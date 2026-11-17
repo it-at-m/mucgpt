@@ -8,7 +8,7 @@ import { useTranslation } from "react-i18next";
 import type { CanvasRevision } from "../../service/canvasStorage";
 import type { CanvasControllerInstance } from "../../hooks/useCanvasController";
 import { canvasExtensions } from "./canvasExtensions";
-import { describeRevisionDiff, type CanvasRevisionDiffItem } from "./canvasDiff";
+import { describeCanvasDiff, type CanvasDiffPreviewItem } from "./canvasDiff";
 import styles from "./CanvasVersionsDrawer.module.css";
 
 // Revision previews are rendered via dangerouslySetInnerHTML, so any link that
@@ -55,13 +55,13 @@ export const CanvasVersionsDrawer = ({ open, onClose, controller, disabled = fal
     // restore would remove, green what it would add. Invalid stored JSON stays
     // out of the map and falls back to the plain preview below.
     const diffs = useMemo(() => {
-        const map = new Map<string, CanvasRevisionDiffItem[]>();
+        const map = new Map<string, CanvasDiffPreviewItem[]>();
         if (!open || !currentDoc || !schema) return map;
         for (const revision of [...controller.revisions.manual, ...controller.revisions.auto]) {
             try {
                 const revisionDoc = schema.nodeFromJSON(revision.doc_json);
                 revisionDoc.check();
-                map.set(revisionKey(revision), describeRevisionDiff(currentDoc, revisionDoc));
+                map.set(revisionKey(revision), describeCanvasDiff(currentDoc, revisionDoc));
             } catch (error) {
                 console.error("Canvas revision diff failed:", error);
             }
@@ -112,23 +112,32 @@ export const CanvasVersionsDrawer = ({ open, onClose, controller, disabled = fal
                                                 <>
                                                     <p className={styles.diffCaption}>{t("canvas.versions.diff_caption")}</p>
                                                     <div className={styles.diff}>
-                                                        {diff.map((item, itemIndex) =>
-                                                            item.lines.map((line, lineIndex) => (
+                                                        {diff.map((item, itemIndex) => {
+                                                            // Added text first (matches the accept/reject control
+                                                            // order), then the removed text.
+                                                            const entries: { line: string; kind: "equal" | "insert" | "delete" }[] =
+                                                                item.kind === "equal"
+                                                                    ? item.newLines.map(line => ({ line, kind: "equal" as const }))
+                                                                    : [
+                                                                          ...item.newLines.map(line => ({ line, kind: "insert" as const })),
+                                                                          ...item.oldLines.map(line => ({ line, kind: "delete" as const }))
+                                                                      ];
+                                                            return entries.map((entry, lineIndex) => (
                                                                 <div
                                                                     key={`${itemIndex}-${lineIndex}`}
-                                                                    data-canvas-diff-kind={item.kind}
+                                                                    data-canvas-diff-kind={entry.kind}
                                                                     className={
-                                                                        item.kind === "insert"
+                                                                        entry.kind === "insert"
                                                                             ? styles.diffInsertion
-                                                                            : item.kind === "delete"
+                                                                            : entry.kind === "delete"
                                                                               ? styles.diffDeletion
                                                                               : styles.diffEqual
                                                                     }
                                                                 >
-                                                                    {line || "\u00a0"}
+                                                                    {entry.line || "\u00a0"}
                                                                 </div>
-                                                            ))
-                                                        )}
+                                                            ));
+                                                        })}
                                                     </div>
                                                 </>
                                             ) : (

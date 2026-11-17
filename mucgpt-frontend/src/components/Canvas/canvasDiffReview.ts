@@ -113,9 +113,10 @@ const inlineDecorations = (change: CanvasChange, labels: CanvasReviewLabels): De
             )
         );
     }
+    // Order matches the accept/reject controls: new text, removed text, buttons.
     if (change.oldText.trim()) {
         decorations.push(
-            Decoration.widget(change.from, deletionWidget(change, labels, false), {
+            Decoration.widget(change.to, deletionWidget(change, labels, false), {
                 side: -1,
                 key: `${change.id}-old`,
                 stopEvent: () => true,
@@ -139,9 +140,10 @@ const blockDecorations = (change: CanvasChange, labels: CanvasReviewLabels): Dec
     if (change.kind !== "delete") {
         decorations.push(Decoration.node(change.from, change.to, { class: styles.insertedBlock, ...changeAttrs(change, "accept") }, changeSpec(change)));
     }
+    // Order matches the accept/reject controls: green block, red box, buttons.
     if (change.oldText.trim()) {
         decorations.push(
-            Decoration.widget(change.from, deletionWidget(change, labels, true), {
+            Decoration.widget(change.to, deletionWidget(change, labels, true), {
                 side: -2,
                 key: `${change.id}-old`,
                 stopEvent: () => true,
@@ -150,7 +152,7 @@ const blockDecorations = (change: CanvasChange, labels: CanvasReviewLabels): Dec
         );
     }
     decorations.push(
-        Decoration.widget(change.from, controlsWidget(change, labels, true), {
+        Decoration.widget(change.to, controlsWidget(change, labels, true), {
             side: -1,
             key: `${change.id}-controls`,
             stopEvent: () => true,

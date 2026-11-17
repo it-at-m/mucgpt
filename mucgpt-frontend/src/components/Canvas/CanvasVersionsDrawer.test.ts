@@ -110,6 +110,9 @@ describe("CanvasVersionsDrawer", () => {
         expect(lines("equal")).toEqual(["Bleibt"]);
         expect(lines("delete")).toEqual(["Aktueller Text"]);
         expect(lines("insert")).toEqual(["Alter Text"]);
+        // Added text is shown before the removed text (matches the ✓/✕ order).
+        const order = Array.from(document.querySelectorAll("[data-canvas-diff-kind]")).map(node => node.getAttribute("data-canvas-diff-kind"));
+        expect(order).toEqual(["equal", "insert", "delete"]);
     });
 
     it("drops malformed-timestamp entries before render and renders the valid ones", () => {

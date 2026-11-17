@@ -15,9 +15,9 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-import inventory  # noqa: E402
-import notices  # noqa: E402
-from license_policy import get_exception  # noqa: E402
+import inventory
+import notices
+from license_policy import get_exception
 
 _ECOSYSTEM = {
     inventory.FRONTEND_TARGET: "npm",

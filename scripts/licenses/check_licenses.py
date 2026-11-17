@@ -17,8 +17,8 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-import inventory  # noqa: E402
-from license_policy import get_exception  # noqa: E402
+import inventory
+from license_policy import get_exception
 
 _TARGETS_LABEL = {
     inventory.FRONTEND_TARGET: "frontend (runtime bundle + dev tooling)",
@@ -77,7 +77,7 @@ def _print_final_guidance(classifications: list[inventory.Classification]) -> No
         print(
             _style.red(
                 "\n  Resolve by: adding a reviewed entry to [tool.licensecheck.exceptions]\n"
-                "  (license + version + reason) or extending the allowed/weak_copyleft\n"
+                "  (license + version + reason) or extending the allowed/warn\n"
                 "  lists in the root pyproject.toml if the license is genuinely permissive."
             )
         )
@@ -146,7 +146,7 @@ def _check_target(target: str, summary: dict) -> inventory.Classification:
         "total_packages": len(packages),
         "shipped_packages": classification.shipped_count,
         "approved": classification.approved,
-        "weak_copyleft": [
+        "warn": [
             {
                 "name": p.name,
                 "version": p.version,
@@ -201,6 +201,7 @@ def main() -> int:
     classifications: list[inventory.Classification] = []
     try:
         for target in args.targets:
+            # Placeholder so a target that raises still appears in the summary.
             summary[target] = {}
             classifications.append(_check_target(target, summary))
     finally:

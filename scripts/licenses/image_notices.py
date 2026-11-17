@@ -16,11 +16,12 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-import notices  # noqa: E402
-from license_policy import (  # noqa: E402
+import notices
+from license_policy import (
     effective_license,
     evaluate_license,
     get_exception,
+    normalize_package_name,
 )
 
 _LICENSE_CLASSIFIER_PREFIX = "License ::"
@@ -112,7 +113,7 @@ def main() -> int:
     """Generate THIRD_PARTY_LICENSES/ in the given application directory."""
     app_dir = Path(sys.argv[1]) if len(sys.argv) > 1 else Path("/app")
     component = _local_project_name(app_dir) or "service"
-    local_name = component.lower().replace("_", "-")
+    local_name = normalize_package_name(component)
 
     output_dir = app_dir / "THIRD_PARTY_LICENSES"
     licenses_dir = output_dir / "licenses"
@@ -121,7 +122,7 @@ def main() -> int:
     entries = []
     for dist in metadata.distributions():
         name = dist.metadata.get("Name") or ""
-        if not name or name.lower().replace("_", "-") == local_name:
+        if not name or normalize_package_name(name) == local_name:
             continue
         version = dist.version or "Unknown"
         detected = _license_label(dist)

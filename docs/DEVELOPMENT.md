@@ -109,7 +109,7 @@ Both registries carry the same tags (`<version>` and `latest`) and the same runn
 ## Third-party licenses
 
 Policy lives in the root `pyproject.toml` under `[tool.licensecheck]`: a minimal
-`allowed` list, accepted `weak_copyleft` licenses and per-package `exceptions`
+`allowed` list, accepted `warn` licenses and per-package `exceptions`
 (`license`, `version`, `reason`). New licenses must be reviewed before being added.
 
 `.github/workflows/license-check.yaml` runs the check on every pull request:

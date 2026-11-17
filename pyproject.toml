@@ -42,7 +42,8 @@ ignore = ["E501", "E701"]      # line too long, multiple statements on one line
 # and enforced by the license-check CI workflow.
 #
 # - allowed: permissive SPDX identifiers.
-# - weak_copyleft: accepted MPL/LGPL-family identifiers, reported as warnings.
+# - warn: accepted identifiers reported as warnings
+#   (e.g. weak copyleft licenses such as MPL/LGPL).
 # - exceptions: per-package overrides for missing/misleading metadata or
 #   multi-license packages; each entry must carry license, version and reason.
 # Anything not resolvable to an entry above fails the license check.
@@ -65,8 +66,9 @@ allowed = [
     "PSF-2.0",
     "Python-2.0",
     "Zlib",
+    "CNRI-Python",
 ]
-weak_copyleft = [
+warn = [
     "LGPL-2.1-or-later",
     "LGPL-3.0-or-later",
     "LGPL-3.0-only",
@@ -79,11 +81,6 @@ weak_copyleft = [
 license = "MPL-1.1"
 version = "0.18.1"
 reason = "tri-license GPLv2+ / LGPL-2.1+ / MPL-1.1; MPL-1.1 elected"
-
-[tool.licensecheck.exceptions."regex"]
-license = "Apache-2.0"
-version = "2026.11.7"
-reason = "dual-licensed Apache-2.0 / CNRI-Python; Apache-2.0 elected"
 
 [tool.licensecheck.exceptions."khroma"]
 license = "MIT"

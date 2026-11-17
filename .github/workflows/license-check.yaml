@@ -60,6 +60,9 @@ jobs:
   check_frontend:
     name: License check Frontend on ${{ matrix.os }} Node ${{ matrix.node_version }}
     runs-on: ${{ matrix.os }}
+    env:
+      # tomllib requires Python >= 3.11.
+      UV_PYTHON: "3.13"
     strategy:
       fail-fast: false
       matrix:

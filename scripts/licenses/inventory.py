@@ -42,8 +42,8 @@ class Package:
     license_files: list[str] = field(default_factory=list)  # absolute paths
 
 
-def _run(cmd: list[str], cwd: Path | None = None) -> str:
-    result = subprocess.run(cmd, capture_output=True, text=True, check=True, cwd=cwd)
+def _run(cmd: list[str]) -> str:
+    result = subprocess.run(cmd, capture_output=True, text=True, check=True)
     return result.stdout
 
 

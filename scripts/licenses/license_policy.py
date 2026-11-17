@@ -1,11 +1,10 @@
 """License policy helpers for the root pyproject.toml ``[tool.licensecheck]``.
 
 Expressions are parsed with OR/AND and parentheses; anything that does not
-resolve to an ``allowed`` or ``weak_copyleft`` identifier is unapproved
+resolve to an ``allowed`` or ``warn`` identifier is unapproved
 (fail-closed, no guessing).
 """
 
-import fnmatch
 import os
 import re
 import tomllib
@@ -78,12 +77,6 @@ _ALIASES = {
     "agpl-3.0-or-later": "AGPL-3.0-or-later",
 }
 
-# Tokens that look like an SPDX identifier (used to keep already-normalized
-# metadata such as "MIT" or "BSD-3-Clause" intact during tokenization).
-_SPDX_PREFIX_RE = re.compile(
-    r"^(?:MIT|BSD|ISC|Apache|MPL|LGPL|GPL|AGPL|PSF|CC0|CC-BY|0BSD|Zlib|Unlicense|CNRI|Python)[-.\w]*$"
-)
-
 _UNKNOWN_TOKENS = {"", "unknown", "unknown!", "none", "null"}
 
 # Identifying sentences of standard license texts as embedded in package
@@ -101,14 +94,13 @@ class Policy:
     """License policy loaded from the root pyproject.toml."""
 
     allowed: frozenset[str]
-    weak_copyleft: frozenset[str]
+    warn: frozenset[str]
     exceptions: dict[str, dict]
-    project_name: str
 
     def category(self, token: str) -> str:
         if token in self.allowed:
             return PERMISSIVE
-        if token in self.weak_copyleft:
+        if token in self.warn:
             return WEAK_COPYLEFT
         return UNAPPROVED
 
@@ -124,9 +116,8 @@ def load_policy() -> Policy:
         exceptions[name.lower().replace("_", "-")] = dict(entry)
     return Policy(
         allowed=frozenset(section.get("allowed", [])),
-        weak_copyleft=frozenset(section.get("weak_copyleft", [])),
+        warn=frozenset(section.get("warn", [])),
         exceptions=exceptions,
-        project_name=data.get("project", {}).get("name", ""),
     )
 
 
@@ -204,7 +195,7 @@ def _tokenize(license_str: str) -> list[str]:
             continue
         if segment in (";", ",", "/"):
             flush_run()
-            if tokens and tokens[-1] not in {"AND", "OR", "("} and run == []:
+            if tokens and tokens[-1] not in {"AND", "OR", "("}:
                 separator_pending = True
             continue
         for piece in segment.split():  # operators must be whitespace-delimited
@@ -220,13 +211,7 @@ def _tokenize(license_str: str) -> list[str]:
 
 def _resolve_identifier(token: str) -> str:
     """Resolve one identifier token via the alias table, else keep it verbatim."""
-    alias = _ALIASES.get(token.lower())
-    if alias is not None:
-        return alias
-    if _SPDX_PREFIX_RE.match(token):
-        return token
-    # Unrecognized: keep the raw token so the check reports it verbatim.
-    return token
+    return _ALIASES.get(token.lower(), token)
 
 
 def _parse_expression(tokens: list[str]):
@@ -284,10 +269,6 @@ def _collect_unapproved(node, policy, into: set) -> None:
         _collect_unapproved(child, policy, into)
 
 
-def _pick_best(nodes: list, key) -> tuple:
-    return min(nodes, key=key)
-
-
 def _evaluate_ast(node, policy) -> dict:
     """Evaluate an AST node -> {"ok": bool, "category": str, "selected": str|None}."""
     kind, value = node
@@ -303,10 +284,7 @@ def _evaluate_ast(node, policy) -> dict:
             else UNAPPROVED
         )
         best = (
-            _pick_best(
-                children,
-                lambda c: (_RANK[c.get("category", UNAPPROVED)], c["selected"] or ""),
-            )
+            min(children, key=lambda c: (_RANK[c["category"]], c["selected"] or ""))
             if ok
             else None
         )
@@ -319,7 +297,7 @@ def _evaluate_ast(node, policy) -> dict:
     passing = [child for child in children if child["ok"]]
     if not passing:
         return {"ok": False, "category": UNAPPROVED, "selected": None}
-    best = _pick_best(passing, lambda c: (_RANK[c["category"]], c["selected"] or ""))
+    best = min(passing, key=lambda c: (_RANK[c["category"]], c["selected"] or ""))
     return {"ok": True, "category": best["category"], "selected": best["selected"]}
 
 
@@ -370,25 +348,12 @@ def evaluate_license(license_str: str) -> dict:
     }
 
 
-def is_approved(license_str: str) -> bool:
-    """True if the license expression resolves to an approved clause."""
-    return evaluate_license(license_str)["status"] == "ok"
-
-
 def effective_license(package_name: str, version: str, license_str: str) -> str:
     """License string for a package after applying the policy exception, if any."""
     exception = get_exception(package_name, version)
     if exception is not None and exception.get("license"):
         return str(exception["license"])
     return license_str
-
-
-def packages_matching_pattern(pattern: str, names: list[str]) -> list[str]:
-    """Package names (normalized) matching a fnmatch pattern, for reports."""
-    pattern = normalize_package_name(pattern)
-    return [
-        name for name in names if fnmatch.fnmatch(normalize_package_name(name), pattern)
-    ]
 
 
 def canonical_license_expression(license_str: str) -> str | None:

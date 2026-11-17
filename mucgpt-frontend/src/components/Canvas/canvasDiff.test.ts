@@ -153,6 +153,62 @@ describe("computeCanvasChanges", () => {
         expect(changes.map(change => change.summary)).toEqual(["Dritter Absatz", "Vierter Absatz"]);
     });
 
+    it("diffs a bullet list per item and only marks the changed bullet", () => {
+        const editor = editorFor();
+        const changes = computeCanvasChanges(
+            docFrom(editor, "- Der Hund läuft schnell\n- Zweiter Punkt"),
+            docFrom(editor, "- Der Hund rennt schnell\n- Zweiter Punkt")
+        );
+
+        expect(changes).toHaveLength(1);
+        expect(changes[0]).toMatchObject({ level: "inline", kind: "replace", oldText: "läuft", newText: "rennt" });
+        expect(changes[0].previewPrefix).toBe("• ");
+    });
+
+    it("reports inserted and deleted bullets as prefixed item changes", () => {
+        const editor = editorFor();
+        const inserted = computeCanvasChanges(docFrom(editor, "- A\n- B"), docFrom(editor, "- A\n- Neuer Punkt\n- B"));
+        expect(inserted).toHaveLength(1);
+        expect(inserted[0]).toMatchObject({ level: "block", kind: "insert", oldText: "", newText: "• Neuer Punkt" });
+
+        const deleted = computeCanvasChanges(docFrom(editor, "- A\n- B\n- C"), docFrom(editor, "- A\n- C"));
+        expect(deleted).toHaveLength(1);
+        expect(deleted[0]).toMatchObject({ level: "block", kind: "delete", oldText: "• B", newText: "" });
+    });
+
+    it("keeps ordered list numbering in the item marker", () => {
+        const editor = editorFor();
+        const changes = computeCanvasChanges(docFrom(editor, "1. Eins\n2. Zwei"), docFrom(editor, "1. Eins geändert\n2. Zwei"));
+        expect(changes).toHaveLength(1);
+        expect(changes[0]).toMatchObject({ level: "inline", oldText: "Eins", newText: "Eins geändert", previewPrefix: "1. " });
+    });
+
+    it("reviews a list type change as one whole-list change", () => {
+        const editor = editorFor();
+        const changes = computeCanvasChanges(docFrom(editor, "- A\n- B"), docFrom(editor, "1. A\n2. B"));
+        expect(changes).toHaveLength(1);
+        expect(changes[0]).toMatchObject({ level: "block", kind: "replace", oldText: "• A\n• B", newText: "1. A\n2. B" });
+    });
+
+    it("reviews an item with a nested list as one coarse item change", () => {
+        const editor = editorFor();
+        const changes = computeCanvasChanges(docFrom(editor, "- Punkt mit Unterliste\n  - Unter A"), docFrom(editor, "- Punkt mit Unterliste\n  - Unter B"));
+        expect(changes).toHaveLength(1);
+        expect(changes[0]).toMatchObject({ level: "block", kind: "replace" });
+        expect(changes[0].oldText.startsWith("• ")).toBe(true);
+    });
+
+    it("keeps list item markers in the static preview", () => {
+        const editor = editorFor();
+        const items = describeCanvasDiff(
+            docFrom(editor, "- Der Hund läuft schnell\n- Zweiter Punkt"),
+            docFrom(editor, "- Der Hund rennt schnell\n- Zweiter Punkt")
+        );
+        expect(items.map(item => item.kind)).toEqual(["replace", "equal"]);
+        expect(items[0]).toEqual({ kind: "replace", oldLines: ["• läuft"], newLines: ["• rennt"] });
+        expect(items[1].newLines).toEqual(["• Zweiter Punkt"]);
+    });
+
     it("keeps structural changes at block level", () => {
         const editor = editorFor();
         const table = "| A | B |\n| --- | --- |\n| 1 | 2 |";

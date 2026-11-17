@@ -6,9 +6,10 @@ import type { Node as PMNode } from "@tiptap/pm/model";
  * Replacements of plain-text blocks are split into *hunks*: a maximal run of
  * consecutive changed words forms one change (one green/red pair), so several
  * edits inside the same paragraph can be accepted or rejected independently.
- * Structural changes (tables, code, lists, type changes, merge/split runs) and
- * pure block insertions/deletions stay block-level and form one change per
- * contiguous run (or pair).
+ * Lists are diffed per bullet: each list item of a matched list pair is its own
+ * unit, so editing one bullet does not mark the whole list.
+ * Structural changes (tables, code, type changes, merge/split runs, items with
+ * nested lists) and pure insertions/deletions stay block-level.
  *
  * Positions are positions in the target document. Pure deletions have an empty
  * range (the anchor where the old content was removed).
@@ -20,7 +21,7 @@ export interface CanvasDiffSegment {
 
 export interface CanvasChange {
     id: string;
-    /** inline = phrase hunk inside a text block; block = whole block(s). */
+    /** inline = phrase hunk inside a text block; block = whole block/list item(s). */
     level: "inline" | "block";
     kind: "insert" | "delete" | "replace";
     /** Target document range; empty for pure deletions (insertion anchor). */
@@ -34,6 +35,8 @@ export interface CanvasChange {
     newText: string;
     /** Short plain-text excerpt of the change for accessible control labels. */
     summary: string;
+    /** List marker for static preview lines ("• " / "3. "); inline changes only. */
+    previewPrefix?: string;
 }
 
 /**
@@ -57,6 +60,14 @@ export interface CanvasTextHunk {
 }
 
 type DiffOp = { type: "equal"; a: number; b: number } | { type: "insert"; b: number } | { type: "delete"; a: number };
+
+/** A diffable node with its position and (for list items) its marker prefix. */
+interface DiffPiece {
+    node: PMNode;
+    from: number;
+    /** "• " or "3. " for list items; undefined for top-level blocks. */
+    prefix?: string;
+}
 
 /** Upper bound for the LCS matrix; larger inputs degrade to a coarse comparison. */
 const MAX_MATRIX_CELLS = 250_000;
@@ -209,8 +220,8 @@ const unchangedShare = (segments: CanvasDiffSegment[]): number => {
     return longest === 0 ? 1 : equal / longest;
 };
 
-/** Old block content as plain lines for the strikethrough preview. */
-const describeBlock = (node: PMNode): string[] => {
+/** Content as plain lines for the strikethrough/preview text. */
+const describeNode = (node: PMNode): string[] => {
     switch (node.type.name) {
         case "table": {
             const rows: string[] = [];
@@ -240,6 +251,18 @@ const describeBlock = (node: PMNode): string[] => {
     }
 };
 
+/** Lines for a diff piece; list items get their marker prefix. */
+const describePiece = (piece: DiffPiece): string[] => {
+    const lines = describeNode(piece.node);
+    return piece.prefix ? lines.map(line => `${piece.prefix}${line}`) : lines;
+};
+
+const plainTextLines = (piece: DiffPiece): string[] => {
+    const text = piece.node.textContent;
+    const lines = text ? text.split("\n") : [""];
+    return piece.prefix ? lines.map(line => `${piece.prefix}${line}`) : lines;
+};
+
 const isPlainTextBlock = (node: PMNode): boolean => {
     if (!node.isTextblock) return false;
     let plain = true;
@@ -251,22 +274,39 @@ const isPlainTextBlock = (node: PMNode): boolean => {
     return plain;
 };
 
-const canInlineDiff = (oldNode: PMNode, newNode: PMNode): boolean => {
-    const simpleType = (node: PMNode) => node.type.name === "paragraph" || node.type.name === "heading";
-    return (
-        simpleType(oldNode) &&
-        simpleType(newNode) &&
-        oldNode.type.name === newNode.type.name &&
-        JSON.stringify(oldNode.attrs) === JSON.stringify(newNode.attrs) &&
-        isPlainTextBlock(oldNode) &&
-        isPlainTextBlock(newNode)
-    );
+const simpleTextblock = (node: PMNode): PMNode | null => {
+    const simpleType = node.type.name === "paragraph" || node.type.name === "heading";
+    return simpleType && isPlainTextBlock(node) ? node : null;
 };
 
-const topLevelBlocks = (doc: PMNode): PMNode[] => {
-    const blocks: PMNode[] = [];
-    doc.forEach(node => blocks.push(node));
-    return blocks;
+/** A list item is inline-diffable when it holds exactly one plain-text paragraph. */
+const simpleItemParagraph = (item: PMNode): PMNode | null => {
+    if (item.childCount !== 1) return null;
+    const paragraph = item.child(0);
+    if (paragraph.type.name !== "paragraph" || !isPlainTextBlock(paragraph)) return null;
+    return paragraph;
+};
+
+const isList = (node: PMNode): boolean => node.type.name === "bulletList" || node.type.name === "orderedList";
+
+const sameListShape = (left: PMNode, right: PMNode): boolean =>
+    isList(left) && isList(right) && left.type.name === right.type.name && JSON.stringify(left.attrs) === JSON.stringify(right.attrs);
+
+const topLevelPieces = (doc: PMNode): DiffPiece[] => {
+    const pieces: DiffPiece[] = [];
+    doc.forEach((node, offset) => pieces.push({ node, from: offset }));
+    return pieces;
+};
+
+/** List items as diff pieces with their list marker prefix. */
+const listItemPieces = (list: PMNode, listPos: number): DiffPiece[] => {
+    const start = typeof list.attrs.start === "number" ? list.attrs.start : 1;
+    const pieces: DiffPiece[] = [];
+    list.forEach((item, offset, index) => {
+        const prefix = list.type.name === "orderedList" ? `${start + index}. ` : "• ";
+        pieces.push({ node: item, from: listPos + 1 + offset, prefix });
+    });
+    return pieces;
 };
 
 /** Plain-text excerpt used to distinguish change controls for assistive tech. */
@@ -276,23 +316,22 @@ const summarize = (lines: string[]): string => {
 };
 
 /**
- * Text positions inside a text block: content starts one position after the
- * block, and plain-text blocks contain only text nodes, so one character is one
- * position (marks do not affect positions).
+ * Text positions: plain-text blocks contain only text nodes and list items hold
+ * their single paragraph as first child, so one character is one position
+ * (marks do not affect positions).
  */
-const inlinePos = (blockStart: number, offset: number): number => blockStart + 1 + offset;
+const blockTextStart = (piece: DiffPiece): number => piece.from + 1;
+const itemTextStart = (piece: DiffPiece): number => piece.from + 2;
 
 const inlineChanges = (
     baseline: PMNode,
-    oldNode: PMNode,
-    oldBlockStart: number,
-    newNode: PMNode,
-    newBlockStart: number,
-    nextChangeId: () => string
+    oldText: string,
+    oldTextStart: number,
+    newText: string,
+    newTextStart: number,
+    nextChangeId: () => string,
+    previewPrefix?: string
 ): CanvasChange[] | null => {
-    if (!canInlineDiff(oldNode, newNode)) return null;
-    const oldText = oldNode.textContent;
-    const newText = newNode.textContent;
     const segments = diffWords(oldText, newText);
     if (!segments) return null;
 
@@ -305,12 +344,13 @@ const inlineChanges = (
                 id: nextChangeId(),
                 level: "inline" as const,
                 kind: oldText && newText ? "replace" : newText ? "insert" : "delete",
-                from: inlinePos(newBlockStart, 0),
-                to: inlinePos(newBlockStart, newText.length),
-                oldSliceJson: oldText ? baseline.slice(inlinePos(oldBlockStart, 0), inlinePos(oldBlockStart, oldText.length)).toJSON() : null,
+                from: newTextStart,
+                to: newTextStart + newText.length,
+                oldSliceJson: oldText ? baseline.slice(oldTextStart, oldTextStart + oldText.length).toJSON() : null,
                 oldText,
                 newText,
-                summary: summarize([newText || oldText])
+                summary: summarize([newText || oldText]),
+                previewPrefix
             }
         ];
     }
@@ -319,46 +359,152 @@ const inlineChanges = (
     if (hunks.length === 0) return null;
 
     return hunks.map(hunk => {
-        const oldFrom = inlinePos(oldBlockStart, hunk.oldStart);
-        const oldTo = inlinePos(oldBlockStart, hunk.oldEnd);
         const kind = hunk.oldText && hunk.newText ? "replace" : hunk.newText ? "insert" : "delete";
         return {
             id: nextChangeId(),
             level: "inline" as const,
             kind,
-            from: inlinePos(newBlockStart, hunk.newStart),
-            to: inlinePos(newBlockStart, hunk.newEnd),
-            oldSliceJson: hunk.oldText ? baseline.slice(oldFrom, oldTo).toJSON() : null,
+            from: newTextStart + hunk.newStart,
+            to: newTextStart + hunk.newEnd,
+            oldSliceJson: hunk.oldText ? baseline.slice(oldTextStart + hunk.oldStart, oldTextStart + hunk.oldEnd).toJSON() : null,
             oldText: hunk.oldText,
             newText: hunk.newText,
-            summary: summarize([hunk.newText || hunk.oldText])
+            summary: summarize([hunk.newText || hunk.oldText]),
+            previewPrefix
         };
     });
 };
 
-const blockChange = (baseline: PMNode, removed: PMNode[], added: PMNode[], oldStart: number, newStart: number, nextChangeId: () => string): CanvasChange => {
-    const addedSize = added.reduce((size, node) => size + node.nodeSize, 0);
-    const oldSize = removed.reduce((size, node) => size + node.nodeSize, 0);
-    const oldLines = removed.flatMap(node => describeBlock(node));
-    const newLines = added.flatMap(node => describeBlock(node));
+const blockChange = (
+    baseline: PMNode,
+    removed: DiffPiece[],
+    added: DiffPiece[],
+    oldStart: number,
+    newStart: number,
+    nextChangeId: () => string
+): CanvasChange => {
+    const oldSize = removed.reduce((size, piece) => size + piece.node.nodeSize, 0);
+    const newSize = added.reduce((size, piece) => size + piece.node.nodeSize, 0);
+    const oldLines = removed.flatMap(describePiece);
+    const newLines = added.flatMap(describePiece);
     const kind = removed.length === 0 ? "insert" : added.length === 0 ? "delete" : "replace";
     return {
         id: nextChangeId(),
         level: "block",
         kind,
         from: newStart,
-        to: newStart + addedSize,
+        to: newStart + newSize,
         oldSliceJson: removed.length > 0 ? baseline.slice(oldStart, oldStart + oldSize).toJSON() : null,
         oldText: oldLines.join("\n"),
         newText: newLines.join("\n"),
-        summary: summarize(added.length > 0 ? added.map(node => node.textContent) : oldLines)
+        summary: summarize(added.length > 0 ? added.flatMap(plainTextLines) : oldLines)
     };
 };
 
 const previewForChange = (change: CanvasChange): CanvasDiffPreviewItem => {
-    // Inline changes carry phrase text; block changes carry one line per block.
+    const prefix = change.level === "inline" ? change.previewPrefix : undefined;
+    const withPrefix = (lines: string[]) => (prefix ? lines.map(line => `${prefix}${line}`) : lines);
     const lines = (text: string): string[] => (change.level === "inline" ? (text ? [text] : []) : text ? text.split("\n") : []);
-    return { kind: change.kind, oldLines: lines(change.oldText), newLines: lines(change.newText) };
+    return { kind: change.kind, oldLines: withPrefix(lines(change.oldText)), newLines: withPrefix(lines(change.newText)) };
+};
+
+interface DiffSink {
+    changes: CanvasChange[];
+    preview: CanvasDiffPreviewItem[];
+}
+
+const emitChange = (sink: DiffSink, change: CanvasChange) => {
+    sink.changes.push(change);
+    sink.preview.push(previewForChange(change));
+};
+
+const emitEqual = (sink: DiffSink, piece: DiffPiece) => {
+    const lines = describePiece(piece);
+    // Empty filler blocks (e.g. a trailing paragraph after a list) carry no
+    // preview information and would only add blank rows.
+    if (lines.every(line => line.trim() === "")) return;
+    sink.preview.push({ kind: "equal", oldLines: [], newLines: lines });
+};
+
+const pushPairChange = (
+    sink: DiffSink,
+    baseline: PMNode,
+    removed: DiffPiece[],
+    added: DiffPiece[],
+    oldStart: number,
+    newStart: number,
+    nextChangeId: () => string
+) => {
+    emitChange(sink, blockChange(baseline, removed, added, oldStart, newStart, nextChangeId));
+};
+
+/**
+ * Diffs the items of a matched list pair. Whole-list changes keep their
+ * node-aligned ranges, so reject slices never cross container boundaries.
+ */
+const diffListPair = (sink: DiffSink, baseline: PMNode, oldList: DiffPiece, newList: DiffPiece, nextChangeId: () => string) => {
+    const oldItems = listItemPieces(oldList.node, oldList.from);
+    const newItems = listItemPieces(newList.node, newList.from);
+    const ops = diffSequences(oldItems, newItems, (left, right) => left.node.eq(right.node));
+
+    // Too many items to align: review the whole list as one block change.
+    if (!ops) {
+        pushPairChange(sink, baseline, [oldList], [newList], oldList.from, newList.from, nextChangeId);
+        return;
+    }
+
+    let opIndex = 0;
+    let oldPos = oldList.from + 1;
+    let newPos = newList.from + 1;
+
+    while (opIndex < ops.length) {
+        const op = ops[opIndex];
+        if (op.type === "equal") {
+            emitEqual(sink, newItems[op.b]);
+            oldPos += oldItems[op.a].node.nodeSize;
+            newPos += newItems[op.b].node.nodeSize;
+            opIndex++;
+            continue;
+        }
+
+        const oldRunStart = oldPos;
+        const newRunStart = newPos;
+        const removed: DiffPiece[] = [];
+        const added: DiffPiece[] = [];
+        while (opIndex < ops.length && ops[opIndex].type !== "equal") {
+            const runOp = ops[opIndex];
+            if (runOp.type === "delete") removed.push(oldItems[runOp.a]);
+            else if (runOp.type === "insert") added.push(newItems[runOp.b]);
+            opIndex++;
+        }
+        for (const piece of removed) oldPos += piece.node.nodeSize;
+        for (const piece of added) newPos += piece.node.nodeSize;
+
+        if (removed.length === 0 || added.length === 0 || removed.length !== added.length) {
+            pushPairChange(sink, baseline, removed, added, oldRunStart, newRunStart, nextChangeId);
+            continue;
+        }
+
+        removed.forEach((oldItem, index) => {
+            const newItem = added[index];
+            const oldParagraph = simpleItemParagraph(oldItem.node);
+            const newParagraph = simpleItemParagraph(newItem.node);
+            const inline =
+                oldParagraph && newParagraph
+                    ? inlineChanges(
+                          baseline,
+                          oldParagraph.textContent,
+                          itemTextStart(oldItem),
+                          newParagraph.textContent,
+                          itemTextStart(newItem),
+                          nextChangeId,
+                          newItem.prefix
+                      )
+                    : null;
+            if (inline) inline.forEach(change => emitChange(sink, change));
+            else pushPairChange(sink, baseline, [oldItem], [newItem], oldItem.from, newItem.from, nextChangeId);
+        });
+    }
 };
 
 /**
@@ -367,22 +513,17 @@ const previewForChange = (change: CanvasChange): CanvasDiffPreviewItem => {
  * (equal blocks interleaved with changes) used by the versions drawer.
  */
 export function diffCanvas(baseline: PMNode, target: PMNode): { changes: CanvasChange[]; preview: CanvasDiffPreviewItem[] } {
-    const oldBlocks = topLevelBlocks(baseline);
-    const newBlocks = topLevelBlocks(target);
-    const ops = diffSequences(oldBlocks, newBlocks, (left, right) => left.eq(right));
+    const oldPieces = topLevelPieces(baseline);
+    const newPieces = topLevelPieces(target);
+    const ops = diffSequences(oldPieces, newPieces, (left, right) => left.node.eq(right.node));
     let changeCounter = 1;
     const nextChangeId = () => `change-${changeCounter++}`;
-    const changes: CanvasChange[] = [];
-    const preview: CanvasDiffPreviewItem[] = [];
-    const pushChange = (change: CanvasChange) => {
-        changes.push(change);
-        preview.push(previewForChange(change));
-    };
+    const sink: DiffSink = { changes: [], preview: [] };
 
     // Too many blocks to align: expose the whole rewrite as one reviewable change.
     if (!ops) {
-        if (!baseline.eq(target)) pushChange(blockChange(baseline, oldBlocks, newBlocks, 0, 0, nextChangeId));
-        return { changes, preview };
+        if (!baseline.eq(target)) emitChange(sink, blockChange(baseline, oldPieces, newPieces, 0, 0, nextChangeId));
+        return sink;
     }
 
     let opIndex = 0;
@@ -393,47 +534,62 @@ export function diffCanvas(baseline: PMNode, target: PMNode): { changes: CanvasC
     while (opIndex < ops.length) {
         const op = ops[opIndex];
         if (op.type === "equal") {
-            preview.push({ kind: "equal", oldLines: [], newLines: describeBlock(newBlocks[op.b]) });
-            oldPos += oldBlocks[op.a].nodeSize;
-            newPos += newBlocks[op.b].nodeSize;
+            emitEqual(sink, newPieces[op.b]);
+            oldPos += oldPieces[op.a].node.nodeSize;
+            newPos += newPieces[op.b].node.nodeSize;
             opIndex++;
             continue;
         }
 
         const oldStart = oldPos;
         const newStart = newPos;
-        const removed: PMNode[] = [];
-        const added: PMNode[] = [];
+        const removed: DiffPiece[] = [];
+        const added: DiffPiece[] = [];
         while (opIndex < ops.length && ops[opIndex].type !== "equal") {
             const runOp = ops[opIndex];
-            if (runOp.type === "delete") removed.push(oldBlocks[runOp.a]);
-            else if (runOp.type === "insert") added.push(newBlocks[runOp.b]);
+            if (runOp.type === "delete") removed.push(oldPieces[runOp.a]);
+            else if (runOp.type === "insert") added.push(newPieces[runOp.b]);
             opIndex++;
         }
-        for (const node of removed) oldPos += node.nodeSize;
-        for (const node of added) newPos += node.nodeSize;
+        for (const piece of removed) oldPos += piece.node.nodeSize;
+        for (const piece of added) newPos += piece.node.nodeSize;
 
         if (removed.length === 0 || added.length === 0 || removed.length !== added.length) {
             // Pure insertion/deletion runs and merge/split runs stay one block change.
-            pushChange(blockChange(baseline, removed, added, oldStart, newStart, nextChangeId));
+            pushPairChange(sink, baseline, removed, added, oldStart, newStart, nextChangeId);
             continue;
         }
 
         // Equal counts: pair the blocks so each rewritten block is reviewed on its
         // own (and inline-diffable pairs are split into independent phrase hunks).
-        let oldCursor = oldStart;
-        let newCursor = newStart;
-        removed.forEach((oldNode, index) => {
-            const newNode = added[index];
-            const inline = inlineChanges(baseline, oldNode, oldCursor, newNode, newCursor, nextChangeId);
-            if (inline) inline.forEach(pushChange);
-            else pushChange(blockChange(baseline, [oldNode], [newNode], oldCursor, newCursor, nextChangeId));
-            oldCursor += oldNode.nodeSize;
-            newCursor += newNode.nodeSize;
+        removed.forEach((oldPiece, index) => {
+            const newPiece = added[index];
+            if (sameListShape(oldPiece.node, newPiece.node)) {
+                diffListPair(sink, baseline, oldPiece, newPiece, nextChangeId);
+                return;
+            }
+            const oldTextblock = simpleTextblock(oldPiece.node);
+            const newTextblock = simpleTextblock(newPiece.node);
+            const inline =
+                oldTextblock &&
+                newTextblock &&
+                oldTextblock.type.name === newTextblock.type.name &&
+                JSON.stringify(oldTextblock.attrs) === JSON.stringify(newTextblock.attrs)
+                    ? inlineChanges(
+                          baseline,
+                          oldTextblock.textContent,
+                          blockTextStart(oldPiece),
+                          newTextblock.textContent,
+                          blockTextStart(newPiece),
+                          nextChangeId
+                      )
+                    : null;
+            if (inline) inline.forEach(change => emitChange(sink, change));
+            else pushPairChange(sink, baseline, [oldPiece], [newPiece], oldPiece.from, newPiece.from, nextChangeId);
         });
     }
 
-    return { changes, preview };
+    return sink;
 }
 
 export const computeCanvasChanges = (baseline: PMNode, target: PMNode): CanvasChange[] => diffCanvas(baseline, target).changes;

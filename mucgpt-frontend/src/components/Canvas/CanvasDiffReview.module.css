@@ -105,3 +105,11 @@
     outline: 2px solid var(--colorStrokeFocus2);
     outline-offset: 1px;
 }
+
+/* Block widgets inside lists must be list items to keep valid list DOM. */
+.listWidget {
+    display: block;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}

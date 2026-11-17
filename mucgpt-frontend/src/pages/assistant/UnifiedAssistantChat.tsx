@@ -1242,10 +1242,10 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                                         historyReadOnly
                                             ? undefined
                                             : prompt => {
-                                                setLastQuestionValue(prompt);
-                                                setIsLoadingValue(true);
-                                                void callApi(prompt);
-                                            }
+                                                  setLastQuestionValue(prompt);
+                                                  setIsLoadingValue(true);
+                                                  void callApi(prompt);
+                                              }
                                     }
                                 />
                             )}

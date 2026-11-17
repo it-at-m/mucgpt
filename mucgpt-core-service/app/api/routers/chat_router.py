@@ -340,13 +340,12 @@ async def put_conversation_canvas(
     request: CanvasContentUpsertRequest,
     user_info: Annotated[AuthenticationResult, Depends(authenticate_user)],
 ) -> Response:
-    """Persist the client's current canvas document (content autosave).
+    """Persist the current canvas document (content autosave).
 
-    The frontend calls this on a debounce while the user edits and once after
-    each agent run, so the stored copy always represents the current view even
-    before the next chat turn would carry it implicitly. A truncated document
-    is not persisted: it carries only the beginning of the editor document and
-    overwriting the stored copy would silently destroy the tail.
+    Called on a debounce while the user edits and once after each agent run,
+    so the stored copy always represents the current view. A truncated
+    document is not persisted: it carries only the beginning and overwriting
+    the stored copy would silently destroy the tail.
     """
     await _authorize_conversation_access(conversation_id, user_info.user_id)
 

@@ -205,7 +205,10 @@ class CanvasContentUpsertRequest(BaseModel):
         description=(
             "True when the client's editor document exceeds the persistence "
             "limit and `content` is only its beginning. The stored canvas is "
-            "then left untouched to avoid silently destroying the tail."
+            "then left untouched to avoid silently destroying the tail. "
+            "Current clients skip over-limit documents locally and never send "
+            "this; it is a fail-safe for partial-document clients, mirroring "
+            "the per-turn CanvasState semantics."
         ),
     )
 

@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
-import { afterEach, describe, expect, it, vi } from "vitest";
-import { mucgptForwardedProps, MucgptAgUiAgent } from "./core-client";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { mucgptForwardedProps, MucgptAgUiAgent, putCanvasContentApi } from "./core-client";
 import type { ChatRequest } from "./models";
 
 function chatRequest(overrides: Partial<ChatRequest> = {}): ChatRequest {
@@ -118,5 +118,59 @@ describe("MucgptAgUiAgent (native RunAgentInput)", () => {
                 })
             })
         );
+    });
+});
+
+describe("putCanvasContentApi", () => {
+    let fetchMock: ReturnType<typeof vi.fn>;
+
+    beforeEach(() => {
+        fetchMock = vi.fn(async () => new Response(null, { status: 204 }));
+        vi.stubGlobal("fetch", fetchMock);
+    });
+
+    afterEach(() => {
+        vi.unstubAllGlobals();
+    });
+
+    it("sends the content as JSON and resolves true on the bodiless 204", async () => {
+        // The 204 success carries no body, so the JSON-parsing response
+        // handler must not be used for it.
+        await expect(putCanvasContentApi("conv-1", "# doc")).resolves.toBe(true);
+
+        const init = fetchMock.mock.calls[0][1] as RequestInit;
+        expect(init.method).toBe("PUT");
+        expect(JSON.parse(String(init.body))).toEqual({ content: "# doc" });
+        expect(init.keepalive).toBe(false);
+    });
+
+    it("passes keepalive through to the request", async () => {
+        await putCanvasContentApi("conv-1", "# doc", true);
+
+        expect((fetchMock.mock.calls[0][1] as RequestInit).keepalive).toBe(true);
+    });
+
+    it("resolves false for the unpersisted conversation (404)", async () => {
+        fetchMock.mockImplementation(async () => new Response(null, { status: 404 }));
+
+        await expect(putCanvasContentApi("conv-2", "# doc")).resolves.toBe(false);
+    });
+
+    it("rejects on server errors via the standard error handling", async () => {
+        fetchMock.mockImplementation(async () => new Response(null, { status: 500, statusText: "Internal Server Error" }));
+
+        await expect(putCanvasContentApi("conv-3", "# doc")).rejects.toThrow("Internal Server Error");
+    });
+
+    it("rejects with the detail message from the standard error handling", async () => {
+        fetchMock.mockImplementation(
+            async () =>
+                new Response(JSON.stringify({ detail: "Canvas exceeds the maximum payload size" }), {
+                    status: 422,
+                    headers: { "Content-Type": "application/json" }
+                })
+        );
+
+        await expect(putCanvasContentApi("conv-4", "# doc")).rejects.toThrow("Canvas exceeds the maximum payload size");
     });
 });

@@ -16,7 +16,7 @@ const PASTE_CLIP_NOTICE_MS = 8000;
 
 const SAVE_REVISIONS_DEBOUNCE_MS = 1000;
 
-/** Keepalive fetches survive a page unload, but browsers cap their body at 64 kB. */
+/** Safety margin below the browsers' 64 kB keepalive body cap. */
 const KEEPALIVE_MAX_BYTES = 60000;
 
 interface Props {
@@ -44,73 +44,59 @@ export const CanvasPanel = ({ controller, conversationId, serverConversationId, 
     const limits = useCanvasLimits();
     const isLocked = controller.isLocked || readOnly;
 
-    // Content lifecycle (load/clear on conversation switch) lives in the controller;
-    // the panel persists revision rings and autosaves the live document content —
-    // the backend is the single source of truth for the canvas, so nothing is
-    // mirrored locally.
-    // Last content confirmed stored for THIS conversation; null until the first
-    // successful autosave. Reset semantics across switches are safe: a stale
-    // value from the previous conversation can only suppress a redundant PUT
-    // of identical content.
-    const lastPersistedContentRef = useRef<string | null>(null);
+    // Panel-side persistence: revision rings plus content autosave; the backend
+    // is the single source of truth, so nothing is mirrored locally.
+    // Last content confirmed stored, scoped per conversation.
+    const lastPersistedContentRef = useRef<{ conversationId: string; content: string } | null>(null);
     const wasLockedRef = useRef(controller.isLocked);
 
+    // All autosave entry points funnel through here.
     const persistContent = useCallback(
-        (markdown: string) => {
+        (markdown: string, keepalive = false) => {
             if (readOnly || !serverId || !conversationId) return;
             const editor = controllerRef.current.editor;
-            // A mid-recreation editor serializes to "" — persisting that would
-            // clobber the stored copy, so wait until the editor is usable again.
+            // A mid-recreation editor serializes to "".
             if (!editor || editor.isDestroyed) return;
-            // Beyond the persistence limit the document exceeds what the backend
-            // can store: writing the beginning would silently destroy the tail
-            // (same rule as the per-turn implicit save, which skips truncated
-            // canvases).
+            // Agent streams are flushed at run end (unlock effect below).
+            if (controllerRef.current.isLocked) return;
+            // A "" write while the current conversation's restore is still
+            // pending (or failed) would wipe the stored copy.
+            if (!markdown.trim()) return;
+            // Over the persist limit only a truncated beginning would be
+            // stored — same rule as the per-turn implicit save.
             if (markdown.length > limits.contentLimitChars) return;
-            void saveCanvasContent(serverId, markdown).then(saved => {
-                if (saved) lastPersistedContentRef.current = markdown;
+            // Large documents fail closed and keep the debounce behavior.
+            if (keepalive && new TextEncoder().encode(markdown).length > KEEPALIVE_MAX_BYTES) return;
+            const persisted = lastPersistedContentRef.current;
+            if (persisted && persisted.conversationId === conversationId && persisted.content === markdown) return;
+            void saveCanvasContent(serverId, markdown, keepalive).then(saved => {
+                if (saved) lastPersistedContentRef.current = { conversationId, content: markdown };
             });
         },
         [readOnly, serverId, conversationId, limits.contentLimitChars]
     );
 
-    // Content autosave: the controller's subscribe channel fires debounced
-    // (1 s after the last edit) and flushes synchronously on unsubscribe, which
-    // covers canvas close, conversation switch and page unmount. Locked runs
-    // are saved at run end instead (unlock effect below), so streaming APPEND
-    // deltas do not churn the server.
+    // The controller's subscribe channel debounces 1 s and flushes
+    // synchronously on unsubscribe (canvas close, switch, unmount).
     useEffect(() => {
-        return controllerRef.current.subscribe(markdown => {
-            if (controllerRef.current.isLocked || markdown === lastPersistedContentRef.current) return;
-            persistContent(markdown);
-        });
+        return controllerRef.current.subscribe(markdown => persistContent(markdown));
     }, [persistContent]);
 
-    // Run-end flush: the controller unlocks when a run finishes; persist the
-    // final state immediately so agent edits stop lagging behind the stored
-    // copy (until now they only reached the server with the next chat turn).
+    // Run end: persist the final state so agent edits don't lag the stored copy.
     useEffect(() => {
         const wasLocked = wasLockedRef.current;
         wasLockedRef.current = controller.isLocked;
         if (!wasLocked || controller.isLocked) return;
-        const markdown = controllerRef.current.getMarkdown();
-        if (markdown !== lastPersistedContentRef.current) persistContent(markdown);
+        persistContent(controllerRef.current.getMarkdown());
     }, [controller.isLocked, persistContent]);
 
-    // Reload/close: the debounced save may not have fired yet. The keepalive
-    // fetch survives the unload; larger documents keep the standard debounce
-    // behavior (at most ~1 s of typing at risk).
+    // Reload/close: flush with a keepalive fetch that survives the unload.
     useEffect(() => {
         if (readOnly || !serverId || !conversationId) return;
-        const onPageHide = () => {
-            const markdown = controllerRef.current.getMarkdown();
-            if (markdown === lastPersistedContentRef.current) return;
-            if (new TextEncoder().encode(markdown).length > KEEPALIVE_MAX_BYTES) return;
-            void saveCanvasContent(serverId, markdown, true);
-        };
+        const onPageHide = () => persistContent(controllerRef.current.getMarkdown(), true);
         window.addEventListener("pagehide", onPageHide);
         return () => window.removeEventListener("pagehide", onPageHide);
-    }, [readOnly, serverId, conversationId]);
+    }, [readOnly, serverId, conversationId, persistContent]);
 
     // Ring changes persist debounced to the server; the PUT is 404-tolerant for
     // conversations never persisted server-side.

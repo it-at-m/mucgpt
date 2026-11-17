@@ -67,7 +67,8 @@ const makeController = (initial: Partial<CanvasControllerInstance> = {}) => {
     return controller;
 };
 
-const renderPanel = (controller: CanvasControllerInstance) => render(<CanvasPanel controller={controller} conversationId="conv-1" />);
+const renderPanel = (controller: CanvasControllerInstance, conversationId = "conv-1") =>
+    render(<CanvasPanel controller={controller} conversationId={conversationId} />);
 
 beforeEach(() => {
     saveMock.mockResolvedValue(true);
@@ -85,7 +86,7 @@ describe("CanvasPanel content autosave", () => {
 
         controller.notify("# draft");
         controller.flush();
-        await waitFor(() => expect(saveMock).toHaveBeenCalledWith("conv-1", "# draft"));
+        await waitFor(() => expect(saveMock).toHaveBeenCalledWith("conv-1", "# draft", false));
 
         saveMock.mockClear();
         controller.notify("# draft");
@@ -114,7 +115,7 @@ describe("CanvasPanel content autosave", () => {
 
         controller.setLocked(false);
         view.rerender(<CanvasPanel controller={controller} conversationId="conv-1" />);
-        await waitFor(() => expect(saveMock).toHaveBeenCalledWith("conv-1", "# final agent state"));
+        await waitFor(() => expect(saveMock).toHaveBeenCalledWith("conv-1", "# final agent state", false));
     });
 
     it("flushes pending edits on unmount (canvas close / page navigation)", async () => {
@@ -124,7 +125,7 @@ describe("CanvasPanel content autosave", () => {
         controller.notify("# unsaved draft");
         view.unmount();
 
-        await waitFor(() => expect(saveMock).toHaveBeenCalledWith("conv-1", "# unsaved draft"));
+        await waitFor(() => expect(saveMock).toHaveBeenCalledWith("conv-1", "# unsaved draft", false));
     });
 
     it("does not persist a document beyond the persistence limit", async () => {
@@ -143,6 +144,51 @@ describe("CanvasPanel content autosave", () => {
 
         controller.notify("# drafted during recreation");
         controller.flush();
+        await waitFor(() => expect(saveMock).toHaveBeenCalledTimes(0));
+    });
+
+    it("never persists an emptied document", async () => {
+        // A "" write during a conversation switch (editor cleared before the
+        // async restore) or after a failed load would wipe the stored copy.
+        const controller = makeController();
+        renderPanel(controller);
+
+        controller.notify("");
+        controller.flush();
+        await waitFor(() => expect(saveMock).toHaveBeenCalledTimes(0));
+    });
+
+    it("scopes the unchanged-content suppression to the conversation", async () => {
+        const controller = makeController();
+        const view = renderPanel(controller, "conv-1");
+        controller.notify("# draft");
+        controller.flush();
+        await waitFor(() => expect(saveMock).toHaveBeenCalledWith("conv-1", "# draft", false));
+
+        // Same content for a different conversation must be persisted again.
+        view.rerender(<CanvasPanel controller={controller} conversationId="conv-2" />);
+        saveMock.mockClear();
+        controller.notify("# draft");
+        controller.flush();
+        await waitFor(() => expect(saveMock).toHaveBeenCalledWith("conv-2", "# draft", false));
+    });
+
+    it("flushes on pagehide with a keepalive request", async () => {
+        const controller = makeController();
+        renderPanel(controller);
+
+        controller.notify("# draft before reload");
+        window.dispatchEvent(new Event("pagehide"));
+        await waitFor(() => expect(saveMock).toHaveBeenCalledWith("conv-1", "# draft before reload", true));
+    });
+
+    it("does not keepalive documents beyond the browser body cap", async () => {
+        const controller = makeController();
+        renderPanel(controller);
+
+        // 60 kB is the local keepalive safety margin (browser cap: 64 kB).
+        controller.notify("a".repeat(60001));
+        window.dispatchEvent(new Event("pagehide"));
         await waitFor(() => expect(saveMock).toHaveBeenCalledTimes(0));
     });
 });

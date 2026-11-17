@@ -229,8 +229,16 @@ export async function putCanvasContentApi(conversationId: string, content: strin
     const response = await fetch(canvasUrl(conversationId), { ...putConfig({ content }), keepalive });
     handleRedirect(response);
     if (response.status === 404) {
+        // Conversation not persisted server-side yet: the content rides along
+        // with the next chat turn instead.
         return false;
     }
+    if (response.status === 204) {
+        // Success answers without a body: skip the JSON-parsing path.
+        return true;
+    }
+    // Anything else is an error (422/500/…): let handleApiRequest produce
+    // the standard ApiError from the JSON error detail.
     await handleApiRequest(() => Promise.resolve(response), "Failed to autosave canvas");
     return true;
 }

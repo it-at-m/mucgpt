@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { Content, Editor } from "@tiptap/core";
 import { useEditor } from "@tiptap/react";
-import type { Mark, Node as PMNode } from "@tiptap/pm/model";
-import { EditorState } from "@tiptap/pm/state";
+import { Slice, type Mark, type Node as PMNode } from "@tiptap/pm/model";
+import { EditorState, type Transaction } from "@tiptap/pm/state";
+import { DecorationSet } from "@tiptap/pm/view";
+import { useTranslation } from "react-i18next";
 
 import type { CanvasState } from "../api/models";
 import { useConfigContext } from "../context/ConfigContext";
@@ -12,6 +14,8 @@ import type { CanvasStreamEvent } from "../utils/canvasStream";
 import { CANVAS_PERSISTENCE_RESET, persistentCaret, persistentSelection } from "../components/Canvas/canvasSelectionPersistence";
 import { canvasExtensions } from "../components/Canvas/canvasExtensions";
 import { effectiveAllowedTags, sanitizeCanvasMarkdown } from "../components/Canvas/canvasHtmlWhitelist";
+import { computeCanvasChanges, type CanvasChange } from "../components/Canvas/canvasDiff";
+import { buildReviewDecorations, CANVAS_REVIEW_META, filterReviewDecorations } from "../components/Canvas/canvasDiffReview";
 
 /**
  * Interface between the canvas UI and the chat page.
@@ -40,11 +44,26 @@ export interface CanvasController {
     beginRun(): void;
     /** Debounced; used for autosave */
     subscribe(cb: (markdown: string) => void): () => void;
-    /** PM-JSON snapshot into the revision rings */
-    snapshot(source: CanvasRevision["source"]): void;
+    /** PM-JSON snapshot into the revision rings; `doc` overrides the live document. */
+    snapshot(source: CanvasRevision["source"], doc?: PMNode): void;
     listRevisions(): CanvasRevisions;
-    /** Non-destructive: setContent(doc_json) as new transaction; undoable via Ctrl+Z */
+    /** Applies the revision and opens a review against the pre-restore document.
+     * Rejecting the review (individually or all) restores the pre-restore text. */
     restore(revision: number): void;
+    /** Pending agent/restore changes shown as accept/reject markup; 0 = none. */
+    pendingChangeCount: number;
+    /** Accepts the change (keeps the new text; only the review markup is removed). */
+    acceptChange(changeId: string): void;
+    /** Rejects the change (restores the baseline text for that region). */
+    rejectChange(changeId: string): void;
+    acceptAllChanges(): void;
+    /** Restores the whole document to the state before the reviewed turn/restore. */
+    rejectAllChanges(): void;
+    /** First canvas stream event of a run: settles any pending review and stores
+     * the pre-turn baseline. Runs that never touch the canvas leave it untouched. */
+    beginAgentCanvasWrite(): void;
+    /** Run end after canvas activity: turns the diff against the baseline into review markup. */
+    finishAgentCanvasWrite(): void;
 }
 
 export interface CanvasControllerInstance extends CanvasController {
@@ -86,6 +105,14 @@ const pushAutoCapped = (ring: CanvasRevision[], revision: CanvasRevision, cap: n
 };
 
 const emptyRevisions = (): CanvasRevisions => ({ auto: [], manual: [] });
+
+/** No user-written text yet: the agent's first content write is auto-approved. */
+const isBlankCanvas = (doc: PMNode): boolean => doc.textContent.trim() === "";
+
+interface CanvasReviewSession {
+    /** Pending changes; ranges are kept in sync with the live document. */
+    changes: CanvasChange[];
+}
 
 /**
  * Selection starting inside a table: the cut document's first row is a partial
@@ -315,6 +342,17 @@ export function useCanvasController(conversationId: string | undefined, serverCo
     const revisionsRef = useRef(revisions);
     revisionsRef.current = revisions;
 
+    // Canvas review (agent changes shown as accept/reject markup). The document
+    // itself stays semantic — approvals are the default, so the new text is what
+    // the agent sees and what snapshots store even before a change is accepted.
+    const { t } = useTranslation();
+    const [pendingChangeCount, setPendingChangeCount] = useState(0);
+    const reviewRef = useRef<CanvasReviewSession | null>(null);
+    const agentBaselineRef = useRef<PMNode | null>(null);
+    const processingReviewRef = useRef(false);
+    const reviewLabelsRef = useRef({ accept: "", reject: "" });
+    reviewLabelsRef.current = { accept: t("canvas.review.accept_change"), reject: t("canvas.review.reject_change") };
+
     const getMarkdown = useCallback((): string => {
         const current = editorRef.current;
         if (!current) return "";
@@ -422,6 +460,16 @@ export function useCanvasController(conversationId: string | undefined, serverCo
         setIsLocked(false);
         setIsOpen(false);
         setRevisions(emptyRevisions());
+        // Review state is conversation-scoped and ephemeral: switching drops it
+        // (approval default keeps the new text), and stale markup must not map
+        // onto another document.
+        reviewRef.current = null;
+        agentBaselineRef.current = null;
+        setPendingChangeCount(0);
+        const reviewEditor = editorRef.current;
+        if (reviewEditor && !reviewEditor.isDestroyed) {
+            reviewEditor.view.dispatch(reviewEditor.state.tr.setMeta(CANVAS_REVIEW_META, DecorationSet.empty).setMeta(NO_HISTORY_META, false));
+        }
         lastNonEmptyDocRef.current = null;
         lastCurrentDocRef.current = null;
         // Deliver the outgoing conversation's pending edit before the editor is
@@ -511,6 +559,184 @@ export function useCanvasController(conversationId: string | undefined, serverCo
     }, []);
     const unlock = useCallback(() => setIsLocked(false), []);
 
+    const setReviewDecorations = useCallback((decorations: DecorationSet) => {
+        const current = editorRef.current;
+        if (!current || current.isDestroyed) return;
+        current.view.dispatch(current.state.tr.setMeta(CANVAS_REVIEW_META, decorations).setMeta(NO_HISTORY_META, false));
+    }, []);
+
+    /** Marks every pending change as accepted: only the view markup is removed. */
+    const clearReview = useCallback(() => {
+        reviewRef.current = null;
+        setPendingChangeCount(0);
+        setReviewDecorations(DecorationSet.empty);
+    }, [setReviewDecorations]);
+
+    /** Applies a reviewed change set; returns the number of pending changes. */
+    const startReview = useCallback(
+        (baseline: PMNode, current: Editor): number => {
+            const changes = computeCanvasChanges(baseline, current.state.doc);
+            if (changes.length === 0) {
+                clearReview();
+                return 0;
+            }
+            reviewRef.current = { changes };
+            setPendingChangeCount(changes.length);
+            setReviewDecorations(buildReviewDecorations(current.state.doc, changes, reviewLabelsRef.current));
+            return changes.length;
+        },
+        [clearReview, setReviewDecorations]
+    );
+
+    // User edits inside a pending change accept that change (rejection stays an
+    // explicit decision); edits elsewhere leave the review untouched. Change
+    // ranges are kept in sync with the live document here.
+    useEffect(() => {
+        if (!editor) return;
+        const onTransaction = ({ transaction }: { transaction: Transaction }) => {
+            const session = reviewRef.current;
+            if (!session || !transaction.docChanged) return;
+            const touched = new Set<string>();
+            for (const step of transaction.steps) {
+                const map = step.getMap();
+                if (!processingReviewRef.current) {
+                    map.forEach((oldStart, oldEnd) => {
+                        for (const change of session.changes) {
+                            const insertedAt = oldStart === oldEnd;
+                            const overlaps = insertedAt ? oldStart > change.from && oldStart < change.to : oldStart < change.to && oldEnd > change.from;
+                            if (overlaps) touched.add(change.id);
+                        }
+                    });
+                }
+                for (const change of session.changes) {
+                    if (touched.has(change.id)) continue;
+                    if (change.from === change.to) {
+                        const pos = map.map(change.from);
+                        change.from = pos;
+                        change.to = pos;
+                    } else {
+                        // Inserts at either boundary stay outside the change range,
+                        // so a later reject never removes user text.
+                        change.from = map.map(change.from, 1);
+                        change.to = map.map(change.to, -1);
+                    }
+                }
+            }
+            if (touched.size === 0) return;
+            const remaining = session.changes.filter(change => !touched.has(change.id));
+            reviewRef.current = remaining.length > 0 ? { changes: remaining } : null;
+            setPendingChangeCount(remaining.length);
+            setReviewDecorations(filterReviewDecorations(editor.state, spec => !touched.has(String(spec.changeId))));
+        };
+        editor.on("transaction", onTransaction);
+        return () => {
+            editor.off("transaction", onTransaction);
+        };
+    }, [editor, setReviewDecorations]);
+
+    const acceptChange = useCallback(
+        (changeId: string) => {
+            const session = reviewRef.current;
+            const current = editorRef.current;
+            if (!session || !current || current.isDestroyed) return;
+            const remaining = session.changes.filter(change => change.id !== changeId);
+            reviewRef.current = remaining.length > 0 ? { changes: remaining } : null;
+            setPendingChangeCount(remaining.length);
+            setReviewDecorations(filterReviewDecorations(current.state, spec => spec.changeId !== changeId));
+        },
+        [setReviewDecorations]
+    );
+
+    const rejectChange = useCallback((changeId: string) => {
+        const session = reviewRef.current;
+        const current = editorRef.current;
+        if (!session || !current || current.isDestroyed) return;
+        const change = session.changes.find(entry => entry.id === changeId);
+        if (!change) return;
+
+        const decorations = filterReviewDecorations(current.state, spec => spec.changeId !== changeId);
+        const tr = current.state.tr;
+        try {
+            if (change.oldSliceJson) tr.replace(change.from, change.to, Slice.fromJSON(current.schema, change.oldSliceJson));
+            else tr.delete(change.from, change.to);
+        } catch (error) {
+            console.error("Restoring the canvas content of a rejected change failed:", error);
+            return;
+        }
+
+        const remaining = session.changes.filter(entry => entry.id !== changeId);
+        reviewRef.current = remaining.length > 0 ? { changes: remaining } : null;
+        processingReviewRef.current = true;
+        try {
+            // Undo is deliberately allowed here: Ctrl+Z brings the new text back
+            // (without markup), i.e. it falls back to the approval default.
+            current.view.dispatch(tr.setMeta(CANVAS_REVIEW_META, decorations));
+        } finally {
+            processingReviewRef.current = false;
+        }
+        setPendingChangeCount(remaining.length);
+    }, []);
+
+    const acceptAllChanges = useCallback(() => clearReview(), [clearReview]);
+
+    const rejectAllChanges = useCallback(() => {
+        const session = reviewRef.current;
+        const current = editorRef.current;
+        if (!session || !current || current.isDestroyed) return;
+        const tr = current.state.tr;
+        try {
+            // Revert each pending range in reverse document order: unchanged blocks
+            // (including user edits made during the review) stay untouched.
+            for (const change of [...session.changes].sort((left, right) => right.from - left.from)) {
+                if (change.oldSliceJson) tr.replace(change.from, change.to, Slice.fromJSON(current.schema, change.oldSliceJson));
+                else tr.delete(change.from, change.to);
+            }
+        } catch (error) {
+            console.error("Restoring the canvas content of the rejected changes failed:", error);
+            return;
+        }
+        reviewRef.current = null;
+        setPendingChangeCount(0);
+        processingReviewRef.current = true;
+        try {
+            current.view.dispatch(tr.setMeta(CANVAS_REVIEW_META, DecorationSet.empty));
+        } finally {
+            processingReviewRef.current = false;
+        }
+    }, []);
+
+    // Click/keyboard activation on the review markup: the colored text itself and
+    // the small per-change controls both carry data attributes, so one delegated
+    // listener covers them (editing stays unaffected).
+    useEffect(() => {
+        if (!editor || editor.isDestroyed) return;
+        // The view is gone after destroy(); capture the element for the cleanup.
+        const dom = editor.view.dom;
+        const onClick = (event: MouseEvent) => {
+            const target = event.target as HTMLElement | null;
+            const element = target?.closest?.("[data-canvas-review-change]") as HTMLElement | null;
+            if (!element) return;
+            const changeId = element.getAttribute("data-canvas-review-change");
+            if (!changeId) return;
+            event.preventDefault();
+            event.stopPropagation();
+            if (element.getAttribute("data-canvas-review-action") === "reject") rejectChange(changeId);
+            else acceptChange(changeId);
+        };
+        dom.addEventListener("click", onClick);
+        return () => {
+            dom.removeEventListener("click", onClick);
+        };
+    }, [editor, acceptChange, rejectChange]);
+
+    // The editor is recreated when the configured limits arrive. Review markup and
+    // change ranges belong to one editor instance, so they must not leak across it.
+    useEffect(() => {
+        reviewRef.current = null;
+        agentBaselineRef.current = null;
+        setPendingChangeCount(0);
+    }, [editor]);
+
     const getSelectionMarkdown = useCallback((): string | null => {
         const current = editorRef.current;
         if (!current) return null;
@@ -560,9 +786,11 @@ export function useCanvasController(conversationId: string | undefined, serverCo
 
     const setMarkdown = useCallback(
         (md: string) => {
+            // A copied-in fragment is a user action: settle the pending review first.
+            clearReview();
             editorRef.current?.commands.setContent(sanitize(md));
         },
-        [sanitize]
+        [clearReview, sanitize]
     );
 
     const toCanvasState = useCallback((): CanvasState | null => {
@@ -662,7 +890,7 @@ export function useCanvasController(conversationId: string | undefined, serverCo
         return flushPendingNotify;
     }, [flushPendingNotify]);
 
-    const snapshot = useCallback((source: CanvasRevision["source"]) => {
+    const snapshot = useCallback((source: CanvasRevision["source"], doc?: PMNode) => {
         // Pre-clear rollback checkpoint: stores the last captured nonempty
         // document (the editor is already empty at clear time). A backup-aware
         // eviction protects agent versions in the shared auto ring.
@@ -679,21 +907,48 @@ export function useCanvasController(conversationId: string | undefined, serverCo
             return;
         }
         const current = editorRef.current;
-        if (!current) return;
+        if (!current && !doc) return;
         const revision: CanvasRevision = {
             revision: nextRevisionRef.current++,
-            doc_json: current.getJSON(),
+            doc_json: doc ? doc.toJSON() : current!.getJSON(),
             timestamp: Date.now(),
             source
         };
         setRevisions(prev =>
             source === "manual"
                 ? { ...prev, manual: pushCapped(prev.manual, revision, MANUAL_RING_CAP) }
-                : { ...prev, auto: pushCapped(prev.auto, revision, AUTO_RING_CAP) }
+                : { ...prev, auto: pushAutoCapped(prev.auto, revision, AUTO_RING_CAP) }
         );
     }, []);
 
     const listRevisions = useCallback((): CanvasRevisions => revisionsRef.current, []);
+
+    const beginAgentCanvasWrite = useCallback(() => {
+        // Pending changes from the previous turn are auto-accepted when the agent
+        // actually writes again (not on every chat message; see the wiring).
+        clearReview();
+        const current = editorRef.current;
+        if (!current) return;
+        agentBaselineRef.current = current.state.doc;
+    }, [clearReview]);
+
+    const finishAgentCanvasWrite = useCallback(() => {
+        const current = editorRef.current;
+        const baseline = agentBaselineRef.current;
+        agentBaselineRef.current = null;
+        if (!current || current.isDestroyed || !baseline) return;
+        // The first write into a canvas without text is not reviewed: approval is
+        // the default and there is no prior content to reject back to. Store the
+        // new document as the recovery revision instead — the empty-server
+        // fallback in the load path uses the newest revision.
+        if (isBlankCanvas(baseline)) {
+            if (!isBlankCanvas(current.state.doc)) snapshot("agent", current.state.doc);
+            return;
+        }
+        if (startReview(baseline, current) === 0) return;
+        // The pre-turn document is the single auto revision of a turn.
+        snapshot("agent", baseline);
+    }, [snapshot, startReview]);
 
     const restore = useCallback(
         (revision: number) => {
@@ -710,10 +965,17 @@ export function useCanvasController(conversationId: string | undefined, serverCo
                 console.error("Canvas revision is not a valid document:", error);
                 return;
             }
+            // Restoring is another reviewed change series: pending changes are
+            // settled first (approval default), then the restored text is diffed
+            // against the document it replaced so it can still be rejected.
+            clearReview();
+            const preRestore = current.state.doc;
             current.commands.setContent(found.doc_json as Content);
+            if (current.state.doc.eq(preRestore)) return;
             snapshot("restore");
+            startReview(preRestore, current);
         },
-        [snapshot]
+        [clearReview, snapshot, startReview]
     );
 
     return useMemo(
@@ -733,6 +995,13 @@ export function useCanvasController(conversationId: string | undefined, serverCo
             snapshot,
             listRevisions,
             restore,
+            pendingChangeCount,
+            acceptChange,
+            rejectChange,
+            acceptAllChanges,
+            rejectAllChanges,
+            beginAgentCanvasWrite,
+            finishAgentCanvasWrite,
             editor,
             revisions
         }),
@@ -752,6 +1021,13 @@ export function useCanvasController(conversationId: string | undefined, serverCo
             snapshot,
             listRevisions,
             restore,
+            pendingChangeCount,
+            acceptChange,
+            rejectChange,
+            acceptAllChanges,
+            rejectAllChanges,
+            beginAgentCanvasWrite,
+            finishAgentCanvasWrite,
             editor,
             revisions
         ]

@@ -218,6 +218,15 @@ i18n
                             agent_revise: "Agent soll das überarbeiten",
                             agent_revise_template: "Bitte überarbeite den folgenden markierten Text aus dem Canvas:\n\n{{selection}}"
                         },
+                        review: {
+                            pending_one: "1 Änderung vom Agenten",
+                            pending_other: "{{count}} Änderungen vom Agenten",
+                            hint: "Klicke grün markierten Text an, um die Änderung zu übernehmen. Rot durchgestrichenen Text anklicken, um ihn abzulehnen. Ungenutzte Änderungen werden beim nächsten Schreibvorgang des Agenten automatisch übernommen.",
+                            accept_all: "Alle übernehmen",
+                            reject_all: "Alle ablehnen",
+                            accept_change: "Änderung übernehmen",
+                            reject_change: "Änderung ablehnen"
+                        },
                         toolbar: {
                             label: "Canvas-Werkzeuge",
                             undo: "Rückgängig",
@@ -261,7 +270,7 @@ i18n
                             restore: "Wiederherstellen",
                             empty: "Noch keine Versionen gespeichert.",
                             source_manual: "Manuell gespeichert",
-                            source_agent: "Nach Agent-Bearbeitung",
+                            source_agent: "Agent-Änderung",
                             source_restore: "Wiederhergestellt",
                             source_autosave: "Automatische Sicherung",
                             source_cleared: "Geleert",
@@ -1220,6 +1229,15 @@ i18n
                             agent_revise: "Let the agent revise this",
                             agent_revise_template: "Please revise the following selected passage from the canvas:\n\n{{selection}}"
                         },
+                        review: {
+                            pending_one: "1 agent change",
+                            pending_other: "{{count}} agent changes",
+                            hint: "Click green highlighted text to accept a change. Click red strikethrough text to reject it. Unreviewed changes are accepted automatically the next time the agent writes.",
+                            accept_all: "Accept all",
+                            reject_all: "Reject all",
+                            accept_change: "Accept change",
+                            reject_change: "Reject change"
+                        },
                         toolbar: {
                             label: "Canvas tools",
                             undo: "Undo",
@@ -1263,7 +1281,7 @@ i18n
                             restore: "Restore",
                             empty: "No versions saved yet.",
                             source_manual: "Manually saved",
-                            source_agent: "After agent edit",
+                            source_agent: "Agent change",
                             source_restore: "Restored",
                             source_autosave: "Automatic backup",
                             source_cleared: "Cleared",
@@ -2251,6 +2269,15 @@ i18n
                             agent_revise: "Agent soi des überarbeite",
                             agent_revise_template: "Bitte überarbeit da folgende markierte Text aus'm Canvas:\n\n{{selection}}"
                         },
+                        review: {
+                            pending_one: "1 Änderung vom Agentn",
+                            pending_other: "{{count}} Änderungen vom Agentn",
+                            hint: "Klick auf grien markiertn Text, um de Änderung z' übernehma. Auf rot durchgstrichna Text klicka, um eahm abz'lehna. Ned ogschaugte Änderungen wern beim nächstn Schreibvorgang vom Agentn automatisch übernomma.",
+                            accept_all: "Alle übernehma",
+                            reject_all: "Alle ab'lehna",
+                            accept_change: "Änderung übernehma",
+                            reject_change: "Änderung ab'lehna"
+                        },
                         toolbar: {
                             label: "Canvas-Werkzeig",
                             undo: "Rückgängig",
@@ -2294,7 +2321,7 @@ i18n
                             restore: "Wiedaherstejn",
                             empty: "No koane Versionen gspeichert.",
                             source_manual: "Manuell gspeichert",
-                            source_agent: "Noch da Agent-Bearbeitung",
+                            source_agent: "Agent-Änderung",
                             source_restore: "Wiedahergstellt",
                             source_autosave: "Automatisch gsichert",
                             source_cleared: "Gleert",
@@ -3160,6 +3187,15 @@ i18n
                             agent_revise: "Faire réviser par l'agent",
                             agent_revise_template: "Veuillez réviser le passage suivant sélectionné dans le canvas :\n\n{{selection}}"
                         },
+                        review: {
+                            pending_one: "1 modification de l'agent",
+                            pending_other: "{{count}} modifications de l'agent",
+                            hint: "Cliquez sur le texte surligné en vert pour accepter une modification. Cliquez sur le texte barré en rouge pour la rejeter. Les modifications non examinées sont acceptées automatiquement la prochaine fois que l'agent écrit.",
+                            accept_all: "Tout accepter",
+                            reject_all: "Tout rejeter",
+                            accept_change: "Accepter la modification",
+                            reject_change: "Rejeter la modification"
+                        },
                         toolbar: {
                             label: "Outils du canvas",
                             undo: "Annuler",
@@ -3203,7 +3239,7 @@ i18n
                             restore: "Restaurer",
                             empty: "Aucune version enregistrée pour le moment.",
                             source_manual: "Enregistré manuellement",
-                            source_agent: "Après modification par l'agent",
+                            source_agent: "Modification de l'agent",
                             source_restore: "Restauré",
                             source_autosave: "Sauvegarde automatique",
                             source_cleared: "Vidé",
@@ -4130,6 +4166,17 @@ i18n
                             agent_revise: "Доручити агенту доопрацювати",
                             agent_revise_template: "Будь ласка, доопрацюйте наступний виділений текст із canvas:\n\n{{selection}}"
                         },
+                        review: {
+                            pending_one: "1 зміна від агента",
+                            pending_few: "{{count}} зміни від агента",
+                            pending_many: "{{count}} змін від агента",
+                            pending_other: "{{count}} змін від агента",
+                            hint: "Натисніть на текст, виділений зеленим, щоб прийняти зміну. Натисніть на перекреслений червоний текст, щоб відхилити її. Непереглянуті зміни приймаються автоматично, коли агент наступного разу пише.",
+                            accept_all: "Прийняти всі",
+                            reject_all: "Відхилити всі",
+                            accept_change: "Прийняти зміну",
+                            reject_change: "Відхилити зміну"
+                        },
                         toolbar: {
                             label: "Інструменти canvas",
                             undo: "Скасувати",
@@ -4173,7 +4220,7 @@ i18n
                             restore: "Відновити",
                             empty: "Ще немає збережених версій.",
                             source_manual: "Збережено вручну",
-                            source_agent: "Після редагування агентом",
+                            source_agent: "Зміна агентом",
                             source_restore: "Відновлено",
                             source_autosave: "Автоматичне резервне копіювання",
                             source_cleared: "Очищено",

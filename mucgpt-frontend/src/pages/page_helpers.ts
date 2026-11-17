@@ -220,9 +220,9 @@ export interface CanvasWiring {
     streamContentLimit: number;
     /** Applies one streamed canvas chunk (STARTED/APPEND/UPDATE) into the editor */
     onStreamEvent: (event: CanvasStreamEvent) => void;
-    /** RUN_STARTED: lock the editor and take a pre-run snapshot */
+    /** RUN_STARTED: lock the editor (review settlement happens on the first canvas event) */
     onRunStarted: () => void;
-    /** RUN_FINISHED/RUN_ERROR: post-run snapshot and unlock */
+    /** RUN_FINISHED/RUN_ERROR: settle the agent-change review (if the canvas was written) and unlock */
     onRunFinished: () => void;
 }
 

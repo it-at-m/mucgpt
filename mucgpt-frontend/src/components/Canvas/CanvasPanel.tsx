@@ -8,6 +8,7 @@ import { saveCanvasContent } from "../../service/canvasStorage";
 import { useCanvasLimits } from "./canvasLimits";
 import { CANVAS_PASTE_CLIPPED_EVENT } from "./canvasTextLimit";
 import { CanvasEditor } from "./CanvasEditor";
+import { CanvasReviewBanner } from "./CanvasReviewBanner";
 import { CanvasToolbar } from "./CanvasToolbar";
 import { CanvasVersionsDrawer } from "./CanvasVersionsDrawer";
 import styles from "./CanvasPanel.module.css";
@@ -260,6 +261,7 @@ export const CanvasPanel = ({ controller, conversationId, serverConversationId, 
                     <span className={styles.shimmer}>{t("canvas.status_writing")}</span>
                 </div>
             )}
+            {!readOnly && <CanvasReviewBanner controller={controller} />}
             {isEmpty && (
                 <div className={styles.emptyState}>
                     <p className={styles.emptyTitle}>{t("canvas.empty_state")}</p>

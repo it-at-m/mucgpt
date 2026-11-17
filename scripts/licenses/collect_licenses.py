@@ -42,8 +42,9 @@ def collect_target(target: str, output_root: Path) -> bool:
         category = result["category"]
         selected = result["selected"] if result["status"] == "ok" else None
         exception = get_exception(pkg.name, pkg.version)
-        expected_counts[f"{notices.sanitize_package_name(pkg.name)}-{pkg.version}"] = (
-            len([path for path in pkg.license_files if Path(path).is_file()])
+        key = f"{notices.sanitize_package_name(pkg.name)}-{pkg.version}"
+        expected_counts[key] = expected_counts.get(key, 0) + len(
+            [path for path in pkg.license_files if Path(path).is_file()]
         )
         entries.append(
             {

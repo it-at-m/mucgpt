@@ -8,3 +8,6 @@
 /infra
 *.ipynb
 **/node_modules
+
+# Generated license notices (produced inside the build; never build input)
+THIRD_PARTY_LICENSES/

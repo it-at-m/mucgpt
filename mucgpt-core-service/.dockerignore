@@ -37,3 +37,6 @@ secrets/
 # !pyproject.toml
 # !uv.lock
 # !departements.json
+
+# Generated license notices (produced inside the build; never build input)
+THIRD_PARTY_LICENSES/

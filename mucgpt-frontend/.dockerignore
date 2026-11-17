@@ -64,3 +64,6 @@ Dockerfile
 README.md
 *.md
 .github/
+
+# Generated license notices (produced inside the build; never build input)
+THIRD_PARTY_LICENSES/

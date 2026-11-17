@@ -9,6 +9,7 @@ Usage:
 """
 
 import importlib.metadata as metadata
+import shutil
 import subprocess
 import sys
 import tomllib
@@ -114,6 +115,9 @@ def main() -> int:
     local_name = normalize_package_name(component)
 
     output_dir = app_dir / "THIRD_PARTY_LICENSES"
+    # Start clean so repeated runs stay idempotent (no stale or suffixed copies).
+    if output_dir.exists():
+        shutil.rmtree(output_dir)
     licenses_dir = output_dir / "licenses"
     licenses_dir.mkdir(parents=True, exist_ok=True)
 
@@ -129,9 +133,8 @@ def main() -> int:
         result = evaluate_license(license_str)
         exception = get_exception(name, version)
         source_files = [path for path in _license_files(dist) if Path(path).is_file()]
-        expected_counts[f"{notices.sanitize_package_name(name)}-{version}"] = len(
-            source_files
-        )
+        key = f"{notices.sanitize_package_name(name)}-{version}"
+        expected_counts[key] = expected_counts.get(key, 0) + len(source_files)
         entries.append(
             {
                 "name": name,

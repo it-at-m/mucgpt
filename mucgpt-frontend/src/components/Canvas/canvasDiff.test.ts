@@ -4,7 +4,7 @@ import { Editor } from "@tiptap/core";
 import type { Node as PMNode } from "@tiptap/pm/model";
 
 import { canvasExtensions } from "./canvasExtensions";
-import { computeCanvasChanges, describeRevisionDiff, diffHunks, diffWords } from "./canvasDiff";
+import { computeCanvasChanges, describeCanvasDiff, diffHunks, diffWords } from "./canvasDiff";
 
 const editors: Editor[] = [];
 
@@ -192,27 +192,44 @@ describe("computeCanvasChanges", () => {
     });
 });
 
-describe("describeRevisionDiff", () => {
+describe("describeCanvasDiff", () => {
     it("reports unchanged documents as equal blocks", () => {
         const editor = editorFor();
-        const items = describeRevisionDiff(docFrom(editor, "A\n\nB"), docFrom(editor, "A\n\nB"));
+        const items = describeCanvasDiff(docFrom(editor, "A\n\nB"), docFrom(editor, "A\n\nB"));
         expect(items.map(item => item.kind)).toEqual(["equal", "equal"]);
-        expect(items[0].lines).toEqual(["A"]);
+        expect(items[0]).toEqual({ kind: "equal", oldLines: [], newLines: ["A"] });
     });
 
-    it("marks what a restore would remove and add", () => {
+    it("pairs a single changed block between unchanged blocks", () => {
         const editor = editorFor();
-        const items = describeRevisionDiff(docFrom(editor, "Bleibt\n\nEntfällt"), docFrom(editor, "Bleibt\n\nNeu"));
-        expect(items.map(item => item.kind)).toEqual(["equal", "delete", "insert"]);
-        expect(items[1].lines).toEqual(["Entfällt"]);
-        expect(items[2].lines).toEqual(["Neu"]);
+        const items = describeCanvasDiff(docFrom(editor, "Bleibt\n\nEntfällt"), docFrom(editor, "Bleibt\n\nNeu"));
+        expect(items.map(item => item.kind)).toEqual(["equal", "replace"]);
+        expect(items[0].newLines).toEqual(["Bleibt"]);
+        expect(items[1]).toEqual({ kind: "replace", oldLines: ["Entfällt"], newLines: ["Neu"] });
     });
 
-    it("groups consecutive deleted and inserted blocks", () => {
+    it("keeps unchanged header/footer and pairs each changed block in between", () => {
         const editor = editorFor();
-        const items = describeRevisionDiff(docFrom(editor, "X\n\nY"), docFrom(editor, "A\n\nB"));
-        expect(items.map(item => item.kind)).toEqual(["delete", "insert"]);
-        expect(items[0].lines).toEqual(["X", "Y"]);
-        expect(items[1].lines).toEqual(["A", "B"]);
+        const items = describeCanvasDiff(docFrom(editor, "Header\n\nEins\n\nZwei\n\nFooter"), docFrom(editor, "Header\n\nEins neu\n\nZwei neu\n\nFooter"));
+
+        expect(items.map(item => item.kind)).toEqual(["equal", "replace", "replace", "equal"]);
+        expect(items[0].newLines).toEqual(["Header"]);
+        expect(items[1]).toEqual({ kind: "replace", oldLines: ["Eins"], newLines: ["Eins neu"] });
+        expect(items[2]).toEqual({ kind: "replace", oldLines: ["Zwei"], newLines: ["Zwei neu"] });
+        expect(items[3].newLines).toEqual(["Footer"]);
+    });
+
+    it("keeps merge/split runs as one grouped item", () => {
+        const editor = editorFor();
+        const items = describeCanvasDiff(docFrom(editor, "A\n\nB"), docFrom(editor, "A\n\nX\n\nY"));
+        expect(items.map(item => item.kind)).toEqual(["equal", "replace"]);
+        expect(items[1]).toEqual({ kind: "replace", oldLines: ["B"], newLines: ["X", "Y"] });
+    });
+
+    it("marks a deleted block as a delete item", () => {
+        const editor = editorFor();
+        const items = describeCanvasDiff(docFrom(editor, "A\n\nB"), docFrom(editor, "A"));
+        expect(items.map(item => item.kind)).toEqual(["equal", "delete"]);
+        expect(items[1]).toEqual({ kind: "delete", oldLines: ["B"], newLines: [] });
     });
 });

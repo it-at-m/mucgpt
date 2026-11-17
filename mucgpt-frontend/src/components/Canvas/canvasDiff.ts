@@ -30,14 +30,20 @@ export interface CanvasChange {
     oldSliceJson: unknown | null;
     /** Removed content shown as red strikethrough. */
     oldText: string;
+    /** Added content shown in green; empty for pure deletions. */
+    newText: string;
     /** Short plain-text excerpt of the change for accessible control labels. */
     summary: string;
 }
 
-/** Ordered block-level preview item for a stored revision versus the current text. */
-export interface CanvasRevisionDiffItem {
-    kind: "equal" | "insert" | "delete";
-    lines: string[];
+/**
+ * Static preview item for a stored revision versus the current text. Produced by
+ * the same walk as the review changes, so both surfaces cannot drift apart.
+ */
+export interface CanvasDiffPreviewItem {
+    kind: "equal" | "insert" | "delete" | "replace";
+    oldLines: string[];
+    newLines: string[];
 }
 
 export interface CanvasTextHunk {
@@ -303,6 +309,7 @@ const inlineChanges = (
                 to: inlinePos(newBlockStart, newText.length),
                 oldSliceJson: oldText ? baseline.slice(inlinePos(oldBlockStart, 0), inlinePos(oldBlockStart, oldText.length)).toJSON() : null,
                 oldText,
+                newText,
                 summary: summarize([newText || oldText])
             }
         ];
@@ -323,6 +330,7 @@ const inlineChanges = (
             to: inlinePos(newBlockStart, hunk.newEnd),
             oldSliceJson: hunk.oldText ? baseline.slice(oldFrom, oldTo).toJSON() : null,
             oldText: hunk.oldText,
+            newText: hunk.newText,
             summary: summarize([hunk.newText || hunk.oldText])
         };
     });
@@ -332,6 +340,7 @@ const blockChange = (baseline: PMNode, removed: PMNode[], added: PMNode[], oldSt
     const addedSize = added.reduce((size, node) => size + node.nodeSize, 0);
     const oldSize = removed.reduce((size, node) => size + node.nodeSize, 0);
     const oldLines = removed.flatMap(node => describeBlock(node));
+    const newLines = added.flatMap(node => describeBlock(node));
     const kind = removed.length === 0 ? "insert" : added.length === 0 ? "delete" : "replace";
     return {
         id: nextChangeId(),
@@ -341,65 +350,41 @@ const blockChange = (baseline: PMNode, removed: PMNode[], added: PMNode[], oldSt
         to: newStart + addedSize,
         oldSliceJson: removed.length > 0 ? baseline.slice(oldStart, oldStart + oldSize).toJSON() : null,
         oldText: oldLines.join("\n"),
+        newText: newLines.join("\n"),
         summary: summarize(added.length > 0 ? added.map(node => node.textContent) : oldLines)
     };
 };
 
+const previewForChange = (change: CanvasChange): CanvasDiffPreviewItem => {
+    // Inline changes carry phrase text; block changes carry one line per block.
+    const lines = (text: string): string[] => (change.level === "inline" ? (text ? [text] : []) : text ? text.split("\n") : []);
+    return { kind: change.kind, oldLines: lines(change.oldText), newLines: lines(change.newText) };
+};
+
 /**
- * Ordered block preview of a stored revision relative to the current document.
- * "delete" lines exist only in the current text (a restore would remove them),
- * "insert" lines come from the revision (a restore would add them) — the same
- * red/green semantics as the review markup.
+ * One walk over the block diff producing both consumers: the interactive review
+ * changes (positions in the target document) and the ordered static preview
+ * (equal blocks interleaved with changes) used by the versions drawer.
  */
-export function describeRevisionDiff(current: PMNode, revision: PMNode): CanvasRevisionDiffItem[] {
-    const currentBlocks = topLevelBlocks(current);
-    const revisionBlocks = topLevelBlocks(revision);
-    const ops = diffSequences(currentBlocks, revisionBlocks, (left, right) => left.eq(right));
-
-    // Too many blocks to align: coarse summary rather than a per-block view.
-    if (!ops) {
-        if (current.eq(revision)) return [];
-        return [
-            ...(currentBlocks.length > 0 ? [{ kind: "delete" as const, lines: currentBlocks.flatMap(node => describeBlock(node)) }] : []),
-            ...(revisionBlocks.length > 0 ? [{ kind: "insert" as const, lines: revisionBlocks.flatMap(node => describeBlock(node)) }] : [])
-        ];
-    }
-
-    const items: CanvasRevisionDiffItem[] = [];
-    let run: CanvasRevisionDiffItem | undefined;
-    for (const op of ops) {
-        if (op.type === "equal") {
-            if (run) items.push(run);
-            run = undefined;
-            items.push({ kind: "equal", lines: describeBlock(currentBlocks[op.a]) });
-            continue;
-        }
-        const kind = op.type === "delete" ? "delete" : "insert";
-        const lines = describeBlock(op.type === "delete" ? currentBlocks[op.a] : revisionBlocks[op.b]);
-        if (run && run.kind === kind) run.lines.push(...lines);
-        else {
-            if (run) items.push(run);
-            run = { kind, lines };
-        }
-    }
-    if (run) items.push(run);
-    return items;
-}
-
-export function computeCanvasChanges(baseline: PMNode, target: PMNode): CanvasChange[] {
+export function diffCanvas(baseline: PMNode, target: PMNode): { changes: CanvasChange[]; preview: CanvasDiffPreviewItem[] } {
     const oldBlocks = topLevelBlocks(baseline);
     const newBlocks = topLevelBlocks(target);
     const ops = diffSequences(oldBlocks, newBlocks, (left, right) => left.eq(right));
     let changeCounter = 1;
     const nextChangeId = () => `change-${changeCounter++}`;
+    const changes: CanvasChange[] = [];
+    const preview: CanvasDiffPreviewItem[] = [];
+    const pushChange = (change: CanvasChange) => {
+        changes.push(change);
+        preview.push(previewForChange(change));
+    };
 
     // Too many blocks to align: expose the whole rewrite as one reviewable change.
     if (!ops) {
-        if (baseline.eq(target)) return [];
-        return [blockChange(baseline, oldBlocks, newBlocks, 0, 0, nextChangeId)];
+        if (!baseline.eq(target)) pushChange(blockChange(baseline, oldBlocks, newBlocks, 0, 0, nextChangeId));
+        return { changes, preview };
     }
 
-    const changes: CanvasChange[] = [];
     let opIndex = 0;
     // Positions are tracked incrementally: baseline and target block sizes only.
     let oldPos = 0;
@@ -408,6 +393,7 @@ export function computeCanvasChanges(baseline: PMNode, target: PMNode): CanvasCh
     while (opIndex < ops.length) {
         const op = ops[opIndex];
         if (op.type === "equal") {
+            preview.push({ kind: "equal", oldLines: [], newLines: describeBlock(newBlocks[op.b]) });
             oldPos += oldBlocks[op.a].nodeSize;
             newPos += newBlocks[op.b].nodeSize;
             opIndex++;
@@ -429,7 +415,7 @@ export function computeCanvasChanges(baseline: PMNode, target: PMNode): CanvasCh
 
         if (removed.length === 0 || added.length === 0 || removed.length !== added.length) {
             // Pure insertion/deletion runs and merge/split runs stay one block change.
-            changes.push(blockChange(baseline, removed, added, oldStart, newStart, nextChangeId));
+            pushChange(blockChange(baseline, removed, added, oldStart, newStart, nextChangeId));
             continue;
         }
 
@@ -440,12 +426,17 @@ export function computeCanvasChanges(baseline: PMNode, target: PMNode): CanvasCh
         removed.forEach((oldNode, index) => {
             const newNode = added[index];
             const inline = inlineChanges(baseline, oldNode, oldCursor, newNode, newCursor, nextChangeId);
-            if (inline) changes.push(...inline);
-            else changes.push(blockChange(baseline, [oldNode], [newNode], oldCursor, newCursor, nextChangeId));
+            if (inline) inline.forEach(pushChange);
+            else pushChange(blockChange(baseline, [oldNode], [newNode], oldCursor, newCursor, nextChangeId));
             oldCursor += oldNode.nodeSize;
             newCursor += newNode.nodeSize;
         });
     }
 
-    return changes;
+    return { changes, preview };
 }
+
+export const computeCanvasChanges = (baseline: PMNode, target: PMNode): CanvasChange[] => diffCanvas(baseline, target).changes;
+
+/** Ordered static preview (versions drawer); identical grouping to the review. */
+export const describeCanvasDiff = (baseline: PMNode, target: PMNode): CanvasDiffPreviewItem[] => diffCanvas(baseline, target).preview;

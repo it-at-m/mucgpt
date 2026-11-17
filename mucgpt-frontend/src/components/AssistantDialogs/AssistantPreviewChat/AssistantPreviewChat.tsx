@@ -315,7 +315,7 @@ export const AssistantPreviewChat = ({
                                 onFollowUpActionSend={prompt => void callApi(prompt)}
                             />
                         ) : (
-                            <Answer key={index} answer={answer.response} />
+                            <Answer key={index} answer={answer.response} reserveFollowUpSpace={isLoading} />
                         )}
                     </>
                 )}

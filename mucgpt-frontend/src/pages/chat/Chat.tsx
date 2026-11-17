@@ -905,7 +905,7 @@ const Chat = () => {
                                     onFollowUpActionSend={prompt => callApi(prompt, systemPrompt)}
                                 />
                             )}
-                            {!isLatestAnswer && <Answer key={`answer-${index}`} answer={answer.response} />}
+                            {!isLatestAnswer && <Answer key={`answer-${index}`} answer={answer.response} reserveFollowUpSpace={isLoading} />}
                         </>
                     );
                 }}

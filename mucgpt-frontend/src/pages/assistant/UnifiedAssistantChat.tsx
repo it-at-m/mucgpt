@@ -1249,7 +1249,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                                     }
                                 />
                             )}
-                            {!isLatestAnswer && <Answer key={index} answer={answer.response} />}
+                            {!isLatestAnswer && <Answer key={index} answer={answer.response} reserveFollowUpSpace={isLoading} />}
                         </>
                     );
                 }}

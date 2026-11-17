@@ -216,6 +216,25 @@ export async function putCanvasRevisionsApi(conversationId: string, revisions: C
     }
 }
 
+/**
+ * Autosaves the current canvas document for a conversation (the stored copy
+ * then always represents the live view, even before the next chat turn would
+ * carry it implicitly). With keepalive, the request survives a page unload
+ * (reload/close); browsers cap keepalive bodies at 64 kB, so callers must not
+ * send larger documents that way. Returns false when the conversation does not
+ * exist server-side yet (404): the content then rides along with the next chat
+ * turn instead.
+ */
+export async function putCanvasContentApi(conversationId: string, content: string, keepalive = false): Promise<boolean> {
+    const response = await fetch(canvasUrl(conversationId), { ...putConfig({ content }), keepalive });
+    handleRedirect(response);
+    if (response.status === 404) {
+        return false;
+    }
+    await handleApiRequest(() => Promise.resolve(response), "Failed to autosave canvas");
+    return true;
+}
+
 export type ExportTarget = "pdf" | "docx" | "xlsx";
 
 /**

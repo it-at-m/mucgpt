@@ -272,6 +272,82 @@ class TestCanvasEndpoints:
 
         assert response.status_code == 403
 
+    def test_put_canvas_autosaves_content(
+        self, test_client: TestClient, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        upsert_mock = AsyncMock(return_value=None)
+        monkeypatch.setattr(PersistanceHelpers, "upsert_canvas", upsert_mock)
+
+        response = test_client.put(
+            f"/v1/conversations/{CONVERSATION_ID}/canvas",
+            json={"content": "# Updated", "truncated": False},
+        )
+
+        assert response.status_code == 204, response.text
+        upsert_mock.assert_awaited_once_with(CONVERSATION_ID, "# Updated", USER_ID)
+
+    def test_put_canvas_autosave_of_foreign_conversation_is_forbidden(
+        self, test_client: TestClient, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        monkeypatch.setattr(
+            PersistanceHelpers,
+            "is_user_in_conversation",
+            AsyncMock(return_value=False),
+        )
+
+        response = test_client.put(
+            f"/v1/conversations/{CONVERSATION_ID}/canvas",
+            json={"content": "# Updated", "truncated": False},
+        )
+
+        assert response.status_code == 403
+
+    def test_put_canvas_autosave_of_missing_conversation_is_not_found(
+        self, test_client: TestClient, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        monkeypatch.setattr(
+            PersistanceHelpers,
+            "conversation_exists",
+            AsyncMock(return_value=False),
+        )
+
+        response = test_client.put(
+            f"/v1/conversations/{CONVERSATION_ID}/canvas",
+            json={"content": "# Updated", "truncated": False},
+        )
+
+        assert response.status_code == 404
+
+    def test_put_canvas_autosave_rejects_oversized_content(
+        self, test_client: TestClient, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        upsert_mock = AsyncMock(return_value=None)
+        monkeypatch.setattr(PersistanceHelpers, "upsert_canvas", upsert_mock)
+
+        response = test_client.put(
+            f"/v1/conversations/{CONVERSATION_ID}/canvas",
+            json={"content": "x" * (CANVAS_CONTENT_MAX_CHARS + 1), "truncated": False},
+        )
+
+        assert response.status_code == 422, response.text
+        upsert_mock.assert_not_awaited()
+
+    def test_put_canvas_autosave_skips_truncated_document(
+        self, test_client: TestClient, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """A truncated autosave is accepted as a no-op: persisting the
+        beginning of the document would silently destroy the stored tail."""
+        upsert_mock = AsyncMock(return_value=None)
+        monkeypatch.setattr(PersistanceHelpers, "upsert_canvas", upsert_mock)
+
+        response = test_client.put(
+            f"/v1/conversations/{CONVERSATION_ID}/canvas",
+            json={"content": "# Only the beginning", "truncated": True},
+        )
+
+        assert response.status_code == 204, response.text
+        upsert_mock.assert_not_awaited()
+
     def test_delete_conversation_canvas_failure_returns_500(
         self, test_client: TestClient, monkeypatch: pytest.MonkeyPatch
     ) -> None:

@@ -68,11 +68,9 @@ def _license_files(dist: metadata.Distribution) -> list[str]:
         parts = tuple(file.parts)
         if len(parts) < 2 or not parts[0].endswith(".dist-info"):
             continue
-        filename = parts[-1].lower()
-        flat_license = len(parts) == 2 and any(
-            filename.startswith(stem) for stem in notices.LICENSE_STEMS
-        )
-        pep639_license = len(parts) == 3 and parts[1].lower() == "licenses"
+        flat_license = len(parts) == 2 and notices.is_license_filename(parts[-1])
+        # PEP 639 permits nested paths below licenses/ (e.g. vendored texts).
+        pep639_license = len(parts) >= 3 and parts[1].lower() == "licenses"
         if flat_license or pep639_license:
             files.append(str(dist.locate_file(file)))
     return sorted(dict.fromkeys(files))
@@ -120,6 +118,7 @@ def main() -> int:
     licenses_dir.mkdir(parents=True, exist_ok=True)
 
     entries = []
+    expected_counts: dict[str, int] = {}
     for dist in metadata.distributions():
         name = dist.metadata.get("Name") or ""
         if not name or normalize_package_name(name) == local_name:
@@ -129,6 +128,10 @@ def main() -> int:
         license_str = effective_license(name, version, detected)
         result = evaluate_license(license_str)
         exception = get_exception(name, version)
+        source_files = [path for path in _license_files(dist) if Path(path).is_file()]
+        expected_counts[f"{notices.sanitize_package_name(name)}-{version}"] = len(
+            source_files
+        )
         entries.append(
             {
                 "name": name,
@@ -142,7 +145,7 @@ def main() -> int:
                 "author": _author_label(dist),
                 "url": _url_label(dist),
                 "license_files": notices.copy_license_texts(
-                    name, version, _license_files(dist), licenses_dir
+                    name, version, source_files, licenses_dir
                 )
                 or None,
                 "policy_exception": (exception or {}).get("reason"),
@@ -154,9 +157,20 @@ def main() -> int:
         output_dir, entries, component, extra_sections=[_rpm_section()]
     )
     notices.write_cyclonedx(output_dir, entries, component, "pypi")
+    problems = notices.verify_notices(output_dir, entries, expected_counts)
     print(
         f"Generated {output_dir} ({len(entries)} packages, "
         f"{sum(len(e['license_files'] or []) for e in entries)} license texts)"
+    )
+    if problems:
+        print("Sanity check failed:", file=sys.stderr)
+        for problem in problems:
+            print(f"  {problem}", file=sys.stderr)
+        return 1
+    missing_texts = sum(1 for entry in entries if not entry["license_files"])
+    print(
+        f"Sanity check passed ({len(entries)} packages, "
+        f"{missing_texts} without license texts)"
     )
     return 0
 

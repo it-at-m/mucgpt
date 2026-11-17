@@ -32,12 +32,25 @@ def sanitize_package_name(name: str) -> str:
     )
 
 
+# Extensions of code files that merely start with a license stem
+# (e.g. "license-update.mjs") and are not license texts.
+_CODE_SUFFIXES = {".js", ".mjs", ".cjs", ".ts", ".tsx", ".jsx", ".py", ".json"}
+
+
+def is_license_filename(name: str) -> bool:
+    """True for license/attribution file names such as ``LICENSE-MIT.txt``."""
+    lowered = name.lower()
+    return (
+        lowered.startswith(LICENSE_STEMS) and Path(lowered).suffix not in _CODE_SUFFIXES
+    )
+
+
 def find_license_files(package_dir: Path) -> list[str]:
     """License files directly inside a package directory (npm packages)."""
     files = []
     try:
         for entry in sorted(package_dir.iterdir()):
-            if entry.is_file() and entry.name.lower().split(".")[0] in LICENSE_STEMS:
+            if entry.is_file() and is_license_filename(entry.name):
                 files.append(str(entry))
     except OSError:
         pass
@@ -52,14 +65,53 @@ def dist_info_license_files(dist_info: Path) -> list[str]:
     """
     files = []
     if dist_info.is_dir():
-        for stem in LICENSE_STEMS:
-            files.extend(sorted(str(p) for p in dist_info.glob(f"{stem}*")))
-        files.extend(sorted(str(p) for p in dist_info.glob("LICENSE.*")))
+        # Case-insensitive match: wheel metadata is often upper-case and
+        # filesystems are case-sensitive on Linux.
+        for entry in sorted(dist_info.iterdir()):
+            if entry.is_file() and is_license_filename(entry.name):
+                files.append(str(entry))
         licenses_dir = dist_info / "licenses"
         if licenses_dir.is_dir():
-            files.extend(sorted(str(p) for p in licenses_dir.iterdir() if p.is_file()))
+            # PEP 639 permits nested paths below licenses/ (e.g. vendored texts).
+            files.extend(sorted(str(p) for p in licenses_dir.rglob("*") if p.is_file()))
     # De-duplicate while keeping a deterministic order.
     return list(dict.fromkeys(files))
+
+
+def verify_notices(
+    output_dir: Path, entries: list[dict], expected_counts: dict[str, int]
+) -> list[str]:
+    """Verify that the written notices are complete and consistent.
+
+    Returns a list of problems: referenced files that are missing, files no
+    entry points at, and package directories with an unexpected number of
+    copied license texts.
+    """
+    problems = []
+    referenced = set()
+    for entry in entries:
+        for relative in entry.get("license_files") or []:
+            referenced.add(relative)
+            if not (output_dir / relative).is_file():
+                problems.append(f"missing license file: {relative}")
+    actual = {
+        str(path.relative_to(output_dir))
+        for path in (output_dir / "licenses").rglob("*")
+        if path.is_file()
+    }
+    problems.extend(
+        f"unreferenced license file: {name}" for name in sorted(actual - referenced)
+    )
+    for directory, expected in sorted(expected_counts.items()):
+        package_dir = output_dir / "licenses" / directory
+        copied = (
+            len([p for p in package_dir.glob("*") if p.is_file()])
+            if package_dir.is_dir()
+            else 0
+        )
+        if copied != expected:
+            problems.append(f"{directory}: {copied} of {expected} license files copied")
+    return problems
 
 
 def copy_license_texts(
@@ -79,8 +131,10 @@ def copy_license_texts(
             continue
         package_dir.mkdir(parents=True, exist_ok=True)
         target = package_dir / source.name
-        if target.exists():
-            target = package_dir / f"{source.stem}-2{source.suffix}"
+        counter = 2
+        while target.exists():
+            target = package_dir / f"{source.stem}-{counter}{source.suffix}"
+            counter += 1
         copyfile(source, target)
         copied.append(f"licenses/{package_dir.name}/{target.name}")
     return copied

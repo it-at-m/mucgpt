@@ -35,12 +35,16 @@ def collect_target(target: str, output_root: Path) -> bool:
     licenses_dir.mkdir(parents=True, exist_ok=True)
 
     entries = []
+    expected_counts: dict[str, int] = {}
     for pkg, result, license_str in sorted(
         classification.all, key=lambda entry: entry[0].name.lower()
     ):
         category = result["category"]
         selected = result["selected"] if result["status"] == "ok" else None
         exception = get_exception(pkg.name, pkg.version)
+        expected_counts[f"{notices.sanitize_package_name(pkg.name)}-{pkg.version}"] = (
+            len([path for path in pkg.license_files if Path(path).is_file()])
+        )
         entries.append(
             {
                 "name": pkg.name,
@@ -65,6 +69,17 @@ def collect_target(target: str, output_root: Path) -> bool:
     print(
         f"{target}: {len(entries)} shipped packages -> {output_dir}"
         + (f"  ({violations} UNAPPROVED)" if violations else "")
+    )
+    problems = notices.verify_notices(output_dir, entries, expected_counts)
+    if problems:
+        print("  Sanity check failed:", file=sys.stderr)
+        for problem in problems:
+            print(f"    {problem}", file=sys.stderr)
+        return False
+    missing_texts = sum(1 for entry in entries if not entry["license_files"])
+    print(
+        f"  Sanity check passed ({len(entries)} packages, "
+        f"{missing_texts} without license texts)"
     )
     return not classification.failing
 

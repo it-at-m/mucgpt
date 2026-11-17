@@ -108,11 +108,12 @@ def _check_target(target: str, summary: dict) -> inventory.Classification:
     )
 
     for pkg, result, license_str in classification.failing:
-        exception = get_exception(pkg.name, pkg.version)
+        exception = get_exception(pkg.name, pkg.version, ignore_version=True)
         pin_note = ""
         if exception is not None:
-            if str(exception.get("version")) != str(pkg.version):
-                pin_note = f" (exception pinned to {exception.get('version')}, found {pkg.version})"
+            pinned = exception.get("version")
+            if pinned is not None and str(pinned) != str(pkg.version):
+                pin_note = f" (exception pinned to {pinned}, found {pkg.version})"
             else:
                 pin_note = (
                     " (exception matched, but its license value is itself unapproved)"

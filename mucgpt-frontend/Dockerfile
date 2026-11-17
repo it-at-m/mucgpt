@@ -55,7 +55,7 @@ FROM registry.access.redhat.com/ubi9/nginx-124:9.8-1793639597@sha256:d5cec86a9ad
 COPY --from=builder /build/dist ./
 
 # Third-party license notices of the bundled dependencies (not web-served)
-COPY --from=builder /tmp/notices/mucgpt-frontend/THIRD_PARTY_LICENSES /usr/share/licenses/mucgpt-frontend/
+COPY --from=builder /tmp/notices/mucgpt-frontend/THIRD_PARTY_LICENSES /usr/share/licenses/mucgpt-frontend/THIRD_PARTY_LICENSES/
 
 ARG IMAGE_CREATED="unknown"
 ARG IMAGE_REVISION="unknown"

@@ -113,6 +113,13 @@ def load_policy() -> Policy:
     section = data.get("tool", {}).get("licensecheck", {})
     exceptions = {}
     for name, entry in section.get("exceptions", {}).items():
+        missing = [
+            key for key in ("license", "version", "reason") if not entry.get(key)
+        ]
+        if missing:
+            raise ValueError(
+                f"[tool.licensecheck.exceptions.{name}] is missing: {', '.join(missing)}"
+            )
         exceptions[name.lower().replace("_", "-")] = dict(entry)
     return Policy(
         allowed=frozenset(section.get("allowed", [])),
@@ -126,11 +133,16 @@ def normalize_package_name(name: str) -> str:
     return name.strip().lower().replace("_", "-")
 
 
-def get_exception(package_name: str, version: str) -> dict | None:
-    """Return the policy exception for a package, if it covers this version."""
+def get_exception(
+    package_name: str, version: str, *, ignore_version: bool = False
+) -> dict | None:
+    """Return the policy exception for a package, if it covers this version.
+
+    ``ignore_version`` is for diagnostics only, e.g. reporting a stale pin.
+    """
     exception = load_policy().exceptions.get(normalize_package_name(package_name))
-    if exception is None:
-        return None
+    if exception is None or ignore_version:
+        return exception
     pinned = exception.get("version")
     if pinned is not None and str(pinned) != str(version):
         return None

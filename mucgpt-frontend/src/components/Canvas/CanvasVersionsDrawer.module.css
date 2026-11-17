@@ -87,3 +87,42 @@
     justify-content: flex-end;
     padding: 0 var(--spacingHorizontalS) var(--spacingVerticalS);
 }
+
+.diffCaption {
+    margin: var(--spacingVerticalS) var(--spacingHorizontalS) 0;
+    color: var(--colorNeutralForeground3);
+    font-size: var(--fontSizeBase200);
+    line-height: var(--lineHeightBase200);
+}
+
+.diff {
+    margin: var(--spacingVerticalS);
+    padding: var(--spacingVerticalS) var(--spacingHorizontalS);
+    background-color: var(--colorNeutralBackground2);
+    border: 1px solid var(--colorNeutralStroke3);
+    border-radius: var(--borderRadiusMedium);
+    font-size: var(--fontSizeBase300);
+    line-height: var(--lineHeightBase300);
+    max-height: 140px;
+    overflow-y: auto;
+    overflow-wrap: break-word;
+}
+
+.diffEqual {
+    color: var(--colorNeutralForeground2);
+    white-space: pre-wrap;
+}
+
+.diffInsertion {
+    background-color: var(--colorStatusSuccessBackground2);
+    border-radius: var(--borderRadiusSmall);
+    white-space: pre-wrap;
+}
+
+.diffDeletion {
+    background-color: var(--colorStatusDangerBackground2);
+    border-radius: var(--borderRadiusSmall);
+    color: var(--colorStatusDangerForeground1);
+    text-decoration: line-through;
+    white-space: pre-wrap;
+}

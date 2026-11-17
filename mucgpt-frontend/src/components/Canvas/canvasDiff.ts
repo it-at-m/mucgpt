@@ -34,6 +34,12 @@ export interface CanvasChange {
     summary: string;
 }
 
+/** Ordered block-level preview item for a stored revision versus the current text. */
+export interface CanvasRevisionDiffItem {
+    kind: "equal" | "insert" | "delete";
+    lines: string[];
+}
+
 export interface CanvasTextHunk {
     /** Offsets into the old/new plain text of the block. */
     oldStart: number;
@@ -338,6 +344,47 @@ const blockChange = (baseline: PMNode, removed: PMNode[], added: PMNode[], oldSt
         summary: summarize(added.length > 0 ? added.map(node => node.textContent) : oldLines)
     };
 };
+
+/**
+ * Ordered block preview of a stored revision relative to the current document.
+ * "delete" lines exist only in the current text (a restore would remove them),
+ * "insert" lines come from the revision (a restore would add them) — the same
+ * red/green semantics as the review markup.
+ */
+export function describeRevisionDiff(current: PMNode, revision: PMNode): CanvasRevisionDiffItem[] {
+    const currentBlocks = topLevelBlocks(current);
+    const revisionBlocks = topLevelBlocks(revision);
+    const ops = diffSequences(currentBlocks, revisionBlocks, (left, right) => left.eq(right));
+
+    // Too many blocks to align: coarse summary rather than a per-block view.
+    if (!ops) {
+        if (current.eq(revision)) return [];
+        return [
+            ...(currentBlocks.length > 0 ? [{ kind: "delete" as const, lines: currentBlocks.flatMap(node => describeBlock(node)) }] : []),
+            ...(revisionBlocks.length > 0 ? [{ kind: "insert" as const, lines: revisionBlocks.flatMap(node => describeBlock(node)) }] : [])
+        ];
+    }
+
+    const items: CanvasRevisionDiffItem[] = [];
+    let run: CanvasRevisionDiffItem | undefined;
+    for (const op of ops) {
+        if (op.type === "equal") {
+            if (run) items.push(run);
+            run = undefined;
+            items.push({ kind: "equal", lines: describeBlock(currentBlocks[op.a]) });
+            continue;
+        }
+        const kind = op.type === "delete" ? "delete" : "insert";
+        const lines = describeBlock(op.type === "delete" ? currentBlocks[op.a] : revisionBlocks[op.b]);
+        if (run && run.kind === kind) run.lines.push(...lines);
+        else {
+            if (run) items.push(run);
+            run = { kind, lines };
+        }
+    }
+    if (run) items.push(run);
+    return items;
+}
 
 export function computeCanvasChanges(baseline: PMNode, target: PMNode): CanvasChange[] {
     const oldBlocks = topLevelBlocks(baseline);

@@ -4,7 +4,7 @@ import { Editor } from "@tiptap/core";
 import type { Node as PMNode } from "@tiptap/pm/model";
 
 import { canvasExtensions } from "./canvasExtensions";
-import { computeCanvasChanges, diffHunks, diffWords } from "./canvasDiff";
+import { computeCanvasChanges, describeRevisionDiff, diffHunks, diffWords } from "./canvasDiff";
 
 const editors: Editor[] = [];
 
@@ -189,5 +189,30 @@ describe("computeCanvasChanges", () => {
         const changes = computeCanvasChanges(docFrom(editor, "Line one\\\nline two"), docFrom(editor, "Line one\\\nline three"));
         expect(changes).toHaveLength(1);
         expect(changes[0]).toMatchObject({ level: "block", kind: "replace" });
+    });
+});
+
+describe("describeRevisionDiff", () => {
+    it("reports unchanged documents as equal blocks", () => {
+        const editor = editorFor();
+        const items = describeRevisionDiff(docFrom(editor, "A\n\nB"), docFrom(editor, "A\n\nB"));
+        expect(items.map(item => item.kind)).toEqual(["equal", "equal"]);
+        expect(items[0].lines).toEqual(["A"]);
+    });
+
+    it("marks what a restore would remove and add", () => {
+        const editor = editorFor();
+        const items = describeRevisionDiff(docFrom(editor, "Bleibt\n\nEntfällt"), docFrom(editor, "Bleibt\n\nNeu"));
+        expect(items.map(item => item.kind)).toEqual(["equal", "delete", "insert"]);
+        expect(items[1].lines).toEqual(["Entfällt"]);
+        expect(items[2].lines).toEqual(["Neu"]);
+    });
+
+    it("groups consecutive deleted and inserted blocks", () => {
+        const editor = editorFor();
+        const items = describeRevisionDiff(docFrom(editor, "X\n\nY"), docFrom(editor, "A\n\nB"));
+        expect(items.map(item => item.kind)).toEqual(["delete", "insert"]);
+        expect(items[0].lines).toEqual(["X", "Y"]);
+        expect(items[1].lines).toEqual(["A", "B"]);
     });
 });

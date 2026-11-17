@@ -78,7 +78,15 @@ const controlButton = (className: string, glyph: string, change: CanvasChange, a
     return button;
 };
 
-const controlsWidget = (change: CanvasChange, labels: CanvasReviewLabels, block: boolean) => () => {
+/** Widgets between list items must be list items themselves (valid <ul> DOM). */
+const listWrapper = (child: HTMLElement): HTMLLIElement => {
+    const item = document.createElement("li");
+    item.className = styles.listWidget;
+    item.appendChild(child);
+    return item;
+};
+
+const controlsWidget = (change: CanvasChange, labels: CanvasReviewLabels, block: boolean, list: boolean) => () => {
     const container = document.createElement("span");
     container.className = block ? `${styles.controls} ${styles.controlsBlock}` : styles.controls;
     container.setAttribute("contenteditable", "false");
@@ -86,11 +94,11 @@ const controlsWidget = (change: CanvasChange, labels: CanvasReviewLabels, block:
         controlButton(styles.acceptControl, "✓", change, "accept", describe(labels.accept, change)),
         controlButton(styles.rejectControl, "✕", change, "reject", describe(labels.reject, change))
     );
-    return container;
+    return list ? listWrapper(container) : container;
 };
 
 /** Strikethrough button holding the removed text; clicking/activating it rejects the change. */
-const deletionWidget = (change: CanvasChange, labels: CanvasReviewLabels, block: boolean) => () => {
+const deletionWidget = (change: CanvasChange, labels: CanvasReviewLabels, block: boolean, list: boolean) => () => {
     const button = document.createElement("button");
     button.type = "button";
     button.className = block ? styles.deletionBlock : styles.deletion;
@@ -98,10 +106,16 @@ const deletionWidget = (change: CanvasChange, labels: CanvasReviewLabels, block:
     button.setAttribute("aria-label", describe(labels.reject, change));
     button.title = describe(labels.reject, change);
     for (const [name, value] of Object.entries(changeAttrs(change, "reject"))) button.setAttribute(name, value);
-    return button;
+    return list && block ? listWrapper(button) : button;
 };
 
-const inlineDecorations = (change: CanvasChange, labels: CanvasReviewLabels): Decoration[] => {
+/** True when the change's end position sits inside a list (widgets need <li>). */
+const inListContext = (doc: PMNode, position: number): boolean => {
+    const name = doc.resolve(Math.min(position, doc.content.size)).parent.type.name;
+    return name === "bulletList" || name === "orderedList";
+};
+
+const inlineDecorations = (change: CanvasChange, labels: CanvasReviewLabels, list: boolean): Decoration[] => {
     const decorations: Decoration[] = [];
     if (change.kind !== "delete") {
         decorations.push(
@@ -116,7 +130,7 @@ const inlineDecorations = (change: CanvasChange, labels: CanvasReviewLabels): De
     // Order matches the accept/reject controls: new text, removed text, buttons.
     if (change.oldText.trim()) {
         decorations.push(
-            Decoration.widget(change.to, deletionWidget(change, labels, false), {
+            Decoration.widget(change.to, deletionWidget(change, labels, false, list), {
                 side: -1,
                 key: `${change.id}-old`,
                 stopEvent: () => true,
@@ -125,7 +139,7 @@ const inlineDecorations = (change: CanvasChange, labels: CanvasReviewLabels): De
         );
     }
     decorations.push(
-        Decoration.widget(change.to, controlsWidget(change, labels, false), {
+        Decoration.widget(change.to, controlsWidget(change, labels, false, list), {
             side: 1,
             key: `${change.id}-controls`,
             stopEvent: () => true,
@@ -135,7 +149,7 @@ const inlineDecorations = (change: CanvasChange, labels: CanvasReviewLabels): De
     return decorations;
 };
 
-const blockDecorations = (change: CanvasChange, labels: CanvasReviewLabels): Decoration[] => {
+const blockDecorations = (change: CanvasChange, labels: CanvasReviewLabels, list: boolean): Decoration[] => {
     const decorations: Decoration[] = [];
     if (change.kind !== "delete") {
         decorations.push(Decoration.node(change.from, change.to, { class: styles.insertedBlock, ...changeAttrs(change, "accept") }, changeSpec(change)));
@@ -143,7 +157,7 @@ const blockDecorations = (change: CanvasChange, labels: CanvasReviewLabels): Dec
     // Order matches the accept/reject controls: green block, red box, buttons.
     if (change.oldText.trim()) {
         decorations.push(
-            Decoration.widget(change.to, deletionWidget(change, labels, true), {
+            Decoration.widget(change.to, deletionWidget(change, labels, true, list), {
                 side: -2,
                 key: `${change.id}-old`,
                 stopEvent: () => true,
@@ -152,7 +166,7 @@ const blockDecorations = (change: CanvasChange, labels: CanvasReviewLabels): Dec
         );
     }
     decorations.push(
-        Decoration.widget(change.to, controlsWidget(change, labels, true), {
+        Decoration.widget(change.to, controlsWidget(change, labels, true, list), {
             side: -1,
             key: `${change.id}-controls`,
             stopEvent: () => true,
@@ -170,7 +184,8 @@ const blockDecorations = (change: CanvasChange, labels: CanvasReviewLabels): Dec
 export function buildReviewDecorations(doc: PMNode, changes: CanvasChange[], labels: CanvasReviewLabels): DecorationSet {
     const decorations: Decoration[] = [];
     for (const change of changes) {
-        decorations.push(...(change.level === "inline" ? inlineDecorations(change, labels) : blockDecorations(change, labels)));
+        const list = inListContext(doc, change.to);
+        decorations.push(...(change.level === "inline" ? inlineDecorations(change, labels, list) : blockDecorations(change, labels, list)));
     }
     return DecorationSet.create(doc, decorations);
 }

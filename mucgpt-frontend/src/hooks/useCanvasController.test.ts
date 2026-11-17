@@ -1170,6 +1170,34 @@ describe("agent change review", () => {
         expect(harness.current.getMarkdown()).toContain("GeYänderter");
     });
 
+    it("reviews and rejects only the changed bullet of a list", () => {
+        const harness = renderController();
+        harness.render(undefined);
+        runCanvasTurn(harness, "- Der Hund läuft schnell\n- Zweiter Punkt", "- Der Hund rennt schnell\n- Zweiter Punkt");
+
+        expect(harness.current.pendingChangeCount).toBe(1);
+        act(() => {
+            reviewElement(harness, "reject")!.click();
+        });
+        expect(harness.current.pendingChangeCount).toBe(0);
+        expect(harness.current.getMarkdown()).toBe("- Der Hund läuft schnell\n- Zweiter Punkt");
+    });
+
+    it("accepts an inserted bullet without touching the rest of the list", () => {
+        const harness = renderController();
+        harness.render(undefined);
+        runCanvasTurn(harness, "- A\n- B", "- A\n- Neuer Punkt\n- B");
+        expect(harness.current.pendingChangeCount).toBe(1);
+
+        act(() => {
+            reviewElement(harness, "accept")!.click();
+        });
+        expect(harness.current.pendingChangeCount).toBe(0);
+        expect(harness.current.getMarkdown()).toContain("Neuer Punkt");
+        expect(harness.current.getMarkdown()).toContain("- A");
+        expect(harness.current.getMarkdown()).toContain("- B");
+    });
+
     it("reviews a version restore and reverts it when rejected", () => {
         const harness = renderController();
         harness.render(undefined);

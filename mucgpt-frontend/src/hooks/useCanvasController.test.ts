@@ -943,6 +943,7 @@ describe("agent change review", () => {
 
         runCanvasTurn(harness, "Der Hund läuft schnell.", "Der Hund rennt sehr schnell.");
 
+        // Most of the sentence changed: one decision between the complete strings.
         expect(harness.current.pendingChangeCount).toBe(1);
         // Review markup is view-only: the agent and snapshots only ever see the new text.
         expect(harness.current.getMarkdown()).toBe("Der Hund rennt sehr schnell.");
@@ -1008,6 +1009,29 @@ describe("agent change review", () => {
         });
         expect(harness.current.pendingChangeCount).toBe(0);
         expect(harness.current.getMarkdown()).toBe("Der Hund läuft schnell.");
+    });
+
+    it("auto-accepts only the edited phrase hunk and rejects another independently", () => {
+        const harness = renderController();
+        harness.render(undefined);
+        runCanvasTurn(harness, "Der Hund läuft schnell und bellt laut.", "Der Hund rennt schnell und bellt leise.");
+        expect(harness.current.pendingChangeCount).toBe(2);
+
+        act(() => {
+            const editor = harness.current.editor!;
+            editor
+                .chain()
+                .insertContentAt(posOf(editor, "rennt") + 2, "X")
+                .run();
+        });
+        expect(harness.current.pendingChangeCount).toBe(1);
+        expect(harness.current.getMarkdown()).toContain("reXnnt");
+
+        act(() => {
+            reviewElement(harness, "reject")!.click();
+        });
+        expect(harness.current.pendingChangeCount).toBe(0);
+        expect(harness.current.getMarkdown()).toBe("Der Hund reXnnt schnell und bellt laut.");
     });
 
     it("rejects all changes by restoring the whole pre-turn document", () => {

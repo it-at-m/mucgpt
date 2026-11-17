@@ -90,11 +90,11 @@ const controlsWidget = (change: CanvasChange, labels: CanvasReviewLabels, block:
 };
 
 /** Strikethrough button holding the removed text; clicking/activating it rejects the change. */
-const deletionWidget = (change: CanvasChange, text: string, labels: CanvasReviewLabels, block: boolean) => () => {
+const deletionWidget = (change: CanvasChange, labels: CanvasReviewLabels, block: boolean) => () => {
     const button = document.createElement("button");
     button.type = "button";
     button.className = block ? styles.deletionBlock : styles.deletion;
-    button.textContent = text;
+    button.textContent = change.oldText;
     button.setAttribute("aria-label", describe(labels.reject, change));
     button.title = describe(labels.reject, change);
     for (const [name, value] of Object.entries(changeAttrs(change, "reject"))) button.setAttribute(name, value);
@@ -103,34 +103,60 @@ const deletionWidget = (change: CanvasChange, text: string, labels: CanvasReview
 
 const inlineDecorations = (change: CanvasChange, labels: CanvasReviewLabels): Decoration[] => {
     const decorations: Decoration[] = [];
-    // change.from is the node position; inline content starts one position later.
-    let offset = change.from + 1;
-    for (const segment of change.inline ?? []) {
-        if (segment.kind === "equal") {
-            offset += segment.text.length;
-            continue;
-        }
-        if (segment.kind === "insert") {
-            decorations.push(
-                Decoration.inline(
-                    offset,
-                    offset + segment.text.length,
-                    { class: styles.insertion, title: describe(labels.accept, change), ...changeAttrs(change, "accept") },
-                    changeSpec(change)
-                )
-            );
-            offset += segment.text.length;
-            continue;
-        }
+    if (change.kind !== "delete") {
         decorations.push(
-            Decoration.widget(offset, deletionWidget(change, segment.text, labels, false), {
+            Decoration.inline(
+                change.from,
+                change.to,
+                { class: styles.insertion, title: describe(labels.accept, change), ...changeAttrs(change, "accept") },
+                changeSpec(change)
+            )
+        );
+    }
+    if (change.oldText.trim()) {
+        decorations.push(
+            Decoration.widget(change.from, deletionWidget(change, labels, false), {
                 side: -1,
-                key: `${change.id}-del-${offset}`,
+                key: `${change.id}-old`,
                 stopEvent: () => true,
                 ...changeSpec(change)
             })
         );
     }
+    decorations.push(
+        Decoration.widget(change.to, controlsWidget(change, labels, false), {
+            side: 1,
+            key: `${change.id}-controls`,
+            stopEvent: () => true,
+            ...changeSpec(change)
+        })
+    );
+    return decorations;
+};
+
+const blockDecorations = (change: CanvasChange, labels: CanvasReviewLabels): Decoration[] => {
+    const decorations: Decoration[] = [];
+    if (change.kind !== "delete") {
+        decorations.push(Decoration.node(change.from, change.to, { class: styles.insertedBlock, ...changeAttrs(change, "accept") }, changeSpec(change)));
+    }
+    if (change.oldText.trim()) {
+        decorations.push(
+            Decoration.widget(change.from, deletionWidget(change, labels, true), {
+                side: -2,
+                key: `${change.id}-old`,
+                stopEvent: () => true,
+                ...changeSpec(change)
+            })
+        );
+    }
+    decorations.push(
+        Decoration.widget(change.from, controlsWidget(change, labels, true), {
+            side: -1,
+            key: `${change.id}-controls`,
+            stopEvent: () => true,
+            ...changeSpec(change)
+        })
+    );
     return decorations;
 };
 
@@ -139,65 +165,10 @@ const inlineDecorations = (change: CanvasChange, labels: CanvasReviewLabels): De
  * old text and per-change accept/reject controls. The document itself is not
  * modified — range decorations and widgets are view-only.
  */
-const oldTextLines = (change: CanvasChange): string => (change.oldLines ?? []).join("\n");
-
 export function buildReviewDecorations(doc: PMNode, changes: CanvasChange[], labels: CanvasReviewLabels): DecorationSet {
     const decorations: Decoration[] = [];
     for (const change of changes) {
-        if (change.inline) {
-            decorations.push(...inlineDecorations(change, labels));
-            decorations.push(
-                Decoration.widget(change.to - 1, controlsWidget(change, labels, false), {
-                    side: 1,
-                    key: `${change.id}-controls`,
-                    stopEvent: () => true,
-                    ...changeSpec(change)
-                })
-            );
-            continue;
-        }
-
-        if (change.kind === "delete") {
-            if (oldTextLines(change).trim()) {
-                decorations.push(
-                    Decoration.widget(change.from, deletionWidget(change, oldTextLines(change), labels, true), {
-                        side: -2,
-                        key: `${change.id}-old`,
-                        stopEvent: () => true,
-                        ...changeSpec(change)
-                    })
-                );
-            }
-            decorations.push(
-                Decoration.widget(change.from, controlsWidget(change, labels, true), {
-                    side: -1,
-                    key: `${change.id}-controls`,
-                    stopEvent: () => true,
-                    ...changeSpec(change)
-                })
-            );
-            continue;
-        }
-
-        decorations.push(Decoration.node(change.from, change.to, { class: styles.insertedBlock, ...changeAttrs(change, "accept") }, changeSpec(change)));
-        if (change.kind === "replace" && oldTextLines(change).trim()) {
-            decorations.push(
-                Decoration.widget(change.from, deletionWidget(change, oldTextLines(change), labels, true), {
-                    side: -2,
-                    key: `${change.id}-old`,
-                    stopEvent: () => true,
-                    ...changeSpec(change)
-                })
-            );
-        }
-        decorations.push(
-            Decoration.widget(change.from, controlsWidget(change, labels, true), {
-                side: -1,
-                key: `${change.id}-controls`,
-                stopEvent: () => true,
-                ...changeSpec(change)
-            })
-        );
+        decorations.push(...(change.level === "inline" ? inlineDecorations(change, labels) : blockDecorations(change, labels)));
     }
     return DecorationSet.create(doc, decorations);
 }

@@ -1,15 +1,17 @@
 import type { Node as PMNode } from "@tiptap/pm/model";
 
 /**
- * Block-level diff between two canvas documents, used for the accept/reject
- * review after an agent turn (or a version restore). The diff works on
- * top-level blocks: consecutive non-equal blocks form one change, so a change
- * is either an inserted block run, a deleted block run, or a replacement run.
- * Replacements of a single plain-text block additionally carry a word-level
- * diff for inline highlighting.
+ * Diff between two canvas documents for the accept/reject review.
  *
- * The produced ranges are positions in the target document. Pure deletions
- * have an empty range (the anchor where the old blocks were removed).
+ * Replacements of plain-text blocks are split into *hunks*: a maximal run of
+ * consecutive changed words forms one change (one green/red pair), so several
+ * edits inside the same paragraph can be accepted or rejected independently.
+ * Structural changes (tables, code, lists, type changes, merge/split runs) and
+ * pure block insertions/deletions stay block-level and form one change per
+ * contiguous run (or pair).
+ *
+ * Positions are positions in the target document. Pure deletions have an empty
+ * range (the anchor where the old content was removed).
  */
 export interface CanvasDiffSegment {
     kind: "equal" | "insert" | "delete";
@@ -18,18 +20,28 @@ export interface CanvasDiffSegment {
 
 export interface CanvasChange {
     id: string;
+    /** inline = phrase hunk inside a text block; block = whole block(s). */
+    level: "inline" | "block";
     kind: "insert" | "delete" | "replace";
     /** Target document range; empty for pure deletions (insertion anchor). */
     from: number;
     to: number;
     /** Baseline content restored on reject; null for pure insertions. */
     oldSliceJson: unknown | null;
-    /** Word-level segments for inline replacements. */
-    inline?: CanvasDiffSegment[];
-    /** Plain-text lines of the removed block content for block-level changes. */
-    oldLines?: string[];
+    /** Removed content shown as red strikethrough. */
+    oldText: string;
     /** Short plain-text excerpt of the change for accessible control labels. */
     summary: string;
+}
+
+export interface CanvasTextHunk {
+    /** Offsets into the old/new plain text of the block. */
+    oldStart: number;
+    oldEnd: number;
+    newStart: number;
+    newEnd: number;
+    oldText: string;
+    newText: string;
 }
 
 type DiffOp = { type: "equal"; a: number; b: number } | { type: "insert"; b: number } | { type: "delete"; a: number };
@@ -38,6 +50,13 @@ type DiffOp = { type: "equal"; a: number; b: number } | { type: "insert"; b: num
 const MAX_MATRIX_CELLS = 250_000;
 /** Inline word diffs are skipped beyond this combined text length. */
 const MAX_INLINE_TEXT = 60_000;
+/**
+ * Share of unchanged text below which a rewritten block becomes one decision
+ * (whole old sentence versus whole new sentence) instead of word-level hunks.
+ */
+const SIMILARITY_THRESHOLD = 0.7;
+/** Hunks separated by at most this many unchanged words merge into one decision. */
+const MAX_MERGE_GAP_WORDS = 2;
 
 const diffSequences = <T>(a: T[], b: T[], equals: (left: T, right: T) => boolean): DiffOp[] | null => {
     const n = a.length;
@@ -101,6 +120,81 @@ export const diffWords = (oldText: string, newText: string): CanvasDiffSegment[]
         else segments.push({ kind: op.type, text });
     }
     return segments;
+};
+
+/** Number of non-whitespace tokens, used to measure unchanged gaps between hunks. */
+const countWords = (text: string): number => tokenize(text).filter(token => /\S/.test(token)).length;
+
+const hunksFromSegments = (oldText: string, newText: string, segments: CanvasDiffSegment[]): CanvasTextHunk[] => {
+    const hunks: CanvasTextHunk[] = [];
+    let oldOffset = 0;
+    let newOffset = 0;
+    let current: CanvasTextHunk | null = null;
+    for (const segment of segments) {
+        if (segment.kind === "equal") {
+            if (current) {
+                hunks.push(current);
+                current = null;
+            }
+            oldOffset += segment.text.length;
+            newOffset += segment.text.length;
+            continue;
+        }
+        current ??= { oldStart: oldOffset, oldEnd: oldOffset, newStart: newOffset, newEnd: newOffset, oldText: "", newText: "" };
+        if (segment.kind === "delete") {
+            current.oldEnd += segment.text.length;
+            current.oldText += segment.text;
+            oldOffset += segment.text.length;
+        } else {
+            current.newEnd += segment.text.length;
+            current.newText += segment.text;
+            newOffset += segment.text.length;
+        }
+    }
+    if (current) hunks.push(current);
+
+    // Merge hunks separated by a very short unchanged stretch: short connecting
+    // words are usually part of the same edit rather than a separate decision.
+    const merged: CanvasTextHunk[] = [];
+    for (const hunk of hunks) {
+        const last = merged[merged.length - 1];
+        if (last && countWords(oldText.slice(last.oldEnd, hunk.oldStart)) <= MAX_MERGE_GAP_WORDS) {
+            last.oldEnd = hunk.oldEnd;
+            last.newEnd = hunk.newEnd;
+            last.oldText = oldText.slice(last.oldStart, last.oldEnd);
+            last.newText = newText.slice(last.newStart, last.newEnd);
+        } else {
+            merged.push({ ...hunk });
+        }
+    }
+    return merged.filter(hunk => hunk.oldText.length > 0 || hunk.newText.length > 0);
+};
+
+/**
+ * Groups the word diff into hunks: a maximal run of changed words separated by
+ * unchanged text (merging across gaps of at most two unchanged words). Each
+ * hunk is an independent review change.
+ */
+export const diffHunks = (oldText: string, newText: string): CanvasTextHunk[] | null => {
+    const segments = diffWords(oldText, newText);
+    return segments ? hunksFromSegments(oldText, newText, segments) : null;
+};
+
+/** Share of unchanged characters; heavy rewrites fall below the hunk threshold. */
+const unchangedShare = (segments: CanvasDiffSegment[]): number => {
+    let equal = 0;
+    let oldLength = 0;
+    let newLength = 0;
+    for (const segment of segments) {
+        if (segment.kind === "equal") {
+            equal += segment.text.length;
+            oldLength += segment.text.length;
+            newLength += segment.text.length;
+        } else if (segment.kind === "delete") oldLength += segment.text.length;
+        else newLength += segment.text.length;
+    }
+    const longest = Math.max(oldLength, newLength);
+    return longest === 0 ? 1 : equal / longest;
 };
 
 /** Old block content as plain lines for the strikethrough preview. */
@@ -169,6 +263,82 @@ const summarize = (lines: string[]): string => {
     return text.length > 60 ? `${text.slice(0, 57)}…` : text;
 };
 
+/**
+ * Text positions inside a text block: content starts one position after the
+ * block, and plain-text blocks contain only text nodes, so one character is one
+ * position (marks do not affect positions).
+ */
+const inlinePos = (blockStart: number, offset: number): number => blockStart + 1 + offset;
+
+const inlineChanges = (
+    baseline: PMNode,
+    oldNode: PMNode,
+    oldBlockStart: number,
+    newNode: PMNode,
+    newBlockStart: number,
+    nextChangeId: () => string
+): CanvasChange[] | null => {
+    if (!canInlineDiff(oldNode, newNode)) return null;
+    const oldText = oldNode.textContent;
+    const newText = newNode.textContent;
+    const segments = diffWords(oldText, newText);
+    if (!segments) return null;
+
+    // A fundamental rewrite is one decision between the two complete strings;
+    // word-level fragments would just be noise (and can produce insert-only
+    // hunks without a counterpart).
+    if (unchangedShare(segments) < SIMILARITY_THRESHOLD) {
+        return [
+            {
+                id: nextChangeId(),
+                level: "inline" as const,
+                kind: oldText && newText ? "replace" : newText ? "insert" : "delete",
+                from: inlinePos(newBlockStart, 0),
+                to: inlinePos(newBlockStart, newText.length),
+                oldSliceJson: oldText ? baseline.slice(inlinePos(oldBlockStart, 0), inlinePos(oldBlockStart, oldText.length)).toJSON() : null,
+                oldText,
+                summary: summarize([newText || oldText])
+            }
+        ];
+    }
+
+    const hunks = hunksFromSegments(oldText, newText, segments);
+    if (hunks.length === 0) return null;
+
+    return hunks.map(hunk => {
+        const oldFrom = inlinePos(oldBlockStart, hunk.oldStart);
+        const oldTo = inlinePos(oldBlockStart, hunk.oldEnd);
+        const kind = hunk.oldText && hunk.newText ? "replace" : hunk.newText ? "insert" : "delete";
+        return {
+            id: nextChangeId(),
+            level: "inline" as const,
+            kind,
+            from: inlinePos(newBlockStart, hunk.newStart),
+            to: inlinePos(newBlockStart, hunk.newEnd),
+            oldSliceJson: hunk.oldText ? baseline.slice(oldFrom, oldTo).toJSON() : null,
+            oldText: hunk.oldText,
+            summary: summarize([hunk.newText || hunk.oldText])
+        };
+    });
+};
+
+const blockChange = (baseline: PMNode, removed: PMNode[], added: PMNode[], oldStart: number, newStart: number, nextChangeId: () => string): CanvasChange => {
+    const addedSize = added.reduce((size, node) => size + node.nodeSize, 0);
+    const oldSize = removed.reduce((size, node) => size + node.nodeSize, 0);
+    const oldLines = removed.flatMap(node => describeBlock(node));
+    const kind = removed.length === 0 ? "insert" : added.length === 0 ? "delete" : "replace";
+    return {
+        id: nextChangeId(),
+        level: "block",
+        kind,
+        from: newStart,
+        to: newStart + addedSize,
+        oldSliceJson: removed.length > 0 ? baseline.slice(oldStart, oldStart + oldSize).toJSON() : null,
+        oldText: oldLines.join("\n"),
+        summary: summarize(added.length > 0 ? added.map(node => node.textContent) : oldLines)
+    };
+};
+
 export function computeCanvasChanges(baseline: PMNode, target: PMNode): CanvasChange[] {
     const oldBlocks = topLevelBlocks(baseline);
     const newBlocks = topLevelBlocks(target);
@@ -178,25 +348,8 @@ export function computeCanvasChanges(baseline: PMNode, target: PMNode): CanvasCh
 
     // Too many blocks to align: expose the whole rewrite as one reviewable change.
     if (!ops) {
-        const wholeDoc: CanvasChange[] = [];
-        if (!baseline.eq(target)) {
-            const from = 0;
-            const to = target.content.size;
-            const oldSliceJson = baseline.content.size > 0 ? baseline.slice(from, baseline.content.size).toJSON() : null;
-            const oldLines = oldSliceJson ? oldBlocks.flatMap(node => describeBlock(node)) : [];
-            const changed: CanvasChange = {
-                id: nextChangeId(),
-                kind: oldSliceJson ? "replace" : "insert",
-                from,
-                to,
-                oldSliceJson,
-                summary: summarize(oldLines)
-            };
-            // No inline segmentation here: word offsets cannot span block boundaries.
-            if (oldLines.length > 0) changed.oldLines = oldLines;
-            wholeDoc.push(changed);
-        }
-        return wholeDoc;
+        if (baseline.eq(target)) return [];
+        return [blockChange(baseline, oldBlocks, newBlocks, 0, 0, nextChangeId)];
     }
 
     const changes: CanvasChange[] = [];
@@ -227,29 +380,24 @@ export function computeCanvasChanges(baseline: PMNode, target: PMNode): CanvasCh
         for (const node of removed) oldPos += node.nodeSize;
         for (const node of added) newPos += node.nodeSize;
 
-        const oldSliceJson = removed.length > 0 ? baseline.slice(oldStart, oldPos).toJSON() : null;
-        const targetEnd = added.length > 0 ? newPos : newStart;
-
-        if (removed.length === 0) {
-            const summary = summarize(added.map(node => node.textContent));
-            changes.push({ id: nextChangeId(), kind: "insert", from: newStart, to: targetEnd, oldSliceJson: null, summary });
+        if (removed.length === 0 || added.length === 0 || removed.length !== added.length) {
+            // Pure insertion/deletion runs and merge/split runs stay one block change.
+            changes.push(blockChange(baseline, removed, added, oldStart, newStart, nextChangeId));
             continue;
         }
 
-        const oldLines = removed.flatMap(node => describeBlock(node));
-        if (added.length === 0) {
-            changes.push({ id: nextChangeId(), kind: "delete", from: newStart, to: newStart, oldSliceJson, oldLines, summary: summarize(oldLines) });
-            continue;
-        }
-
-        const inline =
-            removed.length === 1 && added.length === 1 && canInlineDiff(removed[0], added[0]) ? diffWords(removed[0].textContent, added[0].textContent) : null;
-        if (inline && inline.some(segment => segment.kind !== "equal")) {
-            const summary = summarize(added.map(node => node.textContent));
-            changes.push({ id: nextChangeId(), kind: "replace", from: newStart, to: targetEnd, oldSliceJson, inline, summary });
-        } else {
-            changes.push({ id: nextChangeId(), kind: "replace", from: newStart, to: targetEnd, oldSliceJson, oldLines, summary: summarize(oldLines) });
-        }
+        // Equal counts: pair the blocks so each rewritten block is reviewed on its
+        // own (and inline-diffable pairs are split into independent phrase hunks).
+        let oldCursor = oldStart;
+        let newCursor = newStart;
+        removed.forEach((oldNode, index) => {
+            const newNode = added[index];
+            const inline = inlineChanges(baseline, oldNode, oldCursor, newNode, newCursor, nextChangeId);
+            if (inline) changes.push(...inline);
+            else changes.push(blockChange(baseline, [oldNode], [newNode], oldCursor, newCursor, nextChangeId));
+            oldCursor += oldNode.nodeSize;
+            newCursor += newNode.nodeSize;
+        });
     }
 
     return changes;

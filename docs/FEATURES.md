@@ -21,6 +21,7 @@ Work side by side with the agent: open a rich-text canvas panel next to any chat
 - Select a passage to quote it into the chat or to ask the agent to revise exactly that text.
 - Save versions manually and review an automatic history of agent edits. Restoring an older version is non-destructive and can be undone like any edit.
 - The canvas is saved with the conversation, so your document survives reloads and device switches.
+- Review agent changes directly in the document: new text is highlighted green (click to accept) and removed text is shown in red strikethrough (click to reject). The agent's first write into an empty canvas is applied directly without a review. Unreviewed changes are accepted automatically the next time the agent writes (editing a highlighted passage also counts as accepting that change), and the state before each agent turn is kept as a version you can restore.
 - Export the document as Markdown, PDF, Word, or Excel (one sheet per table).
 
 ## Create Assistants

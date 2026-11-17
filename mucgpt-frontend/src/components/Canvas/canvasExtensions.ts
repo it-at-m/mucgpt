@@ -8,6 +8,7 @@ import type { Extensions } from "@tiptap/core";
 
 import { CanvasSelectionPersistence } from "./canvasSelectionPersistence";
 import { canvasTextLimit, type CanvasTextLimitOptions } from "./canvasTextLimit";
+import { CanvasDiffReview } from "./canvasDiffReview";
 
 /**
  * Canvas schema. The schema is the gatekeeper: only nodes that round-trip
@@ -33,6 +34,8 @@ export const canvasExtensions = (limits?: Partial<CanvasTextLimitOptions>): Exte
     TableHeader,
     TableCell,
     CanvasSelectionPersistence,
+    // View-only accept/reject markup for agent changes; never part of the document.
+    CanvasDiffReview,
     canvasTextLimit.configure(limits),
     Markdown.configure({
         html: true,

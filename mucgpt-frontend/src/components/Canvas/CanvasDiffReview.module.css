@@ -1,0 +1,107 @@
+/* View-only review markup for agent changes (canvas accept/reject). */
+
+.insertion {
+    background-color: var(--colorStatusSuccessBackground2);
+    /* Dotted underline keeps the insertion recognizable without relying on color. */
+    border-bottom: 1px dotted var(--colorStatusSuccessForeground1);
+    border-radius: var(--borderRadiusSmall);
+    cursor: pointer;
+}
+
+.insertion:hover {
+    background-color: var(--colorStatusSuccessBackground3);
+}
+
+.insertedBlock {
+    background-color: var(--colorStatusSuccessBackground1);
+    box-shadow: inset 0 0 0 1px var(--colorStatusSuccessBorder1);
+    border-radius: var(--borderRadiusMedium);
+    cursor: pointer;
+}
+
+.insertedBlock:hover {
+    background-color: var(--colorStatusSuccessBackground2);
+}
+
+.deletion,
+.deletionBlock {
+    background-color: var(--colorStatusDangerBackground2);
+    color: var(--colorStatusDangerForeground1);
+    text-decoration: line-through;
+    border: none;
+    font: inherit;
+    text-align: start;
+    cursor: pointer;
+}
+
+.deletion {
+    border-radius: var(--borderRadiusSmall);
+    padding: 0;
+}
+
+.deletionBlock {
+    display: block;
+    width: 100%;
+    white-space: pre-wrap;
+    padding: var(--spacingVerticalXS) var(--spacingHorizontalS);
+    margin-bottom: var(--spacingVerticalXS);
+    border-radius: var(--borderRadiusMedium);
+}
+
+.deletion:hover,
+.deletionBlock:hover {
+    background-color: var(--colorStatusDangerBackground3);
+}
+
+.controls {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacingHorizontalXXS);
+    margin-inline-start: var(--spacingHorizontalXS);
+    vertical-align: middle;
+}
+
+.controlsBlock {
+    display: flex;
+    margin-bottom: var(--spacingVerticalXS);
+}
+
+.acceptControl,
+.rejectControl {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--spacingHorizontalL);
+    height: var(--spacingHorizontalL);
+    padding: 0;
+    border: 1px solid var(--colorNeutralStroke1);
+    border-radius: var(--borderRadiusCircular);
+    background-color: var(--colorNeutralBackground1);
+    font-size: var(--fontSizeBase200);
+    line-height: 1;
+    cursor: pointer;
+}
+
+.acceptControl {
+    color: var(--colorStatusSuccessForeground1);
+}
+
+.rejectControl {
+    color: var(--colorStatusDangerForeground1);
+}
+
+.acceptControl:hover {
+    background-color: var(--colorStatusSuccessBackground2);
+}
+
+.rejectControl:hover {
+    background-color: var(--colorStatusDangerBackground2);
+}
+
+.acceptControl:focus-visible,
+.rejectControl:focus-visible,
+.deletion:focus-visible,
+.deletionBlock:focus-visible {
+    outline: 2px solid var(--colorStrokeFocus2);
+    outline-offset: 1px;
+}

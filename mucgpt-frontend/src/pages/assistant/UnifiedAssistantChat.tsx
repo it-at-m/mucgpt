@@ -1220,10 +1220,11 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
             <AnswerList
                 answers={answers}
                 regularAssistantMsg={(answer, index) => {
+                    const isLatestAnswer = index === answers.length - 1 && !isLoading;
                     return (
                         <>
                             {" "}
-                            {index === answers.length - 1 && (
+                            {isLatestAnswer && (
                                 <Answer
                                     key={index}
                                     answer={answer.response}
@@ -1248,7 +1249,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                                     }
                                 />
                             )}
-                            {index !== answers.length - 1 && <Answer key={index} answer={answer.response} />}
+                            {!isLatestAnswer && <Answer key={index} answer={answer.response} reserveFollowUpSpace={isLoading} />}
                         </>
                     );
                 }}

@@ -66,6 +66,9 @@ const makeController = (initial: Partial<CanvasControllerInstance> = {}) => {
         snapshot: vi.fn(),
         listRevisions: () => ({ auto: [], manual: [] }),
         revisions: { auto: [], manual: [] },
+        // No pending review changes: the review banner stays hidden in these
+        // autosave tests (0 = none; see CanvasReviewBanner).
+        pendingChangeCount: 0,
         subscribe: (cb: Subscriber) => {
             subscribers.add(cb);
             return () => {
@@ -307,6 +310,24 @@ describe("CanvasPanel content autosave", () => {
         saveMock.mockResolvedValue(true);
         view.unmount();
         await waitFor(() => expect(saveMock).toHaveBeenLastCalledWith("conv-1", "# lost draft"));
+    });
+
+    it("persists content rewritten by a review decision", async () => {
+        // Review actions (reject / accept-all of a pending review, version
+        // restore) rewrite the document — the autosave must follow so the
+        // stored copy always represents the current view.
+        const controller = makeController();
+        renderPanel(controller);
+
+        controller.notify("# new text");
+        controller.flush();
+        await waitFor(() => expect(saveMock).toHaveBeenCalledWith("conv-1", "# new text", false));
+
+        // Simulates rejecting the agent change: the document reverts to the
+        // baseline content.
+        controller.notify("# baseline text");
+        controller.flush();
+        await waitFor(() => expect(saveMock).toHaveBeenCalledWith("conv-1", "# baseline text", false));
     });
 
     it("flushes on pagehide with a keepalive request", async () => {

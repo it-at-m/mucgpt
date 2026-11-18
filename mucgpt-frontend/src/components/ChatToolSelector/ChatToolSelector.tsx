@@ -78,9 +78,18 @@ export const ChatToolSelector = ({ tools, selectedTools, setSelectedTools, allow
     if (lockedEntries.length === 0 && selectableEntries.length === 0) return null;
 
     const handleCheckedValueChange: MenuProps["onCheckedValueChange"] = (_, { checkedItems }) => {
-        const selectableToolIds = selectableEntries.flatMap(entry => entry.toolIds);
-        const checkedToolIds = selectableEntries.filter(entry => checkedItems.includes(entry.id)).flatMap(entry => entry.toolIds);
-        setSelectedTools(previous => [...previous.filter(id => !selectableToolIds.includes(id)), ...checkedToolIds]);
+        const toggledEntry = selectableEntries.find(entry => {
+            const wasChecked = entry.toolIds.some(id => selectedTools.includes(id));
+            return checkedItems.includes(entry.id) !== wasChecked;
+        });
+
+        if (!toggledEntry) return;
+
+        const isNowChecked = checkedItems.includes(toggledEntry.id);
+        setSelectedTools(previous => {
+            const unchangedTools = previous.filter(id => !toggledEntry.toolIds.includes(id));
+            return isNowChecked ? [...unchangedTools, ...toggledEntry.toolIds] : unchangedTools;
+        });
     };
 
     const renderSelectableEntry = (entry: ToolEntry) => (

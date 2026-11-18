@@ -58,6 +58,8 @@ describe("TRANSCRIPTION_MODELS", () => {
         expect(ultra?.files?.encoder).toContain("/w4a8/encoder-model.w4a8.onnx");
         expect(ultra?.files?.decoder).toContain("/int8/decoder_joint-model.int8.onnx");
         expect(ultra?.files?.vocab).toMatch(/vocab\.txt$/);
+        expect(ultra?.revision).toMatch(/^[a-f0-9]{40}$/);
+        expect(Object.values(ultra?.files ?? {}).every(url => url.includes(`/resolve/${ultra?.revision}/`))).toBe(true);
     });
 
     it("parakeet redux entry ships the mrfakename export with the fast graph-optimization level", () => {
@@ -71,6 +73,8 @@ describe("TRANSCRIPTION_MODELS", () => {
         expect(redux?.files?.encoder).toContain("/encoder-model.onnx");
         expect(redux?.files?.decoder).toContain("/decoder_joint-model.int8.onnx");
         expect(redux?.files?.vocab).toMatch(/vocab\.txt$/);
+        expect(redux?.revision).toMatch(/^[a-f0-9]{40}$/);
+        expect(Object.values(redux?.files ?? {}).every(url => url.includes(`/resolve/${redux?.revision}/`))).toBe(true);
     });
 
     it("german-tuned entries avoid fp16 decoder (broken in ort-web) and use single-file dtypes", () => {

@@ -473,7 +473,7 @@ export const TranscriptionProvider = ({ children, transcriptionEnabled, transcri
                 startLoad();
                 return;
             }
-            fetchModelFileSizes(model.model_id, model.file_tree)
+            fetchModelFileSizes(model.model_id, model.file_tree, model.revision)
                 .then(fileSizes => startLoad(fileSizes))
                 .catch(err => {
                     console.error("Failed to fetch file sizes, continuing without size info:", err);

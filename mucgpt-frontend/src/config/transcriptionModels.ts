@@ -25,6 +25,8 @@ export interface TranscriptionModel {
     runtime?: TranscriptionRuntime;
     /** ONNX files for NeMo runtime entries, resolved against the HF resolve endpoint. */
     files?: NemoModelFiles;
+    /** Immutable HuggingFace revision for model files and download-size lookups. */
+    revision?: string;
     /** Repo tree path used to list file sizes for the download progress display (default "onnx"). */
     file_tree?: string;
 }
@@ -128,10 +130,13 @@ export const TRANSCRIPTION_MODELS: TranscriptionModel[] = [
         label: "NVIDIA Parakeet Ultra",
         size_hint: "~410 MB",
         runtime: "parakeet",
+        revision: "b27f93c2238aa35e138996c005a62f1e8430f801",
         files: {
-            encoder: "https://huggingface.co/Olicorne/parakeet-tdt-0.6b-v3-ultra-onnx/resolve/main/w4a8/encoder-model.w4a8.onnx",
-            decoder: "https://huggingface.co/Olicorne/parakeet-tdt-0.6b-v3-ultra-onnx/resolve/main/int8/decoder_joint-model.int8.onnx",
-            vocab: "https://huggingface.co/Olicorne/parakeet-tdt-0.6b-v3-ultra-onnx/resolve/main/vocab.txt"
+            encoder:
+                "https://huggingface.co/Olicorne/parakeet-tdt-0.6b-v3-ultra-onnx/resolve/b27f93c2238aa35e138996c005a62f1e8430f801/w4a8/encoder-model.w4a8.onnx",
+            decoder:
+                "https://huggingface.co/Olicorne/parakeet-tdt-0.6b-v3-ultra-onnx/resolve/b27f93c2238aa35e138996c005a62f1e8430f801/int8/decoder_joint-model.int8.onnx",
+            vocab: "https://huggingface.co/Olicorne/parakeet-tdt-0.6b-v3-ultra-onnx/resolve/b27f93c2238aa35e138996c005a62f1e8430f801/vocab.txt"
         }
     },
     // NVIDIA Parakeet Redux (moondream's ternary 1.58-bit quantization of
@@ -155,10 +160,11 @@ export const TRANSCRIPTION_MODELS: TranscriptionModel[] = [
         size_hint: "~365 MB",
         graph_optimization: "basic",
         runtime: "parakeet",
+        revision: "0f1264f3ce3bcdab31eac2f04cdd5b720eb5fda7",
         files: {
-            encoder: "https://huggingface.co/mrfakename/parakeet-redux-ONNX/resolve/main/encoder-model.onnx",
-            decoder: "https://huggingface.co/mrfakename/parakeet-redux-ONNX/resolve/main/decoder_joint-model.int8.onnx",
-            vocab: "https://huggingface.co/mrfakename/parakeet-redux-ONNX/resolve/main/vocab.txt"
+            encoder: "https://huggingface.co/mrfakename/parakeet-redux-ONNX/resolve/0f1264f3ce3bcdab31eac2f04cdd5b720eb5fda7/encoder-model.onnx",
+            decoder: "https://huggingface.co/mrfakename/parakeet-redux-ONNX/resolve/0f1264f3ce3bcdab31eac2f04cdd5b720eb5fda7/decoder_joint-model.int8.onnx",
+            vocab: "https://huggingface.co/mrfakename/parakeet-redux-ONNX/resolve/0f1264f3ce3bcdab31eac2f04cdd5b720eb5fda7/vocab.txt"
         }
     }
 ];

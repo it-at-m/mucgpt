@@ -185,6 +185,16 @@ Notes for operators:
 - The model choice is deployment-wide: users do not pick a model. The available models, their language support, and their hardware requirements are managed in the frontend registry (`mucgpt-frontend/src/config/transcriptionModels.ts`).
 - WebGPU is required for some larger models; a WebGPU-only model stays greyed out on hardware without WebGPU and explains this in its model panel.
 
+### Canvas HTML whitelist (YAML)
+
+The canvas supports GFM markdown plus a small allowlist of raw HTML tags that GFM cannot express (default: `<u>` for underline — users get a toolbar button, agents may write `<u>text</u>`):
+
+```yaml
+canvas_allowed_html_tags: ["u"] # default; [] disables raw HTML entirely
+```
+
+The list is exposed to the frontend via `/config`, embeds the allowed tags into the `canvas_write`/`canvas_edit` tool descriptions, and the frontend sanitizer escapes every other raw HTML tag to literal text. Tags may not carry attributes. Entries must be lowercase plain tag names — and must be part of the release's supported set (`SUPPORTED_CANVAS_HTML_TAGS` in `mucgpt-core-service/app/config/settings.py`, mirroring `CANVAS_SUPPORTED_HTML_TAGS` in `mucgpt-frontend/src/components/Canvas/canvasHtmlWhitelist.ts`): the config may only **restrict**, never extend — a tag the editor schema does not understand cannot be rendered, serialized, or exported, so referencing one fails core startup. Extending the whitelist requires a core+frontend release.
+
 ### Models Configuration (Environment Variable)
 
 Alternatively, models can be configured via environment variables. Providers are set as a JSON object (`MUCGPT_CORE_PROVIDERS`), models as a JSON array (`MUCGPT_CORE_MODELS`) whose entries reference a provider instead of carrying inline endpoint/credentials:

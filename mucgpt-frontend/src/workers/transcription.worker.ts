@@ -325,10 +325,10 @@ async function loadNemoTranscriber(request: Extract<WorkerInMessage, { type: "lo
     };
 
     log("[transcription-worker] loading NeMo sessions", { modelId, runtime });
-    // webgpu_only NeMo models (ternary Parakeet Redux) have graphs that do not
-    // run on the WASM execution provider; the flag was validated above, so the
-    // encoder session goes to WebGPU while the per-step decoder stays on WASM
-    // (small repeated inferences, avoids GPU contention).
+    // webgpu_only indicates that the encoder graph cannot run on the WASM
+    // execution provider; the flag was validated above, so the encoder session
+    // goes to WebGPU while the per-step decoder stays on WASM (small repeated
+    // inferences, avoids GPU contention).
     const encoderEp: "wasm" | "webgpu" = request.webgpu_only ? "webgpu" : "wasm";
     const graphOptimization = request.graph_optimization ?? "all";
     const encoderPromise = createOrtSessionFromUrl(files.encoder, track("encoder"), encoderEp, graphOptimization);

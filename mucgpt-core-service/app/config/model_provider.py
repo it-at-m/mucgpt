@@ -22,21 +22,27 @@ class ModelRegistry:
     _default_reasoning_efforts: dict[str, ReasoningEffort] = {}
     _fallback_reasoning_effort: ReasoningEffort | None = "low"
     _models_without_temperature: set[str] = set()
+    _models_without_user: set[str] = set()
 
     @staticmethod
     def init_chat_model(config: ModelsConfig) -> ChatOpenAI | AzureChatOpenAI:
         """Initialize a concrete chat model from configuration."""
         try:
             if config.type == "openai":
-                return ChatOpenAI(
-                    default_headers={"extra-parameters": "drop"},
-                    model=config.id,
-                    api_key=config.api_key,
-                    base_url=config.endpoint.unicode_string(),
-                    use_responses_api=False, # needs to be disabled for now to avoid issues with the non-streaming generations
-                    stream_usage=True,
-                    store=False,
-                )
+                init_kwargs: dict[str, Any] = {
+                    "default_headers": {"extra-parameters": "drop"},
+                    "model": config.id,
+                    "api_key": config.api_key,
+                    "base_url": config.endpoint.unicode_string(),
+                    "use_responses_api": False,  # needs to be disabled for now to avoid issues with the non-streaming generations
+                    "stream_usage": True,
+                }
+                # Privacy guard: explicit opt-out of response storage. Providers
+                # that reject the field (extra inputs) skip it — omission means
+                # "not stored" everywhere.
+                if config.model_info.supports_store_param:
+                    init_kwargs["store"] = False
+                return ChatOpenAI(**init_kwargs)
             if config.type == "azure":
                 return AzureChatOpenAI(
                     azure_deployment=config.deployment,
@@ -71,6 +77,9 @@ class ModelRegistry:
         if model_name in cls._models_without_temperature:
             normalized.pop("temperature", None)
 
+        if model_name in cls._models_without_user:
+            normalized.pop("user", None)
+
         if model_name in cls._reasoning_models:
             normalized.pop("temperature", None)
             effort = cls._resolve_reasoning_effort(
@@ -95,7 +104,9 @@ class ModelRegistry:
             or cls._fallback_reasoning_effort
         )
 
-        logging.getLogger(__name__).debug("Requested reasoning effort %r for model %s", effort, model_name)
+        logging.getLogger(__name__).debug(
+            "Requested reasoning effort %r for model %s", effort, model_name
+        )
         supported = cls._supported_reasoning_efforts.get(model_name)
         if effort is None or not supported or effort in supported:
             return effort
@@ -157,6 +168,11 @@ class ModelRegistry:
             for config in models_config
             if not config.model_info.supports_temperature
         }
+        cls._models_without_user = {
+            config.id
+            for config in models_config
+            if not config.model_info.supports_user_param
+        }
 
         default_config = next(
             (
@@ -181,9 +197,7 @@ class ModelRegistry:
             try:
                 models[config.id] = cls.init_chat_model(config)
             except ModelsConfigurationException as exc:
-                _logger.warning(
-                    "Failed to initialize model %s: %s", config.id, exc
-                )
+                _logger.warning("Failed to initialize model %s: %s", config.id, exc)
 
         cls._models = models
         cls._default_model = default_model

@@ -12,14 +12,16 @@
  * Build (bundle the harness, keep ort-web external):
  *
  *   npx esbuild src/workers/nemo/spike/parakeetBrowserHarness.ts --bundle \
- *     --external:onnxruntime-web --format=esm \
+ *     --external:onnxruntime-web --external:onnxruntime-web/webgpu --format=esm \
  *     --outfile=<serve-dir>/parakeetBrowserHarness.js
  *
- * Serve <serve-dir> plus ort-web's *.mjs/*.wasm dist files and the model
- * files, then drive it from Playwright via the exported `parakeetQa` helper
+ * Serve <serve-dir> plus ort-web's *.mjs/*.wasm and ort.webgpu*.mjs dist
+ * files and the model files, then drive it from Playwright via the exported
+ * `parakeetQa` helper
  * (see the temp-dir index.html wiring).
  */
 import * as ort from "onnxruntime-web";
+import * as ortWebgpu from "onnxruntime-web/webgpu";
 import { createParakeetTranscriber } from "../parakeet/parakeetTranscriber";
 import type { NemoVocab, OrtSessionLike, OrtValue } from "../types";
 import { parseNemoVocab } from "../vocab";
@@ -39,25 +41,29 @@ export interface ParakeetQaInput {
     pcm: number[];
 }
 
+type OrtWeb = typeof ort;
+
+function runtimeFor(ep: "wasm" | "webgpu"): OrtWeb {
+    return ep === "webgpu" ? ortWebgpu : ort;
+}
+
 /** Adapts structural OrtValue feeds into ort-web Tensors for session.run. */
-/** Adapts structural OrtValue feeds into ort-web Tensors for session.run. */
-function toTensors(feeds: Record<string, OrtValue>): Record<string, ort.Tensor> {
+function toTensors(feeds: Record<string, OrtValue>, runtime: OrtWeb): Record<string, ort.Tensor> {
     const tensors: Record<string, ort.Tensor> = {};
     for (const [name, value] of Object.entries(feeds)) {
         const { data } = value;
-        tensors[name] = new ort.Tensor(data as Float32Array, [...value.dims]);
+        tensors[name] = new runtime.Tensor(data as Float32Array, [...value.dims]);
     }
     return tensors;
 }
 
 /** Wraps one ort-web session into the structural OrtSessionLike contract. */
-/** Wraps one ort-web session into the structural OrtSessionLike contract. */
-function toSessionLike(session: ort.InferenceSession): OrtSessionLike {
+function toSessionLike(session: ort.InferenceSession, runtime: OrtWeb): OrtSessionLike {
     return {
         inputNames: session.inputNames,
         outputNames: session.outputNames,
         async run(feeds: Record<string, OrtValue>): Promise<Record<string, OrtValue>> {
-            const result = await session.run(toTensors(feeds));
+            const result = await session.run(toTensors(feeds, runtime));
             const out: Record<string, OrtValue> = {};
             for (const [name, tensor] of Object.entries(result)) {
                 out[name] = {
@@ -97,7 +103,7 @@ export async function probeSession(
     ep: "wasm" | "webgpu" = "wasm"
 ): Promise<{ inputNames: string[]; createSeconds: number }> {
     const startedAt = performance.now();
-    const session = await ort.InferenceSession.create(await fetchBuffer(url), sessionOptions(level, ep));
+    const session = await runtimeFor(ep).InferenceSession.create(await fetchBuffer(url), sessionOptions(level, ep));
     const createSeconds = (performance.now() - startedAt) / 1000;
     console.log(`[harness] session for ${url} created in ${createSeconds.toFixed(2)}s (inputs: ${session.inputNames.join(", ")})`);
     await session.release();
@@ -112,7 +118,7 @@ export async function loadSessions(
     encoderEp: "wasm" | "webgpu" = "wasm"
 ): Promise<{ encoder: ort.InferenceSession; decoderJoint: ort.InferenceSession }> {
     console.log(`[harness] creating encoder session (ep=${encoderEp}, optimize=${level})…`);
-    const encoder = await ort.InferenceSession.create(await fetchBuffer(encoderUrl), sessionOptions(level, encoderEp));
+    const encoder = await runtimeFor(encoderEp).InferenceSession.create(await fetchBuffer(encoderUrl), sessionOptions(level, encoderEp));
     console.log(`[harness] encoder ready (${encoder.inputNames.length} inputs); creating decoder_joint session…`);
     let decoderJoint: ort.InferenceSession;
     try {
@@ -144,8 +150,8 @@ export async function runTranscription(
         const vocab: NemoVocab = parseNemoVocab(await vocabResponse.text());
         console.log(`[harness] vocab: ${vocab.idToToken.length} tokens, blank="${vocab.idToToken[vocab.idToToken.length - 1]}"`);
         transcriber = createParakeetTranscriber({
-            encoder: toSessionLike(encoder),
-            decoderJoint: toSessionLike(decoderJoint),
+            encoder: toSessionLike(encoder, runtimeFor(encoderEp)),
+            decoderJoint: toSessionLike(decoderJoint, ort),
             vocab
         });
         const decodeStartedAt = performance.now();
@@ -165,6 +171,8 @@ export async function runTranscription(
 export function configureOrtWeb(wasmPaths: string, numThreads = 1): void {
     ort.env.wasm.wasmPaths = wasmPaths;
     ort.env.wasm.numThreads = numThreads;
+    ortWebgpu.env.wasm.wasmPaths = wasmPaths;
+    ortWebgpu.env.wasm.numThreads = numThreads;
 }
 
 /** Minimal command surface for the Playwright runner. */

@@ -553,9 +553,6 @@ i18n
                             limit: ". Ältere Eingaben werden bei der Generierung nicht berücksichtigt!",
                             removedocument: "Dokument löschen"
                         },
-                        chattsettingsdrawer: {
-                            title: "Chat Einstellungen"
-                        },
                         assistantsettingsdrawer: {
                             expand: "Ansicht erweitern",
                             collapse: "Ansicht einklappen",
@@ -1585,9 +1582,6 @@ i18n
                             limit: ". Previous inputs are not considered during generation!",
                             removedocument: "Delete document"
                         },
-                        chattsettingsdrawer: {
-                            title: "Chat Settings"
-                        },
                         assistantsettingsdrawer: {
                             expand: "Expand view",
                             collapse: "Collapse view",
@@ -2578,9 +2572,6 @@ i18n
                             tokensused: "Token vabrocht",
                             limit: ". Oide Eingabn wean bei da Generierung ned mit einbezogn!",
                             removedocument: "Dokument löschn"
-                        },
-                        chattsettingsdrawer: {
-                            title: "Ratsch Einstellunga"
                         },
                         assistantsettingsdrawer: {
                             expand: "Ansicht erweitern",
@@ -3578,9 +3569,6 @@ i18n
                             limit: ". Les entrées plus anciennes ne seront pas prises en compte lors de la génération !",
                             removedocument: "Supprimer le document"
                         },
-                        chattsettingsdrawer: {
-                            title: "Paramètres de discussion"
-                        },
                         assistantsettingsdrawer: {
                             expand: "Développer la vue",
                             collapse: "Réduire la vue",
@@ -4569,9 +4557,6 @@ i18n
                             tokensused: "Використано токени",
                             limit: ". Старіші введення не будуть враховані при генерації!",
                             removedocument: "Видалити документ"
-                        },
-                        chattsettingsdrawer: {
-                            title: "Налаштування чату"
                         },
                         assistantsettingsdrawer: {
                             expand: "Розгорнути вигляд",

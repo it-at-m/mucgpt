@@ -38,6 +38,7 @@ import { Button } from "../../ui/Button";
 import { MenuItem } from "../../ui/MenuItem";
 import { EdelweissSpinner } from "../EdelweissSpinner";
 import { CREATIVITY_MEDIUM } from "../../constants";
+import { toIntlLocale } from "../../utils/locale";
 import { useToolDisplayName } from "../../hooks/useToolDisplayName";
 import { getCreativityOption } from "../../utils/creativityOptions";
 import { getModelDisplayName } from "../../utils/modelDisplayName";
@@ -66,9 +67,7 @@ const formatConfigurationDate = (value: string | undefined, locale: string): str
     const date = new Date(value);
     if (Number.isNaN(date.getTime())) return undefined;
 
-    const resolvedLocale = locale === "BA" ? "de-DE" : locale;
-
-    return new Intl.DateTimeFormat(resolvedLocale, {
+    return new Intl.DateTimeFormat(toIntlLocale(locale), {
         day: "numeric",
         month: "long",
         year: "numeric"

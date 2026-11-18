@@ -1,5 +1,5 @@
 import { useRef, useState, useEffect, useContext, useCallback, useReducer, useMemo } from "react";
-import { AskResponse, Assistant, AssistantResponse, ChatResponse, DataSource } from "../../api";
+import { AskResponse, Assistant, AssistantResponse, ChatResponse } from "../../api";
 import { Answer } from "../../components/Answer";
 import { QuestionInput } from "../../components/QuestionInput";
 import { useTranslation } from "react-i18next";
@@ -42,8 +42,12 @@ import {
 import { useDuplicateAssistant } from "../discovery/hooks/useDuplicateAssistant";
 import { useMigrateLocalAssistant } from "../../hooks/useMigrateLocalAssistant";
 import { CloseConfirmationDialog } from "../../components/AssistantDialogs/shared/CloseConfirmationDialog";
-import { UploadedData, getSelectedDocumentIds } from "../../components/ContextManagerDialog/ContextManagerDialog";
-import { restoreDocumentSelection } from "../../components/ContextManagerDialog/DocumentLibrary";
+import {
+    getSelectedDocumentIds,
+    isSendBlockedByDocuments,
+    restoreDocumentSelection,
+    type ChatDocument
+} from "../../components/ChatDocuments/documentSelection";
 import { useToolApproval } from "../../hooks/useToolApproval";
 import { useToolStatusToasts } from "../../hooks/useToolStatusToasts";
 import { useCanvasController } from "../../hooks/useCanvasController";
@@ -131,7 +135,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
     const [isUnsubscribed, setIsUnsubscribed] = useState<boolean>(false);
     const [isAssistantMissing, setIsAssistantMissing] = useState<boolean>(false);
     const [isAccessRevoked, setIsAccessRevoked] = useState<boolean>(false);
-    const [uploadedData, setUploadedData] = useState<UploadedData[]>([]);
+    const [chatDocuments, setChatDocuments] = useState<ChatDocument[]>([]);
     const [isInfoDrawerOpen, setIsInfoDrawerOpen] = useState<boolean>(false);
     const [assistantInfoData, setAssistantInfoData] = useState<AssistantCardData | null>(null);
     const [isAssistantInfoLoading, setIsAssistantInfoLoading] = useState<boolean>(false);
@@ -317,7 +321,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
         setLastQuestionValue("");
         setError(undefined);
         // A new or reset chat must not inherit the previous chat's documents.
-        setUploadedData([]);
+        setChatDocuments([]);
         activeChatRef.current = undefined;
         dispatch({ type: "SET_ACTIVE_CHAT", payload: undefined });
         dispatch({ type: "CLEAR_ANSWERS" });
@@ -577,14 +581,22 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
         });
     }, [assistantStorageService, assistant_id, refreshUnifiedHistory]);
 
+    // Starter prompts, follow-ups and regenerate bypass the composer's send button, so they check the attachments here.
+    const ensureDocumentsSendable = useCallback(() => {
+        if (!isSendBlockedByDocuments(chatDocuments)) return true;
+        showWarning(t("document_library.send_blocked_title"), t("document_library.send_blocked_message"));
+        return false;
+    }, [chatDocuments, showWarning, t]);
+
     // callApi-Funktion
     const callApi = useCallback(
         /** Sends one question through the strategy (streaming) and dispatches the answers. */
-        async (question: string, systemOverride?: string, dataSources?: DataSource[]) => {
+        async (question: string, systemOverride?: string) => {
             if (isLegacyAssistant || isAssistantUnavailable || historyReadOnly) {
                 console.warn("Interaction blocked: Assistant is read-only.");
                 return;
             }
+            if (!ensureDocumentsSendable()) return;
 
             setLastQuestionValue(question);
             if (error) setError(undefined);
@@ -595,7 +607,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
             const options: ChatOptions = {
                 system: systemOverride ?? systemPrompt ?? "",
                 creativity: creativity,
-                document_ids: getSelectedDocumentIds(uploadedData)
+                document_ids: getSelectedDocumentIds(chatDocuments)
             };
             try {
                 await makeApiRequest(
@@ -613,7 +625,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                     assistant_id,
                     lockedToolIds,
                     setToolStatuses,
-                    dataSources,
+                    undefined,
                     lastAnswerRef,
                     setIsLoadingValue,
                     requestPersist,
@@ -644,7 +656,8 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
             isAssistantUnavailable,
             historyReadOnly,
             canvasWiring,
-            uploadedData,
+            chatDocuments,
+            ensureDocumentsSendable,
             requestToolApproval
         ]
     );
@@ -673,7 +686,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
             }
             // The transcript must load even when the document library is
             // unreachable: fall back to an empty selection with a warning.
-            let selection: UploadedData[] = [];
+            let selection: ChatDocument[] = [];
             try {
                 selection = await restoreDocumentSelection(chat.documentIds ?? [], chat.documentNames);
             } catch (restoreError) {
@@ -686,7 +699,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
             dispatch({ type: "SET_ANSWERS", payload: chat.messages });
             setLastQuestionValue(chat.messages.length > 0 ? chat.messages[chat.messages.length - 1].user : "");
             dispatch({ type: "SET_ACTIVE_CHAT", payload: id });
-            setUploadedData(selection);
+            setChatDocuments(selection);
 
             setTimeout(() => {
                 scrollToBottom();
@@ -900,6 +913,8 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
     // Regenerate-Funktion
     const onRegenerateResponseClicked = useCallback(async () => {
         if (!conversationActions.canRegenerate || historyReadOnly || answers.length === 0 || !activeChatRef.current || isLoadingRef.current) return;
+        // Regenerate drops the last answer before sending, so it must check before that, not only in callApi.
+        if (!ensureDocumentsSendable()) return;
         try {
             setError(undefined);
             setIsLoadingValue(true);
@@ -908,7 +923,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
             setError(e);
             setIsLoadingValue(false);
         }
-    }, [answers, assistantChatStorage, callApi, systemPrompt, historyReadOnly, setIsLoadingValue]);
+    }, [answers, assistantChatStorage, callApi, ensureDocumentsSendable, systemPrompt, historyReadOnly, setIsLoadingValue]);
 
     useUnifiedHistoryRegistration(
         useMemo(
@@ -1093,24 +1108,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                         clearOnSend
                         disabled={isLoading || isStreaming}
                         draftCacheKey={draftCacheKey}
-                        onSend={(question, datas) => {
-                            const dataSources = datas
-                                .filter(data => data.isActive !== false && data.status === "ready" && data.fileContent)
-                                .map(data => ({
-                                    title: data.name,
-                                    content: data.fileContent!,
-                                    metadata: {
-                                        source: data.source,
-                                        mime_type: data.mimeType || data.file?.type || undefined,
-                                        size: data.size,
-                                        parsed_at: data.parsedAt,
-                                        file_signature: data.fileSignature,
-                                        stored_document_id: data.storedDocumentId,
-                                        status: data.status
-                                    }
-                                }));
-                            callApi(question, undefined, dataSources.length > 0 ? dataSources : undefined);
-                        }}
+                        onSend={question => callApi(question)}
                         question={question}
                         setQuestion={question => setQuestion(question)}
                         selectedTools={lockedToolIds}
@@ -1118,8 +1116,8 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                         tools={tools}
                         allowToolSelection={false}
                         lockedToolIds={lockedToolIds}
-                        uploadedData={uploadedData}
-                        setUploadedData={setUploadedData}
+                        documents={chatDocuments}
+                        setDocuments={setChatDocuments}
                         usage={usageSummary}
                         onStartNewChat={startNewChatFromUsage}
                         usageConversationKey={`assistant:${assistant_id}:${active_chat ?? "new"}`}
@@ -1144,24 +1142,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                     clearOnSend
                     disabled={isLoading || isStreaming || isAssistantUnavailable || isUnsubscribed || strategy instanceof DeletedCommunityAssistantStrategy}
                     draftCacheKey={draftCacheKey}
-                    onSend={(question, datas) => {
-                        const dataSources = datas
-                            .filter(data => data.isActive !== false && data.status === "ready" && data.fileContent)
-                            .map(data => ({
-                                title: data.name,
-                                content: data.fileContent!,
-                                metadata: {
-                                    source: data.source,
-                                    mime_type: data.mimeType || data.file?.type || undefined,
-                                    size: data.size,
-                                    parsed_at: data.parsedAt,
-                                    file_signature: data.fileSignature,
-                                    stored_document_id: data.storedDocumentId,
-                                    status: data.status
-                                }
-                            }));
-                        callApi(question, undefined, dataSources.length > 0 ? dataSources : undefined);
-                    }}
+                    onSend={question => callApi(question)}
                     question={question}
                     setQuestion={question => setQuestion(question)}
                     selectedTools={lockedToolIds}
@@ -1169,8 +1150,8 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                     tools={tools}
                     allowToolSelection={false}
                     lockedToolIds={lockedToolIds}
-                    uploadedData={uploadedData}
-                    setUploadedData={setUploadedData}
+                    documents={chatDocuments}
+                    setDocuments={setChatDocuments}
                     usage={usageSummary}
                     onStartNewChat={startNewChatFromUsage}
                     usageConversationKey={`assistant:${assistant_id}:${active_chat ?? "new"}`}
@@ -1205,7 +1186,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
         lockedToolIds,
         setSelectedToolsNoop,
         draftCacheKey,
-        uploadedData,
+        chatDocuments,
         usageSummary,
         active_chat,
         startNewChatFromUsage,
@@ -1222,10 +1203,11 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
             <AnswerList
                 answers={answers}
                 regularAssistantMsg={(answer, index) => {
+                    const isLatestAnswer = index === answers.length - 1 && !isLoading;
                     return (
                         <>
                             {" "}
-                            {index === answers.length - 1 && (
+                            {isLatestAnswer && (
                                 <Answer
                                     key={index}
                                     answer={answer.response}
@@ -1239,18 +1221,10 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                                             ? t("components.answer.persisted_actions_unavailable")
                                             : undefined
                                     }
-                                    onFollowUpActionSend={
-                                        historyReadOnly
-                                            ? undefined
-                                            : prompt => {
-                                                  setLastQuestionValue(prompt);
-                                                  setIsLoadingValue(true);
-                                                  void callApi(prompt);
-                                              }
-                                    }
+                                    onFollowUpActionSend={historyReadOnly ? undefined : prompt => void callApi(prompt)}
                                 />
                             )}
-                            {index !== answers.length - 1 && <Answer key={index} answer={answer.response} />}
+                            {!isLatestAnswer && <Answer key={index} answer={answer.response} reserveFollowUpSpace={isLoading} />}
                         </>
                     );
                 }}
@@ -1261,6 +1235,8 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                 error={error}
                 makeApiRequest={() => {
                     if (!conversationActions.canRetry || historyReadOnly || isLoadingRef.current) return;
+                    // Retry drops the last answer before sending, so it must check before that, not only in callApi.
+                    if (!ensureDocumentsSendable()) return;
                     dispatch({ type: "SET_ANSWERS", payload: answers.slice(0, -1) });
                     callApi(lastQuestion);
                 }}
@@ -1288,6 +1264,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
             isStreaming,
             error,
             callApi,
+            ensureDocumentsSendable,
             chatMessageStreamEnd,
             lastQuestion,
             lastAnswerRef,

@@ -524,7 +524,7 @@ async def ag_ui_chat_endpoint(
     except BaseException:
         await _unlock_conversation_run(run_lock)
         raise
-    encoder = EventEncoder(accept=request.headers.get("accept"))
+    encoder = EventEncoder(accept=request.headers.get("accept", ""))
 
     async def event_generator() -> AsyncGenerator[str]:
         """Encode AG-UI events and close their source on completion or cancellation."""

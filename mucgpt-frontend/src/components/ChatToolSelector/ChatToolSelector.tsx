@@ -98,7 +98,7 @@ export const ChatToolSelector = ({ tools, selectedTools, setSelectedTools, allow
         <Menu
             checkedValues={{ [TOOLS_GROUP]: activeEntries.map(entry => entry.id) }}
             onCheckedValueChange={handleCheckedValueChange}
-            positioning={{ position: "above", align: "start", offset: 8 }}
+            positioning={{ position: "above", align: "start", offset: 8, autoSize: true }}
         >
             <MenuTrigger disableButtonEnhancement>
                 <Tooltip content={tooltip} relationship="label" positioning="below">

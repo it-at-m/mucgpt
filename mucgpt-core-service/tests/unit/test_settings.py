@@ -146,6 +146,49 @@ class TestSettings:
             assert settings.sso.role is None
             assert settings.sso.admin_role is None
 
+    def test_canvas_allowed_html_tags_defaults_to_underline(self):
+        with patch.dict(os.environ, {}, clear=True):
+            settings = Settings()
+            assert settings.canvas_allowed_html_tags == ["u"]
+
+    def test_canvas_allowed_html_tags_normalizes_case_from_env(self):
+        with patch.dict(
+            os.environ,
+            {"MUCGPT_CORE_CANVAS_ALLOWED_HTML_TAGS": '["U"]'},
+            clear=True,
+        ):
+            settings = Settings()
+            assert settings.canvas_allowed_html_tags == ["u"]
+
+    def test_canvas_allowed_html_tags_rejects_bad_names(self):
+        for bad in ('["u onclick"]', '["<b>"]', '["U B"]'):
+            with patch.dict(
+                os.environ,
+                {"MUCGPT_CORE_CANVAS_ALLOWED_HTML_TAGS": bad},
+                clear=True,
+            ):
+                with pytest.raises(ValidationError):
+                    Settings()
+
+    def test_canvas_allowed_html_tags_rejects_unsupported_tags(self):
+        """Config may only restrict the supported registry, never extend it."""
+        with patch.dict(
+            os.environ,
+            {"MUCGPT_CORE_CANVAS_ALLOWED_HTML_TAGS": '["u", "mark"]'},
+            clear=True,
+        ):
+            with pytest.raises(ValidationError, match="not supported by this release"):
+                Settings()
+
+    def test_canvas_allowed_html_tags_allows_subset_of_supported(self):
+        with patch.dict(
+            os.environ,
+            {"MUCGPT_CORE_CANVAS_ALLOWED_HTML_TAGS": "[]"},
+            clear=True,
+        ):
+            settings = Settings()
+            assert settings.canvas_allowed_html_tags == []
+
     def test_nested_env_variables(self):
         """Test that nested environment variables work correctly."""
         with patch.dict(

@@ -149,6 +149,10 @@ _canvas_settings = get_settings()
 # CANVAS_EDITOR_MAX_CHARS, which the export endpoint grows by 4× headroom).
 CANVAS_CONTENT_MAX_CHARS = _canvas_settings.canvas_content_max_chars
 CANVAS_EDITOR_MAX_CHARS = _canvas_settings.canvas_editor_max_chars
+# HTML tag names allowed inside canvas markdown (e.g. <u> for underline).
+CANVAS_ALLOWED_HTML_TAGS: frozenset[str] = frozenset(
+    _canvas_settings.canvas_allowed_html_tags
+)
 # Full canvas reads stop here so the tool result stays inside the model context;
 # the remaining document is reached via canvas_read(around_cursor).
 CANVAS_READ_LIMIT_CHARS = (CANVAS_CONTENT_MAX_CHARS * 95) // 100
@@ -834,4 +838,8 @@ class ConfigResponse(BaseModel):
     canvas_editor_max_chars: int = Field(
         default=CANVAS_EDITOR_MAX_CHARS,
         description="Maximum canvas editor input length in characters.",
+    )
+    canvas_allowed_html_tags: list[str] = Field(
+        default_factory=lambda: sorted(CANVAS_ALLOWED_HTML_TAGS),
+        description="HTML tag names allowed inside canvas markdown (e.g. <u> for underline). The frontend sanitizer escapes every other raw HTML tag to literal text.",
     )

@@ -23,10 +23,18 @@ FRONTEND_REGISTRY_PATH = (
     / "config"
     / "transcriptionModels.ts"
 )
+REPOSITORY_ROOT = FRONTEND_REGISTRY_PATH.parents[3]
+CORE_CONFIG_EXAMPLE_PATHS = (
+    REPOSITORY_ROOT / "mucgpt-core-service" / "config.yaml.example",
+    REPOSITORY_ROOT / "stack" / "core.config.yaml.example",
+)
 
 # Matches `model_id: "org/repo"` in both active and commented-out lines; the
 # commented entries are excluded manually below via the `//`-prefix check.
 MODEL_ID_PATTERN = re.compile(r'^\s*model_id:\s*"([^"]+)"', re.MULTILINE)
+TRANSCRIPTION_MODEL_PATTERN = re.compile(
+    r'^\s*transcription_model:\s*["\']?([^"\'\s#]+)', re.MULTILINE
+)
 
 
 def _commented_out(line: str) -> bool:
@@ -55,6 +63,14 @@ def test_known_ids_match_frontend_registry():
 
 
 @pytest.mark.unit
-def test_default_example_model_is_known():
-    """The example/default model id from config examples is a known registry entry."""
-    assert "Olicorne/parakeet-tdt-0.6b-v3-ultra-onnx" in KNOWN_TRANSCRIPTION_MODEL_IDS
+def test_example_models_are_known():
+    """Every shipped config example uses a known transcription model id."""
+    for config_path in CORE_CONFIG_EXAMPLE_PATHS:
+        assert config_path.exists(), f"config example missing: {config_path}"
+        match = TRANSCRIPTION_MODEL_PATTERN.search(
+            config_path.read_text(encoding="utf-8")
+        )
+        assert match, f"transcription_model missing from {config_path}"
+        assert match.group(1) in KNOWN_TRANSCRIPTION_MODEL_IDS, (
+            f"unknown transcription model in {config_path}: {match.group(1)}"
+        )

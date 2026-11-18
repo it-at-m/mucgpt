@@ -721,7 +721,8 @@ export function useCanvasController(conversationId: string | undefined, serverCo
     // listener covers them (editing stays unaffected). Block-level removals use a
     // role="button" element, so Enter/Space must activate them as well.
     useEffect(() => {
-        if (!editor || editor.isDestroyed) return;
+        // The view (or its DOM) may be absent pre-mount or in stubs.
+        if (!editor || editor.isDestroyed || !editor.view?.dom) return;
         // The view is gone after destroy(); capture the element for the cleanup.
         const dom = editor.view.dom;
         const activate = (element: HTMLElement, event: Event) => {

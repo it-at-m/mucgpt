@@ -800,3 +800,61 @@ describe("selection markdown", () => {
         expect(state?.cursor).toBe(2);
     });
 });
+
+describe("canvas HTML whitelist integration", () => {
+    const markNames = (harness: ReturnType<typeof renderController>): string[] => {
+        const names: string[] = [];
+        harness.current.editor!.state.doc.descendants(node =>
+            node.marks.forEach(mark => {
+                if (!names.includes(mark.type.name)) names.push(mark.type.name);
+            })
+        );
+        return names;
+    };
+
+    it("keeps whitelisted <u> as a mark and renders other HTML as literal text", () => {
+        const harness = renderController();
+        harness.render(undefined);
+        act(() => {
+            harness.current.setMarkdown("Hello <u>world</u> and <b>bold</b>");
+        });
+        expect(harness.current.getMarkdown()).toContain("<u>world</u>");
+        expect(markNames(harness)).toContain("underline");
+        expect(markNames(harness)).not.toContain("bold");
+        expect(harness.current.editor!.state.doc.textContent).toContain("<b>bold</b>");
+    });
+
+    it("keeps underline through the store/restore cycle", () => {
+        const harness = renderController();
+        harness.render(undefined);
+        act(() => {
+            harness.current.setMarkdown("Before <u>marked</u> rest");
+        });
+        act(() => {
+            harness.current.snapshot("manual");
+        });
+        const revision = harness.current.listRevisions().manual[0].revision;
+        act(() => {
+            harness.current.setMarkdown("Replaced entirely");
+        });
+        act(() => {
+            harness.current.restore(revision);
+        });
+        expect(harness.current.getMarkdown()).toBe("Before <u>marked</u> rest");
+        expect(markNames(harness)).toContain("underline");
+    });
+
+    it("sanitizes stream UPDATE content the same way", () => {
+        const harness = renderController();
+        harness.render(undefined);
+        act(() => {
+            harness.current.applyStreamEvent({
+                state: "UPDATE",
+                content: "Agent <u>wrote</u> <b>this</b>",
+                metadata: { canvas_revision: 1 }
+            });
+        });
+        expect(harness.current.getMarkdown()).toContain("<u>wrote</u>");
+        expect(markNames(harness)).not.toContain("bold");
+    });
+});

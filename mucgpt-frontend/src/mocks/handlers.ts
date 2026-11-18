@@ -144,6 +144,7 @@ const CONFIG_RESPONSE: ApplicationConfig = {
     ai_act_compliance_check_enabled: true,
     canvas_content_max_chars: 256 * 1024,
     canvas_editor_max_chars: 512 * 1024,
+    canvas_allowed_html_tags: ["u"],
     footer_link_url: "https://intranet.example.org",
     footer_label: "Example Organization",
     faq_url: "https://intranet.example.org/help",

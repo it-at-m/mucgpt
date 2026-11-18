@@ -43,13 +43,7 @@ The system is split into microservices to separate concerns and allow independen
 - **Responsibility**:
   - Stores user data, assistants, and organization structure.
   - Manages user permissions and access control.
-  - Handles database migrations via `mucgpt-assistant-service-migrations`.
-
-### `mucgpt-assistant-service-migrations`
-
-- **Role**: Database Schema Management
-- **Tech**: Alembic, Python
-- **Responsibility**: Applies database schema updates to the PostgreSQL instance used by the assistant service.
+  - Includes Alembic revisions under `migrations/`; they are released as the separate `mucgpt-assistant-migrations` image.
 
 ## Developer Workflows
 
@@ -104,7 +98,7 @@ The system is split into microservices to separate concerns and allow independen
 
 ## Specific Patterns
 
-- **Database Migrations**: Handled by `mucgpt-assistant-service-migrations`. Run via `alembic`.
+- **Database Migrations**: Assistant revisions live in `mucgpt-assistant-service/migrations/` and run via the separate migration image.
 - **Authentication**: OIDC via Keycloak. Services validate JWT tokens using `joserfc`.
 - **LangGraph**: Used in `mucgpt-core-service` for complex agentic workflows. Inspect `src/agent` or `src/simply` for examples.
 - **Model Context Protocol (MCP)**: Configured in `mucgpt-core-service` via `MCPSettings`. Supports connecting to external tool providers.

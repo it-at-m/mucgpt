@@ -15,7 +15,7 @@ import {
 } from "../api";
 import { buildAssistantCreateResponse, buildOwnersDetailedFromOwnerIds, buildChatMessage, buildRichMarkdownChatMessage } from "./data/generators";
 import { CREATIVITY_HIGH, CREATIVITY_MEDIUM } from "../constants";
-import type { AssistantAuditEvent } from "../api/models";
+import type { AssistantAuditEvent, DocumentLibraryEntry } from "../api/models";
 import { CANVAS_TOOL_IDS } from "../utils/canvasStream";
 import { loadMockAssistants, loadMockSubscriptions, saveMockAssistants, saveMockSubscriptions } from "./data/assistant-store";
 import { MOCK_DELETED_SUBSCRIBED_SNAPSHOT, MOCK_SUBSCRIPTION_SEED } from "./data/browser-scenario-seed";
@@ -677,6 +677,52 @@ async function parseUploadHandler({ request }: { request: Request }) {
     return HttpResponse.json(content);
 }
 
+const MOCK_DOCUMENT_LIMIT = 10;
+const MOCK_DOCUMENT_MAX_BYTES = 20 * 1024 * 1024;
+const MOCK_UNSUPPORTED_DOCUMENT_EXTENSIONS = [".exe", ".zip", ".mp4"];
+const mockDocuments: DocumentLibraryEntry[] = [];
+
+/** Mocked document library upload: mirrors the backend's quota, size and format rejections. */
+async function uploadDocumentHandler({ request }: { request: Request }) {
+    await delay(1500);
+
+    const formData = await request.formData();
+    const file = formData.get("file");
+    if (!(file instanceof File)) {
+        return HttpResponse.json({ detail: "No file provided" }, { status: 422 });
+    }
+    if (mockDocuments.length >= MOCK_DOCUMENT_LIMIT) {
+        return HttpResponse.json({ detail: "Document library limit of 10 reached" }, { status: 409 });
+    }
+    if (file.size > MOCK_DOCUMENT_MAX_BYTES) {
+        return HttpResponse.json({ detail: "Document exceeds the parser service byte limit." }, { status: 413 });
+    }
+    if (MOCK_UNSUPPORTED_DOCUMENT_EXTENSIONS.some(extension => file.name.toLowerCase().endsWith(extension))) {
+        return HttpResponse.json({ detail: "Parser does not support the document format." }, { status: 415 });
+    }
+
+    const text = await file.text();
+    if (!text.trim()) {
+        return HttpResponse.json({ detail: "Document extraction returned no usable text." }, { status: 422 });
+    }
+
+    const id = crypto.randomUUID();
+    const document: DocumentLibraryEntry = {
+        id,
+        filename: file.name,
+        mime_type: file.type || "application/octet-stream",
+        original_size: file.size,
+        text_length: text.length,
+        preview: text.slice(0, 200),
+        preview_kind: "initial_excerpt",
+        path: `/documents/${id}.txt`,
+        created_at: new Date().toISOString(),
+        status: "ready"
+    };
+    mockDocuments.unshift(document);
+    return HttpResponse.json(document, { status: 201 });
+}
+
 const MOCK_CANVAS_DOCUMENT =
     "# Bescheid-Entwurf\n\nSehr geehrte Damen und Herren,\n\nhiermit erhalten Sie den Entwurf des Bescheids.\n\n| Verfahren | Zuständigkeit |\n| --- | --- |\n| Auskunft | Amt A |\n\n> Hinweis: Der Entwurf wird im Canvas verwaltet.";
 
@@ -714,6 +760,19 @@ const buildCanvasToolCallEvents = (parentMessageId: string, conversationId: stri
     events.push({ type: "TOOL_CALL_END", toolCallId, parentMessageId });
     return events;
 };
+
+const APPROVAL_SCENARIOS: Record<string, Record<string, unknown>[]> = {
+    "agui-approval": [{ query: "Kita-Gebühren München 2026" }],
+    "agui-approval-multi": [{ query: "Kita-Gebühren München 2026" }, { query: "Anwohnerparken München Kosten" }],
+    "agui-approval-kette": [{ query: "Kita-Gebühren München 2026" }],
+    "agui-approval-vertraulich": [{ query: "Personalakte Beförderungsverfahren 2026" }]
+};
+
+const APPROVAL_TOOLS: Record<string, { toolName: string; dataClassification: string }> = {
+    "agui-approval-vertraulich": { toolName: "Personalwesen", dataClassification: "internal" }
+};
+
+const CHAIN_ID_PREFIX = "chain-";
 
 export const handlers = [
     http.all("https://huggingface.co/*", () => passthrough()),
@@ -1093,24 +1152,33 @@ export const handlers = [
         });
     }),
     http.post("/api/backend/v1/chat/v2/completions", async ({ request }) => {
-        const body = (await request.json()) as {
-            messages?: { role: string; content: string }[];
+        // Both request shapes are mocked: the native AG-UI run input
+        // (threadId, camelCase messages with ids) and the legacy envelope
+        // (conversation_id, snake_case settings). The wire settings live in
+        // forwardedProps.mucgpt for the native shape.
+        const raw = (await request.json()) as {
+            messages?: Array<{ role: string; content: string }>;
+            threadId?: string;
             conversation_id?: string;
+            forwardedProps?: { mucgpt?: { enabled_tools?: string[]; canvas?: CanvasState | null } };
             enabled_tools?: string[];
             canvas?: CanvasState | null;
+            resume?: { interruptId: string; status: string; payload?: { decision?: string } }[];
         };
+        const enabledTools = raw.forwardedProps?.mucgpt?.enabled_tools ?? raw.enabled_tools;
+        const mockCanvas = raw.forwardedProps?.mucgpt?.canvas ?? raw.canvas;
         // Canvas tools are auto-added while the canvas is open; the generic
         // demo tool call must not fire from those.
-        const mockToolName = body.enabled_tools?.find(id => !(CANVAS_TOOL_IDS as readonly string[]).includes(id));
+        const mockToolName = enabledTools?.find(id => !(CANVAS_TOOL_IDS as readonly string[]).includes(id));
         const latestUserMessage =
-            body.messages
+            raw.messages
                 ?.slice()
                 .reverse()
                 .find(message => message.role === "user")?.content || "";
         const encoder = new TextEncoder();
         const runId = crypto.randomUUID();
         const messageId = crypto.randomUUID();
-        const threadId = body.conversation_id ?? crypto.randomUUID();
+        const threadId = raw.threadId ?? raw.conversation_id ?? crypto.randomUUID();
         const stream = new ReadableStream({
             async start(controller) {
                 const send = (event: object) => controller.enqueue(encoder.encode(`data: ${JSON.stringify(event)}\n\n`));
@@ -1134,6 +1202,71 @@ export const handlers = [
                     return;
                 }
 
+                const pauseForApproval = (calls: Record<string, unknown>[], idPrefix = "") => {
+                    const interrupts = calls.map(args => {
+                        const toolCallId = idPrefix + crypto.randomUUID();
+                        const { toolName, dataClassification } = APPROVAL_TOOLS[scenario] ?? {
+                            toolName: mockToolName ?? "WebSuche",
+                            dataClassification: "public"
+                        };
+                        const status_message = "Durchsuche das Internet";
+                        send({
+                            type: "TOOL_CALL_CHUNK",
+                            toolCallId,
+                            toolCallName: toolName,
+                            parentMessageId: messageId,
+                            delta: JSON.stringify({ status_message, ...args })
+                        });
+                        return {
+                            id: toolCallId,
+                            reason: "tool_approval",
+                            toolCallId,
+                            message: status_message,
+                            metadata: { mucgpt: { toolName, args, dataClassification } }
+                        };
+                    });
+                    send({ type: "RUN_FINISHED", threadId, runId, outcome: { type: "interrupt", interrupts } });
+                    controller.close();
+                };
+
+                const scenario = latestUserMessage.trim().toLowerCase();
+                if (Object.hasOwn(APPROVAL_SCENARIOS, scenario) && !raw.resume) {
+                    pauseForApproval(APPROVAL_SCENARIOS[scenario], scenario === "agui-approval-kette" ? CHAIN_ID_PREFIX : "");
+                    return;
+                }
+
+                if (raw.resume) {
+                    const isApproved = (entry: NonNullable<typeof raw.resume>[number]) => entry.status === "resolved" && entry.payload?.decision === "approve";
+                    await delay(1200);
+                    for (const entry of raw.resume) {
+                        if (isApproved(entry)) {
+                            send({
+                                type: "TOOL_CALL_RESULT",
+                                messageId: crypto.randomUUID(),
+                                toolCallId: entry.interruptId,
+                                content: "Mock tool result",
+                                role: "tool"
+                            });
+                        }
+                    }
+                    if (raw.resume.some(entry => entry.interruptId.startsWith(CHAIN_ID_PREFIX))) {
+                        pauseForApproval([{ query: "Anwohnerparken München Kosten" }]);
+                        return;
+                    }
+                    const approvedCount = raw.resume.filter(isApproved).length;
+                    const delta = `Mock-Antwort: ${approvedCount} von ${raw.resume.length} Tool-Aufrufen wurden ausgeführt.`;
+                    send({ type: "TEXT_MESSAGE_CHUNK", messageId, role: "assistant", delta });
+                    send({
+                        type: "RUN_FINISHED",
+                        threadId,
+                        runId,
+                        usage: [{ model: "gpt-4o-mini", inputTokens: 80, outputTokens: 20, totalTokens: 100 }],
+                        metadata: { mucgpt: { contextTokens: 100 } }
+                    });
+                    controller.close();
+                    return;
+                }
+
                 if (mockToolName) {
                     const toolCallId = crypto.randomUUID();
                     send({
@@ -1148,7 +1281,7 @@ export const handlers = [
                 }
 
                 const wantsRichMarkdownMock = /^\s*rich\s*$/i.test(latestUserMessage);
-                const wantsCanvasMock = Boolean(body.canvas) && /^\s*canvas-demo\s*$/i.test(latestUserMessage);
+                const wantsCanvasMock = Boolean(mockCanvas) && /^\s*canvas-demo\s*$/i.test(latestUserMessage);
 
                 if (wantsCanvasMock) {
                     for (const event of buildCanvasToolCallEvents(messageId, threadId)) {
@@ -1611,6 +1744,18 @@ export const handlers = [
                 "Content-Disposition": `attachment; filename="canvas.${target}"`
             }
         });
+    }),
+
+    http.get("/api/backend/v1/documents", () => HttpResponse.json(mockDocuments)),
+    http.post("/api/backend/v1/documents", uploadDocumentHandler),
+    http.delete("/api/backend/v1/documents/:documentId", async ({ params }) => {
+        await delay(300);
+        const index = mockDocuments.findIndex(document => document.id === params.documentId);
+        if (index === -1) {
+            return HttpResponse.json({ detail: "Document unavailable" }, { status: 404 });
+        }
+        mockDocuments.splice(index, 1);
+        return new HttpResponse(null, { status: 204 });
     }),
 
     // Parse API handlers (core-service route + legacy compatibility)

@@ -8,6 +8,25 @@ jobs:
   test_package:
     name: Test ${{ matrix.os }} Python ${{ matrix.python_version }}
     runs-on: ${{ matrix.os }}
+    env:
+      MUCGPT_LIFECYCLE_POSTGRES_HOST: 127.0.0.1
+      MUCGPT_LIFECYCLE_POSTGRES_PORT: 5432
+      MUCGPT_LIFECYCLE_POSTGRES_USER: admin
+      MUCGPT_LIFECYCLE_POSTGRES_PASSWORD: admin
+    services:
+      postgres:
+        image: postgres:17.4
+        env:
+          POSTGRES_USER: admin
+          POSTGRES_PASSWORD: admin
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U admin -d postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
     strategy:
       fail-fast: false
       matrix:

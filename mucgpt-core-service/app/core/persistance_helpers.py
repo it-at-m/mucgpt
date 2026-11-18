@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, cast
+from typing import Any
 
 from anyio import CancelScope
 from langchain_core.messages import AIMessage, HumanMessage, ToolMessage
@@ -9,7 +9,6 @@ from psycopg import AsyncConnection
 from psycopg.rows import dict_row
 from psycopg_pool import AsyncConnectionPool
 from pydantic import ValidationError
-from sqlalchemy import Table
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
 
 from api.api_models import (
@@ -21,7 +20,7 @@ from config.settings import Settings, get_settings
 from core.logtools import getLogger
 from database.canvas_repo import CanvasRepository
 from database.conversation_repo import ConversationRepository
-from database.database_models import Base, CanvasDocument, Chat
+from database.database_models import CanvasDocument
 from database.fenced_checkpointer import FencedPostgresSaver
 from database.session import create_engine_and_session_factory
 
@@ -111,7 +110,7 @@ class PersistanceHelpers:
 
     @staticmethod
     async def init(settings: Settings) -> None:
-        """Open persistence and migrate legacy state before publishing ready resources.
+        """Open persistence resources before publishing them as ready.
 
         Failed initialization closes provisional resources and leaves startup retryable.
         All old, unfenced writers must be drained before this migration runs.
@@ -128,8 +127,6 @@ class PersistanceHelpers:
         try:
             await pool.open()
             checkpointer = FencedPostgresSaver(conn=pool)
-            await checkpointer.setup()
-            await PersistanceHelpers._initialize_schema(pool, engine)
         except BaseException:
             with CancelScope(shield=True):
                 await pool.close()
@@ -141,53 +138,6 @@ class PersistanceHelpers:
         PersistanceHelpers._engine = engine
         PersistanceHelpers._session_factory = session_factory
         logger.info("PersistanceHelpers initialized")
-
-    @staticmethod
-    async def _initialize_schema(
-        pool: AsyncConnectionPool[AsyncConnection[dict[str, Any]]],
-        engine: AsyncEngine,
-    ) -> None:
-        """Migrate retirement metadata and quarantine/erase legacy orphan state."""
-        async with engine.begin() as connection:
-            await connection.run_sync(
-                Base.metadata.create_all,
-                # The declarative stubs type `__table__` as a `FromClause`;
-                # at runtime these are the concrete `Table` objects.
-                tables=[
-                    cast("Table", Chat.__table__),
-                    cast("Table", CanvasDocument.__table__),
-                ],
-            )
-
-        # create_all does not alter existing tables. Keep the core's startup
-        # migration idempotent and quarantine pre-fence orphan checkpoint IDs.
-        async with pool.connection() as connection:
-            async with connection.transaction():
-                await connection.execute(
-                    "ALTER TABLE chats ADD COLUMN IF NOT EXISTS deleted_at timestamptz"
-                )
-                await connection.execute(
-                    "ALTER TABLE chats ADD COLUMN IF NOT EXISTS document_ids json NOT NULL DEFAULT '[]'"
-                )
-                await connection.execute(
-                    "ALTER TABLE chats ADD COLUMN IF NOT EXISTS document_names json NOT NULL DEFAULT '{}'"
-                )
-                await connection.execute(
-                    "INSERT INTO chats (conversation_id, user_id, deleted_at) "
-                    "SELECT thread_id, '', now() FROM ("
-                    "SELECT thread_id FROM checkpoints UNION "
-                    "SELECT thread_id FROM checkpoint_writes UNION "
-                    "SELECT thread_id FROM checkpoint_blobs) AS legacy "
-                    "ON CONFLICT (conversation_id) DO NOTHING"
-                )
-                # Unknown legacy owners cannot authorize cleanup through DELETE.
-                # Startup owns that cleanup; failure aborts startup and retries
-                # on the next initialization without serving unsafe mappings.
-                for table in ("checkpoints", "checkpoint_writes", "checkpoint_blobs"):
-                    await connection.execute(
-                        f"DELETE FROM {table} WHERE thread_id IN "
-                        "(SELECT conversation_id FROM chats WHERE user_id = '' AND deleted_at IS NOT NULL)"
-                    )
 
     @staticmethod
     async def close() -> None:

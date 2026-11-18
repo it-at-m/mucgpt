@@ -1,8 +1,6 @@
-from anyio import CancelScope
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
 
 from config.settings import Settings
-from database.database_models import Base, Document
 from database.session import create_engine_and_session_factory
 
 
@@ -17,17 +15,6 @@ class DocumentCatalogManager:
         if DocumentCatalogManager._engine is not None:
             return
         engine, factory = create_engine_and_session_factory(settings)
-        try:
-            async with engine.begin() as connection:
-                # Explicitly initialize the new table on existing deployments;
-                # conversation startup intentionally creates only the chats table.
-                await connection.run_sync(
-                    Base.metadata.create_all, tables=[Document.__table__]  # ty: ignore[invalid-argument-type]
-                )
-        except BaseException:
-            with CancelScope(shield=True):
-                await engine.dispose()
-            raise
         DocumentCatalogManager._engine = engine
         DocumentCatalogManager._session_factory = factory
 

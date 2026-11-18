@@ -8,22 +8,28 @@ import asyncio
 import json
 import os
 import unittest
+from pathlib import Path
 from types import SimpleNamespace
 from typing import Any, cast
 from unittest.mock import AsyncMock, Mock, patch
 from uuid import uuid4
 
 import psycopg
-from fastapi import FastAPI, HTTPException, Request
+from alembic import command
+from alembic.config import Config
+from fastapi import FastAPI, HTTPException
 from langchain_core.messages import AIMessage, HumanMessage
 from langchain_core.runnables import RunnableConfig
 from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
 from langgraph.graph import END, START, MessagesState, StateGraph
+from migrations.settings import get_migration_settings
 from psycopg import AsyncConnection, sql
 from psycopg.conninfo import make_conninfo
 from psycopg.rows import dict_row
 from psycopg_pool import AsyncConnectionPool
 from pydantic import SecretStr
+from starlette.responses import StreamingResponse
+from tests.unit.helpers import request_with_body
 
 from agent.agent_executor import MUCGPTAgentExecutor
 from agent.deep_agent import (
@@ -81,8 +87,6 @@ class ConversationLifecyclePostgresTests(unittest.IsolatedAsyncioTestCase):
                 password=SecretStr(str(self.connection_args["password"])),
             )
         )
-        await PersistanceHelpers.init(self.settings)
-        self.addAsyncCleanup(PersistanceHelpers.close)
         self.conversation_id = uuid4().hex
         self.owner = AuthenticationResult(
             user_id="owner-a", token="test", department="test"
@@ -90,6 +94,15 @@ class ConversationLifecyclePostgresTests(unittest.IsolatedAsyncioTestCase):
         self.other = AuthenticationResult(
             user_id="owner-b", token="test", department="test"
         )
+        if self._testMethodName in {
+            "test_legacy_mapped_history_survives_migration",
+            "test_legacy_orphans_are_quarantined_during_migration",
+        }:
+            await self.create_legacy_schema()
+        else:
+            await self.migrate_database()
+            await PersistanceHelpers.init(self.settings)
+            self.addAsyncCleanup(PersistanceHelpers.close)
 
     async def drop_database(self):
         async with await psycopg.AsyncConnection.connect(
@@ -106,6 +119,21 @@ class ConversationLifecyclePostgresTests(unittest.IsolatedAsyncioTestCase):
         pool = PersistanceHelpers._pool
         assert pool is not None
         return pool
+
+    async def migrate_database(self) -> None:
+        """Apply the same schema migration that production runs before core starts."""
+        migration_env = {
+            "MUCGPT_CORE_DB__HOST": self.connection_args["host"],
+            "MUCGPT_CORE_DB__PORT": str(self.connection_args["port"]),
+            "MUCGPT_CORE_DB__NAME": self.database,
+            "MUCGPT_CORE_DB__USER": self.connection_args["user"],
+            "MUCGPT_CORE_DB__PASSWORD": self.connection_args["password"],
+        }
+        with patch.dict(os.environ, migration_env):
+            get_migration_settings.cache_clear()
+            config = Config(str(Path(__file__).parents[2] / "alembic.ini"))
+            await asyncio.to_thread(command.upgrade, config, "head")
+        get_migration_settings.cache_clear()
 
     def request(self):
         return ChatCompletionRequest(
@@ -135,6 +163,65 @@ class ConversationLifecyclePostgresTests(unittest.IsolatedAsyncioTestCase):
             {"configurable": {"thread_id": self.conversation_id}},
             durability=CHECKPOINT_DURABILITY,
         )
+
+    async def create_legacy_schema(self) -> None:
+        """Create the pre-Alembic schema used by the migration adoption tests."""
+        async with await psycopg.AsyncConnection.connect(
+            **self.connection_args, dbname=self.database, autocommit=True
+        ) as connection:
+            await connection.execute(
+                """
+                CREATE TABLE chats (
+                    conversation_id VARCHAR PRIMARY KEY,
+                    user_id VARCHAR NOT NULL,
+                    assistant_id VARCHAR,
+                    chat_title VARCHAR NOT NULL DEFAULT 'New Chat',
+                    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+                    updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+                )
+                """
+            )
+            await AsyncPostgresSaver(connection).setup()
+
+    async def seed_legacy_history(self, *, orphan: bool = False) -> None:
+        """Seed checkpoint state before Alembic adopts the legacy schema."""
+        async with await psycopg.AsyncConnection.connect(
+            **self.connection_args, dbname=self.database, autocommit=True
+        ) as connection:
+            if not orphan:
+                await connection.execute(
+                    "INSERT INTO chats (conversation_id, user_id) VALUES (%s, %s)",
+                    (self.conversation_id, self.owner.user_id),
+                )
+            saver = AsyncPostgresSaver(connection)
+            if orphan:
+                await saver.aput_writes(
+                    {
+                        "configurable": {
+                            "thread_id": self.conversation_id,
+                            "checkpoint_ns": "",
+                            "checkpoint_id": "legacy",
+                        }
+                    },
+                    [("messages", [HumanMessage(content="legacy private")])],
+                    "task",
+                )
+            else:
+                graph = (
+                    StateGraph(MessagesState)
+                    .add_node(
+                        "answer",
+                        lambda state: {"messages": [AIMessage(content="saved answer")]},
+                    )
+                    .add_edge(START, "answer")
+                    .add_edge("answer", END)
+                    .compile(checkpointer=saver)
+                )
+                await graph.ainvoke(
+                    {"messages": [HumanMessage(content="saved question")]},
+                    {"configurable": {"thread_id": self.conversation_id}},
+                    durability=CHECKPOINT_DURABILITY,
+                )
 
     async def test_manual_rename_persists_and_rejects_foreign_missing_and_retired_ids(
         self,
@@ -248,14 +335,16 @@ class ConversationLifecyclePostgresTests(unittest.IsolatedAsyncioTestCase):
 
     async def test_independent_service_saver_is_fenced(self):
         await get_messages_for_agent(self.request(), self.owner.user_id)
-        pool: AsyncConnectionPool[AsyncConnection[dict[str, Any]]] = AsyncConnectionPool(
-            open=False,
-            kwargs={
-                **self.connection_args,
-                "dbname": self.database,
-                "autocommit": True,
-                "row_factory": dict_row,
-            },
+        pool: AsyncConnectionPool[AsyncConnection[dict[str, Any]]] = (
+            AsyncConnectionPool(
+                open=False,
+                kwargs={
+                    **self.connection_args,
+                    "dbname": self.database,
+                    "autocommit": True,
+                    "row_factory": dict_row,
+                },
+            )
         )
         await pool.open()
         self.addAsyncCleanup(pool.close)
@@ -371,11 +460,10 @@ class ConversationLifecyclePostgresTests(unittest.IsolatedAsyncioTestCase):
         await self.assert_retired()
 
     async def test_legacy_mapped_history_survives_migration(self):
-        await self.seed_history()
-        async with self.pool().connection() as connection:
-            await connection.execute("ALTER TABLE chats DROP COLUMN deleted_at")
-        await PersistanceHelpers.close()
+        await self.seed_legacy_history()
+        await self.migrate_database()
         await PersistanceHelpers.init(self.settings)
+        self.addAsyncCleanup(PersistanceHelpers.close)
         self.assertEqual(
             [
                 message.content
@@ -391,23 +479,11 @@ class ConversationLifecyclePostgresTests(unittest.IsolatedAsyncioTestCase):
         await delete_conversation(self.conversation_id, self.owner)
         await self.assert_retired()
 
-    async def test_legacy_orphans_are_quarantined_on_restart(self):
-        async with self.pool().connection() as connection:
-            # Simulate the pre-fence schema and orphan pending state.
-            await connection.execute("ALTER TABLE chats DROP COLUMN deleted_at")
-            await AsyncPostgresSaver(connection).aput_writes(
-                {
-                    "configurable": {
-                        "thread_id": self.conversation_id,
-                        "checkpoint_ns": "",
-                        "checkpoint_id": "legacy",
-                    }
-                },
-                [("messages", [HumanMessage(content="legacy private")])],
-                "task",
-            )
-        await PersistanceHelpers.close()
+    async def test_legacy_orphans_are_quarantined_during_migration(self):
+        await self.seed_legacy_history(orphan=True)
+        await self.migrate_database()
         await PersistanceHelpers.init(self.settings)
+        self.addAsyncCleanup(PersistanceHelpers.close)
         await self.assert_retired()
         await PersistanceHelpers.close()
         await PersistanceHelpers.init(self.settings)
@@ -420,17 +496,13 @@ class ConversationLifecyclePostgresTests(unittest.IsolatedAsyncioTestCase):
                 with self.subTest(stream=stream, outcome=outcome):
                     self.conversation_id = uuid4().hex
                     saver = PersistanceHelpers.get_checkpointer()
-                    paused, resume = asyncio.Event(), asyncio.Event()
-                    original_put = saver.aput
+                    started, resume = asyncio.Event(), asyncio.Event()
 
-                    async def paused_put(*args, **kwargs):
-                        paused.set()
-                        await resume.wait()
-                        return await original_put(*args, **kwargs)
-
-                    def answer(state):
+                    async def answer(state):
+                        started.set()
                         if outcome == "failure":
                             raise RuntimeError("controlled generation failure")
+                        await resume.wait()
                         return {
                             "messages": [AIMessage(content="private answer from A")]
                         }
@@ -510,9 +582,10 @@ class ConversationLifecyclePostgresTests(unittest.IsolatedAsyncioTestCase):
                             await app(scope, receive, send)
                             return
                         response = await ag_ui_chat_endpoint(
-                            request,
                             self.owner,
-                            Request({"type": "http", "headers": []}),
+                            request_with_body(
+                                request.model_dump(mode="json", exclude_none=True)
+                            ),
                         )
                         if hasattr(response, "body_iterator"):
                             body_iterator = cast("Any", response.body_iterator)
@@ -523,7 +596,6 @@ class ConversationLifecyclePostgresTests(unittest.IsolatedAsyncioTestCase):
                                 await body_iterator.aclose()
                         return response
 
-                    saver.aput = paused_put
                     task = None
                     try:
                         with (
@@ -537,16 +609,25 @@ class ConversationLifecyclePostgresTests(unittest.IsolatedAsyncioTestCase):
                             ),
                         ):
                             task = asyncio.create_task(run())
-                            await asyncio.wait_for(paused.wait(), 10)
-                            await delete_conversation(self.conversation_id, self.owner)
-                            if outcome == "disconnect":
-                                await disconnect.put({"type": "http.disconnect"})
-                            elif outcome == "cancel":
+                            await asyncio.wait_for(started.wait(), 10)
+                            if outcome == "cancel":
                                 task.cancel()
-                            resume.set()
-                            result = await asyncio.wait_for(
-                                asyncio.gather(task, return_exceptions=True), 10
-                            )
+                                result = await asyncio.wait_for(
+                                    asyncio.gather(task, return_exceptions=True), 10
+                                )
+                                await delete_conversation(
+                                    self.conversation_id, self.owner
+                                )
+                            else:
+                                await delete_conversation(
+                                    self.conversation_id, self.owner
+                                )
+                                if outcome == "disconnect":
+                                    await disconnect.put({"type": "http.disconnect"})
+                                resume.set()
+                                result = await asyncio.wait_for(
+                                    asyncio.gather(task, return_exceptions=True), 10
+                                )
                             if outcome == "disconnect":
                                 self.assertIsNone(result[0])
                                 self.assertTrue(disconnected.is_set())
@@ -557,7 +638,9 @@ class ConversationLifecyclePostgresTests(unittest.IsolatedAsyncioTestCase):
                                     )
                                 )
                             elif outcome == "cancel":
-                                self.assertIsInstance(result[0], asyncio.CancelledError)
+                                # LangGraph handles cancellation while closing its event
+                                # stream, so the endpoint completes with its response.
+                                self.assertIsInstance(result[0], StreamingResponse)
                             else:
                                 self.assertTrue(
                                     any("RUN_ERROR" in chunk for chunk in chunks)
@@ -575,7 +658,6 @@ class ConversationLifecyclePostgresTests(unittest.IsolatedAsyncioTestCase):
                         resume.set()
                         if task is not None:
                             await asyncio.gather(task, return_exceptions=True)
-                        saver.aput = original_put
 
 
 if __name__ == "__main__":

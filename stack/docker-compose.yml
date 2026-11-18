@@ -213,6 +213,8 @@ services:
       - LOG_LEVEL_MUCGPT_CORE=INFO
       - LOG_LEVEL_MUCGPT_CORE_AGENT=INFO
     depends_on:
+      core-migrations:
+        condition: service_completed_successfully
       xberg-full:
         condition: service_started
       checkpoint-postgres:
@@ -222,10 +224,29 @@ services:
       # Mount YAML configuration files (recommended over environment variables)
       - ./core.config.yaml:/app/config.yaml:ro
 
+  core-migrations:
+    build:
+      context: ../mucgpt-core-service
+      dockerfile: Dockerfile.migrations
+      args:
+        - HTTPS_PROXY=${HTTPS_PROXY}
+    depends_on:
+      checkpoint-postgres:
+        condition: service_healthy
+    env_file:
+      - ./.env
+    environment:
+      - MIGRATION_LOCK_TIMEOUT=0
+    networks:
+      - internal
+    restart: "no"
+    volumes:
+      - ./core.config.yaml:/app/config.yaml:ro
+
   assistant-migrations:
     build:
-      context: ../mucgpt-assistant-service-migrations
-      dockerfile: Dockerfile
+      context: ../mucgpt-assistant-service
+      dockerfile: Dockerfile.migrations
       args:
         - HTTPS_PROXY=${HTTPS_PROXY}
     depends_on:

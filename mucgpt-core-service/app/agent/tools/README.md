@@ -90,6 +90,52 @@ Requests still carry single tool ids in `enabled_tools`. The tool filter in
 of its tools is enabled, so stored assistant selections keep working when a
 group gains tools or is split via per-tool group overrides.
 
+## Approval and data classification
+
+Two settings per tool, resolved like the group: a matching `overrides` entry's
+value, else the source's value, else the default.
+
+- `require_approval` (default `false`): the run pauses before the tool runs and
+  the user decides in the chat whether the call is sent. The source value also
+  covers tools the server adds later, so a new tool of an approval-bound server
+  is never sent unasked.
+- `data_classification` (`public`, `internal` or `confidential`, default
+  `public`): the highest protection level of the data the tool may receive.
+  The levels are ascending; a tool approved for `internal` data may also receive
+  public data. Users see it in the approval step. MUCGPT only shows the
+  classification; it does not check the data.
+
+```yaml
+"searxng":
+  require_approval: true
+  overrides:
+    - name: "searxng_instance_info"
+      require_approval: false
+```
+
+Local tools set both on their `LocalTool` spec. The values end up in each
+tool's `BaseTool.metadata` (`agent/tools/approval.py`); everything reads them
+from there.
+
+How a paused run works (`deep_agent.py`, `agent_executor.py`,
+`chat_router.py`):
+
+- `interrupt_on` lists every tool with `require_approval`. Before such a call
+  runs, the run stops and the checkpoint keeps it.
+- `/v1/chat/v2/completions` ends the run with an AG-UI interrupt outcome: one
+  interrupt per paused call, its id being the tool call id, with the tool name,
+  the arguments (without `status_message`) and the data classification.
+- The client continues with `resume` (one answer per paused call). Only
+  `status: "resolved"` with `payload: {"decision": "approve"}` runs a call;
+  anything else counts as a rejection. The call that runs is always the one in
+  the checkpoint, never arguments from the client.
+- A new user message instead of an answer cancels the paused calls (deepagents'
+  `PatchToolCallsMiddleware` answers them as cancelled); they never run.
+- A persisted conversation runs one request at a time (Redis lock in
+  `chat_router.py`); a second one gets 409, so an approved call never runs twice.
+- Approval-bound tools are left out wherever a run could not pause and continue,
+  i.e. without a checkpointer (`persist: false`, e.g. assistant previews).
+
 ## What used to be here, and why it's gone
 
 - **`ToolCollection.add_instructions`** - injected a system message describing

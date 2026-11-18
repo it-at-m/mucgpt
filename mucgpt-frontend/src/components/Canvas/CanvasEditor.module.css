@@ -19,7 +19,7 @@
     background-color: var(--colorNeutralBackground1);
     color: var(--colorNeutralForeground1);
     font-family: var(--fontFamilyBase);
-    font-size: var(--fontSizeBase350);
+    font-size: var(--fontSizeBase400);
     line-height: var(--lineHeightBase400);
     overflow-wrap: break-word;
 }
@@ -37,7 +37,7 @@
 }
 
 .editor :global(.ProseMirror) h2 {
-    font-size: var(--fontSizeBase450);
+    font-size: var(--fontSizeBase400);
 }
 
 .editor :global(.ProseMirror) h3 {

@@ -1,0 +1,105 @@
+/*
+ * Matches the 32px action row below the text field, so the composer stays symmetric.
+ * Spacing lives inside the list items because Fluent's overflow measurement ignores gap, margin and the list padding.
+ */
+.chips {
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    min-height: 32px;
+    margin: 0 var(--spacingHorizontalXS);
+    padding: 0;
+    list-style: none;
+}
+
+.expanded {
+    flex-wrap: wrap;
+    row-gap: var(--spacingVerticalXS);
+}
+
+.chipSlot,
+.toggleItem {
+    display: flex;
+    flex: 0 0 auto;
+    max-width: 100%;
+    padding-inline-end: var(--spacingHorizontalXS);
+}
+
+.chip,
+.toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacingHorizontalXS);
+    min-width: 0;
+    max-width: 240px;
+    height: 28px;
+    padding-inline: var(--spacingHorizontalS) var(--spacingHorizontalXXS);
+    border: var(--strokeWidthThin) solid var(--colorNeutralStroke2);
+    border-radius: var(--borderRadiusMedium);
+    background: var(--colorNeutralBackground3);
+    color: var(--colorNeutralForeground1);
+    font-size: var(--fontSizeBase200);
+    line-height: var(--lineHeightBase200);
+}
+
+.toggle {
+    padding-inline: var(--spacingHorizontalS);
+    font-family: inherit;
+    font-weight: var(--fontWeightSemibold);
+    cursor: pointer;
+}
+
+.toggle:hover {
+    background: var(--colorNeutralBackground3Hover);
+}
+
+.toggle:active {
+    background: var(--colorNeutralBackground3Pressed);
+}
+
+.toggle:focus-visible {
+    outline: var(--strokeWidthThick) solid var(--colorStrokeFocus2);
+    outline-offset: var(--strokeWidthThin);
+}
+
+.chip[data-status="uploading"] {
+    padding-inline-end: var(--spacingHorizontalS);
+    color: var(--colorNeutralForeground2);
+}
+
+/* The error reason must stay readable, so failed uploads may exceed the regular chip width. */
+.chip[data-status="failed"] {
+    max-width: none;
+    border-color: var(--colorStatusDangerBorder1);
+    background: var(--colorStatusDangerBackground1);
+    color: var(--colorStatusDangerForeground1);
+}
+
+.chip[data-status="unavailable"] {
+    border-color: var(--colorStatusWarningBorder1);
+    background: var(--colorStatusWarningBackground1);
+    color: var(--colorStatusWarningForeground1);
+}
+
+.icon {
+    display: inline-flex;
+}
+
+.name {
+    overflow: hidden;
+    font-weight: var(--fontWeightSemibold);
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.status {
+    flex-shrink: 0;
+    max-width: 100%;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.status::before {
+    content: "· ";
+}

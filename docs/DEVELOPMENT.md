@@ -78,6 +78,7 @@ First create a tag (decide which one is needed)
 ```bash
  git tag mucgpt-frontend-<version>
  git tag mucgpt-core-<version>
+ git tag mucgpt-core-migrations-<version>
  git tag mucgpt-assistant-<version>
  git tag mucgpt-assistant-migrations-<version>
 ```
@@ -87,6 +88,7 @@ Then push to origin, one of the release workflows is then triggered
 ```bash
  git push origin mucgpt-frontend-<version>
  git push origin mucgpt-core-<version>
+ git push origin mucgpt-core-migrations-<version>
  git push origin mucgpt-assistant-<version>
  git push origin mucgpt-assistant-migrations-<version>
 ```
@@ -95,6 +97,7 @@ You can find the available versions under:
 
 - Frontend: <https://github.com/it-at-m/mucgpt/pkgs/container/mucgpt%2Fmucgpt-frontend>
 - Core: <https://github.com/it-at-m/mucgpt/pkgs/container/mucgpt%2Fmucgpt-core>
+- Core migrations: <https://github.com/it-at-m/mucgpt/pkgs/container/mucgpt%2Fmucgpt-core-migrations>
 - Assistant: <https://github.com/it-at-m/mucgpt/pkgs/container/mucgpt%2Fmucgpt-assistant>
 - Migrations: <https://github.com/it-at-m/mucgpt/pkgs/container/mucgpt%2Fmucgpt-assistant-migrations>
 
@@ -102,6 +105,7 @@ Every release image is also mirrored to the openCode container registry (GitLab 
 
 - Frontend: `registry.opencode.de/landeshauptstadt-muenchen/mucgpt/mucgpt-frontend`
 - Core: `registry.opencode.de/landeshauptstadt-muenchen/mucgpt/mucgpt-core`
+- Core migrations: `registry.opencode.de/landeshauptstadt-muenchen/mucgpt/mucgpt-core-migrations`
 - Assistant: `registry.opencode.de/landeshauptstadt-muenchen/mucgpt/mucgpt-assistant`
 - Migrations: `registry.opencode.de/landeshauptstadt-muenchen/mucgpt/mucgpt-assistant-migrations`
 

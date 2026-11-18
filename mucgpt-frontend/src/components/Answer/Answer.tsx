@@ -21,6 +21,8 @@ interface Props {
     isLatest?: boolean;
     /** Whether the answer is still being streamed/rendered. Answer actions are hidden until this is false. */
     isStreaming?: boolean;
+    /** Keeps the follow-up area stable while a newer answer is loading. */
+    reserveFollowUpSpace?: boolean;
 }
 
 export const Answer = ({
@@ -29,7 +31,8 @@ export const Answer = ({
     regenerationUnavailableReason,
     onFollowUpActionSend,
     isLatest = false,
-    isStreaming = false
+    isStreaming = false,
+    reserveFollowUpSpace = false
 }: Props) => {
     const { t } = useTranslation();
 
@@ -125,9 +128,9 @@ export const Answer = ({
                     )}
                 </div>
             )}
-            {onFollowUpActionSend && !isStreaming && (
+            {(reserveFollowUpSpace || (onFollowUpActionSend && !isStreaming)) && (
                 <div className={styles.followUpActionsBelow}>
-                    <FollowUpActionList onSend={onFollowUpActionSend} />
+                    <FollowUpActionList onSend={onFollowUpActionSend ?? (() => undefined)} disabled={reserveFollowUpSpace} />
                 </div>
             )}
         </div>

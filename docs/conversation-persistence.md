@@ -88,15 +88,18 @@ method is not a substitute for this atomic erasure operation.
 1. Stop accepting new generation requests and stop/drain **every old writer**
    before starting fence-aware instances. Old binaries do not honor the row fence
    and may delete retirement mappings; mixed-version writing is unsafe.
-2. Startup initializes the checkpoint schema and chat table, then idempotently adds
-   `chats.deleted_at` to existing tables. `create_all` alone does not migrate them.
-3. Checkpoint IDs without ownership mappings are quarantined as retired rows with
-   an empty owner. Their checkpoint, pending-write, and blob records are erased in
-   the startup transaction. Existing mapped histories remain associated with their
-   original owners and preserve their checkpoint identities.
-4. Failed migration/legacy cleanup aborts initialization and closes provisional
-   resources; a subsequent startup retries before serving persistence requests.
-5. Start only fence-aware instances. Do not roll back to an unfenced binary after
+2. Run the core migration Job. It initializes the checkpoint and chat schemas and
+   idempotently adds `chats.deleted_at` to existing tables. `create_all` alone does
+   not migrate them.
+3. During that one-time migration, checkpoint IDs without ownership mappings are
+   quarantined as retired rows with an empty owner, and their checkpoint,
+   pending-write, and blob records are erased. Existing mapped histories remain
+   associated with their original owners and preserve their checkpoint identities.
+4. A failed migration or legacy cleanup prevents the migration Job from completing;
+   fix it and rerun the Job before starting core instances. Post-migration runtime
+   startup only opens persistence resources and does not repeat legacy cleanup.
+5. Start only fence-aware instances after the migration Job succeeds. Do not roll
+   back to an unfenced binary after
    migration. Do not purge retirement rows while clients can present the same public
    IDs again: removing them would permit ID reclamation.
 

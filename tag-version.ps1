@@ -2,7 +2,7 @@
 
 param(
     [Parameter(Mandatory=$false)]
-    [ValidateSet("frontend", "core", "assistant", "assistant-migrations")]
+    [ValidateSet("frontend", "core", "core-migrations", "assistant", "assistant-migrations")]
     [string]$Service,
 
     [Parameter(Mandatory=$false)]
@@ -17,24 +17,31 @@ $serviceConfig = @{
         PackageUrl = "https://github.com/it-at-m/mucgpt/pkgs/container/mucgpt%2Fmucgpt-frontend"
         ManifestPath = [System.IO.Path]::Combine("mucgpt-frontend", "package.json")
         ManifestType = "packageJson"
+        VersionSource = "manifest"
     }
     core = @{
         Prefix = "mucgpt-core-"
         PackageUrl = "https://github.com/it-at-m/mucgpt/pkgs/container/mucgpt%2Fmucgpt-core"
         ManifestPath = [System.IO.Path]::Combine("mucgpt-core-service", "pyproject.toml")
         ManifestType = "pyproject"
+        VersionSource = "manifest"
+    }
+    "core-migrations" = @{
+        Prefix = "mucgpt-core-migrations-"
+        PackageUrl = "https://github.com/it-at-m/mucgpt/pkgs/container/mucgpt%2Fmucgpt-core-migrations"
+        VersionSource = "image-tag"
     }
     assistant = @{
         Prefix = "mucgpt-assistant-"
         PackageUrl = "https://github.com/it-at-m/mucgpt/pkgs/container/mucgpt%2Fmucgpt-assistant"
         ManifestPath = [System.IO.Path]::Combine("mucgpt-assistant-service", "pyproject.toml")
         ManifestType = "pyproject"
+        VersionSource = "manifest"
     }
     "assistant-migrations" = @{
         Prefix = "mucgpt-assistant-migrations-"
         PackageUrl = "https://github.com/it-at-m/mucgpt/pkgs/container/mucgpt%2Fmucgpt-assistant-migrations"
-        ManifestPath = [System.IO.Path]::Combine("mucgpt-assistant-service-migrations", "pyproject.toml")
-        ManifestType = "pyproject"
+        VersionSource = "image-tag"
     }
 }
 $availableServices = @($serviceConfig.Keys)
@@ -367,53 +374,58 @@ Write-Host "New version:     $newVersion" -ForegroundColor Green
 Write-Host "New tag:         $newTag" -ForegroundColor Green
 Write-Host "=======================================" -ForegroundColor Cyan
 
-$manifestPath = Join-Path -Path $PSScriptRoot -ChildPath $serviceConfig[$Service].ManifestPath
-$manifestType = $serviceConfig[$Service].ManifestType
+if ($serviceConfig[$Service].VersionSource -eq "manifest") {
+    $manifestPath = Join-Path -Path $PSScriptRoot -ChildPath $serviceConfig[$Service].ManifestPath
+    $manifestType = $serviceConfig[$Service].ManifestType
 
-if (-not (Test-Path $manifestPath)) {
-    throw "Unable to find manifest file: $manifestPath"
-}
+    if (-not (Test-Path $manifestPath)) {
+        throw "Unable to find manifest file: $manifestPath"
+    }
 
-$manifestVersion = Get-ManifestVersion -FilePath $manifestPath -ManifestType $manifestType
-Test-LockfileVersion -FilePath $manifestPath -ManifestType $manifestType -ManifestVersion $manifestVersion
-if ($manifestVersion -ne $newVersion) {
-    $updateManifest = Read-YesNo "Update the manifest and lockfile to version $newVersion? (y/n)"
-    if ($updateManifest -ne "y") {
-        Write-Host "Operation cancelled." -ForegroundColor Yellow
+    $manifestVersion = Get-ManifestVersion -FilePath $manifestPath -ManifestType $manifestType
+    Test-LockfileVersion -FilePath $manifestPath -ManifestType $manifestType -ManifestVersion $manifestVersion
+    if ($manifestVersion -ne $newVersion) {
+        $updateManifest = Read-YesNo "Update the manifest and lockfile to version $newVersion? (y/n)"
+        if ($updateManifest -ne "y") {
+            Write-Host "Operation cancelled." -ForegroundColor Yellow
+            exit
+        }
+
+        Update-ManifestVersion -FilePath $manifestPath -ManifestType $manifestType -NewVersion $newVersion
+        Write-Host "`nVersion files updated. Review and commit them before creating the release tag:" -ForegroundColor Green
+        Write-Host "  git add $($serviceConfig[$Service].ManifestPath)" -ForegroundColor Cyan
+        if ($manifestType -eq "packageJson") {
+            Write-Host "  git add mucgpt-frontend/package-lock.json" -ForegroundColor Cyan
+        }
+        else {
+            $projectDir = Split-Path -Parent $serviceConfig[$Service].ManifestPath
+            Write-Host "  git add $projectDir/uv.lock" -ForegroundColor Cyan
+        }
+        Write-Host "  git commit -m 'release $Service $newVersion'" -ForegroundColor Cyan
+        Write-Host "Then run this script again to create and push $newTag." -ForegroundColor Cyan
         exit
     }
 
-    Update-ManifestVersion -FilePath $manifestPath -ManifestType $manifestType -NewVersion $newVersion
-    Write-Host "`nVersion files updated. Review and commit them before creating the release tag:" -ForegroundColor Green
-    Write-Host "  git add $($serviceConfig[$Service].ManifestPath)" -ForegroundColor Cyan
+    $versionFiles = @($serviceConfig[$Service].ManifestPath)
     if ($manifestType -eq "packageJson") {
-        Write-Host "  git add mucgpt-frontend/package-lock.json" -ForegroundColor Cyan
+        $versionFiles += "mucgpt-frontend/package-lock.json"
     }
     else {
-        $projectDir = Split-Path -Parent $serviceConfig[$Service].ManifestPath
-        Write-Host "  git add $projectDir/uv.lock" -ForegroundColor Cyan
+        $versionFiles += (Join-Path (Split-Path -Parent $serviceConfig[$Service].ManifestPath) "uv.lock")
     }
-    Write-Host "  git commit -m 'release $Service $newVersion'" -ForegroundColor Cyan
-    Write-Host "Then run this script again to create and push $newTag." -ForegroundColor Cyan
-    exit
-}
 
-$versionFiles = @($serviceConfig[$Service].ManifestPath)
-if ($manifestType -eq "packageJson") {
-    $versionFiles += "mucgpt-frontend/package-lock.json"
+    $uncommittedVersionFiles = @(git status --porcelain -- $versionFiles)
+    if ($LASTEXITCODE -ne 0) {
+        throw "Unable to determine whether version files are committed."
+    }
+    if ($uncommittedVersionFiles.Count -gt 0) {
+        Write-Host "Version files must be committed before tagging:" -ForegroundColor Red
+        $uncommittedVersionFiles | ForEach-Object { Write-Host "  $_" -ForegroundColor Red }
+        exit 1
+    }
 }
 else {
-    $versionFiles += (Join-Path (Split-Path -Parent $serviceConfig[$Service].ManifestPath) "uv.lock")
-}
-
-$uncommittedVersionFiles = @(git status --porcelain -- $versionFiles)
-if ($LASTEXITCODE -ne 0) {
-    throw "Unable to determine whether version files are committed."
-}
-if ($uncommittedVersionFiles.Count -gt 0) {
-    Write-Host "Version files must be committed before tagging:" -ForegroundColor Red
-    $uncommittedVersionFiles | ForEach-Object { Write-Host "  $_" -ForegroundColor Red }
-    exit 1
+    Write-Host "Migration image releases are versioned from their existing image tags; no manifest files will be changed." -ForegroundColor DarkGray
 }
 
 $confirmation = Read-YesNo "Create annotated tag $newTag from the current committed version files? (y/n)"

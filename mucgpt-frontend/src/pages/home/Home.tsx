@@ -19,7 +19,7 @@ import { DiscoveryCard } from "../../components/DiscoveryCard";
 import { OwnerMetadataLink, getPrimaryOwnerDetails } from "../../components/OwnerMetadataLink/OwnerMetadataLink";
 import { useToolsContext } from "../../components/ToolsProvider";
 import { ConfigContext } from "../../context/ConfigContext";
-import { UploadedData, getSelectedDocumentIds } from "../../components/ContextManagerDialog/ContextManagerDialog";
+import { getSelectedDocumentIds, type ChatDocument } from "../../components/ChatDocuments/documentSelection";
 import { STORAGE_KEYS } from "../layout/LayoutHelper";
 import { getAssistantBadges, isAssistantPrivate } from "../../utils/assistantCardDisplay";
 import { resolveOrphanedAssistantChats } from "../../utils/orphanedAssistantChats";
@@ -59,6 +59,7 @@ const Home = () => {
     const [recommendedAssistants, setRecommendedAssistants] = useState<HomeAssistant[]>([]);
     const [loading, setLoading] = useState(true);
     const [question, setQuestion] = useState<string>("");
+    const [documents, setDocuments] = useState<ChatDocument[]>([]);
     const [username, setUserName] = useState<string>("");
     const [selectedTools, setSelectedTools] = useState<string[]>(() => {
         try {
@@ -369,32 +370,13 @@ const Home = () => {
         [availableLLMs, setLLM]
     );
 
-    const onSendQuestion = (nextQuestion: string, uploadedFiles: UploadedData[]) => {
-        const uploadedFileIds = Array.from(
-            new Set(
-                uploadedFiles
-                    .filter(
-                        file => file.source !== "library" && file.isActive !== false && file.status === "ready" && typeof file.storedDocumentId === "string"
-                    )
-                    .map(file => file.storedDocumentId!)
-            )
-        );
-
-        if (uploadedFileIds.length > 0) {
-            localStorage.setItem(STORAGE_KEYS.CHAT_FILE_IDS, JSON.stringify(uploadedFileIds));
-        } else {
-            localStorage.removeItem(STORAGE_KEYS.CHAT_FILE_IDS);
-        }
-
+    const onSendQuestion = (nextQuestion: string) => {
         const params = new URLSearchParams();
         params.set("q", nextQuestion);
-        const documentIds = getSelectedDocumentIds(uploadedFiles);
+        const documentIds = getSelectedDocumentIds(documents);
         if (documentIds.length > 0) params.set("documents", documentIds.join(","));
         if (selectedTools.length > 0) {
             params.set("tools", selectedTools.join(","));
-        }
-        if (uploadedFileIds.length > 0) {
-            params.set("data", uploadedFileIds.join(","));
         }
 
         navigate(`/chat?${params.toString()}`);
@@ -440,6 +422,8 @@ const Home = () => {
                         setSelectedTools={setSelectedTools}
                         tools={tools}
                         question={question}
+                        documents={documents}
+                        setDocuments={setDocuments}
                         llmOptions={availableLLMs}
                         selectedLLM={LLM.id}
                         onLLMSelectionChange={onLLMSelectionChange}

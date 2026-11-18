@@ -305,7 +305,7 @@ export const AssistantPreviewChat = ({
                 answers={answers}
                 regularAssistantMsg={(answer, index) => (
                     <>
-                        {index === answers.length - 1 ? (
+                        {index === answers.length - 1 && !isLoading ? (
                             <Answer
                                 key={index}
                                 answer={answer.response}
@@ -315,7 +315,7 @@ export const AssistantPreviewChat = ({
                                 onFollowUpActionSend={prompt => void callApi(prompt)}
                             />
                         ) : (
-                            <Answer key={index} answer={answer.response} />
+                            <Answer key={index} answer={answer.response} reserveFollowUpSpace={isLoading} />
                         )}
                     </>
                 )}
@@ -410,7 +410,6 @@ export const AssistantPreviewChat = ({
                     setSelectedTools={noopSetSelectedTools}
                     tools={tools}
                     allowToolSelection={false}
-                    allowFileUpload={false}
                     usage={usageSummary}
                     llmOptions={availableLLMs}
                     selectedLLM={LLM.id}

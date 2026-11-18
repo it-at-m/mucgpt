@@ -1,5 +1,5 @@
 import logging
-from typing import Any
+from typing import Any, cast
 
 import pytest
 from langchain_core.language_models import BaseChatModel
@@ -47,7 +47,9 @@ class AsyncOnlyChatModel(BaseChatModel):
 
 
 async def _run_tool(tool, args, context=None):
-    workflow = StateGraph(MessagesState, context_schema=RequestContext)
+    # ty cannot verify that TypedDicts satisfy langgraph's StateLike bound
+    # (same stub limitation as in app/agent/tools/simplify_agent.py).
+    workflow = StateGraph(MessagesState, context_schema=RequestContext)  # ty: ignore[invalid-argument-type]
     workflow.add_node("tools", ToolNode([tool]))
     workflow.add_edge(START, "tools")
     workflow.add_edge("tools", END)
@@ -70,10 +72,14 @@ async def _run_tool(tool, args, context=None):
         if mode == "custom":
             events.append(ToolStreamChunk.model_validate_json(data))
         elif mode == "updates":
-            result = data["tools"]["messages"][0].content
+            updates = cast("dict[str, Any]", data)
+            result = updates["tools"]["messages"][0].content
         elif mode == "messages" and isinstance(data[0], AIMessageChunk):
             model_chunks.append(data)
-    assert all(_is_internal_chunk(metadata) for _, metadata in model_chunks)
+    assert all(
+        _is_internal_chunk(cast("dict[str, Any]", metadata))
+        for _, metadata in model_chunks
+    )
     assert "runtime" not in tool.args
     assert all("hidden reasoning" not in event.content for event in events)
     assert events[0].state == ToolStreamState.STARTED

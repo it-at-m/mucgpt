@@ -63,6 +63,14 @@ uv run ruff check
 uv run ruff check --fix
 ```
 
+## Type checking
+
+Each Python service is type-checked with [ty](https://docs.astral.sh/ty/) (dev dependency, pinned in the service's `pyproject.toml`). CI and pre-commit run `uv run ty check` as separate required checks per service. The checks cover application, test, and migration code. Keep the checked code clean — if a library stub is looser than runtime reality, prefer narrowing or a `cast` and use a targeted `# ty: ignore[<rule>]` comment (with a short explanation) only as a last resort.
+
+```bash
+uv run ty check
+```
+
 ## Build new images
 
 First create a tag (decide which one is needed)
@@ -70,6 +78,7 @@ First create a tag (decide which one is needed)
 ```bash
  git tag mucgpt-frontend-<version>
  git tag mucgpt-core-<version>
+ git tag mucgpt-core-migrations-<version>
  git tag mucgpt-assistant-<version>
  git tag mucgpt-assistant-migrations-<version>
 ```
@@ -79,6 +88,7 @@ Then push to origin, one of the release workflows is then triggered
 ```bash
  git push origin mucgpt-frontend-<version>
  git push origin mucgpt-core-<version>
+ git push origin mucgpt-core-migrations-<version>
  git push origin mucgpt-assistant-<version>
  git push origin mucgpt-assistant-migrations-<version>
 ```
@@ -87,6 +97,7 @@ You can find the available versions under:
 
 - Frontend: <https://github.com/it-at-m/mucgpt/pkgs/container/mucgpt%2Fmucgpt-frontend>
 - Core: <https://github.com/it-at-m/mucgpt/pkgs/container/mucgpt%2Fmucgpt-core>
+- Core migrations: <https://github.com/it-at-m/mucgpt/pkgs/container/mucgpt%2Fmucgpt-core-migrations>
 - Assistant: <https://github.com/it-at-m/mucgpt/pkgs/container/mucgpt%2Fmucgpt-assistant>
 - Migrations: <https://github.com/it-at-m/mucgpt/pkgs/container/mucgpt%2Fmucgpt-assistant-migrations>
 
@@ -94,6 +105,7 @@ Every release image is also mirrored to the openCode container registry (GitLab 
 
 - Frontend: `registry.opencode.de/landeshauptstadt-muenchen/mucgpt/mucgpt-frontend`
 - Core: `registry.opencode.de/landeshauptstadt-muenchen/mucgpt/mucgpt-core`
+- Core migrations: `registry.opencode.de/landeshauptstadt-muenchen/mucgpt/mucgpt-core-migrations`
 - Assistant: `registry.opencode.de/landeshauptstadt-muenchen/mucgpt/mucgpt-assistant`
 - Migrations: `registry.opencode.de/landeshauptstadt-muenchen/mucgpt/mucgpt-assistant-migrations`
 

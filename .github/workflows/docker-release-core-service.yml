@@ -5,7 +5,8 @@ permissions:
 on:
   push:
     tags:
-      - "mucgpt-core-*" # Triggers only on mucgpt-core tags
+      - "mucgpt-core-[0-9]*" # Excludes mucgpt-core-migrations tags
+      - "mucgpt-core-latest"
   workflow_dispatch: # Allows manual triggering of the workflow
     inputs:
       tag:
@@ -44,9 +45,11 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: Extract version from mucgpt-core tag
         id: vars
+        env:
+          INPUT_TAG: ${{ github.event.inputs.tag }}
         run: |
           if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
-            FULL_TAG="${{ github.event.inputs.tag }}"
+            FULL_TAG="$INPUT_TAG"
           else
             FULL_TAG=${GITHUB_REF#refs/tags/}
           fi

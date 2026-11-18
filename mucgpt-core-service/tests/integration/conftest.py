@@ -15,9 +15,7 @@ def override_authenticate_user():
             token="dummy_access_token",
             user_id="test_user_123",
             name="Test User",
-            email="test@example.com",
             department="IT-Test-Department",
-            is_authenticated=True,
         )
 
     return _get_test_user

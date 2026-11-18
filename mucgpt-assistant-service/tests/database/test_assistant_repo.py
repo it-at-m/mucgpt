@@ -318,6 +318,7 @@ class TestAssistantRepository:
         assert assistant.is_visible == sample_assistant_data["is_visible"]
         # Use the safe method to check owners
         result = await assistant_repo.get_with_owners(assistant.id)
+        assert result is not None
         assert len(result.owners) == 2
         owner_ids = [owner.user_id for owner in result.owners]
         assert "user1" in owner_ids
@@ -337,6 +338,7 @@ class TestAssistantRepository:
         )
         await db_session.commit()  # Assert
         result = await assistant_repo.get_with_owners(assistant.id)
+        assert result is not None
         assert len(result.owners) == 2
         owner_ids = [owner.user_id for owner in result.owners]
         assert "existing_user" in owner_ids
@@ -382,6 +384,7 @@ class TestAssistantRepository:
         # Assert
         assert updated is not None
         result = await assistant_repo.get_with_owners(updated.id)
+        assert result is not None
         assert len(result.owners) == 3
         owner_ids = [owner.user_id for owner in result.owners]
         assert "new_user1" in owner_ids
@@ -416,11 +419,13 @@ class TestAssistantRepository:
 
         # Refresh and compare
         refreshed = await assistant_repo.get(assistant.id)
+        assert refreshed is not None
         assert refreshed.updated_at > original_updated_at, (
             f"updated_at not incremented. Before={original_updated_at}, After={refreshed.updated_at}"
         )
         # Sanity: ensure owners actually changed
         owners = await assistant_repo.get_with_owners(assistant.id)
+        assert owners is not None
         owner_ids = sorted([o.user_id for o in owners.owners])
         assert owner_ids == ["new_owner_a", "new_owner_b"]
 
@@ -448,7 +453,7 @@ class TestAssistantRepository:
         assistant_repo = AssistantRepository(db_session)
 
         # Act
-        result = await assistant_repo.update(999, hierarchical_access=["TEST"])
+        result = await assistant_repo.update("999", hierarchical_access=["TEST"])
 
         # Assert
         assert result is None
@@ -1236,6 +1241,7 @@ class TestAssistantRepository:
 
         # Check owners were updated too
         result = await assistant_repo.get_with_owners(updated.id)
+        assert result is not None
         owner_ids = [owner.user_id for owner in result.owners]
         assert len(owner_ids) == 2
         assert "owner2" in owner_ids
@@ -1255,10 +1261,11 @@ class TestAssistantRepository:
         )
         await db_session.commit()
 
-        original_access = assistant.hierarchical_access.copy()
+        original_access = (assistant.hierarchical_access or []).copy()
 
         # Get original owners for comparison
         original_assistant = await assistant_repo.get_with_owners(assistant.id)
+        assert original_assistant is not None
         original_owner_ids = [owner.user_id for owner in original_assistant.owners]
 
         # Act - Update only visibility
@@ -1274,6 +1281,7 @@ class TestAssistantRepository:
 
         # Check owners remain unchanged
         updated_assistant = await assistant_repo.get_with_owners(updated.id)
+        assert updated_assistant is not None
         updated_owner_ids = [owner.user_id for owner in updated_assistant.owners]
         assert sorted(updated_owner_ids) == sorted(original_owner_ids)
 

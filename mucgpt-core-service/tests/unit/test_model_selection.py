@@ -1,7 +1,8 @@
+from typing import Any, cast
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
-from langchain.agents.middleware import ModelRequest, ModelResponse
+from langchain.agents.middleware import AgentState, ModelRequest, ModelResponse
 from langchain_core.language_models.fake_chat_models import FakeListChatModel
 from langchain_core.messages import AIMessage, SystemMessage, ToolCall
 from langchain_core.tools import tool
@@ -57,12 +58,12 @@ def second_tool() -> str:
     return "second"
 
 
-def _model_request(context: RequestContext | None) -> ModelRequest:
+def _model_request(context: RequestContext | None) -> ModelRequest[Any]:
     return ModelRequest(
         model=FakeListChatModel(responses=["bootstrap"]),
         messages=[],
         tools=[first_tool, second_tool],
-        state={},
+        state=cast("AgentState[Any]", {}),
         runtime=Runtime(context=context),
         model_settings={"existing": "value"},
     )

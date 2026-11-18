@@ -9,6 +9,7 @@ from zoneinfo import ZoneInfo
 
 from langchain.agents.middleware import (
     AgentMiddleware,
+    AgentState,
     ModelRequest,
     ModelResponse,
     ToolCallRequest,
@@ -96,6 +97,9 @@ class RequestContext:
     enabled_tools: list[str] | None = None
     token_usage: TokenUsage | None = None
     langfuse_prompt: Any | None = None
+    # The user's interface language, for the deliberate-default response
+    # language instruction injected with the system message (issue #1448).
+    language: str | None = None
     canvas: CanvasState | None = None
     # Monotonic within one run; bumped for each canvas_write/canvas_edit call so
     # the streamed UPDATE chunks carry an ordering key for the editor.
@@ -415,6 +419,36 @@ def _add_current_date(system_message: SystemMessage | None) -> SystemMessage:
     return system_message.model_copy(update={"content": content})
 
 
+# Deliberate-default response language instruction: the UI language is the
+# default, assistant system prompts and the language the user writes in take
+# precedence. Kept here (not in the prompt pool) because it must apply to every
+# assistant, while prompt-pool files only reach general chat and can be
+# overridden by Langfuse-hosted prompts.
+_LANGUAGE_INSTRUCTION_TEMPLATE = (
+    "By default, respond in the user's interface language ({language}). "
+    "If the user writes in a different language, respond in that language instead."
+)
+
+
+def _add_language_instruction(
+    system_message: SystemMessage | None, language: str | None
+) -> SystemMessage | None:
+    """Append the response-language instruction for the request's UI language."""
+    if not language:
+        return system_message
+    instruction = _LANGUAGE_INSTRUCTION_TEMPLATE.format(language=language)
+    if system_message is None:
+        return SystemMessage(content=instruction)
+
+    content = system_message.content
+    if isinstance(content, str):
+        content = f"{content}\n\n{instruction}"
+    else:
+        content = [*content, instruction]
+
+    return system_message.model_copy(update={"content": content})
+
+
 def _configure_model_request(request: ModelRequest) -> ModelRequest:
     """Select a concrete model and apply request-scoped invocation settings."""
     system_message = _add_current_date(request.system_message)
@@ -423,6 +457,7 @@ def _configure_model_request(request: ModelRequest) -> ModelRequest:
         return request.override(
             model=ModelRegistry.get_model(), system_message=system_message
         )
+    system_message = _add_language_instruction(system_message, runtime_context.language)
 
     model_settings = {
         **request.model_settings,
@@ -490,11 +525,11 @@ class ContextMiddleware(AgentMiddleware):
     Additional state types can be registered in ``agent.tools.policies``.
     """
 
-    state_schema: type = DefaultAgentState
+    state_schema: type[AgentState[Any]] = DefaultAgentState
 
     def __init__(
         self,
-        state_schema: type = DefaultAgentState,
+        state_schema: type[AgentState[Any]] = DefaultAgentState,
         data_sources: list[Any] | None = None,
         document_selection: list["SelectedDocument"] | None = None,
     ):
@@ -523,8 +558,8 @@ class ContextMiddleware(AgentMiddleware):
 
     def wrap_model_call(
         self,
-        request: ModelRequest,
-        handler: Callable[[ModelRequest], ModelResponse],
+        request: ModelRequest[Any],
+        handler: Callable[[ModelRequest[Any]], ModelResponse],
     ) -> ModelResponse:
         # infer policy from state type and apply to request
         policy = get_policy_for_state(self.state_schema)
@@ -572,8 +607,8 @@ class ContextMiddleware(AgentMiddleware):
 
     async def awrap_model_call(
         self,
-        request: ModelRequest,
-        handler: Callable[[ModelRequest], Awaitable[ModelResponse]],
+        request: ModelRequest[Any],
+        handler: Callable[[ModelRequest[Any]], Awaitable[ModelResponse]],
     ) -> ModelResponse:
         # infer policy from state type and apply to request
         policy = get_policy_for_state(self.state_schema)

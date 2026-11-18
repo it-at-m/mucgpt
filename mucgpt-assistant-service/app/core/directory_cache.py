@@ -3,7 +3,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Iterable, Sequence
 from datetime import UTC, datetime, timedelta
-from typing import TypedDict
+from typing import TypedDict, cast
 
 from fastapi import HTTPException, status
 from pydantic import BaseModel, ConfigDict, Field, TypeAdapter
@@ -58,7 +58,10 @@ _TREE_ADAPTER = TypeAdapter(list[_DirectoryTreeNodeModel])
 
 
 def _dump_tree(nodes: list[_DirectoryTreeNodeModel]) -> DirectoryTree:
-    return [node.model_dump(mode="python", exclude_none=True) for node in nodes]
+    return cast(
+        DirectoryTree,
+        [node.model_dump(mode="python", exclude_none=True) for node in nodes],
+    )
 
 
 def _validate_tree(raw: object) -> DirectoryTree:

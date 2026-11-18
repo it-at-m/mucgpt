@@ -4,6 +4,7 @@ from anyio import CancelScope
 
 from agent.agent_executor import MUCGPTAgentExecutor
 from agent.deep_agent import MUCGPTAgent
+from agent.tools.approval import requires_approval
 from agent.tools.tools import ToolCollection
 from config.harness_profiles import register_model_harness_profile
 from config.langfuse_provider import LangfuseProvider
@@ -162,6 +163,11 @@ async def init_agent(
         tools = await tool_collection.get_tools(
             user_info=user_info
         )  # all tools that are available
+        checkpointer = (
+            PersistanceHelpers.get_checkpointer_if_ready() if persist else None
+        )
+        if not checkpointer:
+            tools = [tool for tool in tools if not requires_approval(tool)]
         logger.debug(
             f"Initializing MUCGPTAgent with tools: {[tool.name for tool in tools]}"
         )
@@ -172,9 +178,7 @@ async def init_agent(
             backend=backend,
             permissions=document_permissions,
             document_selection=document_selection,
-            checkpointer=(
-                PersistanceHelpers.get_checkpointer_if_ready() if persist else None
-            ),
+            checkpointer=checkpointer,
         )
     except Exception as e:
         logger.error("Failed to initialize MUCGPTAgent: %s", e)

@@ -1,9 +1,10 @@
 import hashlib
 import re
 from collections.abc import Sequence
-from typing import Any, Protocol
+from typing import Any, Protocol, cast
 
 from fastapi import HTTPException
+from langchain_core.callbacks import BaseCallbackHandler
 from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, SystemMessage
 from langchain_core.runnables import RunnableConfig
 from langfuse import propagate_attributes
@@ -28,13 +29,30 @@ class MessageLike(Protocol):
 
 
 def to_langchain_messages(messages: Sequence[MessageLike]) -> list[BaseMessage]:
-    """Convert API-style messages to LangChain message objects."""
+    """Convert API-style messages to LangChain message objects.
+
+    A message carrying ``_media_blocks`` (AG-UI image parts resolved to
+    OpenAI-style data-URL blocks by the run-input mapper, see
+    ``api.ag_ui_input``) is converted to a multimodal HumanMessage whose
+    content is a content-block list.
+    """
     converted: list[BaseMessage] = []
     for message in messages:
+        media_blocks = getattr(message, "_media_blocks", None)
         if message.role == "system":
             converted.append(SystemMessage(message.content))
         elif message.role == "user":
-            converted.append(HumanMessage(message.content))
+            if media_blocks:
+                converted.append(
+                    HumanMessage(
+                        content=[
+                            {"type": "text", "text": message.content},
+                            *media_blocks,
+                        ]
+                    )
+                )
+            else:
+                converted.append(HumanMessage(message.content))
         else:
             converted.append(AIMessage(message.content))
     return converted
@@ -121,9 +139,13 @@ def _internal_request_config(
     if langfuse_handler:
         callbacks.append(langfuse_handler)
 
+    callback_config: list[BaseCallbackHandler] | None = (
+        cast("list[BaseCallbackHandler]", callbacks) if callbacks else None
+    )
+
     return RunnableConfig(
         run_name=run_name,
-        callbacks=callbacks if callbacks else None,  # type: ignore[arg-type]
+        callbacks=callback_config,
         configurable={
             "llm": model_name,
             "llm_temperature": temperature,

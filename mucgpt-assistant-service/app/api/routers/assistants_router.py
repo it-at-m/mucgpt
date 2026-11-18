@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import hashlib
+from typing import Any
 
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -59,7 +60,7 @@ def _hash_prompt(system_prompt: str) -> str:
 
 def _state_from_compliance_result(
     compliance_result: dict[str, object] | None,
-) -> str:
+) -> AssistantState:
     """Map a verified EU AI Act screening result to a version lifecycle state."""
     if compliance_result and compliance_result.get("overall_status") == "error":
         raise ComplianceVerificationFailedException(
@@ -180,7 +181,7 @@ async def createAssistant(
 ):  # Create a new assistant using the repository
     logger.info(f"Creating assistant for user {user_info.user_id}")
     try:
-        owner_lookup_cache: dict[str, dict[str, object]] = {}
+        owner_lookup_cache: dict[str, dict[str, Any] | None] = {}
         assistant_repo = AssistantRepository(
             db
         )  # Prepare owner_ids: include the creating user if not already present
@@ -255,6 +256,8 @@ async def createAssistant(
 
         # Get assistant with owners safely
         assistant_with_owners = await assistant_repo.get_with_owners(assistant_id)
+        if assistant_with_owners is None:
+            raise AssistantNotFoundException(assistant_id)
         owner_ids = [owner.user_id for owner in assistant_with_owners.owners]
         await refresh_owner_details(owner_ids, db)
         await db.commit()
@@ -268,6 +271,8 @@ async def createAssistant(
             raise AssistantNotFoundException(assistant_id)
         if latest_version is None:
             raise NoVersionException(assistant_id)
+        if assistant_with_owners is None:
+            raise AssistantNotFoundException(assistant_id)
 
         owners_detailed = await build_owner_details(
             owner_ids,
@@ -499,7 +504,7 @@ async def updateAssistant(
     user_info: AuthenticationResult = Depends(authenticate_user),
 ) -> AssistantResponse:
     logger.info(f"Updating assistant with ID: {id} by user {user_info.user_id}")
-    owner_lookup_cache: dict[str, dict[str, object]] = {}
+    owner_lookup_cache: dict[str, dict[str, Any] | None] = {}
     assistant_repo = AssistantRepository(db)
     # Lock the parent row before reading the latest version so owner updates
     # serialize with administrative state changes.
@@ -745,10 +750,16 @@ async def updateAssistant(
     # Get assistant with owners and latest version safely
     assistant_with_owners = await assistant_repo.get_with_owners(assistant.id)
     latest_version = await assistant_repo.get_latest_version(assistant.id)
+    if assistant_with_owners is None:
+        raise AssistantNotFoundException(assistant.id)
+    if latest_version is None:
+        raise NoVersionException(assistant.id)
     owner_ids = [owner.user_id for owner in assistant_with_owners.owners]
     await refresh_owner_details(owner_ids, db)
     await db.commit()
     assistant_with_owners = await assistant_repo.get_with_owners(assistant.id)
+    if assistant_with_owners is None:
+        raise AssistantNotFoundException(assistant.id)
     owners_detailed = await build_owner_details(
         owner_ids,
         owner_lookup_cache,
@@ -887,7 +898,7 @@ async def getAllAssistants(
     user_info: AuthenticationResult = Depends(authenticate_user),
 ):
     logger.info(f"Fetching all accessible assistants for user {user_info.user_id}")
-    owner_lookup_cache: dict[str, dict[str, object]] = {}
+    owner_lookup_cache: dict[str, dict[str, Any] | None] = {}
     assistant_repo = AssistantRepository(db)
     assistants = (
         await assistant_repo.get_all_possible_assistants_for_user_with_department(
@@ -989,7 +1000,7 @@ async def getAssistant(
     user_info: AuthenticationResult = Depends(authenticate_user),
 ):
     logger.info(f"Fetching assistant with ID: {id} for user {user_info.user_id}")
-    owner_lookup_cache: dict[str, dict[str, object]] = {}
+    owner_lookup_cache: dict[str, dict[str, Any] | None] = {}
     assistant_repo = AssistantRepository(db)
     assistant = await assistant_repo.get(id)
 
@@ -1006,6 +1017,10 @@ async def getAssistant(
     assistant_with_owners = await assistant_repo.get_with_owners(id)
     # Get latest version safely
     latest_version = await assistant_repo.get_latest_version(id)
+    if assistant_with_owners is None:
+        raise AssistantNotFoundException(id)
+    if latest_version is None:
+        raise NoVersionException(id)
     owner_ids = [owner.user_id for owner in assistant_with_owners.owners]
 
     settings = get_settings()
@@ -1021,6 +1036,12 @@ async def getAssistant(
             assistant = await assistant_repo.get(id)
             latest_version = await assistant_repo.get_latest_version(id)
             assistant_with_owners = await assistant_repo.get_with_owners(id)
+            if assistant is None:
+                raise AssistantNotFoundException(id)
+            if latest_version is None:
+                raise NoVersionException(id)
+            if assistant_with_owners is None:
+                raise AssistantNotFoundException(id)
 
     owners_detailed = await build_owner_details(
         owner_ids,
@@ -1102,7 +1123,7 @@ async def get_assistant_version(
     logger.info(
         f"Fetching version {version} of assistant {id} for user {user_info.user_id}"
     )
-    owner_lookup_cache: dict[str, dict[str, object]] = {}
+    owner_lookup_cache: dict[str, dict[str, Any] | None] = {}
     assistant_repo = AssistantRepository(db)
     assistant = await assistant_repo.get(id)
 
@@ -1121,6 +1142,8 @@ async def get_assistant_version(
 
     # Get assistant with owners safely for the owner_ids field
     assistant_with_owners = await assistant_repo.get_with_owners(id)
+    if assistant_with_owners is None:
+        raise AssistantNotFoundException(id)
     owner_ids = [owner.user_id for owner in assistant_with_owners.owners]
 
     settings = get_settings()
@@ -1136,6 +1159,12 @@ async def get_assistant_version(
             assistant = await assistant_repo.get(id)
             assistant_version = await assistant_repo.get_assistant_version(id, version)
             assistant_with_owners = await assistant_repo.get_with_owners(id)
+            if assistant is None:
+                raise AssistantNotFoundException(id)
+            if assistant_version is None:
+                raise VersionNotFoundException(id, version)
+            if assistant_with_owners is None:
+                raise AssistantNotFoundException(id)
 
     owners_detailed = await build_owner_details(
         owner_ids,

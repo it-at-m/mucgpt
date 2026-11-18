@@ -11,7 +11,6 @@ on:
       tag:
         description: "Migrations tag to release (e.g., mucgpt-assistant-migrations-1.0.0)"
         required: true
-        default: "mucgpt-assistant-migrations-latest"
 
 jobs:
   build-and-push-assistant-migrations-service:
@@ -44,9 +43,11 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: Extract version from mucgpt-assistant-migrations tag
         id: vars
+        env:
+          INPUT_TAG: ${{ github.event.inputs.tag }}
         run: |
           if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
-            FULL_TAG="${{ github.event.inputs.tag }}"
+            FULL_TAG="$INPUT_TAG"
           else
             FULL_TAG=${GITHUB_REF#refs/tags/}
           fi
@@ -81,8 +82,8 @@ jobs:
         id: build
         uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
         with:
-          context: ./mucgpt-assistant-service-migrations
-          file: ./mucgpt-assistant-service-migrations/Dockerfile
+          context: ./mucgpt-assistant-service
+          file: ./mucgpt-assistant-service/Dockerfile.migrations
           push: true
           sbom: true
           provenance: true
@@ -95,8 +96,6 @@ jobs:
             IMAGE_CREATED=${{ github.event.repository.pushed_at || env.BUILD_TS }}
             IMAGE_REVISION=${{ steps.revision.outputs.sha }}
             IMAGE_VERSION=${{ steps.vars.outputs.version }}
-            COMMIT=${{ steps.revision.outputs.sha }}
-            VERSION=${{ steps.vars.outputs.version }}
       - name: Image digest
         if: steps.existing-release.outputs.exists != 'true'
         run: |

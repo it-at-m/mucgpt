@@ -16,7 +16,7 @@ Four independently-versioned, independently-deployed components, each with its o
 
 - **`mucgpt-core-service/`** — Python 3.13 / FastAPI. LLM agent orchestration (LangGraph/Deep Agents), tools, document parsing. The heart of the system.
 - **`mucgpt-assistant-service/`** — Python 3.13 / FastAPI. CRUD + sharing of assistant configurations; departments/users via LDAP; talks to Postgres.
-- **`mucgpt-assistant-service-migrations/`** — Alembic migrations for the assistant service's Postgres schema (run-once container).
+- **`mucgpt-assistant-service/migrations/`** — Alembic migrations for the assistant service's Postgres schema, released as a run-once container.
 - **`mucgpt-frontend/`** — React 19 + TypeScript + Vite 8 (Rolldown), Fluent UI v9, i18next, PWA. MSW mocks the backend in dev.
 
 The root `pyproject.toml` is only a dev wrapper (ruff + pre-commit); its pytest/ruff paths are stale. **Run all commands from inside the relevant service directory**, never from the root.
@@ -94,7 +94,7 @@ Entry: `app.py` → `backend.py` builds the FastAPI app, mounts `api_app` at `/a
 
 Standard FastAPI + SQLAlchemy (async) + Postgres. Routers in `api/routers/` (`assistants`, `users`, `department`, `system`). `database/` uses a generic `repo.py` + specialized `assistant_repo.py`. `core/organization/` loads org structure from LDAP (`ldap_loader.py`) with a `directory_cache`. Schema changes go through the **separate migrations component** (Alembic) — never hand-edit the live schema.
 
-**Migrations** (`mucgpt-assistant-service-migrations/`): standalone, run-once container, entrypoint `uv run migrations/run_migrations.py`. Controlled entirely via env vars (see the script's docstring): `MIGRATION_REVISION` (default `head`), `MIGRATION_LOG_LEVEL`, `MIGRATION_CHECK_ONLY`, `MIGRATION_SHOW_SQL`, `MIGRATION_DB_TIMEOUT`/`MIGRATION_DB_RETRIES`/`MIGRATION_DB_RETRY_DELAY`.
+**Migrations** (`mucgpt-assistant-service/migrations/`): a separately released, run-once container built from the assistant-service project. Entrypoint: `python -m migrations.run_migrations`. Controlled entirely via env vars (see the script's docstring): `MIGRATION_REVISION` (default `head`), `MIGRATION_LOG_LEVEL`, `MIGRATION_CHECK_ONLY`, `MIGRATION_DB_TIMEOUT`/`MIGRATION_DB_RETRIES`/`MIGRATION_DB_RETRY_DELAY`, and `MIGRATION_LOCK_TIMEOUT`.
 
 ## Frontend notes
 

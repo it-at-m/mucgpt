@@ -21,6 +21,7 @@ import styles from "./LLMSelector.module.css";
 import { Model } from "../../api";
 import { Button } from "../../ui/Button";
 import { MenuItemRadio } from "../../ui/MenuItem";
+import { toIntlLocale } from "../../utils/locale";
 import { getModelDisplayName } from "../../utils/modelDisplayName";
 
 interface Props {
@@ -97,7 +98,7 @@ const formatKnowledgeDate = (value: string | null | undefined, language: string)
         const date = new Date(trimmed);
         if (!Number.isNaN(date.getTime())) {
             // ISO dates parse as UTC midnight; formatting in UTC keeps "2024-07-01" in July for every user timezone.
-            return new Intl.DateTimeFormat(language === "BA" ? "de-DE" : language, {
+            return new Intl.DateTimeFormat(toIntlLocale(language), {
                 month: "long",
                 year: "numeric",
                 timeZone: "UTC"

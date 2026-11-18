@@ -1,13 +1,15 @@
 from contextlib import asynccontextmanager
 from datetime import UTC, datetime
 from types import SimpleNamespace
+from typing import cast
 from unittest.mock import AsyncMock, Mock
 from uuid import uuid4
 
 import pytest
-from fastapi import HTTPException, Request
-from sqlalchemy import create_engine
+from fastapi import HTTPException
+from sqlalchemy import Table, create_engine
 from sqlalchemy.orm import Session
+from tests.unit.helpers import request_with_body
 
 from api.api_models import ChatCompletionMessage, ChatCompletionRequest
 from api.routers import chat_router
@@ -19,7 +21,7 @@ from database.database_models import Chat, Document
 @pytest.fixture
 def catalog(monkeypatch):
     engine = create_engine("sqlite://")
-    Chat.__table__.create(engine)
+    cast("Table", Chat.__table__).create(engine)
     with Session(engine) as session:
         session.add_all(
             [
@@ -92,7 +94,8 @@ async def test_agui_saves_validated_selection_and_explicit_empty(
     monkeypatch.setattr(chat_router, "init_agent", AsyncMock(return_value=agent))
     owner = AuthenticationResult(user_id="owner", token="test", department="test")
     await chat_router.ag_ui_chat_endpoint(
-        request(ids=ids), owner, Request({"type": "http", "headers": []})
+        owner,
+        request_with_body(request(ids=ids).model_dump(mode="json", exclude_none=True)),
     )
     metadata = await PersistanceHelpers.get_conversations_for_user("owner")
     assert (
@@ -102,10 +105,65 @@ async def test_agui_saves_validated_selection_and_explicit_empty(
         == ids
     )
     with Session(catalog) as session:
-        assert session.get(Chat, "owned").document_names == {
+        owned = session.get(Chat, "owned")
+        assert owned is not None
+        assert owned.document_names == {
             document_id: "Policy.pdf" for document_id in ids
         }
-        assert session.get(Chat, "foreign").document_ids == ["previous"]
+        foreign = session.get(Chat, "foreign")
+        assert foreign is not None
+        assert foreign.document_ids == ["previous"]
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("ids", [[], [str(uuid4())]])
+async def test_agui_native_input_saves_validated_selection_too(
+    catalog, monkeypatch, ids
+):
+    """The identical gate pipeline runs for the native AG-UI shape as well."""
+    selection = [
+        SimpleNamespace(id=document_id, filename="Policy.pdf") for document_id in ids
+    ]
+    monkeypatch.setattr(chat_router.ModelRegistry, "get_model", Mock())
+    monkeypatch.setattr(
+        chat_router, "get_documents_for_agent", AsyncMock(return_value=selection)
+    )
+    monkeypatch.setattr(
+        chat_router, "get_messages_for_agent", AsyncMock(return_value=[])
+    )
+    monkeypatch.setattr(
+        chat_router, "get_temperature_from_request", Mock(return_value=0.5)
+    )
+
+    async def events(**_):
+        if False:
+            yield
+
+    agent = Mock(
+        run_without_streaming=AsyncMock(return_value="answer"),
+        run_agui_with_streaming=events,
+    )
+    monkeypatch.setattr(chat_router, "init_agent", AsyncMock(return_value=agent))
+    body = {
+        "threadId": "owned",
+        "runId": "run-1",
+        "protocolVersion": "1.0",
+        "messages": [{"id": "m1", "role": "user", "content": "Question"}],
+        "forwardedProps": {"mucgpt": {"persist": True, "document_ids": list(ids)}},
+        "state": {},
+        "tools": [],
+        "context": [],
+        "resume": [],
+    }
+    owner = AuthenticationResult(user_id="owner", token="test", department="test")
+    await chat_router.ag_ui_chat_endpoint(owner, request_with_body(body))
+    metadata = await PersistanceHelpers.get_conversations_for_user("owner")
+    assert (
+        next(row for row in metadata if row["conversation_id"] == "owned")[
+            "document_ids"
+        ]
+        == ids
+    )
 
 
 @pytest.mark.asyncio
@@ -127,12 +185,14 @@ async def test_selection_write_does_not_claim_foreign_missing_or_retired_rows(
 async def test_stateless_request_does_not_change_saved_selection(catalog):
     await chat_router._save_document_selection(request(persist=False), "owner", [])
     with Session(catalog) as session:
-        assert session.get(Chat, "owned").document_ids == ["previous"]
+        row = session.get(Chat, "owned")
+        assert row is not None
+        assert row.document_ids == ["previous"]
 
 
 @pytest.mark.asyncio
 async def test_deleted_document_keeps_filename_until_detached(catalog):
-    Document.__table__.create(catalog)
+    cast("Table", Document.__table__).create(catalog)
     document_id = str(uuid4())
     with Session(catalog) as session:
         session.add(
@@ -160,4 +220,6 @@ async def test_deleted_document_keeps_filename_until_detached(catalog):
     assert owned["document_names"] == {document_id: "Policy.pdf"}
     await chat_router._save_document_selection(request(), "owner", [])
     with Session(catalog) as session:
-        assert session.get(Chat, "owned").document_names == {}
+        owned = session.get(Chat, "owned")
+        assert owned is not None
+        assert owned.document_names == {}

@@ -95,9 +95,9 @@ describe("computeCanvasChanges", () => {
         );
 
         expect(changes).toHaveLength(2);
-        expect(changes.map(change => ({ level: change.level, kind: change.kind, oldText: change.oldText, summary: change.summary }))).toEqual([
-            { level: "inline", kind: "replace", oldText: "läuft", summary: "rennt" },
-            { level: "inline", kind: "replace", oldText: "laut.", summary: "leise." }
+        expect(changes.map(change => ({ level: change.level, kind: change.kind, oldText: change.oldText, newText: change.newText }))).toEqual([
+            { level: "inline", kind: "replace", oldText: "läuft", newText: "rennt" },
+            { level: "inline", kind: "replace", oldText: "laut.", newText: "leise." }
         ]);
         for (const change of changes) {
             expect(change.from).toBeLessThan(change.to);
@@ -125,7 +125,7 @@ describe("computeCanvasChanges", () => {
         expect(changes).toHaveLength(1);
         expect(changes[0]).toMatchObject({ level: "inline", kind: "replace" });
         expect(changes[0].oldText).toBe("Falls zusätzliche Informationen benötigt werden");
-        expect(changes[0].summary).toBe("Sollten Sie zur Klärung weitere Angaben benötigen");
+        expect(changes[0].newText).toBe("Sollten Sie zur Klärung weitere Angaben benötigen");
         expect(changes[0].oldSliceJson).not.toBeNull();
     });
 
@@ -150,7 +150,7 @@ describe("computeCanvasChanges", () => {
 
         expect(changes).toHaveLength(2);
         expect(changes.every(change => change.level === "inline")).toBe(true);
-        expect(changes.map(change => change.summary)).toEqual(["Dritter Absatz", "Vierter Absatz"]);
+        expect(changes.map(change => change.newText)).toEqual(["Dritter Absatz", "Vierter Absatz"]);
     });
 
     it("diffs a bullet list per item and only marks the changed bullet", () => {
@@ -198,6 +198,39 @@ describe("computeCanvasChanges", () => {
         expect(changes[0].oldText.startsWith("• ")).toBe(true);
     });
 
+    it("carries formatted fragments for both sides of a change", () => {
+        const editor = editorFor();
+        // Inline phrase hunks carry their text fragment without a list wrapper.
+        const inline = computeCanvasChanges(
+            docFrom(editor, "- Der Hund läuft schnell\n- Zweiter Punkt"),
+            docFrom(editor, "- Der Hund rennt schnell\n- Zweiter Punkt")
+        );
+        expect(inline[0].oldFragmentTag).toBeUndefined();
+        expect(JSON.stringify(inline[0].oldFragmentJson)).toContain("läuft");
+        expect(JSON.stringify(inline[0].newFragmentJson)).toContain("rennt");
+
+        // Item-level changes wrap their fragments in the list container.
+        const inserted = computeCanvasChanges(docFrom(editor, "- A\n- B"), docFrom(editor, "- A\n- Neuer Punkt\n- B"));
+        expect(inserted[0].newFragmentTag).toBe("ul");
+        expect(JSON.stringify(inserted[0].newFragmentJson)).toContain("listItem");
+        expect(inserted[0].oldFragmentJson).toBeUndefined();
+    });
+
+    it("keeps character marks in inline change fragments", () => {
+        const editor = editorFor();
+        const changes = computeCanvasChanges(docFrom(editor, "Der **alte** Hund."), docFrom(editor, "Der **neue** Hund."));
+        expect(changes).toHaveLength(1);
+        expect(changes[0].level).toBe("inline");
+        expect(JSON.stringify(changes[0].oldFragmentJson)).toContain("bold");
+        expect(JSON.stringify(changes[0].newFragmentJson)).toContain("bold");
+    });
+
+    it("carries fragments for unchanged preview blocks", () => {
+        const editor = editorFor();
+        const items = describeCanvasDiff(docFrom(editor, "A\n\nB"), docFrom(editor, "A\n\nB"));
+        expect(items.every(item => Array.isArray(item.newFragmentJson))).toBe(true);
+    });
+
     it("keeps list item markers in the static preview", () => {
         const editor = editorFor();
         const items = describeCanvasDiff(
@@ -205,7 +238,7 @@ describe("computeCanvasChanges", () => {
             docFrom(editor, "- Der Hund rennt schnell\n- Zweiter Punkt")
         );
         expect(items.map(item => item.kind)).toEqual(["replace", "equal"]);
-        expect(items[0]).toEqual({ kind: "replace", oldLines: ["• läuft"], newLines: ["• rennt"] });
+        expect(items[0]).toMatchObject({ kind: "replace", oldLines: ["• läuft"], newLines: ["• rennt"] });
         expect(items[1].newLines).toEqual(["• Zweiter Punkt"]);
     });
 
@@ -253,7 +286,7 @@ describe("describeCanvasDiff", () => {
         const editor = editorFor();
         const items = describeCanvasDiff(docFrom(editor, "A\n\nB"), docFrom(editor, "A\n\nB"));
         expect(items.map(item => item.kind)).toEqual(["equal", "equal"]);
-        expect(items[0]).toEqual({ kind: "equal", oldLines: [], newLines: ["A"] });
+        expect(items[0]).toMatchObject({ kind: "equal", oldLines: [], newLines: ["A"] });
     });
 
     it("pairs a single changed block between unchanged blocks", () => {
@@ -261,7 +294,7 @@ describe("describeCanvasDiff", () => {
         const items = describeCanvasDiff(docFrom(editor, "Bleibt\n\nEntfällt"), docFrom(editor, "Bleibt\n\nNeu"));
         expect(items.map(item => item.kind)).toEqual(["equal", "replace"]);
         expect(items[0].newLines).toEqual(["Bleibt"]);
-        expect(items[1]).toEqual({ kind: "replace", oldLines: ["Entfällt"], newLines: ["Neu"] });
+        expect(items[1]).toMatchObject({ kind: "replace", oldLines: ["Entfällt"], newLines: ["Neu"] });
     });
 
     it("keeps unchanged header/footer and pairs each changed block in between", () => {
@@ -270,8 +303,8 @@ describe("describeCanvasDiff", () => {
 
         expect(items.map(item => item.kind)).toEqual(["equal", "replace", "replace", "equal"]);
         expect(items[0].newLines).toEqual(["Header"]);
-        expect(items[1]).toEqual({ kind: "replace", oldLines: ["Eins"], newLines: ["Eins neu"] });
-        expect(items[2]).toEqual({ kind: "replace", oldLines: ["Zwei"], newLines: ["Zwei neu"] });
+        expect(items[1]).toMatchObject({ kind: "replace", oldLines: ["Eins"], newLines: ["Eins neu"] });
+        expect(items[2]).toMatchObject({ kind: "replace", oldLines: ["Zwei"], newLines: ["Zwei neu"] });
         expect(items[3].newLines).toEqual(["Footer"]);
     });
 
@@ -279,13 +312,13 @@ describe("describeCanvasDiff", () => {
         const editor = editorFor();
         const items = describeCanvasDiff(docFrom(editor, "A\n\nB"), docFrom(editor, "A\n\nX\n\nY"));
         expect(items.map(item => item.kind)).toEqual(["equal", "replace"]);
-        expect(items[1]).toEqual({ kind: "replace", oldLines: ["B"], newLines: ["X", "Y"] });
+        expect(items[1]).toMatchObject({ kind: "replace", oldLines: ["B"], newLines: ["X", "Y"] });
     });
 
     it("marks a deleted block as a delete item", () => {
         const editor = editorFor();
         const items = describeCanvasDiff(docFrom(editor, "A\n\nB"), docFrom(editor, "A"));
         expect(items.map(item => item.kind)).toEqual(["equal", "delete"]);
-        expect(items[1]).toEqual({ kind: "delete", oldLines: ["B"], newLines: [] });
+        expect(items[1]).toMatchObject({ kind: "delete", oldLines: ["B"], newLines: [] });
     });
 });

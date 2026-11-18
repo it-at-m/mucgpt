@@ -576,3 +576,115 @@ describe("cursor anchor sampling", () => {
         expect(state?.content).toBe(small);
     });
 });
+
+/** Selection serialization: operators belong to the selection only when the
+ * selection covers their boundary side. */
+describe("selection markdown", () => {
+    const selectRange = (harness: ReturnType<typeof renderController>, markdown: string, from: string, to: string) => {
+        act(() => {
+            harness.current.setMarkdown(markdown);
+            harness.current.setIsOpen(true);
+            const editor = harness.current.editor!;
+            const fromPos = posOf(editor, from);
+            const toPos = posOf(editor, to) + to.length;
+            editor.chain().setTextSelection({ from: fromPos, to: toPos }).run();
+        });
+        return harness.current.getSelectionMarkdown();
+    };
+
+    it("reports a plain word inside a bullet without the list prefix", () => {
+        const harness = renderController();
+        harness.render(undefined);
+        expect(selectRange(harness, "- this is my text", "my", "my")).toBe("my");
+    });
+
+    it("keeps the list prefix only when the selection starts at the item's beginning", () => {
+        const harness = renderController();
+        harness.render(undefined);
+        expect(selectRange(harness, "- this is my text", "this", "text")).toBe("- this is my text");
+    });
+
+    it("reports a mid-heading word without the marker", () => {
+        const harness = renderController();
+        harness.render(undefined);
+        expect(selectRange(harness, "# My heading", "head", "head")).toBe("head");
+    });
+
+    it("keeps the heading marker when the selection starts at the heading's beginning", () => {
+        const harness = renderController();
+        harness.render(undefined);
+        expect(selectRange(harness, "# My heading", "My", "heading")).toBe("# My heading");
+    });
+
+    it("does not add inline operators for a partial bold run", () => {
+        const harness = renderController();
+        harness.render(undefined);
+        expect(selectRange(harness, "**bold one** and more", "old", "old")).toBe("old");
+    });
+
+    it("adds inline operators when the selection covers the full mark", () => {
+        const harness = renderController();
+        harness.render(undefined);
+        expect(selectRange(harness, "**bold one** and more", "bold", "one")).toBe("**bold one**");
+    });
+
+    it("covers operators the selection spans across", () => {
+        const harness = renderController();
+        harness.render(undefined);
+        expect(selectRange(harness, "plain **bold face** tail", "plain", "bold")).toBe("plain **bold");
+    });
+
+    it("renders a multi-block selection exactly as it appears in the markdown", () => {
+        const harness = renderController();
+        harness.render(undefined);
+        expect(selectRange(harness, "- alpha\n- beta tail", "lph", "be")).toBe("lpha\n- be");
+    });
+
+    it("reports text inside a code block verbatim", () => {
+        const harness = renderController();
+        harness.render(undefined);
+        expect(selectRange(harness, "```\ncode line\n```", "code", "line")).toBe("code line");
+    });
+
+    it("sends the selection with the selection-start cursor on the canvas state", () => {
+        const harness = renderController();
+        harness.render(undefined);
+        act(() => {
+            harness.current.setMarkdown("Hello world");
+            harness.current.setIsOpen(true);
+            harness.current.editor!.chain().setTextSelection({ from: 3, to: 9 }).run();
+        });
+        const state = harness.current.toCanvasState();
+        expect(state?.selection).toBe("llo wo");
+        expect(state?.cursor).toBe(2);
+    });
+
+    it("aligns the cursor with the line start when the selection begins a whole block", () => {
+        const harness = renderController();
+        harness.render(undefined);
+        act(() => {
+            harness.current.setMarkdown("- this is my text");
+            harness.current.setIsOpen(true);
+            const editor = harness.current.editor!;
+            const from = posOf(editor, "this");
+            const to = posOf(editor, "text") + 4;
+            editor.chain().setTextSelection({ from, to }).run();
+        });
+        const state = harness.current.toCanvasState();
+        expect(state?.selection).toBe("- this is my text");
+        expect(state?.cursor).toBe(0);
+    });
+
+    it("keeps the collapsed caret at the line-prefix end when nothing is selected", () => {
+        const harness = renderController();
+        harness.render(undefined);
+        act(() => {
+            harness.current.setMarkdown("- item text");
+            harness.current.setIsOpen(true);
+            harness.current.editor!.chain().setTextSelection(posOf(harness.current.editor!, "item")).run();
+        });
+        const state = harness.current.toCanvasState();
+        expect(state?.selection).toBeNull();
+        expect(state?.cursor).toBe(2);
+    });
+});

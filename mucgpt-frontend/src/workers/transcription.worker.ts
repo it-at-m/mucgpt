@@ -109,9 +109,15 @@ function cancelAutoStop(): void {
     }
 }
 
-/** True when the WebGPU API is exposed (gates webgpu_only models). */
-function detectWebGPU(): boolean {
-    return typeof navigator !== "undefined" && "gpu" in navigator;
+/** True when WebGPU can provide an adapter (gates webgpu_only models). */
+async function detectWebGPU(): Promise<boolean> {
+    if (typeof navigator === "undefined" || !("gpu" in navigator)) return false;
+    try {
+        const gpu = (navigator as Navigator & { gpu?: { requestAdapter: () => Promise<unknown | null> } }).gpu;
+        return gpu !== undefined && (await gpu.requestAdapter()) !== null;
+    } catch {
+        return false;
+    }
 }
 
 /** Maps q4f16 to q4 for WASM loads (fp16 is a WebGPU-only dtype in transformers.js). */
@@ -152,7 +158,7 @@ async function loadModel(request: Extract<WorkerInMessage, { type: "load" }>) {
     isLoading = true;
 
     try {
-        hasWebGPU = detectWebGPU();
+        hasWebGPU = await detectWebGPU();
         log("[transcription-worker] WebGPU detection result:", hasWebGPU);
         if (request.webgpu_only && !hasWebGPU) {
             self.postMessage({

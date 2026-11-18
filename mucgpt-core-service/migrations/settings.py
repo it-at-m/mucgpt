@@ -60,6 +60,7 @@ class MigrationSettings(BaseSettings):
             raise ValueError(
                 "Missing required database configuration: db.host, db.name, db.user, db.password"
             )
+        assert db.password is not None
         return URL.create(
             drivername="postgresql+asyncpg",
             host=db.host,

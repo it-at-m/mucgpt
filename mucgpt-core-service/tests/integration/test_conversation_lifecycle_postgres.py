@@ -166,8 +166,10 @@ class ConversationLifecyclePostgresTests(unittest.IsolatedAsyncioTestCase):
 
     async def create_legacy_schema(self) -> None:
         """Create the pre-Alembic schema used by the migration adoption tests."""
-        async with await psycopg.AsyncConnection.connect(
-            **self.connection_args, dbname=self.database, autocommit=True
+        async with await AsyncConnection[dict[str, Any]].connect(
+            make_conninfo(**self.connection_args, dbname=self.database),
+            autocommit=True,
+            row_factory=dict_row,
         ) as connection:
             await connection.execute(
                 """
@@ -185,8 +187,10 @@ class ConversationLifecyclePostgresTests(unittest.IsolatedAsyncioTestCase):
 
     async def seed_legacy_history(self, *, orphan: bool = False) -> None:
         """Seed checkpoint state before Alembic adopts the legacy schema."""
-        async with await psycopg.AsyncConnection.connect(
-            **self.connection_args, dbname=self.database, autocommit=True
+        async with await AsyncConnection[dict[str, Any]].connect(
+            make_conninfo(**self.connection_args, dbname=self.database),
+            autocommit=True,
+            row_factory=dict_row,
         ) as connection:
             if not orphan:
                 await connection.execute(
@@ -208,7 +212,7 @@ class ConversationLifecyclePostgresTests(unittest.IsolatedAsyncioTestCase):
                 )
             else:
                 graph = (
-                    StateGraph(MessagesState)
+                    StateGraph(MessagesState)  # ty: ignore[invalid-argument-type]
                     .add_node(
                         "answer",
                         lambda state: {"messages": [AIMessage(content="saved answer")]},
@@ -520,6 +524,7 @@ class ConversationLifecyclePostgresTests(unittest.IsolatedAsyncioTestCase):
                         _ConfiguredLangChainDeepAgentGraph
                     )
                     wrapper.agent = cast("Any", graph)
+                    wrapper.approval_tools = {}
                     wrapper.state_schema = cast("Any", MessagesState)
                     wrapper._prepare_run = cast(
                         "Any",

@@ -126,3 +126,34 @@
     text-decoration: line-through;
     white-space: pre-wrap;
 }
+
+/* Formatted fragment content inside diff entries. */
+.diff :global(p) {
+    margin: 0 0 var(--spacingVerticalXXS);
+}
+
+.diff :global(ul),
+.diff :global(ol) {
+    margin: var(--spacingVerticalXXS) 0;
+    padding-inline-start: var(--spacingHorizontalL);
+}
+
+.diff :global(table) {
+    border-collapse: collapse;
+    margin: var(--spacingVerticalXXS) 0;
+}
+
+.diff :global(th),
+.diff :global(td) {
+    border: 1px solid var(--colorNeutralStroke1);
+    padding: 0 var(--spacingHorizontalXXS);
+    text-align: start;
+}
+
+.diff :global(h1),
+.diff :global(h2),
+.diff :global(h3) {
+    font-size: var(--fontSizeBase300);
+    font-weight: var(--fontWeightSemibold);
+    margin: var(--spacingVerticalXXS) 0;
+}

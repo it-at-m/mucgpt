@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import DOMPurify from "dompurify";
 import { generateHTML } from "@tiptap/html";
 import { Button, DrawerBody, DrawerHeader, DrawerHeaderTitle, OverlayDrawer } from "@fluentui/react-components";
@@ -9,6 +9,8 @@ import type { CanvasRevision } from "../../service/canvasStorage";
 import type { CanvasControllerInstance } from "../../hooks/useCanvasController";
 import { canvasExtensions } from "./canvasExtensions";
 import { describeCanvasDiff, type CanvasDiffPreviewItem } from "./canvasDiff";
+import { appendDiffFragment } from "./canvasDiffMarkup";
+import type { Schema } from "@tiptap/pm/model";
 import styles from "./CanvasVersionsDrawer.module.css";
 
 // Revision previews are rendered via dangerouslySetInnerHTML, so any link that
@@ -36,6 +38,49 @@ interface RevisionGroup {
 }
 
 const revisionKey = (revision: CanvasRevision): string => `${revision.source}-${revision.revision}`;
+
+interface DiffEntry {
+    kind: "equal" | "insert" | "delete";
+    fragmentJson?: unknown;
+    listTag?: "ul" | "ol";
+    lines: string[];
+}
+
+const diffEntries = (item: CanvasDiffPreviewItem): DiffEntry[] =>
+    item.kind === "equal"
+        ? [{ kind: "equal", fragmentJson: item.newFragmentJson, listTag: item.newFragmentTag, lines: item.newLines }]
+        : [
+              // Added text first (matches the accept/reject control order), then the removed text.
+              ...(item.newLines.length > 0 || item.newFragmentJson
+                  ? [{ kind: "insert" as const, fragmentJson: item.newFragmentJson, listTag: item.newFragmentTag, lines: item.newLines }]
+                  : []),
+              ...(item.oldLines.length > 0 || item.oldFragmentJson
+                  ? [{ kind: "delete" as const, fragmentJson: item.oldFragmentJson, listTag: item.oldFragmentTag, lines: item.oldLines }]
+                  : [])
+          ];
+
+/** Renders one diff entry as formatted ProseMirror DOM, falling back to plain lines. */
+const DiffEntryView = ({ entry, schema }: { entry: DiffEntry; schema?: Schema }) => {
+    const ref = useRef<HTMLDivElement | null>(null);
+    useEffect(() => {
+        const container = ref.current;
+        if (!container) return;
+        container.replaceChildren();
+        if (entry.fragmentJson && schema && appendDiffFragment(container, schema, entry.fragmentJson, entry.listTag)) return;
+        for (const line of entry.lines) {
+            const lineElement = document.createElement("div");
+            lineElement.textContent = line || "\u00a0";
+            container.append(lineElement);
+        }
+    }, [entry, schema]);
+    return (
+        <div
+            ref={ref}
+            data-canvas-diff-kind={entry.kind}
+            className={entry.kind === "insert" ? styles.diffInsertion : entry.kind === "delete" ? styles.diffDeletion : styles.diffEqual}
+        />
+    );
+};
 
 const buildGroups = (revisions: { auto: CanvasRevision[]; manual: CanvasRevision[] }, t: (key: string) => string): RevisionGroup[] => [
     { key: "manual", title: t("canvas.versions.manual_group"), revisions: [...revisions.manual].reverse() },
@@ -112,32 +157,11 @@ export const CanvasVersionsDrawer = ({ open, onClose, controller, disabled = fal
                                                 <>
                                                     <p className={styles.diffCaption}>{t("canvas.versions.diff_caption")}</p>
                                                     <div className={styles.diff}>
-                                                        {diff.map((item, itemIndex) => {
-                                                            // Added text first (matches the accept/reject control
-                                                            // order), then the removed text.
-                                                            const entries: { line: string; kind: "equal" | "insert" | "delete" }[] =
-                                                                item.kind === "equal"
-                                                                    ? item.newLines.map(line => ({ line, kind: "equal" as const }))
-                                                                    : [
-                                                                          ...item.newLines.map(line => ({ line, kind: "insert" as const })),
-                                                                          ...item.oldLines.map(line => ({ line, kind: "delete" as const }))
-                                                                      ];
-                                                            return entries.map((entry, lineIndex) => (
-                                                                <div
-                                                                    key={`${itemIndex}-${lineIndex}`}
-                                                                    data-canvas-diff-kind={entry.kind}
-                                                                    className={
-                                                                        entry.kind === "insert"
-                                                                            ? styles.diffInsertion
-                                                                            : entry.kind === "delete"
-                                                                              ? styles.diffDeletion
-                                                                              : styles.diffEqual
-                                                                    }
-                                                                >
-                                                                    {entry.line || "\u00a0"}
-                                                                </div>
-                                                            ));
-                                                        })}
+                                                        {diff.flatMap((item, itemIndex) =>
+                                                            diffEntries(item).map((entry, entryIndex) => (
+                                                                <DiffEntryView key={`${itemIndex}-${entryIndex}`} entry={entry} schema={schema} />
+                                                            ))
+                                                        )}
                                                     </div>
                                                 </>
                                             ) : (

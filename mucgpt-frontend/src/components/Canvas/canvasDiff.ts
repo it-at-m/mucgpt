@@ -33,10 +33,16 @@ export interface CanvasChange {
     oldText: string;
     /** Added content shown in green; empty for pure deletions. */
     newText: string;
-    /** Short plain-text excerpt of the change for accessible control labels. */
-    summary: string;
-    /** List marker for static preview lines ("• " / "3. "); inline changes only. */
+    /** List marker for static preview fallback lines ("• " / "3. "); inline changes only. */
     previewPrefix?: string;
+    /** Baseline content as PM node JSON array, rendered formatted in diff views. */
+    oldFragmentJson?: unknown;
+    /** List wrapper for the old fragment when it consists of list items. */
+    oldFragmentTag?: "ul" | "ol";
+    /** Target content as PM node JSON array, rendered formatted in diff views. */
+    newFragmentJson?: unknown;
+    /** List wrapper for the new fragment when it consists of list items. */
+    newFragmentTag?: "ul" | "ol";
 }
 
 /**
@@ -47,6 +53,10 @@ export interface CanvasDiffPreviewItem {
     kind: "equal" | "insert" | "delete" | "replace";
     oldLines: string[];
     newLines: string[];
+    oldFragmentJson?: unknown;
+    oldFragmentTag?: "ul" | "ol";
+    newFragmentJson?: unknown;
+    newFragmentTag?: "ul" | "ol";
 }
 
 export interface CanvasTextHunk {
@@ -67,6 +77,8 @@ interface DiffPiece {
     from: number;
     /** "• " or "3. " for list items; undefined for top-level blocks. */
     prefix?: string;
+    /** List wrapper tag for formatted fragment rendering; list items only. */
+    listTag?: "ul" | "ol";
 }
 
 /** Upper bound for the LCS matrix; larger inputs degrade to a coarse comparison. */
@@ -257,12 +269,6 @@ const describePiece = (piece: DiffPiece): string[] => {
     return piece.prefix ? lines.map(line => `${piece.prefix}${line}`) : lines;
 };
 
-const plainTextLines = (piece: DiffPiece): string[] => {
-    const text = piece.node.textContent;
-    const lines = text ? text.split("\n") : [""];
-    return piece.prefix ? lines.map(line => `${piece.prefix}${line}`) : lines;
-};
-
 const isPlainTextBlock = (node: PMNode): boolean => {
     if (!node.isTextblock) return false;
     let plain = true;
@@ -302,15 +308,16 @@ const topLevelPieces = (doc: PMNode): DiffPiece[] => {
 const listItemPieces = (list: PMNode, listPos: number): DiffPiece[] => {
     const start = typeof list.attrs.start === "number" ? list.attrs.start : 1;
     const pieces: DiffPiece[] = [];
+    const listTag: "ul" | "ol" = list.type.name === "orderedList" ? "ol" : "ul";
     list.forEach((item, offset, index) => {
         const prefix = list.type.name === "orderedList" ? `${start + index}. ` : "• ";
-        pieces.push({ node: item, from: listPos + 1 + offset, prefix });
+        pieces.push({ node: item, from: listPos + 1 + offset, prefix, listTag });
     });
     return pieces;
 };
 
-/** Plain-text excerpt used to distinguish change controls for assistive tech. */
-const summarize = (lines: string[]): string => {
+/** Truncated plain-text excerpt for review tooltips and accessible labels. */
+export const summarize = (lines: string[]): string => {
     const text = lines.join(" ").replace(/\s+/g, " ").trim();
     return text.length > 60 ? `${text.slice(0, 57)}…` : text;
 };
@@ -325,6 +332,7 @@ const itemTextStart = (piece: DiffPiece): number => piece.from + 2;
 
 const inlineChanges = (
     baseline: PMNode,
+    target: PMNode,
     oldText: string,
     oldTextStart: number,
     newText: string,
@@ -334,6 +342,11 @@ const inlineChanges = (
 ): CanvasChange[] | null => {
     const segments = diffWords(oldText, newText);
     if (!segments) return null;
+
+    // Fragments carry the real node/marks structure so diff views can render
+    // the removed and added text properly formatted.
+    const oldFragmentJson = oldText ? baseline.slice(oldTextStart, oldTextStart + oldText.length).content.toJSON() : undefined;
+    const newFragmentJson = newText ? target.slice(newTextStart, newTextStart + newText.length).content.toJSON() : undefined;
 
     // A fundamental rewrite is one decision between the two complete strings;
     // word-level fragments would just be noise (and can produce insert-only
@@ -349,8 +362,9 @@ const inlineChanges = (
                 oldSliceJson: oldText ? baseline.slice(oldTextStart, oldTextStart + oldText.length).toJSON() : null,
                 oldText,
                 newText,
-                summary: summarize([newText || oldText]),
-                previewPrefix
+                previewPrefix,
+                oldFragmentJson,
+                newFragmentJson
             }
         ];
     }
@@ -369,8 +383,9 @@ const inlineChanges = (
             oldSliceJson: hunk.oldText ? baseline.slice(oldTextStart + hunk.oldStart, oldTextStart + hunk.oldEnd).toJSON() : null,
             oldText: hunk.oldText,
             newText: hunk.newText,
-            summary: summarize([hunk.newText || hunk.oldText]),
-            previewPrefix
+            previewPrefix,
+            oldFragmentJson: hunk.oldText ? baseline.slice(oldTextStart + hunk.oldStart, oldTextStart + hunk.oldEnd).content.toJSON() : undefined,
+            newFragmentJson: hunk.newText ? target.slice(newTextStart + hunk.newStart, newTextStart + hunk.newEnd).content.toJSON() : undefined
         };
     });
 };
@@ -388,6 +403,9 @@ const blockChange = (
     const oldLines = removed.flatMap(describePiece);
     const newLines = added.flatMap(describePiece);
     const kind = removed.length === 0 ? "insert" : added.length === 0 ? "delete" : "replace";
+    // Pieces of one run share their container, so one list wrapper fits all.
+    const oldFragmentTag = removed.every(piece => piece.listTag) ? removed[0]?.listTag : undefined;
+    const newFragmentTag = added.every(piece => piece.listTag) ? added[0]?.listTag : undefined;
     return {
         id: nextChangeId(),
         level: "block",
@@ -397,7 +415,10 @@ const blockChange = (
         oldSliceJson: removed.length > 0 ? baseline.slice(oldStart, oldStart + oldSize).toJSON() : null,
         oldText: oldLines.join("\n"),
         newText: newLines.join("\n"),
-        summary: summarize(added.length > 0 ? added.flatMap(plainTextLines) : oldLines)
+        oldFragmentJson: removed.length > 0 ? removed.map(piece => piece.node.toJSON()) : undefined,
+        oldFragmentTag,
+        newFragmentJson: added.length > 0 ? added.map(piece => piece.node.toJSON()) : undefined,
+        newFragmentTag
     };
 };
 
@@ -405,7 +426,15 @@ const previewForChange = (change: CanvasChange): CanvasDiffPreviewItem => {
     const prefix = change.level === "inline" ? change.previewPrefix : undefined;
     const withPrefix = (lines: string[]) => (prefix ? lines.map(line => `${prefix}${line}`) : lines);
     const lines = (text: string): string[] => (change.level === "inline" ? (text ? [text] : []) : text ? text.split("\n") : []);
-    return { kind: change.kind, oldLines: withPrefix(lines(change.oldText)), newLines: withPrefix(lines(change.newText)) };
+    return {
+        kind: change.kind,
+        oldLines: withPrefix(lines(change.oldText)),
+        newLines: withPrefix(lines(change.newText)),
+        oldFragmentJson: change.oldFragmentJson,
+        oldFragmentTag: change.oldFragmentTag,
+        newFragmentJson: change.newFragmentJson,
+        newFragmentTag: change.newFragmentTag
+    };
 };
 
 interface DiffSink {
@@ -423,7 +452,13 @@ const emitEqual = (sink: DiffSink, piece: DiffPiece) => {
     // Empty filler blocks (e.g. a trailing paragraph after a list) carry no
     // preview information and would only add blank rows.
     if (lines.every(line => line.trim() === "")) return;
-    sink.preview.push({ kind: "equal", oldLines: [], newLines: lines });
+    sink.preview.push({
+        kind: "equal",
+        oldLines: [],
+        newLines: lines,
+        newFragmentJson: [piece.node.toJSON()],
+        newFragmentTag: piece.listTag
+    });
 };
 
 const pushPairChange = (
@@ -442,7 +477,7 @@ const pushPairChange = (
  * Diffs the items of a matched list pair. Whole-list changes keep their
  * node-aligned ranges, so reject slices never cross container boundaries.
  */
-const diffListPair = (sink: DiffSink, baseline: PMNode, oldList: DiffPiece, newList: DiffPiece, nextChangeId: () => string) => {
+const diffListPair = (sink: DiffSink, baseline: PMNode, target: PMNode, oldList: DiffPiece, newList: DiffPiece, nextChangeId: () => string) => {
     const oldItems = listItemPieces(oldList.node, oldList.from);
     const newItems = listItemPieces(newList.node, newList.from);
     const ops = diffSequences(oldItems, newItems, (left, right) => left.node.eq(right.node));
@@ -493,6 +528,7 @@ const diffListPair = (sink: DiffSink, baseline: PMNode, oldList: DiffPiece, newL
                 oldParagraph && newParagraph
                     ? inlineChanges(
                           baseline,
+                          target,
                           oldParagraph.textContent,
                           itemTextStart(oldItem),
                           newParagraph.textContent,
@@ -565,7 +601,7 @@ export function diffCanvas(baseline: PMNode, target: PMNode): { changes: CanvasC
         removed.forEach((oldPiece, index) => {
             const newPiece = added[index];
             if (sameListShape(oldPiece.node, newPiece.node)) {
-                diffListPair(sink, baseline, oldPiece, newPiece, nextChangeId);
+                diffListPair(sink, baseline, target, oldPiece, newPiece, nextChangeId);
                 return;
             }
             const oldTextblock = simpleTextblock(oldPiece.node);
@@ -577,6 +613,7 @@ export function diffCanvas(baseline: PMNode, target: PMNode): { changes: CanvasC
                 JSON.stringify(oldTextblock.attrs) === JSON.stringify(newTextblock.attrs)
                     ? inlineChanges(
                           baseline,
+                          target,
                           oldTextblock.textContent,
                           blockTextStart(oldPiece),
                           newTextblock.textContent,

@@ -94,6 +94,26 @@ describe("CanvasVersionsDrawer", () => {
         expect(document.querySelector('[aria-label="canvas.versions.close"]')).not.toBeNull();
     });
 
+    it("renders removed list content formatted in the diff", () => {
+        const schema = getSchema(canvasExtensions());
+        const paragraph = (text: string) => ({ type: "paragraph", content: [{ type: "text", text }] });
+        const currentDoc = schema.nodeFromJSON({
+            type: "doc",
+            content: [paragraph("Bleibt"), { type: "bulletList", content: [{ type: "listItem", content: [paragraph("Entfallener Punkt")] }] }]
+        });
+        const revisionDocJson = { type: "doc", content: [paragraph("Bleibt")] };
+
+        renderDrawerWith({
+            revisions: { auto: [{ revision: 1, doc_json: revisionDocJson, timestamp: 1, source: "agent" }], manual: [] },
+            restore: () => {},
+            editor: { state: { doc: currentDoc, schema } }
+        } as unknown as CanvasControllerInstance);
+
+        const redEntry = document.querySelector('[data-canvas-diff-kind="delete"]');
+        expect(redEntry?.querySelector("ul li")).not.toBeNull();
+        expect(redEntry?.textContent).toContain("Entfallener Punkt");
+    });
+
     it("only marks the changed block and keeps unchanged blocks plain", () => {
         const schema = getSchema(canvasExtensions());
         const paragraph = (text: string) => ({ type: "paragraph", content: [{ type: "text", text }] });

@@ -2,9 +2,10 @@
 
 .insertion {
     background-color: var(--colorStatusSuccessBackground2);
-    /* Dotted underline keeps the insertion recognizable without relying on color. */
+    /* Dotted underline keeps the insertion recognizable without relying on color.
+       No border radius: one change may span several text nodes (formatting
+       boundaries), and adjacent spans must read as one continuous band. */
     border-bottom: 1px dotted var(--colorStatusSuccessForeground1);
-    border-radius: var(--borderRadiusSmall);
     cursor: pointer;
 }
 
@@ -112,4 +113,38 @@
     list-style: none;
     margin: 0;
     padding: 0;
+}
+
+/* Formatted fragment content inside the red removal box. */
+.deletionBlock :global(p) {
+    margin: 0 0 var(--spacingVerticalXXS);
+}
+
+.deletionBlock :global(ul),
+.deletionBlock :global(ol) {
+    margin: var(--spacingVerticalXXS) 0;
+    padding-inline-start: var(--spacingHorizontalL);
+}
+
+.deletionBlock :global(table) {
+    border-collapse: collapse;
+    margin: var(--spacingVerticalXXS) 0;
+}
+
+.deletionBlock :global(th),
+.deletionBlock :global(td) {
+    border: 1px solid var(--colorNeutralStroke1);
+    padding: 0 var(--spacingHorizontalXXS);
+    text-align: start;
+}
+
+.deletionBlock,
+.deletionBlock :global(*) {
+    text-decoration: line-through;
+}
+
+/* Applied via delegation so every green part of one change lights up together
+   (inline decorations are split per text node, so :hover alone cannot group them). */
+.insertionHover {
+    background-color: var(--colorStatusSuccessBackground3);
 }

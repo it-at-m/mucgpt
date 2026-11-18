@@ -15,7 +15,13 @@ import { CANVAS_PERSISTENCE_RESET, persistentCaret, persistentSelection } from "
 import { canvasExtensions } from "../components/Canvas/canvasExtensions";
 import { effectiveAllowedTags, sanitizeCanvasMarkdown } from "../components/Canvas/canvasHtmlWhitelist";
 import { computeCanvasChanges, type CanvasChange } from "../components/Canvas/canvasDiff";
-import { buildReviewDecorations, CANVAS_REVIEW_META, filterReviewDecorations } from "../components/Canvas/canvasDiffReview";
+import {
+    buildReviewDecorations,
+    CANVAS_REVIEW_META,
+    filterReviewDecorations,
+    insertionHoverClass,
+    type CanvasReviewLabels
+} from "../components/Canvas/canvasDiffReview";
 
 /**
  * Interface between the canvas UI and the chat page.
@@ -350,8 +356,13 @@ export function useCanvasController(conversationId: string | undefined, serverCo
     const reviewRef = useRef<CanvasReviewSession | null>(null);
     const agentBaselineRef = useRef<PMNode | null>(null);
     const processingReviewRef = useRef(false);
-    const reviewLabelsRef = useRef({ accept: "", reject: "" });
-    reviewLabelsRef.current = { accept: t("canvas.review.accept_change"), reject: t("canvas.review.reject_change") };
+    const reviewLabelsRef = useRef<CanvasReviewLabels>({ acceptNew: "", keepOld: "", removeOld: "", removeNew: "" });
+    reviewLabelsRef.current = {
+        acceptNew: t("canvas.review.accept_new"),
+        keepOld: t("canvas.review.keep_old"),
+        removeOld: t("canvas.review.remove_old"),
+        removeNew: t("canvas.review.remove_new")
+    };
 
     const getMarkdown = useCallback((): string => {
         const current = editorRef.current;
@@ -582,7 +593,7 @@ export function useCanvasController(conversationId: string | undefined, serverCo
             }
             reviewRef.current = { changes };
             setPendingChangeCount(changes.length);
-            setReviewDecorations(buildReviewDecorations(current.state.doc, changes, reviewLabelsRef.current));
+            setReviewDecorations(buildReviewDecorations(current.state.doc, changes, reviewLabelsRef.current, current.schema));
             return changes.length;
         },
         [clearReview, setReviewDecorations]
@@ -707,15 +718,13 @@ export function useCanvasController(conversationId: string | undefined, serverCo
 
     // Click/keyboard activation on the review markup: the colored text itself and
     // the small per-change controls both carry data attributes, so one delegated
-    // listener covers them (editing stays unaffected).
+    // listener covers them (editing stays unaffected). Block-level removals use a
+    // role="button" element, so Enter/Space must activate them as well.
     useEffect(() => {
         if (!editor || editor.isDestroyed) return;
         // The view is gone after destroy(); capture the element for the cleanup.
         const dom = editor.view.dom;
-        const onClick = (event: MouseEvent) => {
-            const target = event.target as HTMLElement | null;
-            const element = target?.closest?.("[data-canvas-review-change]") as HTMLElement | null;
-            if (!element) return;
+        const activate = (element: HTMLElement, event: Event) => {
             const changeId = element.getAttribute("data-canvas-review-change");
             if (!changeId) return;
             event.preventDefault();
@@ -723,9 +732,59 @@ export function useCanvasController(conversationId: string | undefined, serverCo
             if (element.getAttribute("data-canvas-review-action") === "reject") rejectChange(changeId);
             else acceptChange(changeId);
         };
+        const reviewElement = (target: EventTarget | null): HTMLElement | null =>
+            (target as HTMLElement | null)?.closest?.("[data-canvas-review-change]") ?? null;
+        const onClick = (event: MouseEvent) => {
+            const element = reviewElement(event.target);
+            if (element) activate(element, event);
+        };
+        const onKeyDown = (event: KeyboardEvent) => {
+            if (event.key !== "Enter" && event.key !== " ") return;
+            const element = reviewElement(event.target);
+            if (element?.getAttribute("role") === "button") activate(element, event);
+        };
+        // Inline decorations are split per text node, so hovering one green span
+        // must light up every green part of the same change. The red box and the
+        // controls are single elements and rely on CSS :hover.
+        let hoveredChangeId = "";
+        let hoveredElements: HTMLElement[] = [];
+        const clearHover = () => {
+            hoveredElements.forEach(element => element.classList.remove(insertionHoverClass));
+            hoveredElements = [];
+            hoveredChangeId = "";
+        };
+        const onMouseOver = (event: MouseEvent) => {
+            const element = reviewElement(event.target);
+            if (!element || element.getAttribute("data-canvas-review-action") !== "accept") return;
+            const changeId = element.getAttribute("data-canvas-review-change");
+            if (!changeId || changeId === hoveredChangeId) return;
+            clearHover();
+            hoveredChangeId = changeId;
+            dom.querySelectorAll<HTMLElement>(`[data-canvas-review-change="${changeId}"][data-canvas-review-action="accept"]:not(button)`).forEach(element => {
+                element.classList.add(insertionHoverClass);
+                hoveredElements.push(element);
+            });
+        };
+        const onMouseOut = (event: MouseEvent) => {
+            const element = reviewElement(event.target);
+            if (!element) return;
+            const relatedElement = reviewElement(event.relatedTarget);
+            // Stay lit while moving within the same change (its controls or the
+            // paired red box); clear when leaving towards other content.
+            if (relatedElement && relatedElement.getAttribute("data-canvas-review-change") === element.getAttribute("data-canvas-review-change")) return;
+            if (event.relatedTarget && element.contains(event.relatedTarget as Node)) return;
+            clearHover();
+        };
         dom.addEventListener("click", onClick);
+        dom.addEventListener("keydown", onKeyDown);
+        dom.addEventListener("mouseover", onMouseOver);
+        dom.addEventListener("mouseout", onMouseOut);
         return () => {
+            clearHover();
             dom.removeEventListener("click", onClick);
+            dom.removeEventListener("keydown", onKeyDown);
+            dom.removeEventListener("mouseover", onMouseOver);
+            dom.removeEventListener("mouseout", onMouseOut);
         };
     }, [editor, acceptChange, rejectChange]);
 

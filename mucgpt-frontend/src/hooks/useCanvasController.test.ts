@@ -8,6 +8,7 @@ import { Editor } from "@tiptap/core";
 import { canvasExtensions } from "../components/Canvas/canvasExtensions";
 import { caretMarkdownOffset, markdownStorage, tableSelectionMarkdownAt, useCanvasController, type CanvasControllerInstance } from "./useCanvasController";
 import { CANVAS_STREAM_CONTENT_LIMIT, parseCanvasStreamEvent } from "../utils/canvasStream";
+import { insertionHoverClass } from "../components/Canvas/canvasDiffReview";
 import { DEFAULT_APP_CONFIG } from "../constants";
 import type { CanvasRevisions } from "../service/canvasStorage";
 
@@ -1196,6 +1197,76 @@ describe("agent change review", () => {
         expect(harness.current.getMarkdown()).toContain("Neuer Punkt");
         expect(harness.current.getMarkdown()).toContain("- A");
         expect(harness.current.getMarkdown()).toContain("- B");
+    });
+
+    it("renders the removed content formatted and activates it via keyboard", () => {
+        const harness = renderController();
+        harness.render(undefined);
+        runCanvasTurn(harness, "- Erster Punkt\n- Zweiter Punkt", "Ersetzt");
+
+        expect(harness.current.pendingChangeCount).toBe(1);
+        // The red removal box renders the real list structure, not plain text.
+        const redBox = harness.current.editor!.view.dom.querySelector('[data-canvas-review-action="reject"][role="button"]');
+        expect(redBox?.querySelector("ul li")).not.toBeNull();
+
+        act(() => {
+            redBox!.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true }));
+        });
+        expect(harness.current.pendingChangeCount).toBe(0);
+        expect(harness.current.getMarkdown()).toBe("- Erster Punkt\n- Zweiter Punkt");
+    });
+
+    it("highlights all green parts of a change on hover", () => {
+        const harness = renderController();
+        harness.render(undefined);
+        runCanvasTurn(harness, "Eins", "Eins\n\nZwei\n\nDrei");
+        expect(harness.current.pendingChangeCount).toBe(1);
+
+        const greenParts = Array.from(harness.current.editor!.view.dom.querySelectorAll<HTMLElement>('[data-canvas-review-action="accept"]:not(button)'));
+        expect(greenParts.length).toBeGreaterThan(1);
+
+        act(() => {
+            greenParts[0].dispatchEvent(new MouseEvent("mouseover", { bubbles: true }));
+        });
+        const hovered = greenParts.filter(element => element.classList.contains(insertionHoverClass));
+        expect(hovered).toHaveLength(greenParts.length);
+
+        act(() => {
+            greenParts[0].dispatchEvent(new MouseEvent("mouseout", { bubbles: true }));
+        });
+        expect(greenParts.some(element => element.classList.contains(insertionHoverClass))).toBe(false);
+    });
+
+    it("uses context-aware control tooltips per change kind", () => {
+        const harness = renderController();
+        harness.render(undefined);
+
+        // Delete-only: accepting removes the old text, rejecting keeps it.
+        runCanvasTurn(harness, "Erster Absatz\n\nZweiter Absatz", "Erster Absatz");
+        const redBox = harness.current.editor!.view.dom.querySelector('[data-canvas-review-action="reject"][role="button"]') as HTMLElement;
+        expect(redBox.title).toContain("canvas.review.keep_old:");
+        expect(redBox.title).toContain("Zweiter Absatz");
+        const check = harness.current.editor!.view.dom.querySelector('[data-canvas-review-action="accept"]') as HTMLElement;
+        expect(check.title).toContain("canvas.review.remove_old:");
+        expect(check.title).toContain("Zweiter Absatz");
+
+        act(() => {
+            harness.current.rejectAllChanges();
+        });
+
+        // Insert-only: rejecting removes the new text, accepting keeps it; the
+        // green block announces the same acceptance.
+        runCanvasTurn(harness, "Erster Absatz", "Erster Absatz\n\nNeuer Absatz");
+        const cross = harness.current.editor!.view.dom.querySelector('[data-canvas-review-action="reject"]') as HTMLElement;
+        expect(cross.title).toContain("canvas.review.remove_new:");
+        expect(cross.title).toContain("Neuer Absatz");
+        const acceptElements = Array.from(harness.current.editor!.view.dom.querySelectorAll<HTMLElement>('[data-canvas-review-action="accept"]'));
+        console.log("DEBUG-ACCEPT-HTML", acceptElements.map(element => element.outerHTML).join("\n>>>"));
+        expect(acceptElements.length).toBeGreaterThan(1);
+        for (const element of acceptElements) {
+            expect(element.title).toContain("canvas.review.accept_new:");
+            expect(element.title).toContain("Neuer Absatz");
+        }
     });
 
     it("reviews a version restore and reverts it when rejected", () => {

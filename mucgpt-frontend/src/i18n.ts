@@ -224,8 +224,10 @@ i18n
                             hint: "Klicke grün markierten Text an, um die Änderung zu übernehmen. Rot durchgestrichenen Text anklicken, um ihn abzulehnen. Ungenutzte Änderungen werden beim nächsten Schreibvorgang des Agenten automatisch übernommen.",
                             accept_all: "Alle übernehmen",
                             reject_all: "Alle ablehnen",
-                            accept_change: "Änderung übernehmen",
-                            reject_change: "Änderung ablehnen"
+                            accept_new: "Neuen Text übernehmen",
+                            keep_old: "Alten Text behalten",
+                            remove_old: "Alten Text entfernen",
+                            remove_new: "Neuen Text entfernen"
                         },
                         toolbar: {
                             label: "Canvas-Werkzeuge",
@@ -1237,8 +1239,10 @@ i18n
                             hint: "Click green highlighted text to accept a change. Click red strikethrough text to reject it. Unreviewed changes are accepted automatically the next time the agent writes.",
                             accept_all: "Accept all",
                             reject_all: "Reject all",
-                            accept_change: "Accept change",
-                            reject_change: "Reject change"
+                            accept_new: "Accept new text",
+                            keep_old: "Keep old text",
+                            remove_old: "Remove old text",
+                            remove_new: "Remove new text"
                         },
                         toolbar: {
                             label: "Canvas tools",
@@ -2279,8 +2283,10 @@ i18n
                             hint: "Klick auf grien markiertn Text, um de Änderung z' übernehma. Auf rot durchgstrichna Text klicka, um eahm abz'lehna. Ned ogschaugte Änderungen wern beim nächstn Schreibvorgang vom Agentn automatisch übernomma.",
                             accept_all: "Alle übernehma",
                             reject_all: "Alle ab'lehna",
-                            accept_change: "Änderung übernehma",
-                            reject_change: "Änderung ab'lehna"
+                            accept_new: "Neien Text übernehma",
+                            keep_old: "Altn Text behoidn",
+                            remove_old: "Altn Text entfern",
+                            remove_new: "Neien Text entfern"
                         },
                         toolbar: {
                             label: "Canvas-Werkzeig",
@@ -3199,8 +3205,10 @@ i18n
                             hint: "Cliquez sur le texte surligné en vert pour accepter une modification. Cliquez sur le texte barré en rouge pour la rejeter. Les modifications non examinées sont acceptées automatiquement la prochaine fois que l'agent écrit.",
                             accept_all: "Tout accepter",
                             reject_all: "Tout rejeter",
-                            accept_change: "Accepter la modification",
-                            reject_change: "Rejeter la modification"
+                            accept_new: "Accepter le nouveau texte",
+                            keep_old: "Garder l'ancien texte",
+                            remove_old: "Supprimer l'ancien texte",
+                            remove_new: "Supprimer le nouveau texte"
                         },
                         toolbar: {
                             label: "Outils du canvas",
@@ -4182,8 +4190,10 @@ i18n
                             hint: "Натисніть на текст, виділений зеленим, щоб прийняти зміну. Натисніть на перекреслений червоний текст, щоб відхилити її. Непереглянуті зміни приймаються автоматично, коли агент наступного разу пише.",
                             accept_all: "Прийняти всі",
                             reject_all: "Відхилити всі",
-                            accept_change: "Прийняти зміну",
-                            reject_change: "Відхилити зміну"
+                            accept_new: "Прийняти новий текст",
+                            keep_old: "Залишити старий текст",
+                            remove_old: "Видалити старий текст",
+                            remove_new: "Видалити новий текст"
                         },
                         toolbar: {
                             label: "Інструменти canvas",

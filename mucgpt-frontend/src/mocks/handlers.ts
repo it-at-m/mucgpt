@@ -15,7 +15,7 @@ import {
 } from "../api";
 import { buildAssistantCreateResponse, buildOwnersDetailedFromOwnerIds, buildChatMessage, buildRichMarkdownChatMessage } from "./data/generators";
 import { CREATIVITY_HIGH, CREATIVITY_MEDIUM } from "../constants";
-import type { AssistantAuditEvent } from "../api/models";
+import type { AssistantAuditEvent, DocumentLibraryEntry } from "../api/models";
 import { CANVAS_TOOL_IDS } from "../utils/canvasStream";
 import { loadMockAssistants, loadMockSubscriptions, saveMockAssistants, saveMockSubscriptions } from "./data/assistant-store";
 import { MOCK_DELETED_SUBSCRIBED_SNAPSHOT, MOCK_SUBSCRIPTION_SEED } from "./data/browser-scenario-seed";
@@ -675,6 +675,52 @@ async function parseUploadHandler({ request }: { request: Request }) {
 
     // Return the parsed content as a plain string (matching the API spec)
     return HttpResponse.json(content);
+}
+
+const MOCK_DOCUMENT_LIMIT = 10;
+const MOCK_DOCUMENT_MAX_BYTES = 20 * 1024 * 1024;
+const MOCK_UNSUPPORTED_DOCUMENT_EXTENSIONS = [".exe", ".zip", ".mp4"];
+const mockDocuments: DocumentLibraryEntry[] = [];
+
+/** Mocked document library upload: mirrors the backend's quota, size and format rejections. */
+async function uploadDocumentHandler({ request }: { request: Request }) {
+    await delay(1500);
+
+    const formData = await request.formData();
+    const file = formData.get("file");
+    if (!(file instanceof File)) {
+        return HttpResponse.json({ detail: "No file provided" }, { status: 422 });
+    }
+    if (mockDocuments.length >= MOCK_DOCUMENT_LIMIT) {
+        return HttpResponse.json({ detail: "Document library limit of 10 reached" }, { status: 409 });
+    }
+    if (file.size > MOCK_DOCUMENT_MAX_BYTES) {
+        return HttpResponse.json({ detail: "Document exceeds the parser service byte limit." }, { status: 413 });
+    }
+    if (MOCK_UNSUPPORTED_DOCUMENT_EXTENSIONS.some(extension => file.name.toLowerCase().endsWith(extension))) {
+        return HttpResponse.json({ detail: "Parser does not support the document format." }, { status: 415 });
+    }
+
+    const text = await file.text();
+    if (!text.trim()) {
+        return HttpResponse.json({ detail: "Document extraction returned no usable text." }, { status: 422 });
+    }
+
+    const id = crypto.randomUUID();
+    const document: DocumentLibraryEntry = {
+        id,
+        filename: file.name,
+        mime_type: file.type || "application/octet-stream",
+        original_size: file.size,
+        text_length: text.length,
+        preview: text.slice(0, 200),
+        preview_kind: "initial_excerpt",
+        path: `/documents/${id}.txt`,
+        created_at: new Date().toISOString(),
+        status: "ready"
+    };
+    mockDocuments.unshift(document);
+    return HttpResponse.json(document, { status: 201 });
 }
 
 const MOCK_CANVAS_DOCUMENT =
@@ -1698,6 +1744,18 @@ export const handlers = [
                 "Content-Disposition": `attachment; filename="canvas.${target}"`
             }
         });
+    }),
+
+    http.get("/api/backend/v1/documents", () => HttpResponse.json(mockDocuments)),
+    http.post("/api/backend/v1/documents", uploadDocumentHandler),
+    http.delete("/api/backend/v1/documents/:documentId", async ({ params }) => {
+        await delay(300);
+        const index = mockDocuments.findIndex(document => document.id === params.documentId);
+        if (index === -1) {
+            return HttpResponse.json({ detail: "Document unavailable" }, { status: 404 });
+        }
+        mockDocuments.splice(index, 1);
+        return new HttpResponse(null, { status: 204 });
     }),
 
     // Parse API handlers (core-service route + legacy compatibility)

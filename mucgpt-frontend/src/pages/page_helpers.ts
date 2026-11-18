@@ -178,7 +178,7 @@ export async function handleRegenerate(
     activeChat: string,
     storageService: StorageService<any, any>,
     systemPrompt: string,
-    callApi: (question: string, ...args: any[]) => Promise<void>,
+    callApi: (question: string, ...args: any[]) => Promise<unknown>,
     isLoadingRef: RefObject<boolean>,
     persist: boolean = true
 ) {

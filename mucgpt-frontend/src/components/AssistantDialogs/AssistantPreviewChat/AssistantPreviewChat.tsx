@@ -410,7 +410,6 @@ export const AssistantPreviewChat = ({
                     setSelectedTools={noopSetSelectedTools}
                     tools={tools}
                     allowToolSelection={false}
-                    allowFileUpload={false}
                     usage={usageSummary}
                     llmOptions={availableLLMs}
                     selectedLLM={LLM.id}

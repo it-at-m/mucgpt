@@ -687,4 +687,31 @@ describe("selection markdown", () => {
         expect(state?.selection).toBeNull();
         expect(state?.cursor).toBe(2);
     });
+
+    it("serializes a select-all selection as the full document", () => {
+        const harness = renderController();
+        harness.render(undefined);
+        act(() => {
+            harness.current.setMarkdown("- this is my text");
+            harness.current.setIsOpen(true);
+            harness.current.editor!.commands.selectAll();
+        });
+        const state = harness.current.toCanvasState();
+        expect(state?.selection).toBe("- this is my text");
+    });
+
+    it("serializes doc-boundary selections when the sentinel path has no textblock boundary", () => {
+        const harness = renderController();
+        harness.render(undefined);
+        act(() => {
+            harness.current.setMarkdown("- this is my text");
+            harness.current.setIsOpen(true);
+            const editor = harness.current.editor!;
+            // from = doc start (0), to = after "my" (inside the textblock)
+            const to = posOf(editor, "my") + 2;
+            editor.chain().setTextSelection({ from: 0, to }).run();
+        });
+        const state = harness.current.toCanvasState();
+        expect(state?.selection).toBe("- this is my");
+    });
 });

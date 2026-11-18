@@ -165,7 +165,10 @@ class CanvasState(BaseModel):
     selection: str | None = Field(
         None,
         max_length=CANVAS_CONTENT_MAX_CHARS,
-        description="Exact markdown substring covering the selection, if any.",
+        description=(
+            "Exact markdown substring covering the selection, if any; table "
+            "selections use a coordinate annotation instead."
+        ),
     )
     cursor: int | None = Field(
         None,

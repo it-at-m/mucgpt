@@ -436,7 +436,8 @@ def test_canvas_edit_unresolvable_ambiguity_despite_selection(monkeypatch: Any) 
 
     assert result.startswith("Error:")
     assert "2 times" in result
-    assert "highlighted" in result
+    assert "Extend old_text" in result
+    assert "highlighted" not in result
     assert writer.chunks == []
 
 

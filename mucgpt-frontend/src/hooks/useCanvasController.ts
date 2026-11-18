@@ -70,8 +70,9 @@ const emptyRevisions = (): CanvasRevisions => ({ auto: [], manual: [] });
 /**
  * Selection starting inside a table: the cut document's first row is a partial
  * body row, which the GFM serializer rejects (it would collapse to "[table]"),
- * so quote coordinates plus the verbatim cell text instead. The text stays a
- * document substring, which canvas_edit's selection check relies on.
+ * so quote coordinates plus the verbatim cell text instead; the backend can
+ * still locate the passage via the "referenced text". The annotation is not a
+ * document substring.
  * Row 1 is the header row; the canvas schema allows no colspans, so the cell
  * index is the column index. The highlighted text may be a partial cell, hence
  * "referenced text" rather than "cell content".
@@ -157,7 +158,7 @@ const serializeWithSentinels = (editor: Editor, boundaries: OffsetBoundary[]): s
  * Markdown offset of the character at a ProseMirror position (sentinel
  * method). Null when the serializer is unavailable.
  */
-export const markdownOffsetAt = (editor: Editor, pos: number): number | null => {
+const markdownOffsetAt = (editor: Editor, pos: number): number | null => {
     const full = markdownStorage(editor)?.serializer.serialize(editor.state.doc);
     if (full === undefined) return null;
     const sentinel = OFFSET_SENTINELS.find(candidate => !full.includes(candidate));
@@ -168,8 +169,9 @@ export const markdownOffsetAt = (editor: Editor, pos: number): number | null => 
 };
 
 /**
- * Caret position as character offset into the serialized markdown. Uses the
- * selection start, so a selected passage reports where it begins.
+ * Markdown offset of a ProseMirror position (defaults to the selection
+ * start). Callers align selection-anchored offsets with the selection slice
+ * (line start at a block content start).
  */
 export const caretMarkdownOffset = (editor: Editor | null, pos?: number): number | null => {
     if (!editor) return null;
@@ -202,6 +204,9 @@ const selectionMarkdownOffsets = (editor: Editor, from: number, to: number, full
     if (fromIndex < 0 || toIndex < 0 || fromIndex > toIndex) return null;
     return { startOffset: fromIndex, endOffset: toIndex };
 };
+
+/** Markdown index of the line start containing `offset` (0-safe for offset 0). */
+const lineStart = (markdown: string, offset: number): number => markdown.lastIndexOf("\n", Math.max(offset - 1, 0)) + 1;
 
 export function useCanvasController(conversationId: string | undefined, serverConversationId?: string): CanvasControllerInstance {
     // Assistant chats keep a prefixed local id for their chat history but talk
@@ -389,10 +394,12 @@ export function useCanvasController(conversationId: string | undefined, serverCo
         const markdown = getMarkdown();
         if (!markdown) return null;
         const offsets = selectionMarkdownOffsets(current, from, to, markdown);
-        if (!offsets) return null;
+        // Selections with a boundary outside a textblock (select-all, doc start
+        // or end) have no sentinel offsets; the cut serialization is exact there.
+        if (!offsets) return markdownStorage(current)?.serializer.serialize(current.state.doc.cut(from, to)) ?? null;
         // A selection starting at a block's content start covers the block prefix;
         // slide to the line start. Mid-block: keep the exact covered characters.
-        const start = current.state.doc.resolve(from).parentOffset === 0 ? markdown.lastIndexOf("\n", offsets.startOffset - 1) + 1 : offsets.startOffset;
+        const start = current.state.doc.resolve(from).parentOffset === 0 ? lineStart(markdown, offsets.startOffset) : offsets.startOffset;
         return start <= offsets.endOffset ? markdown.slice(start, offsets.endOffset) : null;
     }, [getMarkdown]);
 
@@ -419,19 +426,18 @@ export function useCanvasController(conversationId: string | undefined, serverCo
         const truncated = markdown.length > limits.contentLimitChars;
         const content = truncated ? markdown.slice(0, limits.contentLimitChars) : markdown;
         // The anchor is the persistent caret; while a passage is selected the
-        // selection start takes over, so a position is always sent.
-        const caretPos = persistentCaret(editorRef.current);
-        const liveSelection = editorRef.current?.state.selection;
-        const editor = editorRef.current;
+        // selection start takes over, so a position is sent whenever one exists.
+        const current = editorRef.current;
+        const caretPos = persistentCaret(current);
+        const liveSelection = current?.state.selection;
         const anchor = caretPos ?? (liveSelection && !liveSelection.empty ? liveSelection.from : null);
         let cursor: number | null = null;
-        if (anchor !== null && editor) {
-            const cursorOffset = caretMarkdownOffset(editor, anchor);
+        if (anchor !== null && current) {
+            const cursorOffset = caretMarkdownOffset(current, anchor);
             if (cursorOffset !== null) {
                 // Selection-anchored cursors align with the selection slice
                 // (line start at a block content start).
-                cursor =
-                    caretPos === null && editor.state.doc.resolve(anchor).parentOffset === 0 ? markdown.lastIndexOf("\n", cursorOffset - 1) + 1 : cursorOffset;
+                cursor = caretPos === null && current.state.doc.resolve(anchor).parentOffset === 0 ? lineStart(markdown, cursorOffset) : cursorOffset;
             }
         }
         const selection = isOpen ? getSelectionMarkdown() : null;

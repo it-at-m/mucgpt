@@ -5,8 +5,9 @@ import { Decoration, DecorationSet } from "@tiptap/pm/view";
 /**
  * Keeps the last selection (muted highlight) and caret position (brand-colored
  * caret) visible while the editor is unfocused, so they survive typing in the
- * chat input and tell the user where the agent anchors edits (the caret offset
- * is what toCanvasState reports as `cursor`).
+ * chat input and tell the user where the agent anchors edits (toCanvasState
+ * reports the caret as `cursor`, or the selection start while a passage is
+ * selected).
  */
 
 export const CANVAS_PERSISTENCE_RESET = "canvasPersistenceReset";
@@ -27,8 +28,8 @@ const caretWidget = () => {
 };
 
 /**
- * The anchor the user currently sees (marker = what toCanvasState sends as
- * `cursor`): the persistent caret position, or null once it was cleared (agent
+ * The anchor the user currently sees (used as `cursor` when no passage is
+ * selected): the persistent caret position, or null once it was cleared (agent
  * rewrite, canvas reset) until the user places a caret again.
  */
 export const persistentCaret = (editor: Editor | null): number | null => {

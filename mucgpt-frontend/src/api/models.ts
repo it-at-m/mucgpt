@@ -46,7 +46,8 @@ export type CanvasState = {
     content: string;
     /** Exact markdown substring covering the selection, if any; structural
      * operators ("- ", "# ", "**") included only when the selection covers
-     * their boundary side. */
+     * their boundary side. Table selections use a coordinate annotation
+     * instead of a verbatim substring. */
     selection: string | null;
     /** Offset of the user's focus in the markdown: caret, or selection start
      * while a passage is selected; sent whenever one exists. */

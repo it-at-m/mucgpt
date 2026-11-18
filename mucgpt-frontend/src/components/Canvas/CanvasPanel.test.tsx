@@ -2,6 +2,7 @@
 import { cleanup, render, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { putCanvasRevisionsApi } from "../../api/core-client";
 import type { CanvasControllerInstance } from "../../hooks/useCanvasController";
 import { saveCanvasContent } from "../../service/canvasStorage";
 import { CanvasPanel } from "./CanvasPanel";
@@ -12,14 +13,31 @@ vi.mock("./CanvasEditor", () => ({ CanvasEditor: () => <div data-testid="canvas-
 vi.mock("./CanvasToolbar", () => ({ CanvasToolbar: () => <div /> }));
 vi.mock("./CanvasVersionsDrawer", () => ({ CanvasVersionsDrawer: () => <div /> }));
 
+vi.mock("../../api/core-client", async importOriginal => {
+    const original = await importOriginal<typeof import("../../api/core-client")>();
+    return { ...original, putCanvasRevisionsApi: vi.fn() };
+});
+
 vi.mock("../../service/canvasStorage", async importOriginal => {
     const original = await importOriginal<typeof import("../../service/canvasStorage")>();
     return { ...original, saveCanvasContent: vi.fn() };
 });
 
 const saveMock = vi.mocked(saveCanvasContent);
+const putRevisionsMock = vi.mocked(putCanvasRevisionsApi);
 
 type Subscriber = (markdown: string) => void;
+
+interface Deferred<T> {
+    promise: Promise<T>;
+    resolve: (value: T) => void;
+}
+
+const deferred = <T,>(): Deferred<T> => {
+    let resolve!: (value: T) => void;
+    const promise = new Promise<T>(r => (resolve = r));
+    return { promise, resolve };
+};
 
 /**
  * Minimal controller double reproducing the real subscribe semantics: debounced
@@ -72,11 +90,13 @@ const renderPanel = (controller: CanvasControllerInstance, conversationId = "con
 
 beforeEach(() => {
     saveMock.mockResolvedValue(true);
+    putRevisionsMock.mockResolvedValue(undefined);
 });
 
 afterEach(() => {
     cleanup();
     saveMock.mockClear();
+    putRevisionsMock.mockClear();
 });
 
 describe("CanvasPanel content autosave", () => {
@@ -92,6 +112,46 @@ describe("CanvasPanel content autosave", () => {
         controller.notify("# draft");
         controller.flush();
         await waitFor(() => expect(saveMock).toHaveBeenCalledTimes(0));
+    });
+
+    it("serializes saves so snapshots can never be written out of order", async () => {
+        const controller = makeController();
+        renderPanel(controller);
+        const gate = deferred<boolean>();
+        saveMock.mockImplementationOnce(() => gate.promise);
+
+        controller.notify("# first");
+        controller.flush();
+        await waitFor(() => expect(saveMock).toHaveBeenCalledTimes(1));
+        expect(saveMock).toHaveBeenLastCalledWith("conv-1", "# first", false);
+
+        controller.notify("# second");
+        controller.flush();
+        await waitFor(() => expect(saveMock).toHaveBeenCalledTimes(1));
+
+        gate.resolve(true);
+        await waitFor(() => expect(saveMock).toHaveBeenCalledTimes(2));
+        expect(saveMock).toHaveBeenLastCalledWith("conv-1", "# second", false);
+    });
+
+    it("persists an undo back to the previous content while a newer save is in flight", async () => {
+        const controller = makeController();
+        renderPanel(controller);
+        controller.notify("# A");
+        controller.flush();
+        await waitFor(() => expect(saveMock).toHaveBeenCalledTimes(1));
+
+        const gate = deferred<boolean>();
+        saveMock.mockImplementationOnce(() => gate.promise);
+        controller.notify("# B");
+        controller.flush();
+        await waitFor(() => expect(saveMock).toHaveBeenCalledTimes(2));
+
+        controller.notify("# A");
+        controller.flush();
+        gate.resolve(true);
+        await waitFor(() => expect(saveMock).toHaveBeenCalledTimes(3));
+        expect(saveMock).toHaveBeenLastCalledWith("conv-1", "# A", false);
     });
 
     it("does not persist while the agent run locks the editor", async () => {
@@ -137,25 +197,76 @@ describe("CanvasPanel content autosave", () => {
         await waitFor(() => expect(saveMock).toHaveBeenCalledTimes(0));
     });
 
-    it("does not persist while the editor is mid-recreation", async () => {
+    it("does not persist an emptied document while the editor is mid-recreation", async () => {
         const controller = makeController();
         (controller.editor as { isDestroyed: boolean }).isDestroyed = true;
         renderPanel(controller);
 
-        controller.notify("# drafted during recreation");
+        controller.notify("");
         controller.flush();
         await waitFor(() => expect(saveMock).toHaveBeenCalledTimes(0));
     });
 
-    it("never persists an emptied document", async () => {
-        // A "" write during a conversation switch (editor cleared before the
-        // async restore) or after a failed load would wipe the stored copy.
+    it("persists a captured nonempty snapshot even when the editor is already destroyed", async () => {
+        const controller = makeController();
+        renderPanel(controller);
+        controller.notify("# captured before unmount");
+        controller.flush();
+        await waitFor(() => expect(saveMock).toHaveBeenCalledWith("conv-1", "# captured before unmount", false));
+
+        (controller.editor as { isDestroyed: boolean }).isDestroyed = true;
+        controller.notify("# captured later");
+        controller.flush();
+        await waitFor(() => expect(saveMock).toHaveBeenCalledWith("conv-1", "# captured later", false));
+    });
+
+    it("does not persist emptiness when nothing nonempty was stored before", async () => {
+        // A "" write while the current conversation's restore is pending (or
+        // failed) would wipe the stored copy.
         const controller = makeController();
         renderPanel(controller);
 
         controller.notify("");
         controller.flush();
         await waitFor(() => expect(saveMock).toHaveBeenCalledTimes(0));
+    });
+
+    it("persists an intentional clear after a nonempty document of this conversation was stored", async () => {
+        const controller = makeController();
+        const snapshotMock = controller.snapshot as unknown as ReturnType<typeof vi.fn>;
+        renderPanel(controller);
+
+        controller.notify("# document");
+        controller.flush();
+        await waitFor(() => expect(saveMock).toHaveBeenCalledWith("conv-1", "# document", false));
+
+        snapshotMock.mockClear();
+        controller.notify("");
+        controller.flush();
+        await waitFor(() => expect(saveMock).toHaveBeenCalledWith("conv-1", "", false));
+        // The cleared content got a rollback checkpoint and a cleared marker
+        // (the load path restores the newest ring entry, which must be the
+        // marker so the clear sticks after a reload) before the empty state
+        // was stored.
+        expect(snapshotMock).toHaveBeenCalledTimes(2);
+        expect(snapshotMock).toHaveBeenNthCalledWith(1, "autosave");
+        expect(snapshotMock).toHaveBeenNthCalledWith(2, "cleared");
+
+        // Repeated empty notifications do not re-checkpoint or re-mark.
+        controller.notify("");
+        controller.flush();
+        await waitFor(() => expect(snapshotMock).toHaveBeenCalledTimes(2));
+    });
+
+    it("does not checkpoint an empty write without a confirmed nonempty predecessor", async () => {
+        const controller = makeController();
+        const snapshotMock = controller.snapshot as unknown as ReturnType<typeof vi.fn>;
+        renderPanel(controller);
+
+        controller.notify("");
+        controller.flush();
+        await waitFor(() => expect(saveMock).toHaveBeenCalledTimes(0));
+        expect(snapshotMock).toHaveBeenCalledTimes(0);
     });
 
     it("scopes the unchanged-content suppression to the conversation", async () => {
@@ -171,6 +282,20 @@ describe("CanvasPanel content autosave", () => {
         controller.notify("# draft");
         controller.flush();
         await waitFor(() => expect(saveMock).toHaveBeenCalledWith("conv-2", "# draft", false));
+    });
+
+    it("retries a failed snapshot once on unmount", async () => {
+        saveMock.mockResolvedValue(false);
+        const controller = makeController();
+        const view = renderPanel(controller);
+
+        controller.notify("# lost draft");
+        controller.flush();
+        await waitFor(() => expect(saveMock).toHaveBeenCalledWith("conv-1", "# lost draft", false));
+
+        saveMock.mockResolvedValue(true);
+        view.unmount();
+        await waitFor(() => expect(saveMock).toHaveBeenLastCalledWith("conv-1", "# lost draft"));
     });
 
     it("flushes on pagehide with a keepalive request", async () => {
@@ -190,5 +315,25 @@ describe("CanvasPanel content autosave", () => {
         controller.notify("a".repeat(60001));
         window.dispatchEvent(new Event("pagehide"));
         await waitFor(() => expect(saveMock).toHaveBeenCalledTimes(0));
+    });
+
+    it("flushes pending revision rings on pagehide with a keepalive request", async () => {
+        const rings = { auto: [{ revision: 1, doc_json: {}, timestamp: 1, source: "agent" as const }], manual: [] };
+        const controller = makeController({ revisions: rings, listRevisions: () => rings });
+        renderPanel(controller);
+
+        window.dispatchEvent(new Event("pagehide"));
+
+        await waitFor(() => expect(putRevisionsMock).toHaveBeenCalledWith("conv-1", rings, true));
+    });
+
+    it("does not keepalive revision rings beyond the browser body cap", async () => {
+        const rings = { auto: [{ revision: 1, doc_json: { blob: "x".repeat(70000) }, timestamp: 1, source: "agent" as const }], manual: [] };
+        const controller = makeController({ revisions: rings, listRevisions: () => rings });
+        renderPanel(controller);
+
+        window.dispatchEvent(new Event("pagehide"));
+
+        await waitFor(() => expect(putRevisionsMock).toHaveBeenCalledTimes(0));
     });
 });

@@ -206,10 +206,12 @@ export async function getCanvasRevisionsApi(conversationId: string): Promise<Can
 
 /**
  * Replaces the client-owned canvas revision rings on the server (wholesale
- * overwrite, max 512 KB).
+ * overwrite, max 512 KB). With keepalive, the request survives a page unload;
+ * browsers cap keepalive bodies at 64 kB, so callers must check the exact
+ * serialized body size first.
  */
-export async function putCanvasRevisionsApi(conversationId: string, revisions: CanvasRevisions): Promise<void> {
-    const response = await fetch(canvasUrl(conversationId, "/revisions"), putConfig({ ...revisions }));
+export async function putCanvasRevisionsApi(conversationId: string, revisions: CanvasRevisions, keepalive = false): Promise<void> {
+    const response = await fetch(canvasUrl(conversationId, "/revisions"), { ...putConfig({ ...revisions }), keepalive });
     handleRedirect(response);
     if (!response.ok && response.status !== 404) {
         throw new Error(`Failed to save canvas revisions: ${response.status}`);

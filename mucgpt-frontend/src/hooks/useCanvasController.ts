@@ -39,7 +39,7 @@ export interface CanvasController {
     /** Debounced; used for autosave */
     subscribe(cb: (markdown: string) => void): () => void;
     /** PM-JSON snapshot into the revision rings */
-    snapshot(source: "agent" | "manual" | "restore"): void;
+    snapshot(source: CanvasRevision["source"]): void;
     listRevisions(): CanvasRevisions;
     /** Non-destructive: setContent(doc_json) as new transaction; undoable via Ctrl+Z */
     restore(revision: number): void;
@@ -64,6 +64,24 @@ export const markdownStorage = (editor: Editor): MarkdownEditorStorage =>
     (editor.storage as unknown as Record<string, unknown>).markdown as MarkdownEditorStorage;
 
 const pushCapped = (ring: CanvasRevision[], revision: CanvasRevision, cap: number): CanvasRevision[] => [...ring, revision].slice(-cap);
+
+/**
+ * Pushing a pre-clear rollback checkpoint into a full auto ring evicts the
+ * oldest autosave entry first, so frequent clear/save cycles cannot push out
+ * agent versions; plain FIFO applies only when no backups exist.
+ */
+const pushAutoCapped = (ring: CanvasRevision[], revision: CanvasRevision, cap: number): CanvasRevision[] => {
+    if (ring.length < cap) return [...ring, revision];
+    if (revision.source === "autosave") {
+        const oldestBackup = ring.findIndex(entry => entry.source === "autosave");
+        if (oldestBackup !== -1) {
+            const next = [...ring];
+            next.splice(oldestBackup, 1);
+            return [...next, revision];
+        }
+    }
+    return [...ring.slice(1), revision];
+};
 
 const emptyRevisions = (): CanvasRevisions => ({ auto: [], manual: [] });
 
@@ -149,6 +167,13 @@ export function useCanvasController(conversationId: string | undefined, serverCo
     const isOpenRef = useRef(false);
     const subscribersRef = useRef(new Set<(markdown: string) => void>());
     const notifyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    // Markdown captured when the debounced notification was scheduled; typical
+    // cleanups (unmount) can run after the editor was destroyed, so the flush
+    // must not rely on reading the editor again.
+    const pendingNotifyRef = useRef<string | null>(null);
+    // Last nonempty document, captured with each debounced notification; feeds
+    // the pre-clear rollback checkpoints (snapshot("autosave")).
+    const lastNonEmptyDocRef = useRef<Record<string, unknown> | null>(null);
     const revisionsRef = useRef(revisions);
     revisionsRef.current = revisions;
 
@@ -175,12 +200,43 @@ export function useCanvasController(conversationId: string | undefined, serverCo
 
     const notifySubscribers = useCallback(() => {
         if (notifyTimerRef.current) clearTimeout(notifyTimerRef.current);
+        pendingNotifyRef.current = getMarkdown();
         notifyTimerRef.current = setTimeout(() => {
             notifyTimerRef.current = null;
-            const markdown = getMarkdown();
-            subscribersRef.current.forEach(cb => cb(markdown));
+            const markdown = pendingNotifyRef.current;
+            pendingNotifyRef.current = null;
+            if (markdown !== null) {
+                // Keep the last nonempty document around for the pre-clear
+                // rollback checkpoint: at clear time the editor is already
+                // empty, so the pre-clear state must be captured beforehand.
+                const current = editorRef.current;
+                if (markdown.trim() && current && !current.isDestroyed) lastNonEmptyDocRef.current = current.getJSON();
+                subscribersRef.current.forEach(cb => cb(markdown));
+            }
         }, AUTOSAVE_DEBOUNCE_MS);
     }, [getMarkdown]);
+
+    // Delivers the captured markdown of a pending debounced notification
+    // synchronously; a no-op when nothing is pending.
+    const flushPendingNotify = useCallback(() => {
+        if (notifyTimerRef.current === null) return;
+        clearTimeout(notifyTimerRef.current);
+        notifyTimerRef.current = null;
+        const markdown = pendingNotifyRef.current;
+        pendingNotifyRef.current = null;
+        if (markdown !== null) subscribersRef.current.forEach(cb => cb(markdown));
+    }, []);
+
+    // Drops a pending debounced notification without delivering it. Used for
+    // the conversation switch's editor clear: that "" is not a user edit and
+    // must not be captured as one.
+    const clearPendingNotify = useCallback(() => {
+        if (notifyTimerRef.current !== null) {
+            clearTimeout(notifyTimerRef.current);
+            notifyTimerRef.current = null;
+        }
+        pendingNotifyRef.current = null;
+    }, []);
 
     useEffect(() => {
         if (!editor) return;
@@ -213,12 +269,21 @@ export function useCanvasController(conversationId: string | undefined, serverCo
         setIsLocked(false);
         setIsOpen(false);
         setRevisions(emptyRevisions());
+        lastNonEmptyDocRef.current = null;
+        // Deliver the outgoing conversation's pending edit before the editor is
+        // cleared; clearPendingNotify would otherwise capture "" and the
+        // notification would carry empty content (or drop the edit, depending
+        // on cleanup ordering).
+        flushPendingNotify();
         const current = editorRef.current;
         if (current && hasCanvasContent()) {
             current.commands.setContent("");
             // A stale caret/selection must not leak into another conversation's document.
             current.view.dispatch(current.state.tr.setMeta(CANVAS_PERSISTENCE_RESET, true));
         }
+        // The setContent above triggered an editor update whose "" capture is
+        // the switch's doing, not a user edit.
+        clearPendingNotify();
         let cancelled = false;
         if (conversationId) {
             const loadedServerId = serverConversationId ?? conversationId;
@@ -265,7 +330,7 @@ export function useCanvasController(conversationId: string | undefined, serverCo
         return () => {
             cancelled = true;
         };
-    }, [conversationId, hasCanvasContent, serverId]);
+    }, [conversationId, hasCanvasContent, serverId, flushPendingNotify, clearPendingNotify]);
 
     const setIsOpen = useCallback((open: boolean) => {
         isOpenRef.current = open;
@@ -368,28 +433,36 @@ export function useCanvasController(conversationId: string | undefined, serverCo
             return () => {
                 // Final synchronous flush so edits inside the debounce window are not
                 // lost when the panel unsubscribes (canvas close / unmount).
-                if (notifyTimerRef.current) {
-                    clearTimeout(notifyTimerRef.current);
-                    notifyTimerRef.current = null;
-                    const markdown = getMarkdown();
-                    subscribersRef.current.forEach(subscriber => subscriber(markdown));
-                }
+                flushPendingNotify();
                 subscribersRef.current.delete(cb);
             };
         },
-        [getMarkdown]
+        [flushPendingNotify]
     );
 
     useEffect(() => {
-        return () => {
-            if (notifyTimerRef.current) {
-                clearTimeout(notifyTimerRef.current);
-                notifyTimerRef.current = null;
-            }
-        };
-    }, []);
+        // On unmount the cleanups of the owning component run before this hook's
+        // subscribers unsubscribed — a plain timer clear would silently drop the
+        // pending markdown. Flush the captured content instead.
+        return flushPendingNotify;
+    }, [flushPendingNotify]);
 
     const snapshot = useCallback((source: CanvasRevision["source"]) => {
+        // Pre-clear rollback checkpoint: stores the last captured nonempty
+        // document (the editor is already empty at clear time). A backup-aware
+        // eviction protects agent versions in the shared auto ring.
+        if (source === "autosave") {
+            const docJson = lastNonEmptyDocRef.current;
+            if (docJson === null) return;
+            const revision: CanvasRevision = {
+                revision: nextRevisionRef.current++,
+                doc_json: docJson,
+                timestamp: Date.now(),
+                source
+            };
+            setRevisions(prev => ({ ...prev, auto: pushAutoCapped(prev.auto, revision, AUTO_RING_CAP) }));
+            return;
+        }
         const current = editorRef.current;
         if (!current) return;
         const revision: CanvasRevision = {

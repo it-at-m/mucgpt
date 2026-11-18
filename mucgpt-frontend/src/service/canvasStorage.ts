@@ -7,7 +7,7 @@ export interface CanvasRevision {
     /** ProseMirror document (editor.getJSON()) */
     doc_json: unknown;
     timestamp: number;
-    source: "agent" | "manual" | "restore";
+    source: "agent" | "manual" | "restore" | "autosave" | "cleared";
 }
 
 /** Two client-owned FIFO rings; the caps and eviction logic live in the controller. */

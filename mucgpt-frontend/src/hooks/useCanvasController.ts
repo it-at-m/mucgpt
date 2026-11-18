@@ -201,18 +201,18 @@ export function useCanvasController(conversationId: string | undefined, serverCo
     const notifySubscribers = useCallback(() => {
         if (notifyTimerRef.current) clearTimeout(notifyTimerRef.current);
         pendingNotifyRef.current = getMarkdown();
+        // Capture the rollback document at edit time: a clear arriving before
+        // the debounced delivery would otherwise replace the capture with the
+        // delivered "" and the backup would miss the last edits.
+        const current = editorRef.current;
+        if (pendingNotifyRef.current.trim() && current && !current.isDestroyed) {
+            lastNonEmptyDocRef.current = current.getJSON();
+        }
         notifyTimerRef.current = setTimeout(() => {
             notifyTimerRef.current = null;
             const markdown = pendingNotifyRef.current;
             pendingNotifyRef.current = null;
-            if (markdown !== null) {
-                // Keep the last nonempty document around for the pre-clear
-                // rollback checkpoint: at clear time the editor is already
-                // empty, so the pre-clear state must be captured beforehand.
-                const current = editorRef.current;
-                if (markdown.trim() && current && !current.isDestroyed) lastNonEmptyDocRef.current = current.getJSON();
-                subscribersRef.current.forEach(cb => cb(markdown));
-            }
+            if (markdown !== null) subscribersRef.current.forEach(cb => cb(markdown));
         }, AUTOSAVE_DEBOUNCE_MS);
     }, [getMarkdown]);
 
@@ -245,6 +245,20 @@ export function useCanvasController(conversationId: string | undefined, serverCo
             editor.off("update", notifySubscribers);
         };
     }, [editor, notifySubscribers]);
+
+    // Editor recreation (e.g. the limits config arriving) starts empty and the
+    // conversation-switch effect does not re-run for it. Reapply the last
+    // captured document so a recreated empty editor cannot be mistaken for a
+    // user clear (which would wipe the stored copy). Known narrow edge: a
+    // recreation directly after an intentional clear resurrects the cleared
+    // content — recreation happens once when the config loads.
+    useEffect(() => {
+        if (!editor || editor.isDestroyed || hasCanvasContent()) return;
+        const docJson = lastNonEmptyDocRef.current;
+        if (docJson === null) return;
+        editor.commands.setContent(docJson as Content);
+        editor.view.dispatch(editor.state.tr.setMeta(CANVAS_PERSISTENCE_RESET, true));
+    }, [editor, hasCanvasContent]);
 
     // Conversation switch: reset run-scoped state, clear the editor and reopen only
     // when the conversation's stored canvas has content — the open state is derived

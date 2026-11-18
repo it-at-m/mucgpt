@@ -45,41 +45,48 @@ const docToMarkdown = (doc: unknown): string => {
 const docWithText = (text: string) => ({ type: "doc", content: [{ type: "paragraph", content: [{ type: "text", text }] }] });
 
 /** Editor stub that mirrors the controller-relevant ProseMirror behavior. */
-const editorStub = {
-    isDestroyed: false,
-    markdownText: "",
-    state: {
-        doc: {
-            // equals the empty document unless (stubbed) content was set
-            eq: () => editorStub.markdownText.trim() === ""
+const makeEditorStub = () => {
+    const stub = {
+        isDestroyed: false,
+        markdownText: "",
+        state: {
+            doc: {
+                // equals the empty document unless (stubbed) content was set
+                eq: () => stub.markdownText.trim() === ""
+            },
+            tr: { setMeta: () => ({}) }
         },
-        tr: { setMeta: () => ({}) }
-    },
-    schema: { topNodeType: { createAndFill: () => ({}) } },
-    storage: { markdown: { serializer: { serialize: () => editorStub.markdownText } } },
-    getJSON: () => ({ stub: editorStub.markdownText }),
-    view: { dispatch: vi.fn() },
-    listeners: new Map<string, Set<(payload?: unknown) => void>>(),
-    commands: {
-        // Real setContent updates the document and emits an update event.
-        setContent: (content: unknown) => {
-            editorStub.markdownText = docToMarkdown(content);
-            editorStub.emit("update");
+        schema: { topNodeType: { createAndFill: () => ({}) } },
+        storage: { markdown: { serializer: { serialize: () => stub.markdownText } } },
+        getJSON: () => docWithText(stub.markdownText),
+        view: { dispatch: vi.fn() },
+        listeners: new Map<string, Set<(payload?: unknown) => void>>(),
+        commands: {
+            // Real setContent updates the document and emits an update event.
+            setContent: (content: unknown) => {
+                stub.markdownText = docToMarkdown(content);
+                stub.emit("update");
+            }
+        },
+        on(event: string, listener: (payload?: unknown) => void) {
+            if (!stub.listeners.has(event)) stub.listeners.set(event, new Set());
+            stub.listeners.get(event)!.add(listener);
+        },
+        off(event: string, listener: (payload?: unknown) => void) {
+            stub.listeners.get(event)?.delete(listener);
+        },
+        emit(event: string) {
+            stub.listeners.get(event)?.forEach(listener => listener());
         }
-    },
-    on(event: string, listener: (payload?: unknown) => void) {
-        if (!editorStub.listeners.has(event)) editorStub.listeners.set(event, new Set());
-        editorStub.listeners.get(event)!.add(listener);
-    },
-    off(event: string, listener: (payload?: unknown) => void) {
-        editorStub.listeners.get(event)?.delete(listener);
-    },
-    emit(event: string) {
-        editorStub.listeners.get(event)?.forEach(listener => listener());
-    }
+    };
+    return stub;
 };
 
-vi.mock("@tiptap/react", () => ({ useEditor: () => editorStub }));
+const editors = vi.hoisted(() => ({ active: undefined as unknown }));
+const editorStub = makeEditorStub();
+editors.active = editorStub;
+
+vi.mock("@tiptap/react", () => ({ useEditor: () => editors.active }));
 
 let capturedController: ReturnType<typeof useCanvasController> | undefined;
 
@@ -146,7 +153,7 @@ describe("useCanvasController notify flush", () => {
         act(() => capturedController!.snapshot("autosave"));
         const backups = capturedController!.listRevisions().auto.filter(entry => entry.source === "autosave");
         expect(backups).toHaveLength(1);
-        expect(backups[0].doc_json).toEqual({ stub: "# content" });
+        expect(backups[0].doc_json).toEqual(docWithText("# content"));
     });
 
     it("prefers evicting the oldest autosave entry over agent versions when the auto ring is full", async () => {
@@ -185,10 +192,11 @@ describe("useCanvasController notify flush", () => {
 
         render(<Owner conversationId="conv-1" />);
 
-        // The load path falls back to the newest ring entry — the cleared
-        // marker — so the editor stays empty instead of resurrecting the
-        // pre-clear backup.
-        await waitFor(() => expect(editorStub.markdownText).toBe(""));
+        // The fallback applied the cleared marker: the canvas opened empty.
+        await waitFor(() => expect(capturedController!.isOpen).toBe(true));
+        // Let a possible wrongful resurrection save attempt play out.
+        await advanceDebounce();
+        expect(editorStub.markdownText).toBe("");
         expect(saveMock.mock.calls.some(call => call[1] !== "")).toBe(false);
     });
 
@@ -202,5 +210,21 @@ describe("useCanvasController notify flush", () => {
         render(<Owner conversationId="conv-1" />);
 
         await waitFor(() => expect(editorStub.markdownText).toBe("restored backup"));
+    });
+
+    it("reapplies the last captured document into a recreated empty editor", async () => {
+        const view = render(<Owner conversationId="conv-1" />);
+
+        editorStub.markdownText = "# before recreation";
+        editorStub.emit("update");
+
+        // Simulate editor recreation (the limits config arriving): a fresh
+        // empty editor replaces the live one.
+        const recreated = makeEditorStub();
+        editors.active = recreated;
+        view.rerender(<Owner conversationId="conv-1" />);
+
+        expect(recreated.markdownText).toBe("# before recreation");
+        editors.active = editorStub;
     });
 });

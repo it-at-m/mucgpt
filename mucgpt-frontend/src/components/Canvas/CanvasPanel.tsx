@@ -70,11 +70,14 @@ export const CanvasPanel = ({ controller, conversationId, serverConversationId, 
         saveCanvasContent(entry.serverId, entry.content, keepalive).then(ok => {
             if (ok) {
                 if ((unsavedRef.current?.seq ?? -1) < entry.seq) unsavedRef.current = null;
+                // ackedRef tracks CONFIRMED server state only: it is advanced
+                // on success and preserved on failure, so the clear guard and
+                // the dedupe never treat an unconfirmed snapshot as stored.
                 if ((ackedRef.current?.seq ?? -1) < entry.seq) ackedRef.current = entry;
             } else {
                 // Not stored: allow a retry by the next attempt and keep the
-                // snapshot for the cleanup flush (below).
-                if (ackedRef.current?.seq === entry.seq) ackedRef.current = null;
+                // snapshot for the cleanup flush (below). The previously
+                // confirmed entry stays untouched — the server still holds it.
                 if ((unsavedRef.current?.seq ?? -1) < entry.seq) unsavedRef.current = entry;
             }
             if (pendingRef.current?.seq === entry.seq) pendingRef.current = null;
@@ -106,7 +109,10 @@ export const CanvasPanel = ({ controller, conversationId, serverConversationId, 
             // Large documents fail closed and keep the debounce behavior.
             if (keepalive && new TextEncoder().encode(markdown).length > KEEPALIVE_MAX_BYTES) return;
             const pending = pendingRef.current;
-            if (pending && pending.conversationId === conversationId && pending.content === markdown) return;
+            // A queued snapshot identical to this one is already handled —
+            // unless forced (pagehide): the queued PUT may never run after an
+            // unload begins, so the keepalive dispatch must not be skipped.
+            if (!force && pending && pending.conversationId === conversationId && pending.content === markdown) return;
             if (
                 !force &&
                 acked &&
@@ -127,10 +133,6 @@ export const CanvasPanel = ({ controller, conversationId, serverConversationId, 
             }
             const entry: PersistEntry = { seq: ++seqRef.current, conversationId, serverId, content: markdown };
             pendingRef.current = entry;
-            // Optimistic: the dedupe must see this snapshot as sent already,
-            // otherwise an undo back to the previous content is suppressed
-            // while the newer snapshot is still in flight.
-            ackedRef.current = entry;
             if (keepalive) {
                 // Unload: dispatch immediately, chained microtasks may never run.
                 void sendEntry(entry, true);

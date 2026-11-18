@@ -39,6 +39,9 @@ const deferred = <T,>(): Deferred<T> => {
     return { promise, resolve };
 };
 
+/** Lets queued promise work (the serialized save chain) run before asserting. */
+const drain = () => new Promise(resolve => setTimeout(resolve, 0));
+
 /**
  * Minimal controller double reproducing the real subscribe semantics: debounced
  * notifications are queued via notify() and the unsubscribe cleanup performs a
@@ -111,7 +114,8 @@ describe("CanvasPanel content autosave", () => {
         saveMock.mockClear();
         controller.notify("# draft");
         controller.flush();
-        await waitFor(() => expect(saveMock).toHaveBeenCalledTimes(0));
+        await drain();
+        expect(saveMock).toHaveBeenCalledTimes(0);
     });
 
     it("serializes saves so snapshots can never be written out of order", async () => {
@@ -127,7 +131,8 @@ describe("CanvasPanel content autosave", () => {
 
         controller.notify("# second");
         controller.flush();
-        await waitFor(() => expect(saveMock).toHaveBeenCalledTimes(1));
+        await drain();
+        expect(saveMock).toHaveBeenCalledTimes(1);
 
         gate.resolve(true);
         await waitFor(() => expect(saveMock).toHaveBeenCalledTimes(2));
@@ -161,7 +166,8 @@ describe("CanvasPanel content autosave", () => {
 
         controller.notify("# agent is writing");
         controller.flush();
-        await waitFor(() => expect(saveMock).toHaveBeenCalledTimes(0));
+        await drain();
+        expect(saveMock).toHaveBeenCalledTimes(0);
     });
 
     it("flushes the final document when the run unlocks the editor", async () => {
@@ -194,7 +200,8 @@ describe("CanvasPanel content autosave", () => {
 
         controller.notify("x".repeat(256001));
         controller.flush();
-        await waitFor(() => expect(saveMock).toHaveBeenCalledTimes(0));
+        await drain();
+        expect(saveMock).toHaveBeenCalledTimes(0);
     });
 
     it("does not persist an emptied document while the editor is mid-recreation", async () => {
@@ -204,7 +211,8 @@ describe("CanvasPanel content autosave", () => {
 
         controller.notify("");
         controller.flush();
-        await waitFor(() => expect(saveMock).toHaveBeenCalledTimes(0));
+        await drain();
+        expect(saveMock).toHaveBeenCalledTimes(0);
     });
 
     it("persists a captured nonempty snapshot even when the editor is already destroyed", async () => {
@@ -228,7 +236,8 @@ describe("CanvasPanel content autosave", () => {
 
         controller.notify("");
         controller.flush();
-        await waitFor(() => expect(saveMock).toHaveBeenCalledTimes(0));
+        await drain();
+        expect(saveMock).toHaveBeenCalledTimes(0);
     });
 
     it("persists an intentional clear after a nonempty document of this conversation was stored", async () => {
@@ -255,7 +264,8 @@ describe("CanvasPanel content autosave", () => {
         // Repeated empty notifications do not re-checkpoint or re-mark.
         controller.notify("");
         controller.flush();
-        await waitFor(() => expect(snapshotMock).toHaveBeenCalledTimes(2));
+        await drain();
+        expect(snapshotMock).toHaveBeenCalledTimes(2);
     });
 
     it("does not checkpoint an empty write without a confirmed nonempty predecessor", async () => {
@@ -265,7 +275,8 @@ describe("CanvasPanel content autosave", () => {
 
         controller.notify("");
         controller.flush();
-        await waitFor(() => expect(saveMock).toHaveBeenCalledTimes(0));
+        await drain();
+        expect(saveMock).toHaveBeenCalledTimes(0);
         expect(snapshotMock).toHaveBeenCalledTimes(0);
     });
 
@@ -314,7 +325,54 @@ describe("CanvasPanel content autosave", () => {
         // 60 kB is the local keepalive safety margin (browser cap: 64 kB).
         controller.notify("a".repeat(60001));
         window.dispatchEvent(new Event("pagehide"));
-        await waitFor(() => expect(saveMock).toHaveBeenCalledTimes(0));
+        await drain();
+        expect(saveMock).toHaveBeenCalledTimes(0);
+    });
+
+    it("keeps the confirmed snapshot when a newer save fails", async () => {
+        const controller = makeController();
+        renderPanel(controller);
+        controller.notify("# A");
+        controller.flush();
+        await waitFor(() => expect(saveMock).toHaveBeenCalledWith("conv-1", "# A", false));
+
+        const gate = deferred<boolean>();
+        saveMock.mockImplementationOnce(() => gate.promise);
+        controller.notify("# B");
+        controller.flush();
+        await waitFor(() => expect(saveMock).toHaveBeenCalledTimes(2));
+        gate.resolve(false);
+        await drain();
+
+        // The server still holds the confirmed A: an identical content is
+        // deduplicated, the failed B is retried by the next distinct edit.
+        saveMock.mockClear();
+        controller.notify("# A");
+        controller.flush();
+        await drain();
+        expect(saveMock).toHaveBeenCalledTimes(0);
+
+        controller.notify("# C");
+        controller.flush();
+        await waitFor(() => expect(saveMock).toHaveBeenCalledWith("conv-1", "# C", false));
+    });
+
+    it("keepalive-flushes a queued snapshot on pagehide instead of dropping it", async () => {
+        const controller = makeController();
+        renderPanel(controller);
+        const gate = deferred<boolean>();
+        saveMock.mockImplementationOnce(() => gate.promise);
+        controller.notify("# A");
+        controller.flush();
+        await waitFor(() => expect(saveMock).toHaveBeenCalledTimes(1));
+
+        controller.notify("# B");
+        controller.flush();
+        await drain();
+        expect(saveMock).toHaveBeenCalledTimes(1);
+
+        window.dispatchEvent(new Event("pagehide"));
+        await waitFor(() => expect(saveMock).toHaveBeenCalledWith("conv-1", "# B", true));
     });
 
     it("flushes pending revision rings on pagehide with a keepalive request", async () => {
@@ -334,6 +392,7 @@ describe("CanvasPanel content autosave", () => {
 
         window.dispatchEvent(new Event("pagehide"));
 
-        await waitFor(() => expect(putRevisionsMock).toHaveBeenCalledTimes(0));
+        await drain();
+        expect(putRevisionsMock).toHaveBeenCalledTimes(0);
     });
 });

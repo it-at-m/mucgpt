@@ -110,7 +110,7 @@ export async function probeSession(
     return { inputNames: [...session.inputNames], createSeconds };
 }
 
-/** Loads one encoder/decoder_joint pair of real sessions from URL bytes on the given execution provider. */
+/** Loads one encoder/decoder_joint pair; the encoder uses the selected execution provider, while decoder_joint always uses WASM, even when the encoder uses WebGPU. */
 export async function loadSessions(
     encoderUrl: string,
     decoderUrl: string,

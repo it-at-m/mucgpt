@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Any, TypedDict
 
 from sqlalchemy import (
@@ -10,18 +10,31 @@ from sqlalchemy import (
     Column,
     DateTime,
     ForeignKey,
-    Integer,
     String,
     Table,
     Text,
     UniqueConstraint,
 )
-from sqlalchemy.orm import declarative_base, relationship
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 from sqlalchemy.types import JSON
+
+from api.api_models import AdminTag
 
 from .path_matcher import _get_directory_index, path_matches_department
 
-Base = declarative_base()
+
+def utcnow() -> datetime:
+    """Return the current UTC time as a naive datetime.
+
+    Replaces the deprecated ``datetime.utcnow()`` while preserving the
+    naive-UTC semantics of the existing columns.
+    """
+    return datetime.now(UTC).replace(tzinfo=None)
+
+
+class Base(DeclarativeBase):
+    pass
+
 
 assistant_owners = Table(
     "assistant_owners",
@@ -44,15 +57,14 @@ assistant_owners = Table(
 
 class AssistantTool(Base):
     __tablename__ = "assistant_tools"
-    assistant_version_id = Column(
-        Integer,
+    assistant_version_id: Mapped[int] = mapped_column(
         ForeignKey("assistant_versions.id", ondelete="CASCADE"),
         primary_key=True,
     )
-    tool_id = Column(String(255), primary_key=True)
-    config = Column(JSON, nullable=True)
+    tool_id: Mapped[str] = mapped_column(String(255), primary_key=True)
+    config: Mapped[dict[str, Any] | None] = mapped_column(JSON, nullable=True)
 
-    assistant_version = relationship(
+    assistant_version: Mapped[AssistantVersion] = relationship(
         "AssistantVersion", back_populates="tool_associations"
     )
 
@@ -63,46 +75,52 @@ class AssistantTool(Base):
 class AssistantVersion(Base):
     __tablename__ = "assistant_versions"
 
-    id = Column(Integer, primary_key=True)
-    assistant_id = Column(
-        String(36), ForeignKey("assistants.id", ondelete="CASCADE"), nullable=False
+    id: Mapped[int] = mapped_column(primary_key=True)
+    assistant_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey("assistants.id", ondelete="CASCADE")
     )
-    version = Column(Integer, nullable=False)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    version: Mapped[int] = mapped_column()
+    created_at: Mapped[datetime] = mapped_column(default=utcnow, nullable=True)
 
-    name = Column(String(255), nullable=False)
-    description = Column(Text)
-    system_prompt = Column(Text, nullable=False)
-    creativity = Column(String(10), default="medium")
-    default_model = Column(String(255), nullable=True)
-    examples = Column(JSON, nullable=True)
-    quick_prompts = Column(JSON, nullable=True)
-    tags = Column(JSON, nullable=True)
-    compliance_check_result = Column(JSON, nullable=True)
-    compliance_confirmation = Column(
-        Boolean, default=False, nullable=False, server_default="0"
+    name: Mapped[str] = mapped_column(String(255))
+    description: Mapped[str | None] = mapped_column(Text)
+    system_prompt: Mapped[str] = mapped_column(Text)
+    creativity: Mapped[str] = mapped_column(
+        String(10), default="medium", nullable=True
     )
-    state = Column(
-        String(32), nullable=False, default="active", server_default="active"
+    default_model: Mapped[str | None] = mapped_column(String(255))
+    examples: Mapped[list[Any] | None] = mapped_column(JSON, nullable=True)
+    quick_prompts: Mapped[list[Any] | None] = mapped_column(JSON, nullable=True)
+    tags: Mapped[list[str] | None] = mapped_column(JSON, nullable=True)
+    compliance_check_result: Mapped[dict[str, Any] | None] = mapped_column(
+        JSON, nullable=True
     )
-    state_changed_by = Column(String(255), nullable=True)
-    state_change_reason = Column(Text, nullable=True)
+    compliance_confirmation: Mapped[bool] = mapped_column(
+        Boolean, default=False, server_default="0"
+    )
+    state: Mapped[str] = mapped_column(
+        String(32), default="active", server_default="active"
+    )
+    state_changed_by: Mapped[str | None] = mapped_column(String(255))
+    state_change_reason: Mapped[str | None] = mapped_column(Text)
 
-    assistant = relationship("Assistant", back_populates="versions")
-    tool_associations = relationship(
+    assistant: Mapped[Assistant] = relationship(
+        "Assistant", back_populates="versions"
+    )
+    tool_associations: Mapped[list[AssistantTool]] = relationship(
         "AssistantTool",
         back_populates="assistant_version",
         cascade="all, delete-orphan",
     )
 
-    def tools(self):
+    def tools(self) -> list[ToolAssociationDict]:
         """Return a list of tool configurations for the assistant version."""
         return [
             {"id": assoc.tool_id, "config": assoc.config}
             for assoc in self.tool_associations
         ]
 
-    def to_dict(self):
+    def to_dict(self) -> dict[str, Any]:
         """Convert AssistantVersion instance to a dictionary for test compatibility."""
         return {
             "name": self.name,
@@ -137,16 +155,18 @@ class AssistantAuditEvent(Base):
 
     __tablename__ = "assistant_audit_events"
 
-    id = Column(Integer, primary_key=True)
-    assistant_id = Column(String(36), nullable=False, index=True)
-    occurred_at = Column(DateTime, default=datetime.utcnow, nullable=False, index=True)
-    actor_user_id = Column(String(255), nullable=False)
-    actor_name = Column(String(255), nullable=True)
-    action = Column(String(64), nullable=False)
-    before = Column(JSON, nullable=True)
-    after = Column(JSON, nullable=True)
-    reason = Column(Text, nullable=True)
-    assistant_version = Column(Integer, nullable=True)
+    id: Mapped[int] = mapped_column(primary_key=True)
+    assistant_id: Mapped[str] = mapped_column(String(36), index=True)
+    occurred_at: Mapped[datetime] = mapped_column(
+        DateTime, default=utcnow, index=True
+    )
+    actor_user_id: Mapped[str] = mapped_column(String(255))
+    actor_name: Mapped[str | None] = mapped_column(String(255))
+    action: Mapped[str] = mapped_column(String(64))
+    before: Mapped[dict[str, Any] | None] = mapped_column(JSON, nullable=True)
+    after: Mapped[dict[str, Any] | None] = mapped_column(JSON, nullable=True)
+    reason: Mapped[str | None] = mapped_column(Text)
+    assistant_version: Mapped[int | None] = mapped_column()
 
     __table_args__ = (
         # Stable ordering for events created in the same microsecond.
@@ -156,25 +176,32 @@ class AssistantAuditEvent(Base):
 
 class Assistant(Base):
     __tablename__ = "assistants"  # Use UUID version 4 (random) as the primary key
-    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    id: Mapped[str] = mapped_column(
+        String(36), primary_key=True, default=lambda: str(uuid.uuid4())
+    )
 
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-    hierarchical_access = Column(JSON, default=list)
-    is_visible = Column(
-        Boolean, default=True, nullable=False
-    )  # Whether this assistant is publicly listed
-    admin_tags = Column(JSON, default=list, nullable=False, server_default="[]")
-    subscriptions_count = Column(Integer, nullable=False, default=0, server_default="0")
+    created_at: Mapped[datetime] = mapped_column(default=utcnow, nullable=True)
+    updated_at: Mapped[datetime] = mapped_column(
+        default=utcnow, onupdate=utcnow, nullable=True
+    )
+    hierarchical_access: Mapped[list[str] | None] = mapped_column(JSON, default=list)
+    # Whether this assistant is publicly listed
+    is_visible: Mapped[bool] = mapped_column(Boolean, default=True)
+    admin_tags: Mapped[list[AdminTag]] = mapped_column(
+        JSON, default=list, server_default="[]"
+    )
+    subscriptions_count: Mapped[int] = mapped_column(
+        default=0, server_default="0"
+    )
 
-    versions = relationship(
+    versions: Mapped[list[AssistantVersion]] = relationship(
         "AssistantVersion",
         back_populates="assistant",
         cascade="all, delete-orphan",
         order_by="desc(AssistantVersion.version)",
     )
 
-    owners = relationship(
+    owners: Mapped[list[Owner]] = relationship(
         "Owner", secondary=assistant_owners, back_populates="assistants"
     )
 
@@ -194,7 +221,7 @@ class Assistant(Base):
         legacy string matcher if the tree cannot be resolved.
         """
 
-        if not self.hierarchical_access or len(self.hierarchical_access) == 0:
+        if not self.hierarchical_access:
             return True
 
         if directory_index is None:
@@ -221,15 +248,15 @@ class Assistant(Base):
 class Owner(Base):
     __tablename__ = "owners"
 
-    user_id = Column(String(255), primary_key=True)
-    display_name = Column(String(255), nullable=True)
-    given_name = Column(String(255), nullable=True)
-    surname = Column(String(255), nullable=True)
-    mail = Column(String(255), nullable=True)
-    organizational_unit = Column(String(255), nullable=True)
-    details_updated_at = Column(DateTime, nullable=True)
+    user_id: Mapped[str] = mapped_column(String(255), primary_key=True)
+    display_name: Mapped[str | None] = mapped_column(String(255))
+    given_name: Mapped[str | None] = mapped_column(String(255))
+    surname: Mapped[str | None] = mapped_column(String(255))
+    mail: Mapped[str | None] = mapped_column(String(255))
+    organizational_unit: Mapped[str | None] = mapped_column(String(255))
+    details_updated_at: Mapped[datetime | None] = mapped_column()
 
-    assistants = relationship(
+    assistants: Mapped[list[Assistant]] = relationship(
         "Assistant", secondary=assistant_owners, back_populates="owners"
     )
 
@@ -240,14 +267,14 @@ class Owner(Base):
 class Subscription(Base):
     __tablename__ = "subscriptions"
 
-    id = Column(Integer, primary_key=True)
-    assistant_id = Column(
-        String(36), ForeignKey("assistants.id", ondelete="CASCADE"), nullable=False
+    id: Mapped[int] = mapped_column(primary_key=True)
+    assistant_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey("assistants.id", ondelete="CASCADE")
     )
-    user_id = Column(String(255), nullable=False)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    user_id: Mapped[str] = mapped_column(String(255))
+    created_at: Mapped[datetime] = mapped_column(default=utcnow, nullable=True)
 
-    assistant = relationship("Assistant")
+    assistant: Mapped[Assistant] = relationship("Assistant")
 
     __table_args__ = (
         UniqueConstraint("assistant_id", "user_id", name="uq_subscription"),
@@ -282,7 +309,7 @@ class QuickPromptDict(TypedDict, total=False):
 
 
 class ToolConfigDict(TypedDict, total=False):
-    """Configuration for a tool associated with an assistant."""
+    """Configuration for a tool associated with an assistant version."""
 
     parameters: dict[str, Any]
     options: dict[str, Any]
@@ -293,7 +320,7 @@ class ToolAssociationDict(TypedDict):
     """Represents a tool associated with an assistant version."""
 
     id: str
-    config: ToolConfigDict | None
+    config: dict[str, Any] | None
 
 
 # Type aliases for better readability in function signatures

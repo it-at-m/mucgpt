@@ -160,10 +160,13 @@ async def test_history_restores_latest_usage_per_turn_and_legacy_context(monkeyp
 
     history = await PersistanceHelpers.get_conversation_messages("thread")
 
+    assert history[0].usage is not None
     assert history[0].usage.model_dump(exclude_none=True) == snapshot
+    assert history[2].usage is not None
     assert history[2].usage.context_tokens == 450
     assert history[2].usage.usage_max_input_tokens == model.max_input_tokens
     assert history[2].usage.user_tokens is None
+    assert history[4].usage is not None
     assert history[4].usage.context_tokens == 12
     assert history[4].usage.usage_max_input_tokens is None
     assert history[6].usage is None

@@ -227,6 +227,7 @@ def test_get_user_assistants_success(test_client):
     assistant_response = AssistantResponse.model_validate(my_test_assistant)
     assert assistant_response.id == created_assistant["id"]
     assert assistant_response.latest_version.name == "My Test Assistant"
+    assert assistant_response.owner_ids is not None
     assert "test_user_123" in assistant_response.owner_ids
 
 
@@ -266,6 +267,7 @@ def test_get_user_assistants_multiple_owned(test_client):
         assistant_response = AssistantResponse.model_validate(assistant)
         assert assistant_response.id is not None
         assert assistant_response.latest_version is not None
+        assert assistant_response.owner_ids is not None
         assert "test_user_123" in assistant_response.owner_ids
 
     assistant_names = {
@@ -301,6 +303,7 @@ def test_get_user_assistants_owner_filter_is_strict(test_client):
 
     # Validate that test_user_123 is indeed an owner
     assistant_response = AssistantResponse.model_validate(response_data[0])
+    assert assistant_response.owner_ids is not None
     assert "test_user_123" in assistant_response.owner_ids
     assert "another_user" in assistant_response.owner_ids
 
@@ -351,10 +354,12 @@ def test_get_user_assistants_with_complex_data(test_client):
         == "A complex assistant with various features"
     )
     assert assistant_response.latest_version.creativity == "high"
+    assert assistant_response.latest_version.examples is not None
     assert len(assistant_response.latest_version.examples) == 2
+    assert assistant_response.latest_version.quick_prompts is not None
     assert len(assistant_response.latest_version.quick_prompts) == 1
     assert assistant_response.latest_version.tags == ["complex", "user-owned"]
-    assert set(assistant_response.hierarchical_access) == {"IT", "MANAGEMENT"}
+    assert set(assistant_response.hierarchical_access or []) == {"IT", "MANAGEMENT"}
 
 
 @pytest.mark.integration
@@ -462,6 +467,7 @@ def test_get_user_assistants_multiple_owners(test_client):
 
     # Validate ownership
     assistant_response = AssistantResponse.model_validate(user_assistants[0])
+    assert assistant_response.owner_ids is not None
     assert "test_user_123" in assistant_response.owner_ids
     assert "other_user_456" in assistant_response.owner_ids
     assert "third_user_789" in assistant_response.owner_ids
@@ -603,6 +609,7 @@ async def test_get_user_assistants_access_control_repo(test_client, test_db_sess
     # Verify ownership for each returned assistant
     for assistant in user_assistants:
         assistant_response = AssistantResponse.model_validate(assistant)
+        assert assistant_response.owner_ids is not None
         assert "test_user_123" in assistant_response.owner_ids
 
         # Verify specific assistants
@@ -1199,6 +1206,7 @@ def test_get_user_assistants_hierarchical_access_filtering(test_client):
     # Verify both assistants are owned by test_user_123
     for assistant in user_assistants:
         assistant_response = AssistantResponse.model_validate(assistant)
+        assert assistant_response.owner_ids is not None
         assert "test_user_123" in assistant_response.owner_ids
 
 
@@ -1440,6 +1448,7 @@ def test_subscription_count_decrements_on_unsubscribe(test_client):
         (assistant for assistant in user_assistants if assistant["id"] == assistant_id),
         None,
     )
+    assert our_assistant is not None
     assert our_assistant["subscriptions_count"] == 1
 
     # Unsubscribe
@@ -1455,6 +1464,7 @@ def test_subscription_count_decrements_on_unsubscribe(test_client):
         (assistant for assistant in user_assistants if assistant["id"] == assistant_id),
         None,
     )
+    assert our_assistant is not None
     assert our_assistant["subscriptions_count"] == 0
 
 
@@ -1554,6 +1564,7 @@ async def test_subscription_count_with_repository_operations(
         ),
         None,
     )
+    assert our_assistant is not None
     assert our_assistant["subscriptions_count"] == 0
 
 
@@ -1603,13 +1614,16 @@ def test_subscription_count_in_complex_assistant_response(test_client):
     )
 
     # Validate complex response structure with subscription count
+    assert our_assistant is not None
     assistant_response = AssistantResponse.model_validate(our_assistant)
     assert hasattr(assistant_response, "subscriptions_count")
     assert assistant_response.subscriptions_count == 1
 
     # Verify other complex fields are still present
     assert assistant_response.latest_version.creativity == "high"
+    assert assistant_response.latest_version.examples is not None
     assert len(assistant_response.latest_version.examples) == 1
+    assert assistant_response.latest_version.quick_prompts is not None
     assert len(assistant_response.latest_version.quick_prompts) == 1
     assert assistant_response.latest_version.tags == ["complex", "counting"]
 

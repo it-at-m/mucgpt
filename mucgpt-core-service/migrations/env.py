@@ -2,6 +2,7 @@ import asyncio
 import logging
 import os
 import sys
+from typing import Any
 
 from alembic import context
 from sqlalchemy import pool, text
@@ -66,7 +67,7 @@ def do_run_migrations(connection: Connection) -> None:
 
 
 async def run_async_migrations() -> None:
-    configuration = config.get_section(config.config_ini_section, {})
+    configuration: dict[str, Any] = config.get_section(config.config_ini_section, {})
     configuration["sqlalchemy.url"] = get_database_url()
     configuration["sqlalchemy.connect_args"] = {
         "timeout": int(config.get_main_option("mucgpt.migration_db_timeout", "30"))

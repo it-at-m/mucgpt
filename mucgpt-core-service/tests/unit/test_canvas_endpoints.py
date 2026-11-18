@@ -56,9 +56,7 @@ def test_client(monkeypatch: pytest.MonkeyPatch) -> TestClient:
             token="dummy_access_token",
             user_id=USER_ID,
             name="Test User",
-            email="test@example.com",
             department="IT-Test-Department",
-            is_authenticated=True,
         )
 
     app.dependency_overrides[authenticate_user] = _get_test_user

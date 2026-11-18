@@ -1,10 +1,11 @@
 """Real catalog SQL on SQLite; PostgreSQL concurrency has separate integration tests."""
 
+from typing import cast
 from unittest.mock import AsyncMock, MagicMock
 from uuid import uuid4
 
 import pytest
-from sqlalchemy import create_engine, update
+from sqlalchemy import Table, create_engine, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
@@ -23,7 +24,7 @@ from database.document_repo import DocumentQuotaExceededError, DocumentRepositor
 @pytest.fixture
 def catalog():
     engine = create_engine("sqlite://")
-    Base.metadata.create_all(engine, tables=[Document.__table__])
+    Base.metadata.create_all(engine, tables=[cast("Table", Document.__table__)])
     with Session(engine, expire_on_commit=False) as session:
         # Execute real SQL while adapting the sync in-memory driver to AsyncSession.
         repository = DocumentRepository(

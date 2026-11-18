@@ -1,7 +1,9 @@
+from typing import cast
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 from langchain_core.language_models.fake_chat_models import FakeListChatModel
+from langchain_core.runnables import RunnableConfig
 from langgraph.types import Command
 
 from agent.deep_agent import _ConfiguredLangChainDeepAgentGraph
@@ -213,7 +215,7 @@ async def test_aget_state_delegates_to_compiled_agent(
         tools=[],
         logger=MagicMock(),
     )
-    config = {"configurable": {"thread_id": "conversation-1"}}
+    config = cast(RunnableConfig, {"configurable": {"thread_id": "conversation-1"}})
 
     assert await graph.aget_state(config) is state
     compiled_agent.aget_state.assert_awaited_once_with(config)

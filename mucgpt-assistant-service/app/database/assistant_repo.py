@@ -3,13 +3,13 @@ from __future__ import annotations  # Enable forward references in annotations
 import uuid
 from collections.abc import Sequence
 from datetime import datetime
-from typing import Any
+from typing import Any, cast
 
-from sqlalchemy import String, delete, func, insert, or_, select, update
+from sqlalchemy import CursorResult, String, delete, func, insert, or_, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import aliased, attributes, selectinload
 
-from api.api_models import AssistantAccessType, AssistantState
+from api.api_models import AdminTag, AssistantAccessType, AssistantState
 from api.exceptions import AssistantUnavailableForUseException
 from core.logtools import getLogger
 from utils import serialize_list
@@ -18,12 +18,11 @@ from .database_models import (
     Assistant,
     AssistantAuditEvent,
     AssistantVersion,
-    Example,
     Owner,
-    QuickPrompt,
     Subscription,
     ToolAssociation,
     assistant_owners,
+    utcnow,
 )
 from .path_matcher import _get_directory_index, path_matches_department
 from .repo import Repository
@@ -141,24 +140,24 @@ class AssistantRepository(Repository[Assistant]):
                 Assistant.id == assistant.id,
                 Assistant.updated_at == assistant.updated_at,
             )
-            .values(updated_at=datetime.utcnow())
+            .values(updated_at=utcnow())
         )
-        return result.rowcount == 1
+        return cast(CursorResult, result).rowcount == 1
 
     async def create_assistant_version(
         self,
         assistant: Assistant,
         name: str,
         system_prompt: str,
-        description: str,
+        description: str | None,
         creativity: str,
         default_model: str | None = None,
-        examples: list[Example] | None = None,
-        quick_prompts: list[QuickPrompt] | None = None,
+        examples: Sequence[Any] | None = None,
+        quick_prompts: Sequence[Any] | None = None,
         tags: list[str] | None = None,
         compliance_check_result: dict[str, Any] | None = None,
         compliance_confirmation: bool = False,
-        state: AssistantState = AssistantState.ACTIVE,
+        state: AssistantState | str = AssistantState.ACTIVE,
         state_changed_by: str | None = None,
         state_change_reason: str | None = None,
     ) -> AssistantVersion:
@@ -606,7 +605,9 @@ class AssistantRepository(Repository[Assistant]):
         result = await self.session.execute(stmt)
         return result.first() is not None
 
-    async def create(
+    # The generic base repository uses **kwargs; the assistant-specific
+    # signatures are intentionally narrower.
+    async def create(  # ty: ignore[invalid-method-override]
         self,
         hierarchical_access: list[str] | None = None,
         owner_ids: list[str] | None = None,
@@ -663,12 +664,12 @@ class AssistantRepository(Repository[Assistant]):
             await self.session.rollback()
             raise
 
-    async def update(
+    async def update(  # ty: ignore[invalid-method-override]
         self,
         assistant_id: str,
         hierarchical_access: list[str] | None = None,
         owner_ids: list[str] | None = None,
-        is_visible: bool = None,
+        is_visible: bool | None = None,
         assistant: Assistant | None = None,
     ) -> Assistant | None:
         logger.info(f"Updating assistant {assistant_id}")
@@ -715,7 +716,7 @@ class AssistantRepository(Repository[Assistant]):
                         await self.session.execute(stmt)
 
                 # Always bump the updated_at so API clients see a change even if only owners or related tables changed
-                assistant.updated_at = datetime.now()
+                assistant.updated_at = utcnow()
                 await self.session.flush()
                 await self.session.refresh(assistant)
                 logger.info(f"Updated assistant {assistant_id}")
@@ -730,8 +731,10 @@ class AssistantRepository(Repository[Assistant]):
         self, assistant: Assistant, admin_tags: Sequence[str]
     ) -> Assistant:
         """Update administrator-managed metadata without creating a new version."""
-        assistant.admin_tags = list(dict.fromkeys(admin_tags))
-        assistant.updated_at = datetime.utcnow()
+        assistant.admin_tags = cast(
+            "list[AdminTag]", list(dict.fromkeys(admin_tags))
+        )
+        assistant.updated_at = utcnow()
         await self.session.flush()
         await self.session.refresh(assistant)
         return assistant
@@ -852,7 +855,7 @@ class AssistantRepository(Repository[Assistant]):
                 .where(Assistant.id == assistant_id)
                 .values(
                     subscriptions_count=Assistant.subscriptions_count + 1,
-                    updated_at=datetime.now(),
+                    updated_at=utcnow(),
                 )
             )
 
@@ -893,7 +896,7 @@ class AssistantRepository(Repository[Assistant]):
                 .where(Subscription.user_id == user_id)
             )
 
-            rows_deleted = result.rowcount
+            rows_deleted = cast(CursorResult, result).rowcount
 
             # Manually decrement the counter since events might not be reliable
             if rows_deleted > 0:
@@ -903,7 +906,7 @@ class AssistantRepository(Repository[Assistant]):
                     .values(
                         subscriptions_count=Assistant.subscriptions_count
                         - rows_deleted,
-                        updated_at=datetime.now(),
+                        updated_at=utcnow(),
                     )
                 )
 

@@ -63,6 +63,14 @@ uv run ruff check
 uv run ruff check --fix
 ```
 
+## Type checking
+
+Each Python service is type-checked with [ty](https://docs.astral.sh/ty/) (dev dependency, pinned in the service's `pyproject.toml`). CI and pre-commit run `uv run ty check` as separate required checks per service. The checks cover application, test, and migration code. Keep the checked code clean — if a library stub is looser than runtime reality, prefer narrowing or a `cast` and use a targeted `# ty: ignore[<rule>]` comment (with a short explanation) only as a last resort.
+
+```bash
+uv run ty check
+```
+
 ## Build new images
 
 First create a tag (decide which one is needed)

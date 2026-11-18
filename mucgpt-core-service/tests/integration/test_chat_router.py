@@ -1,5 +1,6 @@
 import asyncio
 import json
+from typing import cast
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
@@ -10,6 +11,7 @@ from ag_ui.core.events import (
 from fastapi.testclient import TestClient
 from langchain_core.language_models import BaseChatModel
 from langchain_core.language_models.fake_chat_models import FakeListChatModel
+from redis.asyncio.lock import Lock
 
 from agent.agent_executor import MUCGPTAgentExecutor
 from agent.deep_agent import PendingToolApproval
@@ -94,7 +96,8 @@ class TestChatRouter:
         )
         lock = RenewableLock()
 
-        await _renew_conversation_run_lock(lock, stop)  # type: ignore[arg-type]
+        # The test double implements the lock operation exercised by the renewal loop.
+        await _renew_conversation_run_lock(cast(Lock, lock), stop)
 
         assert lock.calls == 1
 

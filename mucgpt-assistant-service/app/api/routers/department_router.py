@@ -1,4 +1,5 @@
 import json
+from typing import Any, cast
 
 from fastapi import APIRouter, HTTPException, Query
 
@@ -67,7 +68,7 @@ async def get_directory_children(
     # Return shallow nodes (without children) to support lazy loading
     result = []
     for node in children:
-        node_copy = node.copy()
+        node_copy = cast("dict[str, Any]", node.copy())
         # If the node has children in the cache, we mark it as having children
         # but don't include them in the response payload.
         # The frontend can then query for children if needed.

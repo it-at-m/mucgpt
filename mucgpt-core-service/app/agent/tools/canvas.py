@@ -249,7 +249,7 @@ def make_canvas_write_tool(logger: Logger) -> BaseTool:
     def canvas_write(
         content: str,
         canvas_state: _CANVAS_STATE_ARG = None,
-        runtime: ToolRuntime = None,
+        runtime: ToolRuntime = None,  # ty: ignore[invalid-parameter-default]
     ) -> str:
         # The canvas is always editable: when no canvas exists in this
         # conversation yet, canvas_write creates one.
@@ -302,7 +302,7 @@ def make_canvas_edit_tool(logger: Logger) -> BaseTool:
         old_text: str,
         new_text: str,
         canvas_state: _CANVAS_STATE_ARG = None,
-        runtime: ToolRuntime = None,
+        runtime: ToolRuntime = None,  # ty: ignore[invalid-parameter-default]
     ) -> str:
         # Shape validation stays before the batch gate: an empty-argument call
         # never touches the canvas, so it must not fail the batch for the
@@ -457,7 +457,7 @@ def make_canvas_read_tool(logger: Logger) -> BaseTool:
         canvas_state: _CANVAS_STATE_ARG = None,
         around_cursor: bool = False,
         messages: Annotated[list | None, InjectedState("messages")] = None,
-        runtime: ToolRuntime = None,
+        runtime: ToolRuntime = None,  # ty: ignore[invalid-parameter-default]
     ) -> str | Command:
         context = _tool_context(runtime)
         lock = getattr(context, "canvas_lock", None)

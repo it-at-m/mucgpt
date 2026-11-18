@@ -179,7 +179,7 @@ def _mucgpt_props(run_input: RunAgentInput) -> dict[str, Any]:
 
 def _flatten_user_content(
     message: UserMessage,
-) -> tuple[str, list[ImagePart]]:
+) -> tuple[str, list[Any]]:
     """Flatten a user message's content parts to text plus pending image parts.
 
     ``TextPart``s are concatenated in order; image parts are returned for the
@@ -188,7 +188,7 @@ def _flatten_user_content(
     if isinstance(message.content, str):
         return message.content, []
     text_chunks: list[str] = []
-    image_parts: list[ImagePart] = []
+    image_parts: list[Any] = []
     for part in message.content:
         if isinstance(part, TextPart):
             text_chunks.append(part.text)
@@ -198,7 +198,7 @@ def _flatten_user_content(
             # Audio/video/document parts have no mapped representation yet;
             # refused together with the other unusable parts (fail-closed
             # policy, see module docstring) at the vision gate.
-            image_parts.append(part)  # type: ignore[arg-type]
+            image_parts.append(part)
     return "".join(text_chunks), image_parts
 
 

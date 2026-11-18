@@ -26,7 +26,7 @@ class NotOwnerException(HTTPException):
 
 
 class VersionConflictException(HTTPException):
-    def __init__(self, provided_version: int, latest_version: str):
+    def __init__(self, provided_version: int, latest_version: int | str):
         super().__init__(
             status_code=409,
             detail=f"Version conflict: You are trying to update version {provided_version}, but the latest version is {latest_version}.",
@@ -34,10 +34,13 @@ class VersionConflictException(HTTPException):
 
 
 class NoVersionException(HTTPException):
-    def __init__(self):
-        super().__init__(
-            status_code=500, detail="Assistant has no versions, cannot update"
+    def __init__(self, assistant_id: str | None = None):
+        detail = (
+            f"Assistant {assistant_id} has no versions, cannot update"
+            if assistant_id
+            else "Assistant has no versions, cannot update"
         )
+        super().__init__(status_code=500, detail=detail)
 
 
 class VersionNotFoundException(HTTPException):
@@ -72,7 +75,9 @@ class ComplianceVerificationFailedException(HTTPException):
 
 
 class AssistantUnavailableForUseException(HTTPException):
-    def __init__(self, assistant_id: str, state: AssistantState | None = None):
+    def __init__(
+        self, assistant_id: str, state: AssistantState | str | None = None
+    ):
         if state == AssistantState.PENDING_LEGAL_REVIEW:
             status_code = 451
             detail = (

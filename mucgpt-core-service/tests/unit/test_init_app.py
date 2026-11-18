@@ -1,3 +1,4 @@
+from typing import Any, cast
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -85,7 +86,9 @@ class TestInitApp:
         }[selection_kind]
 
         # Act
-        result = await init_agent(self.mock_user, **selection_kwargs)
+        result = await init_agent(
+            self.mock_user, **cast("dict[str, Any]", selection_kwargs)
+        )
 
         # Assert
         mock_get_model.assert_called_once()

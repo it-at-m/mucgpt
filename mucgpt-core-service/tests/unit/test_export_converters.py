@@ -162,7 +162,7 @@ def test_dispatch_returns_mimetype_and_filename(
 
 DOCX_HTML = """
 <h1>Titel</h1>
-<p>Text mit <strong>fett</strong>, <em>kursiv</em>, <s>strike</s> und <code>mono</code>.</p>
+<p>Text mit <strong>fett</strong>, <em>kursiv</em>, <s>strike</s>, <u>unterstrichen</u> und <code>mono</code>.</p>
 <ul><li>eins<ul><li>verschachtelt</li></ul></li><li>zwei</li></ul>
 <blockquote><p>Zitat</p></blockquote>
 <pre><code>Zeile 1
@@ -215,6 +215,7 @@ def test_docx_blocks_and_inline_formatting() -> None:
     assert _run_by_text(document, "fett").bold is True
     assert _run_by_text(document, "kursiv").italic is True
     assert _run_by_text(document, "strike").font.strike is True
+    assert _run_by_text(document, "unterstrichen").underline is True
     assert _run_by_text(document, "mono").font.name == "Courier New"
 
 

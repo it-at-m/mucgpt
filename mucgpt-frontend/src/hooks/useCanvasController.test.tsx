@@ -227,4 +227,25 @@ describe("useCanvasController notify flush", () => {
         expect(recreated.markdownText).toBe("# before recreation");
         editors.active = editorStub;
     });
+
+    it("recreation after an intentional clear keeps the recreated editor empty", async () => {
+        const view = render(<Owner conversationId="conv-1" />);
+
+        editorStub.markdownText = "# content";
+        editorStub.emit("update");
+
+        // The user clears the cleared-and-saved document.
+        editorStub.markdownText = "";
+        editorStub.emit("update");
+
+        // Editor recreation (the limits config arriving) must not resurrect
+        // the cleared content: the recreation restore reuses the latest
+        // document, emptiness included.
+        const recreated = makeEditorStub();
+        editors.active = recreated;
+        view.rerender(<Owner conversationId="conv-1" />);
+
+        expect(recreated.markdownText).toBe("");
+        editors.active = editorStub;
+    });
 });

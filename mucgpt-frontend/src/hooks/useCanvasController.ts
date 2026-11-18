@@ -171,9 +171,13 @@ export function useCanvasController(conversationId: string | undefined, serverCo
     // cleanups (unmount) can run after the editor was destroyed, so the flush
     // must not rely on reading the editor again.
     const pendingNotifyRef = useRef<string | null>(null);
-    // Last nonempty document, captured with each debounced notification; feeds
-    // the pre-clear rollback checkpoints (snapshot("autosave")).
+    // Last nonempty document, captured with each editor update; feeds the
+    // pre-clear rollback checkpoints (snapshot("autosave")).
     const lastNonEmptyDocRef = useRef<Record<string, unknown> | null>(null);
+    // Latest editor document including empty content; the editor recreation
+    // restore must respect an intentional clear and reapply emptiness, so it
+    // cannot reuse the nonempty checkpoint.
+    const lastCurrentDocRef = useRef<Record<string, unknown> | null>(null);
     const revisionsRef = useRef(revisions);
     revisionsRef.current = revisions;
 
@@ -201,12 +205,14 @@ export function useCanvasController(conversationId: string | undefined, serverCo
     const notifySubscribers = useCallback(() => {
         if (notifyTimerRef.current) clearTimeout(notifyTimerRef.current);
         pendingNotifyRef.current = getMarkdown();
-        // Capture the rollback document at edit time: a clear arriving before
-        // the debounced delivery would otherwise replace the capture with the
-        // delivered "" and the backup would miss the last edits.
+        // Captures at edit time: a clear arriving before the debounced
+        // delivery would otherwise replace the nonempty backup capture with
+        // the delivered "" — and snapshots do not read the editor at all, so
+        // the captures must be maintained here.
         const current = editorRef.current;
-        if (pendingNotifyRef.current.trim() && current && !current.isDestroyed) {
-            lastNonEmptyDocRef.current = current.getJSON();
+        if (current && !current.isDestroyed) {
+            lastCurrentDocRef.current = current.getJSON();
+            if (pendingNotifyRef.current.trim()) lastNonEmptyDocRef.current = lastCurrentDocRef.current;
         }
         notifyTimerRef.current = setTimeout(() => {
             notifyTimerRef.current = null;
@@ -247,14 +253,13 @@ export function useCanvasController(conversationId: string | undefined, serverCo
     }, [editor, notifySubscribers]);
 
     // Editor recreation (e.g. the limits config arriving) starts empty and the
-    // conversation-switch effect does not re-run for it. Reapply the last
-    // captured document so a recreated empty editor cannot be mistaken for a
-    // user clear (which would wipe the stored copy). Known narrow edge: a
-    // recreation directly after an intentional clear resurrects the cleared
-    // content — recreation happens once when the config loads.
+    // conversation-switch effect does not re-run for it. Reapply the latest
+    // document — including an intentional clear — so a recreated empty editor
+    // cannot be mistaken for a user clear (which would wipe the stored copy)
+    // and cannot resurrect cleared content.
     useEffect(() => {
         if (!editor || editor.isDestroyed || hasCanvasContent()) return;
-        const docJson = lastNonEmptyDocRef.current;
+        const docJson = lastCurrentDocRef.current;
         if (docJson === null) return;
         editor.commands.setContent(docJson as Content);
         editor.view.dispatch(editor.state.tr.setMeta(CANVAS_PERSISTENCE_RESET, true));
@@ -284,6 +289,7 @@ export function useCanvasController(conversationId: string | undefined, serverCo
         setIsOpen(false);
         setRevisions(emptyRevisions());
         lastNonEmptyDocRef.current = null;
+        lastCurrentDocRef.current = null;
         // Deliver the outgoing conversation's pending edit before the editor is
         // cleared; clearPendingNotify would otherwise capture "" and the
         // notification would carry empty content (or drop the edit, depending

@@ -28,7 +28,7 @@ export interface CanvasChange {
     from: number;
     to: number;
     /** Baseline content restored on reject; null for pure insertions. */
-    oldSliceJson: unknown | null;
+    oldSliceJson: unknown;
     /** Removed content shown as red strikethrough. */
     oldText: string;
     /** Added content shown in green; empty for pure deletions. */
@@ -202,7 +202,9 @@ const hunksFromSegments = (oldText: string, newText: string, segments: CanvasDif
             merged.push({ ...hunk });
         }
     }
-    return merged.filter(hunk => hunk.oldText.length > 0 || hunk.newText.length > 0);
+    // Whitespace-only hunks carry no visible change: auto-accepting them
+    // (approval default) avoids floating controls without content.
+    return merged.filter(hunk => hunk.oldText.trim().length > 0 || hunk.newText.trim().length > 0);
 };
 
 /**
@@ -317,9 +319,9 @@ const listItemPieces = (list: PMNode, listPos: number): DiffPiece[] => {
 };
 
 /** Truncated plain-text excerpt for review tooltips and accessible labels. */
-export const summarize = (lines: string[]): string => {
-    const text = lines.join(" ").replace(/\s+/g, " ").trim();
-    return text.length > 60 ? `${text.slice(0, 57)}…` : text;
+export const summarize = (text: string): string => {
+    const collapsed = text.replace(/\s+/g, " ").trim();
+    return collapsed.length > 60 ? `${collapsed.slice(0, 57)}…` : collapsed;
 };
 
 /**
@@ -343,15 +345,14 @@ const inlineChanges = (
     const segments = diffWords(oldText, newText);
     if (!segments) return null;
 
-    // Fragments carry the real node/marks structure so diff views can render
-    // the removed and added text properly formatted.
-    const oldFragmentJson = oldText ? baseline.slice(oldTextStart, oldTextStart + oldText.length).content.toJSON() : undefined;
-    const newFragmentJson = newText ? target.slice(newTextStart, newTextStart + newText.length).content.toJSON() : undefined;
-
     // A fundamental rewrite is one decision between the two complete strings;
     // word-level fragments would just be noise (and can produce insert-only
     // hunks without a counterpart).
     if (unchangedShare(segments) < SIMILARITY_THRESHOLD) {
+        // Fragments carry the real node/marks structure so diff views can render
+        // the removed and added text properly formatted.
+        const oldFragmentJson = oldText ? baseline.slice(oldTextStart, oldTextStart + oldText.length).content.toJSON() : undefined;
+        const newFragmentJson = newText ? target.slice(newTextStart, newTextStart + newText.length).content.toJSON() : undefined;
         return [
             {
                 id: nextChangeId(),

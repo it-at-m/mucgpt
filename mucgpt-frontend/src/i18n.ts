@@ -221,7 +221,7 @@ i18n
                         review: {
                             pending_one: "1 Änderung vom Agenten",
                             pending_other: "{{count}} Änderungen vom Agenten",
-                            hint: "Klicke grün markierten Text an, um die Änderung zu übernehmen. Rot durchgestrichenen Text anklicken, um ihn abzulehnen. Ungenutzte Änderungen werden beim nächsten Schreibvorgang des Agenten automatisch übernommen.",
+                            hint: "Klicke grün markierten Text an, um die Änderung zu übernehmen. Rot durchgestrichenen Text anklicken, um ihn abzulehnen. Die Schaltflächen ✓ und ✕ an jeder Änderung erledigen dies auch per Tastatur. Nicht geprüfte Änderungen werden beim nächsten Schreibvorgang des Agenten automatisch übernommen.",
                             accept_all: "Alle übernehmen",
                             reject_all: "Alle ablehnen",
                             accept_new: "Neuen Text übernehmen",
@@ -1236,7 +1236,7 @@ i18n
                         review: {
                             pending_one: "1 agent change",
                             pending_other: "{{count}} agent changes",
-                            hint: "Click green highlighted text to accept a change. Click red strikethrough text to reject it. Unreviewed changes are accepted automatically the next time the agent writes.",
+                            hint: "Click green highlighted text to accept a change. Click red strikethrough text to reject it. The ✓ and ✕ buttons next to each change do the same via keyboard. Unreviewed changes are accepted automatically the next time the agent writes.",
                             accept_all: "Accept all",
                             reject_all: "Reject all",
                             accept_new: "Accept new text",
@@ -2280,7 +2280,7 @@ i18n
                         review: {
                             pending_one: "1 Änderung vom Agentn",
                             pending_other: "{{count}} Änderungen vom Agentn",
-                            hint: "Klick auf grien markiertn Text, um de Änderung z' übernehma. Auf rot durchgstrichna Text klicka, um eahm abz'lehna. Ned ogschaugte Änderungen wern beim nächstn Schreibvorgang vom Agentn automatisch übernomma.",
+                            hint: "Klick auf grien markiertn Text, um de Änderung z' übernehma. Auf rot durchgstrichna Text klicka, um eahm abz'lehna. De Schaltflächn ✓ und ✕ bei jeder Änderung machn des a per Tastatur. Ned ogschaugte Änderungen wern beim nächstn Schreibvorgang vom Agentn automatisch übernomma.",
                             accept_all: "Alle übernehma",
                             reject_all: "Alle ab'lehna",
                             accept_new: "Neien Text übernehma",
@@ -3202,7 +3202,7 @@ i18n
                         review: {
                             pending_one: "1 modification de l'agent",
                             pending_other: "{{count}} modifications de l'agent",
-                            hint: "Cliquez sur le texte surligné en vert pour accepter une modification. Cliquez sur le texte barré en rouge pour la rejeter. Les modifications non examinées sont acceptées automatiquement la prochaine fois que l'agent écrit.",
+                            hint: "Cliquez sur le texte surligné en vert pour accepter une modification. Cliquez sur le texte barré en rouge pour la rejeter. Les boutons ✓ et ✕ à côté de chaque modification font de même au clavier. Les modifications non examinées sont acceptées automatiquement la prochaine fois que l'agent écrit.",
                             accept_all: "Tout accepter",
                             reject_all: "Tout rejeter",
                             accept_new: "Accepter le nouveau texte",
@@ -4187,7 +4187,7 @@ i18n
                             pending_few: "{{count}} зміни від агента",
                             pending_many: "{{count}} змін від агента",
                             pending_other: "{{count}} змін від агента",
-                            hint: "Натисніть на текст, виділений зеленим, щоб прийняти зміну. Натисніть на перекреслений червоний текст, щоб відхилити її. Непереглянуті зміни приймаються автоматично, коли агент наступного разу пише.",
+                            hint: "Натисніть на текст, виділений зеленим, щоб прийняти зміну. Натисніть на перекреслений червоний текст, щоб відхилити її. Кнопки ✓ і ✕ біля кожної зміни роблять те саме з клавіатури. Непереглянуті зміни приймаються автоматично, коли агент наступного разу пише.",
                             accept_all: "Прийняти всі",
                             reject_all: "Відхилити всі",
                             accept_new: "Прийняти новий текст",
@@ -4240,7 +4240,7 @@ i18n
                             diff_caption: "Різниця з поточним текстом",
                             empty: "Ще немає збережених версій.",
                             source_manual: "Збережено вручну",
-                            source_agent: "Зміна агентом",
+                            source_agent: "Зміна від агента",
                             source_restore: "Відновлено",
                             source_autosave: "Автоматичне резервне копіювання",
                             source_cleared: "Очищено",

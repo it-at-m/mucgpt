@@ -77,9 +77,9 @@ const changeSpec = (change: CanvasChange): Record<string, unknown> => ({ changeI
  */
 const tooltip = (labels: CanvasReviewLabels, change: CanvasChange, action: "accept" | "reject"): string => {
     if (action === "accept") {
-        return change.newText ? `${labels.acceptNew}: ${summarize([change.newText])}` : `${labels.removeOld}: ${summarize([change.oldText])}`;
+        return change.newText ? `${labels.acceptNew}: ${summarize(change.newText)}` : `${labels.removeOld}: ${summarize(change.oldText)}`;
     }
-    return change.oldText ? `${labels.keepOld}: ${summarize([change.oldText])}` : `${labels.removeNew}: ${summarize([change.newText])}`;
+    return change.oldText ? `${labels.keepOld}: ${summarize(change.oldText)}` : `${labels.removeNew}: ${summarize(change.newText)}`;
 };
 
 const controlButton = (className: string, glyph: string, change: CanvasChange, action: "accept" | "reject", label: string): HTMLButtonElement => {
@@ -180,20 +180,23 @@ const inlineDecorations = (change: CanvasChange, labels: CanvasReviewLabels, lis
  * none of the attributes would be applied at all.
  */
 const coveredNodes = (doc: PMNode, from: number, to: number): { node: PMNode; pos: number }[] => {
-    const candidates: { node: PMNode; pos: number; end: number }[] = [];
+    const covered: { node: PMNode; pos: number }[] = [];
+    let outerEnd = -1;
     doc.nodesBetween(from, to, (node, pos) => {
-        if (node.isBlock && pos >= from && pos + node.nodeSize <= to) candidates.push({ node, pos, end: pos + node.nodeSize });
+        // nodesBetween yields container nodes before their descendants, so a
+        // running end boundary keeps only the top-most covered nodes.
+        if (node.isBlock && pos >= outerEnd && pos >= from && pos + node.nodeSize <= to) {
+            covered.push({ node, pos });
+            outerEnd = pos + node.nodeSize;
+        }
         return true;
     });
-    return candidates.filter(candidate => !candidates.some(other => other !== candidate && other.pos <= candidate.pos && other.end >= candidate.end));
+    return covered;
 };
 
 const blockDecorations = (doc: PMNode, change: CanvasChange, labels: CanvasReviewLabels, list: boolean, schema?: Schema): Decoration[] => {
     const decorations: Decoration[] = [];
     if (change.kind !== "delete") {
-        // Node decorations apply to exactly one node: a change covering several
-        // blocks (coalesced insert run) needs one decoration per covered
-        // top-most node, or none of the attributes would be applied at all.
         for (const { node, pos } of coveredNodes(doc, change.from, change.to)) {
             decorations.push(
                 Decoration.node(

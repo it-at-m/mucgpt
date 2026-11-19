@@ -158,7 +158,7 @@ describe("computeCanvasChanges", () => {
 
         expect(changes).toHaveLength(2);
         expect(changes.every(change => change.level === "inline")).toBe(true);
-        expect(changes.map(change => change.newText)).toEqual(["Dritter Absatz", "Vierter Absatz"]);
+        expect(changes.map(change => change.newText)).toEqual(["Dritter", "Vierter"]);
     });
 
     it("diffs a bullet list per item and only marks the changed bullet", () => {
@@ -188,7 +188,7 @@ describe("computeCanvasChanges", () => {
         const editor = editorFor();
         const changes = computeCanvasChanges(docFrom(editor, "1. Eins\n2. Zwei"), docFrom(editor, "1. Eins geändert\n2. Zwei"));
         expect(changes).toHaveLength(1);
-        expect(changes[0]).toMatchObject({ level: "inline", oldText: "Eins", newText: "Eins geändert", previewPrefix: "1. " });
+        expect(changes[0]).toMatchObject({ level: "inline", kind: "insert", oldText: "", newText: " geändert", previewPrefix: "1. " });
     });
 
     it("reviews a list type change as one whole-list change", () => {
@@ -309,10 +309,10 @@ describe("describeCanvasDiff", () => {
         const editor = editorFor();
         const items = describeCanvasDiff(docFrom(editor, "Header\n\nEins\n\nZwei\n\nFooter"), docFrom(editor, "Header\n\nEins neu\n\nZwei neu\n\nFooter"));
 
-        expect(items.map(item => item.kind)).toEqual(["equal", "replace", "replace", "equal"]);
+        expect(items.map(item => item.kind)).toEqual(["equal", "insert", "insert", "equal"]);
         expect(items[0].newLines).toEqual(["Header"]);
-        expect(items[1]).toMatchObject({ kind: "replace", oldLines: ["Eins"], newLines: ["Eins neu"] });
-        expect(items[2]).toMatchObject({ kind: "replace", oldLines: ["Zwei"], newLines: ["Zwei neu"] });
+        expect(items[1]).toMatchObject({ kind: "insert", oldLines: [], newLines: [" neu"] });
+        expect(items[2]).toMatchObject({ kind: "insert", oldLines: [], newLines: [" neu"] });
         expect(items[3].newLines).toEqual(["Footer"]);
     });
 

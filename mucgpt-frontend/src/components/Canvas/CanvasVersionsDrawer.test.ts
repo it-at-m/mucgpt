@@ -89,8 +89,8 @@ describe("CanvasVersionsDrawer", () => {
 
         const text = document.body.textContent ?? "";
         expect(text).toContain("canvas.versions.diff_caption");
-        expect(text).toContain("Alter Text");
-        expect(text).toContain("Aktueller Text");
+        expect(text).toContain("Alter");
+        expect(text).toContain("Aktueller");
         expect(document.querySelector('[aria-label="canvas.versions.close"]')).not.toBeNull();
     });
 
@@ -128,8 +128,8 @@ describe("CanvasVersionsDrawer", () => {
 
         const lines = (kind: string) => Array.from(document.querySelectorAll(`[data-canvas-diff-kind="${kind}"]`)).map(node => node.textContent);
         expect(lines("equal")).toEqual(["Bleibt"]);
-        expect(lines("delete")).toEqual(["Aktueller Text"]);
-        expect(lines("insert")).toEqual(["Alter Text"]);
+        expect(lines("delete")).toEqual(["Aktueller"]);
+        expect(lines("insert")).toEqual(["Alter"]);
         // Added text is shown before the removed text (matches the ✓/✕ order).
         const order = Array.from(document.querySelectorAll("[data-canvas-diff-kind]")).map(node => node.getAttribute("data-canvas-diff-kind"));
         expect(order).toEqual(["equal", "insert", "delete"]);

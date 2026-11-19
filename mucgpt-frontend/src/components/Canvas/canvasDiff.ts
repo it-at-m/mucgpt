@@ -88,8 +88,10 @@ const MAX_INLINE_TEXT = 60_000;
 /**
  * Share of unchanged text below which a rewritten block becomes one decision
  * (whole old sentence versus whole new sentence) instead of word-level hunks.
+ * A low value keeps word-level splits for moderately heavy rewrites; only
+ * fundamentally rewritten blocks collapse into a single decision.
  */
-const SIMILARITY_THRESHOLD = 0.7;
+const SIMILARITY_THRESHOLD = 0.3;
 /** Hunks separated by at most this many unchanged words merge into one decision. */
 const MAX_MERGE_GAP_WORDS = 2;
 

@@ -949,7 +949,7 @@ describe("agent change review", () => {
         // Review markup is view-only: the agent and snapshots only ever see the new text.
         expect(harness.current.getMarkdown()).toBe("Der Hund rennt sehr schnell.");
         expect(harness.current.toCanvasState()?.content).toBe("Der Hund rennt sehr schnell.");
-        // One baseline revision per turn instead of the previous pre/post pair.
+        // One baseline revision (the pre-turn document) is stored per turn.
         expect(harness.current.revisions.auto).toHaveLength(1);
         expect(reviewElement(harness, "accept")).not.toBeNull();
         expect(reviewElement(harness, "reject")).not.toBeNull();
@@ -1261,7 +1261,6 @@ describe("agent change review", () => {
         expect(cross.title).toContain("canvas.review.remove_new:");
         expect(cross.title).toContain("Neuer Absatz");
         const acceptElements = Array.from(harness.current.editor!.view.dom.querySelectorAll<HTMLElement>('[data-canvas-review-action="accept"]'));
-        console.log("DEBUG-ACCEPT-HTML", acceptElements.map(element => element.outerHTML).join("\n>>>"));
         expect(acceptElements.length).toBeGreaterThan(1);
         for (const element of acceptElements) {
             expect(element.title).toContain("canvas.review.accept_new:");

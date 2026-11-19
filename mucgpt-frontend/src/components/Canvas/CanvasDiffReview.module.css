@@ -72,10 +72,12 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: var(--spacingHorizontalL);
-    height: var(--spacingHorizontalL);
+    /* Structural control size (Fluent smallest button size ~24px would be
+       oversized for an inline decoration). */
+    width: 16px;
+    height: 16px;
     padding: 0;
-    border: 1px solid var(--colorNeutralStroke1);
+    border: 1px solid var(--colorNeutralStrokeAccessible);
     border-radius: var(--borderRadiusCircular);
     background-color: var(--colorNeutralBackground1);
     font-size: var(--fontSizeBase200);

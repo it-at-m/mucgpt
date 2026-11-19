@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef } from "react";
 import DOMPurify from "dompurify";
+import type { Schema } from "@tiptap/pm/model";
 import { generateHTML } from "@tiptap/html";
 import { Button, DrawerBody, DrawerHeader, DrawerHeaderTitle, OverlayDrawer } from "@fluentui/react-components";
 import { ArrowUndo24Regular, Dismiss24Regular } from "@fluentui/react-icons";
@@ -10,7 +11,6 @@ import type { CanvasControllerInstance } from "../../hooks/useCanvasController";
 import { canvasExtensions } from "./canvasExtensions";
 import { describeCanvasDiff, type CanvasDiffPreviewItem } from "./canvasDiff";
 import { appendDiffFragment } from "./canvasDiffMarkup";
-import type { Schema } from "@tiptap/pm/model";
 import styles from "./CanvasVersionsDrawer.module.css";
 
 // Revision previews are rendered via dangerouslySetInnerHTML, so any link that

@@ -773,7 +773,6 @@ export function useCanvasController(conversationId: string | undefined, serverCo
             // Stay lit while moving within the same change (its controls or the
             // paired red box); clear when leaving towards other content.
             if (relatedElement && relatedElement.getAttribute("data-canvas-review-change") === element.getAttribute("data-canvas-review-change")) return;
-            if (event.relatedTarget && element.contains(event.relatedTarget as Node)) return;
             clearHover();
         };
         dom.addEventListener("click", onClick);
@@ -789,8 +788,9 @@ export function useCanvasController(conversationId: string | undefined, serverCo
         };
     }, [editor, acceptChange, rejectChange]);
 
-    // The editor is recreated when the configured limits arrive. Review markup and
-    // change ranges belong to one editor instance, so they must not leak across it.
+    // The editor is recreated when the configured limits arrive. Review markup
+    // and change ranges belong to one editor instance, so they must not leak
+    // across it: pending changes are auto-accepted here (approval default).
     useEffect(() => {
         reviewRef.current = null;
         agentBaselineRef.current = null;

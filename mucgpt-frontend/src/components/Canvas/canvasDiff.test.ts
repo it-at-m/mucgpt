@@ -87,6 +87,11 @@ describe("computeCanvasChanges", () => {
         expect(changes[0].from).toBe(changes[0].to);
     });
 
+    it("auto-accepts whitespace-only edits instead of floating review controls", () => {
+        const editor = editorFor();
+        expect(computeCanvasChanges(docFrom(editor, "Der Hund läuft schnell."), docFrom(editor, "Der  Hund läuft schnell."))).toEqual([]);
+    });
+
     it("splits a rewritten paragraph into independent phrase hunks", () => {
         const editor = editorFor();
         const changes = computeCanvasChanges(

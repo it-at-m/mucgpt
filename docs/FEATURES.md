@@ -80,6 +80,8 @@ Available models (deployments select exactly one — the line-up grows over time
 | Distil-Whisper Large v3 German | German | None (runs on CPU/WASM) |
 | NVIDIA Canary 180M Flash | English, German, French, Spanish | None (runs on CPU/WASM) |
 | NVIDIA Parakeet TDT 0.6B v3 | 25 languages, automatic detection (incl. Ukrainian) | None (runs on CPU/WASM) |
+| NVIDIA Parakeet Ultra | 25 languages, automatic detection (incl. Ukrainian), punctuation & capitalization | None (runs on CPU/WASM) |
+| NVIDIA Parakeet Redux (ternary) | 25 languages, automatic detection (incl. Ukrainian) | None (runs on CPU/WASM) |
 
 The feature must be enabled per deployment; if the microphone button is missing, your administrator has not activated it yet.
 

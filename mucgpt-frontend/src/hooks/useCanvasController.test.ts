@@ -6,7 +6,7 @@ import { createRoot, type Root } from "react-dom/client";
 import { Editor } from "@tiptap/core";
 
 import { canvasExtensions } from "../components/Canvas/canvasExtensions";
-import { caretMarkdownOffset, markdownStorage, tableSelectionMarkdown, useCanvasController, type CanvasControllerInstance } from "./useCanvasController";
+import { caretMarkdownOffset, markdownStorage, tableSelectionMarkdownAt, useCanvasController, type CanvasControllerInstance } from "./useCanvasController";
 import { CANVAS_STREAM_CONTENT_LIMIT, parseCanvasStreamEvent } from "../utils/canvasStream";
 import { DEFAULT_APP_CONFIG } from "../constants";
 import type { CanvasRevisions } from "../service/canvasStorage";
@@ -106,25 +106,20 @@ const posOf = (editor: Editor, needle: string) => {
     return found;
 };
 
-const select = (editor: Editor, from: number, to: number) => {
-    editor.chain().setTextSelection({ from, to }).run();
-    return editor;
-};
-
-describe("tableSelectionMarkdown", () => {
+describe("tableSelectionMarkdownAt", () => {
     const TABLE = "| Verfahren | Zuständigkeit | Frist |\n| --- | --- | --- |\n| Auskunft | Amt A | 2 Wochen |\n| Genehmigung | Amt B | 6 Wochen |";
 
     it("quotes a body-cell selection with row, column header and text", () => {
         const editor = editorFor(TABLE);
         const start = posOf(editor, "2 Wochen");
-        const markdown = tableSelectionMarkdown(select(editor, start, start + "2 Wochen".length).state);
+        const markdown = tableSelectionMarkdownAt(editor.state.doc, start, start + "2 Wochen".length);
         expect(markdown).toBe('[table, row 2, col "Frist", referenced text: "2 Wochen"]');
     });
 
     it("quotes a header-cell selection without a column header name", () => {
         const editor = editorFor(TABLE);
         const start = posOf(editor, "Zuständigkeit");
-        const markdown = tableSelectionMarkdown(select(editor, start, start + "Zuständigkeit".length).state);
+        const markdown = tableSelectionMarkdownAt(editor.state.doc, start, start + "Zuständigkeit".length);
         expect(markdown).toBe('[table, row 1, col 2, referenced text: "Zuständigkeit"]');
     });
 
@@ -132,19 +127,19 @@ describe("tableSelectionMarkdown", () => {
         const editor = editorFor(TABLE);
         const from = posOf(editor, "Auskunft");
         const to = posOf(editor, "Amt A") + "Amt".length;
-        const markdown = tableSelectionMarkdown(select(editor, from, to).state);
+        const markdown = tableSelectionMarkdownAt(editor.state.doc, from, to);
         expect(markdown).toMatch(/^\[table, row 2, cols 1-2, referenced text: ".+"\]$/);
     });
 
     it("returns null outside a table", () => {
-        const editor = select(editorFor("Hello world"), 3, 8);
-        expect(tableSelectionMarkdown(editor.state)).toBeNull();
+        const editor = editorFor("Hello world");
+        expect(tableSelectionMarkdownAt(editor.state.doc, 3, 8)).toBeNull();
         expect(markdownStorage(editor).serializer.serialize(editor.state.doc.cut(3, 8))).toBe("llo w");
     });
 
     it("keeps the generic serialization for a selection covering the table from outside", () => {
         const editor = editorFor(`Intro\n\n${TABLE}`);
-        const markdown = tableSelectionMarkdown(select(editor, 1, editor.state.doc.content.size).state);
+        const markdown = tableSelectionMarkdownAt(editor.state.doc, 1, editor.state.doc.content.size);
         expect(markdown).toBeNull();
     });
 });
@@ -152,12 +147,12 @@ describe("tableSelectionMarkdown", () => {
 const offsetAt = (markdown: string, pos: number) => {
     const editor = editorFor(markdown);
     editor.chain().setTextSelection(pos).run();
-    return caretMarkdownOffset(editor);
+    return caretMarkdownOffset(editor, pos);
 };
 
 describe("caretMarkdownOffset", () => {
     it("is null without an editor", () => {
-        expect(caretMarkdownOffset(null)).toBeNull();
+        expect(caretMarkdownOffset(null, 1)).toBeNull();
     });
 
     it("is 0 at the start of the document", () => {
@@ -171,13 +166,13 @@ describe("caretMarkdownOffset", () => {
     it("matches the full markdown length at the end of the document", () => {
         const editor = editorFor("First\n\nSecond");
         editor.chain().setTextSelection(editor.state.doc.content.size).run();
-        expect(caretMarkdownOffset(editor)).toBe(markdownStorage(editor).serializer.serialize(editor.state.doc).length);
+        expect(caretMarkdownOffset(editor, editor.state.selection.from)).toBe(markdownStorage(editor).serializer.serialize(editor.state.doc).length);
     });
 
-    it("uses the selection start when a passage is selected", () => {
+    it("offsets the given position, e.g. a selection start", () => {
         const editor = editorFor("Hello world");
         editor.chain().setTextSelection({ from: 3, to: 8 }).run();
-        expect(caretMarkdownOffset(editor)).toBe(2);
+        expect(caretMarkdownOffset(editor, editor.state.selection.from)).toBe(2);
     });
 });
 
@@ -596,6 +591,22 @@ describe("selection markdown", () => {
         const harness = renderController();
         harness.render(undefined);
         expect(selectRange(harness, "- this is my text", "my", "my")).toBe("my");
+    });
+
+    it("delivers a trailing space in a mid-line selection", () => {
+        const harness = renderController();
+        harness.render(undefined);
+        act(() => {
+            harness.current.setMarkdown("Katzen und Hunde");
+            harness.current.setIsOpen(true);
+            const editor = harness.current.editor!;
+            const from = posOf(editor, "und");
+            editor
+                .chain()
+                .setTextSelection({ from, to: from + "und ".length })
+                .run();
+        });
+        expect(harness.current.getSelectionMarkdown()).toBe("und ");
     });
 
     it("keeps the list prefix only when the selection starts at the item's beginning", () => {

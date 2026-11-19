@@ -253,7 +253,8 @@ def test_canvas_edit_replaces_first_occurrence_and_streams(monkeypatch: Any) -> 
     assert writer.chunks[-1].metadata is None
 
 
-def test_canvas_edit_keeps_selection_in_state_update(monkeypatch: Any) -> None:
+def test_canvas_edit_clears_selection_in_state_update(monkeypatch: Any) -> None:
+    """A successful edit clears the highlight and keeps (or moves) the caret."""
     writer = RecordingWriter()
     monkeypatch.setattr(canvas, "_get_writer", lambda: writer)
     tool = canvas.make_canvas_edit_tool(_logger())
@@ -269,8 +270,44 @@ def test_canvas_edit_keeps_selection_in_state_update(monkeypatch: Any) -> None:
     )
 
     assert runtime.context.canvas_working == CanvasState(
-        content="revised text", selection="revised text"
+        content="revised text", selection=None
     )
+
+    cursor_runtime = _runtime()
+    tool.invoke(
+        {
+            "old_text": "selected text",
+            "new_text": "revised text",
+            "canvas_state": CanvasState(
+                content="selected text", selection="selected text", cursor=8
+            ),
+            "runtime": cursor_runtime,
+        }
+    )
+    # the caret sat inside the edit, so it moves to the edit start
+    assert cursor_runtime.context.canvas_working == CanvasState(
+        content="revised text", selection=None, cursor=0
+    )
+
+
+def test_canvas_edit_failure_keeps_selection(monkeypatch: Any) -> None:
+    """A failed edit never mutates the working canvas, so the highlight survives."""
+    writer = RecordingWriter()
+    monkeypatch.setattr(canvas, "_get_writer", lambda: writer)
+    tool = canvas.make_canvas_edit_tool(_logger())
+    runtime = _runtime()
+
+    result = tool.invoke(
+        {
+            "old_text": "missing passage",
+            "new_text": "x",
+            "canvas_state": _canvas("Hello world", selection="world"),
+            "runtime": runtime,
+        }
+    )
+
+    assert result.startswith("Error:")
+    assert runtime.context.canvas_working is None
 
 
 def test_canvas_write_then_edit_build_on_previous_update(monkeypatch: Any) -> None:
@@ -347,7 +384,8 @@ def test_canvas_edit_with_ambiguous_match_errors(monkeypatch: Any) -> None:
 
 
 def test_canvas_edit_targets_anything_even_with_selection(monkeypatch: Any) -> None:
-    """Edits outside the selection succeed and leave it unchanged."""
+    """Edits outside the selection succeed and clear the highlight like any
+    other successful edit."""
     writer = RecordingWriter()
     monkeypatch.setattr(canvas, "_get_writer", lambda: writer)
     tool = canvas.make_canvas_edit_tool(_logger())
@@ -366,104 +404,12 @@ def test_canvas_edit_targets_anything_even_with_selection(monkeypatch: Any) -> N
 
     assert result.startswith(CONFIRMATION)
     assert runtime.context.canvas_working == CanvasState(
-        content="changed text selected text", selection="selected text"
-    )
-
-
-def test_canvas_edit_across_selection_boundary(monkeypatch: Any) -> None:
-    """old_text crossing the selection boundary clears the stale highlight."""
-    writer = RecordingWriter()
-    monkeypatch.setattr(canvas, "_get_writer", lambda: writer)
-    tool = canvas.make_canvas_edit_tool(_logger())
-    runtime = _runtime()
-
-    result = tool.invoke(
-        {
-            "old_text": "selected text more",
-            "new_text": "revised text more",
-            "canvas_state": _canvas(
-                "selected text more here", selection="selected text"
-            ),
-            "runtime": runtime,
-        }
-    )
-
-    assert result.startswith(CONFIRMATION)
-    assert runtime.context.canvas_working == CanvasState(
-        content="revised text more here", selection=None
-    )
-
-
-def test_canvas_edit_before_selection_boundary_clears_it(monkeypatch: Any) -> None:
-    """An edit overlapping only the selection's start clears it."""
-    writer = RecordingWriter()
-    monkeypatch.setattr(canvas, "_get_writer", lambda: writer)
-    tool = canvas.make_canvas_edit_tool(_logger())
-    runtime = _runtime()
-
-    result = tool.invoke(
-        {
-            "old_text": "alpha bet",
-            "new_text": "one and",
-            "canvas_state": _canvas("alpha beta gamma", selection="beta"),
-            "runtime": runtime,
-        }
-    )
-
-    assert result.startswith(CONFIRMATION)
-    assert runtime.context.canvas_working == CanvasState(
-        content="one anda gamma", selection=None
-    )
-
-
-def test_canvas_edit_rejects_overlapping_ambiguity(monkeypatch: Any) -> None:
-    """Selections with overlapping repeats (e.g. "ababa" in "abababa") cannot
-    anchor despite the non-overlapping counts."""
-    writer = RecordingWriter()
-    monkeypatch.setattr(canvas, "_get_writer", lambda: writer)
-    tool = canvas.make_canvas_edit_tool(_logger())
-
-    result = tool.invoke(
-        {
-            "old_text": "aba",
-            "new_text": "x",
-            "canvas_state": _canvas("abababa", selection="ababa"),
-        }
-    )
-
-    assert result.startswith("Error:")
-    assert "2 times" in result
-    assert writer.chunks == []
-
-
-def test_canvas_edit_anchors_duplicate_to_selection(monkeypatch: Any) -> None:
-    """Duplicate text anchors to the selected occurrence."""
-    writer = RecordingWriter()
-    monkeypatch.setattr(canvas, "_get_writer", lambda: writer)
-    tool = canvas.make_canvas_edit_tool(_logger())
-    runtime = _runtime()
-
-    result = tool.invoke(
-        {
-            "old_text": "duplicated word",
-            "new_text": "revised word",
-            "canvas_state": _canvas(
-                "lead in\nthe duplicated word here\nagain duplicated word",
-                selection="the duplicated word here",
-            ),
-            "runtime": runtime,
-        }
-    )
-
-    assert result.startswith(CONFIRMATION)
-    assert runtime.context.canvas_working == CanvasState(
-        content=("lead in\nthe revised word here\nagain duplicated word"),
-        selection="the revised word here",
+        content="changed text selected text", selection=None
     )
 
 
 def test_canvas_edit_unresolvable_ambiguity_despite_selection(monkeypatch: Any) -> None:
-    """Selection that occurs twice cannot anchor; plain ambiguity error."""
+    """Selections do not disambiguate duplicates; plain ambiguity error."""
     writer = RecordingWriter()
     monkeypatch.setattr(canvas, "_get_writer", lambda: writer)
     tool = canvas.make_canvas_edit_tool(_logger())
@@ -481,6 +427,18 @@ def test_canvas_edit_unresolvable_ambiguity_despite_selection(monkeypatch: Any) 
     assert "Extend old_text" in result
     assert "highlighted" not in result
     assert writer.chunks == []
+
+
+def test_canvas_read_reports_selection_verbatim() -> None:
+    """The model sees the exact highlighted characters, spaces included."""
+    tool = canvas.make_canvas_read_tool(_logger())
+
+    result = tool.invoke(
+        {"canvas_state": _canvas("Katzen und Hunde", selection="und ")}
+    )
+
+    assert "hint, not a constraint" in result
+    assert "\nund \n" in result
 
 
 def test_canvas_edit_rejects_result_over_limit(monkeypatch: Any) -> None:

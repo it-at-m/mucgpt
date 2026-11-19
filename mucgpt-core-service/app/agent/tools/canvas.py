@@ -35,11 +35,11 @@ CANVAS_WRITE_SUMMARY = (
 CANVAS_EDIT_SUMMARY = (
     "Replaces the exact string old_text with new_text in the canvas document. "
     "Prefer this over canvas_write for any change smaller than a full rewrite; "
-    "copy old_text verbatim from the document (canvas_read). Edits may target "
-    "any part of the document; when several passages match, old_text may be "
-    "the user's highlighted passage from canvas_read — the edit anchors to it. "
-    "When the user refers to 'here', anchor the change at the cursor position "
-    "reported by canvas_read."
+    "copy old_text verbatim from the document (canvas_read). When several "
+    "passages match, extend old_text with surrounding context so it matches "
+    "exactly one (canvas_read with around_cursor shows the area around the "
+    "user's highlighted passage). When the user refers to 'here', anchor the "
+    "change at the cursor position reported by canvas_read."
 )
 
 CANVAS_READ_SUMMARY = (
@@ -165,28 +165,6 @@ def _ensure_canvas(value: Any) -> CanvasState | None:
         except Exception:
             return None
     return None
-
-
-def _occurrence_in_selection(
-    document: str, selection: str | None, old_text: str
-) -> int | None:
-    """Offset of old_text's single occurrence inside the selected passage, or
-    None when the (advisory) selection cannot disambiguate the edit."""
-    if (
-        not selection
-        or selection.count(old_text) != 1
-        or document.count(selection) != 1
-    ):
-        return None
-    sel_start = document.find(selection)
-    # count() overlooks overlapping repeats ("ababa" in "abababa" counts as
-    # one); probe for a match starting one character later.
-    if len(selection) > 1 and document.find(selection, sel_start + 1) != -1:
-        return None
-    old_index = selection.index(old_text)
-    if len(old_text) > 1 and selection.find(old_text, old_index + 1) != -1:
-        return None
-    return sel_start + old_index
 
 
 def _next_revision(context: Any) -> int:
@@ -357,27 +335,15 @@ def make_canvas_edit_tool(logger: Logger) -> BaseTool:
                     "Copy old_text verbatim from the current document "
                     "(canvas_read returns it) and retry.",
                 )
-
-            # The selection is a hint, not a constraint: edits may target
-            # anything. When old_text is ambiguous, the highlighted passage
-            # (an exact markdown substring from the client; table selections
-            # use a coordinate annotation) anchors it.
-            selection = canvas.selection
-            edit_start = document.find(old_text)
             if occurrences > 1:
-                candidate = _occurrence_in_selection(document, selection, old_text)
-                if candidate is None:
-                    # Reaching this branch means the selection cannot anchor
-                    # the edit (the client value is not uniquely locatable),
-                    # so extending old_text is the only way out.
-                    return _fail(
-                        context,
-                        "Error: old_text occurs "
-                        f"{occurrences} times in the canvas document. "
-                        "Extend old_text with surrounding context so it matches "
-                        "exactly one passage.",
-                    )
-                edit_start = candidate
+                return _fail(
+                    context,
+                    "Error: old_text occurs "
+                    f"{occurrences} times in the canvas document. "
+                    "Extend old_text with surrounding context so it matches "
+                    "exactly one passage.",
+                )
+            edit_start = document.find(old_text)
             if _contains_html(new_text):
                 return _fail(context, HTML_NOT_ALLOWED_ERROR)
 
@@ -388,28 +354,11 @@ def make_canvas_edit_tool(logger: Logger) -> BaseTool:
             )
             if len(updated) > CANVAS_CONTENT_MAX_CHARS:
                 return _fail(context, _OVERSIZED_ERROR)
-            # Keep the selection meaningful across the edit: a contained edit
-            # adjusts it (a follow-up within one run would otherwise target a
-            # stale passage), an edit crossing its boundary clears it like a
-            # full replace, an edit outside leaves it unchanged.
-            if selection is not None:
-                selection_start = document.find(selection)
-                selection_end = selection_start + len(selection)
-                edit_end = edit_start + len(old_text)
-                if (
-                    selection_start >= 0
-                    and edit_start < selection_end
-                    and edit_end > selection_start
-                ):
-                    if edit_start >= selection_start and edit_end <= selection_end:
-                        offset = edit_start - selection_start
-                        selection = (
-                            selection[:offset]
-                            + new_text
-                            + selection[offset + len(old_text) :]
-                        )
-                    else:
-                        selection = None
+            # A successful edit clears the highlight: the client applies the
+            # UPDATE and resets its persisted focus, so a retained selection
+            # would point at a passage the user no longer sees highlighted.
+            # Failed edits never touch the working canvas, so the highlight
+            # survives them.
             # Keep the reported caret meaningful across the edit: shift it by the
             # length delta when it sits after the replaced passage, move it to the
             # edit start when it sat inside the passage.
@@ -426,7 +375,7 @@ def make_canvas_edit_tool(logger: Logger) -> BaseTool:
             _emit(writer, ToolStreamState.UPDATE, updated)
             if context is not None and hasattr(context, "canvas_working"):
                 context.canvas_working = CanvasState(
-                    content=updated, selection=selection, cursor=cursor
+                    content=updated, selection=None, cursor=cursor
                 )
             return f"Canvas document updated ({len(updated)} characters)."
         finally:
@@ -454,7 +403,7 @@ def _read_result(canvas: CanvasState, around_cursor: bool) -> str:
             "The user has highlighted this passage (their current focus — an "
             "edit hint, not a constraint; around_cursor shows its "
             "surroundings):\n"
-            f"{canvas.selection.strip()}"
+            f"{canvas.selection}"
         )
         if "[table, row" in canvas.selection:
             lines.append(_TABLE_SELECTION_NOTE)

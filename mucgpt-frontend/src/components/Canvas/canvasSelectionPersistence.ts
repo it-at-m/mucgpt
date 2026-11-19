@@ -38,6 +38,19 @@ export const persistentCaret = (editor: Editor | null): number | null => {
     return stored?.caret ?? null;
 };
 
+/**
+ * The selection the user currently sees (muted highlight while unfocused),
+ * mapped through every document change; null when collapsed, cleared, or
+ * mapped down to a point. The visual source of truth for what toCanvasState
+ * sends.
+ */
+export const persistentSelection = (editor: Editor | null): { from: number; to: number } | null => {
+    if (!editor) return null;
+    const stored = persistenceKey.getState(editor.state) as PersistenceState | undefined;
+    const selection = stored?.selection ?? null;
+    return selection && selection.from !== selection.to ? selection : null;
+};
+
 export const CanvasSelectionPersistence = Extension.create({
     name: "canvasSelectionPersistence",
 

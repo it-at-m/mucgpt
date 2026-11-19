@@ -1,21 +1,24 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
 
-const { getCanvasApiMock, getCanvasRevisionsApiMock } = vi.hoisted(() => ({
+const { getCanvasApiMock, getCanvasRevisionsApiMock, putCanvasContentApiMock } = vi.hoisted(() => ({
     getCanvasApiMock: vi.fn(),
-    getCanvasRevisionsApiMock: vi.fn()
+    getCanvasRevisionsApiMock: vi.fn(),
+    putCanvasContentApiMock: vi.fn()
 }));
 
 vi.mock("../api/core-client", () => ({
     getCanvasApi: (...args: unknown[]) => getCanvasApiMock(...args),
-    getCanvasRevisionsApi: (...args: unknown[]) => getCanvasRevisionsApiMock(...args)
+    getCanvasRevisionsApi: (...args: unknown[]) => getCanvasRevisionsApiMock(...args),
+    putCanvasContentApi: (...args: unknown[]) => putCanvasContentApiMock(...args)
 }));
 
-import { loadCanvasRevisions, loadCanvasState, parseCanvasRevisions } from "./canvasStorage";
+import { loadCanvasRevisions, loadCanvasState, parseCanvasRevisions, saveCanvasContent } from "./canvasStorage";
 
 describe("loadCanvasState", () => {
     beforeEach(() => {
         getCanvasApiMock.mockReset();
         getCanvasRevisionsApiMock.mockReset();
+        putCanvasContentApiMock.mockReset();
     });
 
     it("returns the server copy as the single source of truth", async () => {
@@ -53,6 +56,7 @@ describe("loadCanvasRevisions", () => {
     beforeEach(() => {
         getCanvasApiMock.mockReset();
         getCanvasRevisionsApiMock.mockReset();
+        putCanvasContentApiMock.mockReset();
     });
 
     it("returns the rings from the server", async () => {
@@ -74,6 +78,45 @@ describe("loadCanvasRevisions", () => {
         vi.spyOn(console, "error").mockImplementation(() => {});
         try {
             expect(await loadCanvasRevisions("conv-3")).toBeNull();
+        } finally {
+            vi.restoreAllMocks();
+        }
+    });
+});
+
+describe("saveCanvasContent", () => {
+    beforeEach(() => {
+        getCanvasApiMock.mockReset();
+        getCanvasRevisionsApiMock.mockReset();
+        putCanvasContentApiMock.mockReset();
+    });
+
+    it("forwards the content to the server and resolves true on success", async () => {
+        putCanvasContentApiMock.mockResolvedValue(true);
+
+        expect(await saveCanvasContent("conv-1", "# doc")).toBe(true);
+        expect(putCanvasContentApiMock).toHaveBeenCalledWith("conv-1", "# doc", false);
+    });
+
+    it("passes the keepalive flag through", async () => {
+        putCanvasContentApiMock.mockResolvedValue(true);
+
+        await saveCanvasContent("conv-1", "# doc", true);
+
+        expect(putCanvasContentApiMock).toHaveBeenCalledWith("conv-1", "# doc", true);
+    });
+
+    it("resolves false when the conversation is not persisted yet", async () => {
+        putCanvasContentApiMock.mockResolvedValue(false);
+
+        expect(await saveCanvasContent("conv-2", "# doc")).toBe(false);
+    });
+
+    it("resolves false and logs when the request fails", async () => {
+        putCanvasContentApiMock.mockRejectedValue(new Error("network down"));
+        vi.spyOn(console, "error").mockImplementation(() => {});
+        try {
+            expect(await saveCanvasContent("conv-3", "# doc")).toBe(false);
         } finally {
             vi.restoreAllMocks();
         }

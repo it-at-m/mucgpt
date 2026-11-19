@@ -262,6 +262,8 @@ i18n
                             source_manual: "Manuell gespeichert",
                             source_agent: "Nach Agent-Bearbeitung",
                             source_restore: "Wiederhergestellt",
+                            source_autosave: "Automatische Sicherung",
+                            source_cleared: "Geleert",
                             source_local: "Nur lokal (überschrieben)"
                         }
                     },
@@ -1261,6 +1263,8 @@ i18n
                             source_manual: "Manually saved",
                             source_agent: "After agent edit",
                             source_restore: "Restored",
+                            source_autosave: "Automatic backup",
+                            source_cleared: "Cleared",
                             source_local: "Local only (replaced)"
                         }
                     },
@@ -2289,6 +2293,8 @@ i18n
                             source_manual: "Manuell gspeichert",
                             source_agent: "Noch da Agent-Bearbeitung",
                             source_restore: "Wiedahergstellt",
+                            source_autosave: "Automatisch gsichert",
+                            source_cleared: "Gleert",
                             source_local: "Nur lokal (überschrieben)"
                         }
                     },
@@ -3195,6 +3201,8 @@ i18n
                             source_manual: "Enregistré manuellement",
                             source_agent: "Après modification par l'agent",
                             source_restore: "Restauré",
+                            source_autosave: "Sauvegarde automatique",
+                            source_cleared: "Vidé",
                             source_local: "Local uniquement (remplacé)"
                         }
                     },
@@ -4162,6 +4170,8 @@ i18n
                             source_manual: "Збережено вручну",
                             source_agent: "Після редагування агентом",
                             source_restore: "Відновлено",
+                            source_autosave: "Автоматичне резервне копіювання",
+                            source_cleared: "Очищено",
                             source_local: "Лише локально (перезаписано)"
                         }
                     },

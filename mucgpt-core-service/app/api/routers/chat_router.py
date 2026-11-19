@@ -22,6 +22,7 @@ from api.ag_ui_input import (
     to_chat_completion_request,
 )
 from api.api_models import (
+    CanvasContentUpsertRequest,
     CanvasResponse,
     ChatCompletionMessage,
     ChatCompletionRequest,
@@ -330,6 +331,38 @@ async def get_conversation_canvas(
     if canvas is None:
         raise HTTPException(status_code=404, detail="Canvas not found")
     return CanvasResponse(content=canvas.content, updated_at=canvas.updated_at)
+
+
+@router.put(
+    "/conversations/{conversation_id}/canvas",
+    summary="Autosave conversation canvas content",
+    status_code=204,
+    responses={
+        403: {"description": "Forbidden"},
+        404: {"description": "Not found"},
+    },
+)
+async def put_conversation_canvas(
+    conversation_id: str,
+    request: CanvasContentUpsertRequest,
+    user_info: Annotated[AuthenticationResult, Depends(authenticate_user)],
+) -> Response:
+    """Persist the current canvas document (content autosave).
+
+    Called on a debounce while the user edits and once after each agent run,
+    so the stored copy always represents the current view. A truncated
+    document is not persisted: it carries only the beginning and overwriting
+    the stored copy would silently destroy the tail.
+    """
+    await _authorize_conversation_access(conversation_id, user_info.user_id)
+
+    if request.truncated:
+        return Response(status_code=204)
+
+    await PersistanceHelpers.upsert_canvas(
+        conversation_id, request.content, user_info.user_id
+    )
+    return Response(status_code=204)
 
 
 @router.get(

@@ -1,5 +1,5 @@
 // mocks/handlers.js
-import { http, HttpResponse, delay, passthrough } from "msw";
+import { http, HttpResponse, delay } from "msw";
 import { PROVIDER_ERROR_CODES, type ProviderErrorCode } from "../utils/providerError";
 import {
     ApplicationConfig,
@@ -140,7 +140,7 @@ const CONFIG_RESPONSE: ApplicationConfig = {
     ],
     document_processing_enabled: true,
     transcription_enabled: true,
-    transcription_model: "istupakov/canary-180m-flash-onnx",
+    transcription_model: "Olicorne/parakeet-tdt-0.6b-v3-ultra-onnx",
     ai_act_compliance_check_enabled: true,
     canvas_content_max_chars: 256 * 1024,
     canvas_editor_max_chars: 512 * 1024,
@@ -775,8 +775,6 @@ const APPROVAL_TOOLS: Record<string, { toolName: string; dataClassification: str
 const CHAIN_ID_PREFIX = "chain-";
 
 export const handlers = [
-    http.all("https://huggingface.co/*", () => passthrough()),
-    http.all("https://cdn-lfs.huggingface.co/*", () => passthrough()),
     http.get("/api/backend/config", () => {
         return HttpResponse.json(CONFIG_RESPONSE);
     }),

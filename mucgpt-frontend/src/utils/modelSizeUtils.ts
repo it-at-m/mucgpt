@@ -4,13 +4,14 @@
  *
  * @param modelId repo id on the HuggingFace Hub
  * @param treePath repo subfolder holding the ONNX files (default "onnx"; empty = repo root)
+ * @param revision repository revision to inspect (default "main")
  */
-export async function fetchModelFileSizes(modelId: string, treePath = "onnx"): Promise<Record<string, number>> {
+export async function fetchModelFileSizes(modelId: string, treePath = "onnx", revision = "main"): Promise<Record<string, number>> {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), 5000);
     try {
         const tree = treePath ? `${treePath}/` : "";
-        const response = await fetch(`https://huggingface.co/api/models/${modelId}/tree/main/${tree}`, {
+        const response = await fetch(`https://huggingface.co/api/models/${modelId}/tree/${revision}/${tree}`, {
             headers: { Accept: "application/json" },
             signal: controller.signal
         });

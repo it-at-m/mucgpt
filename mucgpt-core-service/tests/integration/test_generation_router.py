@@ -144,8 +144,7 @@ def test_generate_chat_title_direct_model(
     )
     propagate_attributes.assert_called_once_with(
         user_id=hash_user_id("test_user_123"),
-        tags=["chat-title"],
-        session_id="conv-1",
+        tags=["chat-title", "session_id:conv-1"],
         trace_name="chat-title-generation",
     )
     observation.update.assert_called_once_with(output=body)

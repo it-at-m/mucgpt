@@ -757,4 +757,18 @@ describe("selection markdown", () => {
         const state = harness.current.toCanvasState();
         expect(state?.selection).toBe("\\- literal");
     });
+
+    it("slices a doc-end boundary without fabricating mark delimiters", () => {
+        const harness = renderController();
+        harness.render(undefined);
+        act(() => {
+            harness.current.setMarkdown("**Alpha Beta**\n\nTail");
+            harness.current.setIsOpen(true);
+            const editor = harness.current.editor!;
+            const from = posOf(editor, "Beta");
+            editor.chain().setTextSelection({ from, to: editor.state.doc.content.size }).run();
+        });
+        const state = harness.current.toCanvasState();
+        expect(state?.selection).toBe("Beta**\n\nTail");
+    });
 });

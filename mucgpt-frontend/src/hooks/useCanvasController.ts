@@ -422,10 +422,28 @@ export function useCanvasController(conversationId: string | undefined, serverCo
         const markdown = getMarkdown();
         if (!markdown) return null;
         const offsets = selectionMarkdownOffsets(current, from, to, markdown);
-        // Selections the sentinel path cannot serve (a boundary outside a
-        // textblock, or a throwaway serialization diverging from the document)
-        // fall back to the cut serialization, which is exact there.
-        if (!offsets) return markdownStorage(current)?.serializer.serialize(current.state.doc.cut(from, to)) ?? null;
+        if (!offsets) {
+            // A selection the sentinel path cannot serve. Where a boundary is
+            // the document start or end, clamp it and slice the full markdown
+            // (serializing a cut would fabricate mark delimiters at the cut);
+            // where the throwaway serialization diverged from the document
+            // (e.g. a lost line-start escape), the cut stays the exact fallback.
+            const doc = current.state.doc;
+            const outsideTextblock = (pos: number) => {
+                try {
+                    return !doc.resolve(pos).parent.type.isTextblock;
+                } catch {
+                    return true;
+                }
+            };
+            if (outsideTextblock(from) || outsideTextblock(to)) {
+                const fromOffset = from === 0 ? 0 : markdownOffsetAt(current, from);
+                const toOffset = to >= doc.content.size ? markdown.length : markdownOffsetAt(current, to);
+                const sliceable = fromOffset !== null && toOffset !== null && fromOffset <= toOffset;
+                return sliceable ? markdown.slice(fromOffset, toOffset) : null;
+            }
+            return markdownStorage(current)?.serializer.serialize(doc.cut(from, to)) ?? null;
+        }
         // A selection starting at a block's content start covers the block prefix;
         // slide to the line start. Mid-block: keep the exact covered characters.
         const start = selectionStartOffset(markdown, current, from, offsets.startOffset);

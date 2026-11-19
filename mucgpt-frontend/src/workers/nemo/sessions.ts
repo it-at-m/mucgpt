@@ -22,12 +22,22 @@ type OrtModule = {
 };
 
 let ortPromise: Promise<OrtModule> | null = null;
+let ortWebgpuPromise: Promise<OrtModule> | null = null;
 
-async function getOrt(): Promise<OrtModule> {
+async function getOrt(executionProvider: "wasm" | "webgpu"): Promise<OrtModule> {
     if (!ortPromise) {
         ortPromise = import("onnxruntime-web") as unknown as Promise<OrtModule>;
     }
-    return ortPromise;
+    if (executionProvider === "wasm") return ortPromise;
+
+    if (!ortWebgpuPromise) {
+        ortWebgpuPromise = import("onnxruntime-web/webgpu") as unknown as Promise<OrtModule>;
+    }
+    const [ort, ortWebgpu] = await Promise.all([ortPromise, ortWebgpuPromise]);
+    // Each entry has its own environment object, so preserve any WASM asset configuration.
+    ortWebgpu.env.wasm.wasmPaths = ort.env.wasm.wasmPaths;
+    ortWebgpu.env.wasm.numThreads = ort.env.wasm.numThreads;
+    return ortWebgpu;
 }
 
 /** Fetches model bytes with per-byte progress; backed by the browser Cache API so models download once. */
@@ -111,7 +121,7 @@ export async function createOrtSessionFromUrl(
     executionProvider: "wasm" | "webgpu" = "wasm",
     graphOptimization: "disabled" | "basic" | "all" = "all"
 ): Promise<OrtSessionLike> {
-    const ort = await getOrt();
+    const ort = await getOrt(executionProvider);
     const bytes = await fetchModelBytes(url, onProgress);
     const session = await ort.InferenceSession.create(bytes, {
         executionProviders: [executionProvider],

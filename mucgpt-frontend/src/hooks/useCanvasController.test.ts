@@ -714,4 +714,36 @@ describe("selection markdown", () => {
         const state = harness.current.toCanvasState();
         expect(state?.selection).toBe("- this is my");
     });
+
+    it("falls back to exact serialization when a line-start escape breaks the sentinel doc", () => {
+        const harness = renderController();
+        harness.render(undefined);
+        act(() => {
+            // Markdown "\- literal tail" parses to a paragraph whose text
+            // starts with "- "; the full serialization escapes it as "\-".
+            harness.current.setMarkdown("\\- literal tail");
+            harness.current.setIsOpen(true);
+            const editor = harness.current.editor!;
+            const from = posOf(editor, "literal");
+            const to = posOf(editor, "tail") + 4;
+            editor.chain().setTextSelection({ from, to }).run();
+        });
+        const state = harness.current.toCanvasState();
+        expect(state?.selection).toBe("literal tail");
+        expect(state?.selection!.length).toBeGreaterThan(9);
+    });
+
+    it("keeps the escaped marker when the selection starts at the block start", () => {
+        const harness = renderController();
+        harness.render(undefined);
+        act(() => {
+            harness.current.setMarkdown("\\- literal tail");
+            harness.current.setIsOpen(true);
+            const editor = harness.current.editor!;
+            const to = posOf(editor, "literal") + "literal".length;
+            editor.chain().setTextSelection({ from: 0, to }).run();
+        });
+        const state = harness.current.toCanvasState();
+        expect(state?.selection).toBe("\\- literal");
+    });
 });

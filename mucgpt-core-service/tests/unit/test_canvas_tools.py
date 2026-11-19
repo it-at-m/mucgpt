@@ -371,7 +371,7 @@ def test_canvas_edit_targets_anything_even_with_selection(monkeypatch: Any) -> N
 
 
 def test_canvas_edit_across_selection_boundary(monkeypatch: Any) -> None:
-    """old_text may extend beyond the selection."""
+    """old_text crossing the selection boundary clears the stale highlight."""
     writer = RecordingWriter()
     monkeypatch.setattr(canvas, "_get_writer", lambda: writer)
     tool = canvas.make_canvas_edit_tool(_logger())
@@ -390,8 +390,50 @@ def test_canvas_edit_across_selection_boundary(monkeypatch: Any) -> None:
 
     assert result.startswith(CONFIRMATION)
     assert runtime.context.canvas_working == CanvasState(
-        content="revised text more here", selection="selected text"
+        content="revised text more here", selection=None
     )
+
+
+def test_canvas_edit_before_selection_boundary_clears_it(monkeypatch: Any) -> None:
+    """An edit overlapping only the selection's start clears it."""
+    writer = RecordingWriter()
+    monkeypatch.setattr(canvas, "_get_writer", lambda: writer)
+    tool = canvas.make_canvas_edit_tool(_logger())
+    runtime = _runtime()
+
+    result = tool.invoke(
+        {
+            "old_text": "alpha bet",
+            "new_text": "one and",
+            "canvas_state": _canvas("alpha beta gamma", selection="beta"),
+            "runtime": runtime,
+        }
+    )
+
+    assert result.startswith(CONFIRMATION)
+    assert runtime.context.canvas_working == CanvasState(
+        content="one anda gamma", selection=None
+    )
+
+
+def test_canvas_edit_rejects_overlapping_ambiguity(monkeypatch: Any) -> None:
+    """Selections with overlapping repeats (e.g. "ababa" in "abababa") cannot
+    anchor despite the non-overlapping counts."""
+    writer = RecordingWriter()
+    monkeypatch.setattr(canvas, "_get_writer", lambda: writer)
+    tool = canvas.make_canvas_edit_tool(_logger())
+
+    result = tool.invoke(
+        {
+            "old_text": "aba",
+            "new_text": "x",
+            "canvas_state": _canvas("abababa", selection="ababa"),
+        }
+    )
+
+    assert result.startswith("Error:")
+    assert "2 times" in result
+    assert writer.chunks == []
 
 
 def test_canvas_edit_anchors_duplicate_to_selection(monkeypatch: Any) -> None:

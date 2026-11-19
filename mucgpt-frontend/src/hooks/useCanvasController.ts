@@ -156,7 +156,8 @@ const serializeWithSentinels = (editor: Editor, boundaries: OffsetBoundary[]): s
 
 /**
  * Markdown offset of the character at a ProseMirror position (sentinel
- * method). Null when the serializer is unavailable.
+ * method, with a serialized-prefix fallback when the throwaway serialization
+ * diverges). Null when the serializer is unavailable.
  */
 const markdownOffsetAt = (editor: Editor, pos: number): number | null => {
     const full = markdownStorage(editor)?.serializer.serialize(editor.state.doc);
@@ -164,7 +165,18 @@ const markdownOffsetAt = (editor: Editor, pos: number): number | null => {
     const sentinel = OFFSET_SENTINELS.find(candidate => !full.includes(candidate));
     if (sentinel === undefined) return null;
     const marked = serializeWithSentinels(editor, [{ pos, sentinel, marks: continuationMarks(editor.state.doc, pos) }]);
-    const index = marked?.indexOf(sentinel) ?? -1;
+    if (marked === null) {
+        // Boundaries outside a textblock: fall back to the serialized prefix.
+        const { doc } = editor.state;
+        const prefix = markdownStorage(editor)?.serializer.serialize(doc.cut(0, pos));
+        return prefix === undefined ? null : prefix.replace(/\n$/, "").length;
+    }
+    if (marked.replace(sentinel, "") !== full) {
+        // The serializer rendered the sentinel doc differently (e.g. it lost
+        // a line-start escape): its indices cannot slice `full`.
+        return null;
+    }
+    const index = marked.indexOf(sentinel);
     return index < 0 ? null : index;
 };
 
@@ -202,6 +214,11 @@ const selectionMarkdownOffsets = (editor: Editor, from: number, to: number, full
     // The to-sentinel sits one char past its offset: the from-sentinel lands first.
     const toIndex = serialized.indexOf(usable[1]) - 1;
     if (fromIndex < 0 || toIndex < 0 || fromIndex > toIndex) return null;
+    if (serialized.replace(usable[0], "").replace(usable[1], "") !== full) {
+        // The serializer rendered the sentinel doc differently (e.g. it lost
+        // a line-start escape): its indices cannot slice `full`.
+        return null;
+    }
     return { startOffset: fromIndex, endOffset: toIndex };
 };
 
@@ -394,8 +411,9 @@ export function useCanvasController(conversationId: string | undefined, serverCo
         const markdown = getMarkdown();
         if (!markdown) return null;
         const offsets = selectionMarkdownOffsets(current, from, to, markdown);
-        // Selections with a boundary outside a textblock (select-all, doc start
-        // or end) have no sentinel offsets; the cut serialization is exact there.
+        // Selections the sentinel path cannot serve (a boundary outside a
+        // textblock, or a throwaway serialization diverging from the document)
+        // fall back to the cut serialization, which is exact there.
         if (!offsets) return markdownStorage(current)?.serializer.serialize(current.state.doc.cut(from, to)) ?? null;
         // A selection starting at a block's content start covers the block prefix;
         // slide to the line start. Mid-block: keep the exact covered characters.

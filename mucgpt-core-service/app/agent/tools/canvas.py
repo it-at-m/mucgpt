@@ -178,7 +178,15 @@ def _occurrence_in_selection(
         or document.count(selection) != 1
     ):
         return None
-    return document.find(selection) + selection.index(old_text)
+    sel_start = document.find(selection)
+    # count() overlooks overlapping repeats ("ababa" in "abababa" counts as
+    # one); probe for a match starting one character later.
+    if len(selection) > 1 and document.find(selection, sel_start + 1) != -1:
+        return None
+    old_index = selection.index(old_text)
+    if len(old_text) > 1 and selection.find(old_text, old_index + 1) != -1:
+        return None
+    return sel_start + old_index
 
 
 def _next_revision(context: Any) -> int:
@@ -380,16 +388,28 @@ def make_canvas_edit_tool(logger: Logger) -> BaseTool:
             )
             if len(updated) > CANVAS_CONTENT_MAX_CHARS:
                 return _fail(context, _OVERSIZED_ERROR)
-            # Keep the selection tracking an edit inside it: within one run a
-            # follow-up edit would otherwise target a stale passage.
-            if selection is not None and old_text in selection:
+            # Keep the selection meaningful across the edit: a contained edit
+            # adjusts it (a follow-up within one run would otherwise target a
+            # stale passage), an edit crossing its boundary clears it like a
+            # full replace, an edit outside leaves it unchanged.
+            if selection is not None:
                 selection_start = document.find(selection)
+                selection_end = selection_start + len(selection)
+                edit_end = edit_start + len(old_text)
                 if (
                     selection_start >= 0
-                    and selection_start <= edit_start
-                    and edit_start < selection_start + len(selection)
+                    and edit_start < selection_end
+                    and edit_end > selection_start
                 ):
-                    selection = selection.replace(old_text, new_text, 1)
+                    if edit_start >= selection_start and edit_end <= selection_end:
+                        offset = edit_start - selection_start
+                        selection = (
+                            selection[:offset]
+                            + new_text
+                            + selection[offset + len(old_text) :]
+                        )
+                    else:
+                        selection = None
             # Keep the reported caret meaningful across the edit: shift it by the
             # length delta when it sits after the replaced passage, move it to the
             # edit start when it sat inside the passage.

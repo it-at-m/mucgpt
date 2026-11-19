@@ -858,3 +858,67 @@ describe("canvas HTML whitelist integration", () => {
         expect(markNames(harness)).not.toContain("bold");
     });
 });
+
+describe("selection markdown and caret offsets with whitelisted HTML", () => {
+    const selectRange = (harness: ReturnType<typeof renderController>, markdown: string, from: string, to: string) => {
+        act(() => {
+            harness.current.setMarkdown(markdown);
+            harness.current.setIsOpen(true);
+            const editor = harness.current.editor!;
+            const fromPos = posOf(editor, from);
+            const toPos = posOf(editor, to) + to.length;
+            editor.chain().setTextSelection({ from: fromPos, to: toPos }).run();
+        });
+        return harness.current.getSelectionMarkdown();
+    };
+
+    it("quotes an inner underlined segment without the enclosing tags", () => {
+        const harness = renderController();
+        harness.render(undefined);
+        expect(selectRange(harness, "Vor <u>unterstrichener Welt hier</u> nach", "strichener", "Welt")).toBe("strichener Welt");
+    });
+
+    it("keeps the opening tag when the selection starts at the mark's start (contract)", () => {
+        const harness = renderController();
+        harness.render(undefined);
+        expect(selectRange(harness, "Vor <u>unterstrichener Welt hier</u> nach", "unterstrichener", "Welt")).toBe("<u>unterstrichener Welt");
+    });
+
+    it("keeps the underline tags when the selection covers the whole mark", () => {
+        const harness = renderController();
+        harness.render(undefined);
+        expect(selectRange(harness, "Vor <u>unterstrichener Welt</u> nach", "unterstrichener", "Welt")).toBe("<u>unterstrichener Welt</u>");
+    });
+
+    it("keeps verbatim markdown when the selection crosses the closing tag", () => {
+        const harness = renderController();
+        harness.render(undefined);
+        expect(selectRange(harness, "Vor <u>unterstrichener Welt</u> nach", "strichener", "nach")).toBe("strichener Welt</u> nach");
+    });
+
+    it("reports exact caret offsets inside underlined text", () => {
+        const harness = renderController();
+        harness.render(undefined);
+        act(() => {
+            harness.current.setMarkdown("Vor <u>hallo Welt</u> nach");
+        });
+        const editor = harness.current.editor!;
+        const offset = caretMarkdownOffset(editor, posOf(editor, "hallo") + 2);
+        const markdown = harness.current.getMarkdown();
+        expect(offset).toBe(markdown.indexOf("llo Welt"));
+        expect(markdown.slice(offset!, offset! + 3)).toBe("llo");
+    });
+
+    it("reports exact caret offsets inside bold text", () => {
+        const harness = renderController();
+        harness.render(undefined);
+        act(() => {
+            harness.current.setMarkdown("Vor **krasser Welt** nach");
+        });
+        const editor = harness.current.editor!;
+        const offset = caretMarkdownOffset(editor, posOf(editor, "krasser") + 3);
+        const markdown = harness.current.getMarkdown();
+        expect(offset).toBe(markdown.indexOf("sser Welt"));
+        expect(markdown.slice(offset!, offset! + 3)).toBe("sse");
+    });
+});

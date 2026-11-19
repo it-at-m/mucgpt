@@ -1,5 +1,5 @@
 // mocks/handlers.js
-import { http, HttpResponse, delay, passthrough } from "msw";
+import { http, HttpResponse, delay } from "msw";
 import { PROVIDER_ERROR_CODES, type ProviderErrorCode } from "../utils/providerError";
 import {
     ApplicationConfig,
@@ -775,8 +775,6 @@ const APPROVAL_TOOLS: Record<string, { toolName: string; dataClassification: str
 const CHAIN_ID_PREFIX = "chain-";
 
 export const handlers = [
-    http.all("https://huggingface.co/*", () => passthrough()),
-    http.all("https://cdn-lfs.huggingface.co/*", () => passthrough()),
     http.get("/api/backend/config", () => {
         return HttpResponse.json(CONFIG_RESPONSE);
     }),

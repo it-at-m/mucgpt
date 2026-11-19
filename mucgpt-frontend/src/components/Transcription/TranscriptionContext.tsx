@@ -243,8 +243,10 @@ export const TranscriptionProvider = ({ children, transcriptionEnabled, transcri
         }
 
         const worker = new Worker(new URL("../../workers/transcription.worker.ts", import.meta.url), { type: "module" });
+        let disposed = false;
 
         worker.onmessage = (event: MessageEvent<WorkerOutMessage>) => {
+            if (disposed) return;
             const msg = event.data;
             switch (msg.type) {
                 case "progress":
@@ -339,6 +341,10 @@ export const TranscriptionProvider = ({ children, transcriptionEnabled, transcri
         };
 
         worker.onerror = (event: ErrorEvent) => {
+            // React Strict Mode replays effects in development. Firefox emits an
+            // empty error event when that first, already-terminated module
+            // worker finishes loading; it must not replace the active worker.
+            if (disposed) return;
             console.error("[TranscriptionWorker] Worker error:", event.message, event);
             const pending = pendingDownloadRef.current;
             pending?.reject(new Error(event.message));
@@ -365,6 +371,7 @@ export const TranscriptionProvider = ({ children, transcriptionEnabled, transcri
         workerRef.current = worker;
         setWorkerReady(true);
         return () => {
+            disposed = true;
             worker.terminate();
             workerRef.current = null;
             loadedModelIdRef.current = null;

@@ -120,6 +120,14 @@ addEventListener("message", function (event) {
 });
 
 addEventListener("fetch", function (event) {
+    // Only window clients opt in through MOCK_ACTIVATE. Requests from dedicated
+    // workers must remain native: proxying the transcription worker's module
+    // imports and large model streams through the page can wedge them before
+    // the first progress event.
+    if (!activeClientIds.has(event.clientId)) {
+        return;
+    }
+
     // Opening the DevTools triggers the "only-if-cached" request
     // that cannot be handled by the worker. Bypass such requests.
     if (event.request.cache === "only-if-cached" && event.request.mode !== "same-origin") {

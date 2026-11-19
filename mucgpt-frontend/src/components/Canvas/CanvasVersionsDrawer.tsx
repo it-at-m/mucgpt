@@ -98,7 +98,7 @@ export const CanvasVersionsDrawer = ({ open, onClose, controller, disabled = fal
 
     // Diff every stored revision against the live document: red marks what a
     // restore would remove, green what it would add. Invalid stored JSON stays
-    // out of the map and falls back to the plain preview below.
+    // out of the map and falls back to the rich HTML preview below.
     const diffs = useMemo(() => {
         const map = new Map<string, CanvasDiffPreviewItem[]>();
         if (!open || !currentDoc || !schema) return map;

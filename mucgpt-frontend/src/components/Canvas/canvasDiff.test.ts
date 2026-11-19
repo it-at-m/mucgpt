@@ -90,6 +90,9 @@ describe("computeCanvasChanges", () => {
     it("auto-accepts whitespace-only edits instead of floating review controls", () => {
         const editor = editorFor();
         expect(computeCanvasChanges(docFrom(editor, "Der Hund läuft schnell."), docFrom(editor, "Der  Hund läuft schnell."))).toEqual([]);
+        // Same for a whitespace-only bullet edit (must not fall back to a
+        // whole-item block change).
+        expect(computeCanvasChanges(docFrom(editor, "- Der Hund läuft schnell."), docFrom(editor, "- Der  Hund läuft schnell."))).toEqual([]);
     });
 
     it("splits a rewritten paragraph into independent phrase hunks", () => {

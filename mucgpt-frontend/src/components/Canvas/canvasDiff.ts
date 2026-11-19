@@ -371,7 +371,10 @@ const inlineChanges = (
     }
 
     const hunks = hunksFromSegments(oldText, newText, segments);
-    if (hunks.length === 0) return null;
+    // An empty result means nothing visible is left to review (all hunks were
+    // whitespace-only): the caller must emit no change at all, not fall back to
+    // a block-level one. Only a failed word diff (`segments === null`) degrades.
+    if (hunks.length === 0) return [];
 
     return hunks.map(hunk => {
         const kind = hunk.oldText && hunk.newText ? "replace" : hunk.newText ? "insert" : "delete";

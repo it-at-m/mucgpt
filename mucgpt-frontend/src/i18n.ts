@@ -219,8 +219,8 @@ i18n
                             agent_revise_template: "Bitte überarbeite den folgenden markierten Text aus dem Canvas:\n\n{{selection}}"
                         },
                         review: {
-                            pending_one: "1 Änderung vom Agenten",
-                            pending_other: "{{count}} Änderungen vom Agenten",
+                            pending_one: "1 Änderung zu prüfen",
+                            pending_other: "{{count}} Änderungen zu prüfen",
                             hint: "Klicke grün markierten Text an, um die Änderung zu übernehmen. Rot durchgestrichenen Text anklicken, um ihn abzulehnen. Die Schaltflächen ✓ und ✕ an jeder Änderung erledigen dies auch per Tastatur. Nicht geprüfte Änderungen werden beim nächsten Schreibvorgang des Agenten automatisch übernommen.",
                             accept_all: "Alle übernehmen",
                             reject_all: "Alle ablehnen",
@@ -1234,9 +1234,9 @@ i18n
                             agent_revise_template: "Please revise the following selected passage from the canvas:\n\n{{selection}}"
                         },
                         review: {
-                            pending_one: "1 agent change",
-                            pending_other: "{{count}} agent changes",
-                            hint: "Click green highlighted text to accept a change. Click red strikethrough text to reject it. The ✓ and ✕ buttons next to each change do the same via keyboard. Unreviewed changes are accepted automatically the next time the agent writes.",
+                            pending_one: "1 change to review",
+                            pending_other: "{{count}} changes to review",
+                            hint: "Click green highlighted text to accept a change. Click red strikethrough text to reject it. The ✓ and ✕ buttons next to each change can also be operated via the keyboard. Unreviewed changes are accepted automatically the next time the agent writes.",
                             accept_all: "Accept all",
                             reject_all: "Reject all",
                             accept_new: "Accept new text",
@@ -2278,8 +2278,8 @@ i18n
                             agent_revise_template: "Bitte überarbeit da folgende markierte Text aus'm Canvas:\n\n{{selection}}"
                         },
                         review: {
-                            pending_one: "1 Änderung vom Agentn",
-                            pending_other: "{{count}} Änderungen vom Agentn",
+                            pending_one: "1 Änderung zum Prüfa",
+                            pending_other: "{{count}} Änderungen zum Prüfa",
                             hint: "Klick auf grien markiertn Text, um de Änderung z' übernehma. Auf rot durchgstrichna Text klicka, um eahm abz'lehna. De Schaltflächn ✓ und ✕ bei jeder Änderung machn des a per Tastatur. Ned ogschaugte Änderungen wern beim nächstn Schreibvorgang vom Agentn automatisch übernomma.",
                             accept_all: "Alle übernehma",
                             reject_all: "Alle ab'lehna",
@@ -3200,8 +3200,8 @@ i18n
                             agent_revise_template: "Veuillez réviser le passage suivant sélectionné dans le canvas :\n\n{{selection}}"
                         },
                         review: {
-                            pending_one: "1 modification de l'agent",
-                            pending_other: "{{count}} modifications de l'agent",
+                            pending_one: "1 modification à examiner",
+                            pending_other: "{{count}} modifications à examiner",
                             hint: "Cliquez sur le texte surligné en vert pour accepter une modification. Cliquez sur le texte barré en rouge pour la rejeter. Les boutons ✓ et ✕ à côté de chaque modification font de même au clavier. Les modifications non examinées sont acceptées automatiquement la prochaine fois que l'agent écrit.",
                             accept_all: "Tout accepter",
                             reject_all: "Tout rejeter",
@@ -4183,10 +4183,10 @@ i18n
                             agent_revise_template: "Будь ласка, доопрацюйте наступний виділений текст із canvas:\n\n{{selection}}"
                         },
                         review: {
-                            pending_one: "1 зміна від агента",
-                            pending_few: "{{count}} зміни від агента",
-                            pending_many: "{{count}} змін від агента",
-                            pending_other: "{{count}} змін від агента",
+                            pending_one: "1 зміна до перевірки",
+                            pending_few: "{{count}} зміни до перевірки",
+                            pending_many: "{{count}} змін до перевірки",
+                            pending_other: "{{count}} змін до перевірки",
                             hint: "Натисніть на текст, виділений зеленим, щоб прийняти зміну. Натисніть на перекреслений червоний текст, щоб відхилити її. Кнопки ✓ і ✕ біля кожної зміни роблять те саме з клавіатури. Непереглянуті зміни приймаються автоматично, коли агент наступного разу пише.",
                             accept_all: "Прийняти всі",
                             reject_all: "Відхилити всі",

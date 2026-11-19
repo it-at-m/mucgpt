@@ -413,8 +413,17 @@ mcp:
       url: "http://mcpdoc-server:8088/sse"
       forward_token: true
       transport: "sse"
+      # require_approval: true        # the user confirms each call before it is sent (default: false)
+      # data_classification: "public" # highest data level the tools may receive: public | internal | confidential (default: public)
+      # overrides:                    # per-tool customization (description, group, approval, classification)
+      #   - name: "<tool_name>"
+      #     require_approval: false
   cache_ttl: 43200 # seconds, default: 12h
 ```
+
+Tools that require approval pause the run and ask the user before executing;
+see [Tool approval (human in the loop)](AG_UI_CHAT.md#tool-approval-human-in-the-loop)
+and `app/agent/tools/README.md`.
 
 Or via environment variable:
 

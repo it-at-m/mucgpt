@@ -84,17 +84,42 @@ would be worse than refusing it. Documented here as a conscious exception.
 - Other media types (audio/video/document parts) are refused with a clear 400
   until a mapping exists.
 
-## Interrupt / resume groundwork
+## Tool approval (human in the loop)
 
-The endpoint already carries the AG-UI interrupt contract end to end, dormant
-until a tool calls LangGraph's `interrupt()` (per-tool approval: #1093,
-websearch confirmation: #1085):
+Tools configured with `require_approval: true` activate the AG-UI interrupt
+contract on every run: before the tool executes, the run **ends** and asks the
+user (see the tool configuration reference in
+`app/agent/tools/README.md` and the examples in `config.yaml.example`).
 
-- A run that ends in an interrupt emits `STATE_SNAPSHOT`, `MESSAGES_SNAPSHOT`
-  and `RUN_FINISHED` with `outcome: { type: "interrupt", interrupts: [...] }`
-  (bound by `toolCallId`, carrying the `responseSchema`).
-- The next run's `resume[]` entries are mapped to a LangGraph
-  `Command(resume=…)` keyed by interrupt id.
+**Run side:**
+
+- A run that hits an approval emits `STATE_SNAPSHOT`, `MESSAGES_SNAPSHOT` and
+  `RUN_FINISHED` with `outcome: { type: "interrupt", interrupts: [...] }`.
+- Each `Interrupt` carries `id = toolCallId` (unique per run),
+  `reason: "tool_approval"`, and `metadata.mucgpt` with the tool name, the
+  exact arguments the checkpointed call would use (without the internal
+  `status_message`) and the tool's `data_classification`.
+- The paused run is kept in the conversation's checkpoint; nothing executes
+  until the user answers.
+- Only `persist=true` runs can pause: without a checkpointer, approval-bound
+  tools are excluded from the toolset (stateless assistant previews fail
+  closed).
+- One run per conversation at a time: a second concurrent request gets a 409,
+  so an approved call can never run twice.
+
+**Resume side (next run):**
+
+- The client continues the paused run by attaching `resume[]` to the next
+  request — natively on the AG-UI `RunAgentInput`, or as the legacy envelope's
+  `resume` field during the transition. Both carry AG-UI `ResumeEntry` shapes:
+  `interruptId`, `status: "resolved" | "cancelled"`, and a `payload` whose
+  `decision` is `"approve"` (or anything else, which counts as a rejection).
+- Every interrupt of the interrupted run must be covered — answered or
+  explicitly `cancelled`; an incomplete list is rejected with a 400 before the
+  run starts. The executed call is always the one from the checkpoint: client
+  supplied arguments are never executed.
+- A new user message instead of an answer abandons the paused calls (they are
+  answered as cancelled and never run).
 
 ## Transition and deploy order
 

@@ -260,6 +260,7 @@ def test_canvas_edit_accepts_whitelisted_html_in_old_and_new_text(
     )
 
     assert result.startswith(CONFIRMATION)
+    assert runtime.context.canvas_working is not None
     assert runtime.context.canvas_working.content == "Hello <u>there</u>"
 
 

@@ -771,4 +771,32 @@ describe("selection markdown", () => {
         const state = harness.current.toCanvasState();
         expect(state?.selection).toBe("Beta**\n\nTail");
     });
+
+    it("aligns the doc-end fallback with the line start", () => {
+        const harness = renderController();
+        harness.render(undefined);
+        act(() => {
+            harness.current.setMarkdown("- item text");
+            harness.current.setIsOpen(true);
+            const editor = harness.current.editor!;
+            const from = posOf(editor, "item");
+            editor.chain().setTextSelection({ from, to: editor.state.doc.content.size }).run();
+        });
+        const state = harness.current.toCanvasState();
+        expect(state?.selection).toBe("- item text");
+        expect(state?.cursor).toBe(0);
+    });
+
+    it("reports the cursor in code-point offsets for astral characters", () => {
+        const harness = renderController();
+        harness.render(undefined);
+        act(() => {
+            harness.current.setMarkdown("😀 cat");
+            harness.current.setIsOpen(true);
+            const editor = harness.current.editor!;
+            editor.chain().setTextSelection(posOf(editor, "cat")).run();
+        });
+        const state = harness.current.toCanvasState();
+        expect(state?.cursor).toBe(2);
+    });
 });

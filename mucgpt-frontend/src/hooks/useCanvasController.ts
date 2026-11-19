@@ -250,6 +250,14 @@ const lineStart = (markdown: string, offset: number): number => markdown.lastInd
 const selectionStartOffset = (markdown: string, editor: Editor, anchor: number, offset: number): number =>
     editor.state.doc.resolve(anchor).parentOffset === 0 ? lineStart(markdown, offset) : offset;
 
+/**
+ * UTF-16 string index converted to a code-point offset: the backend indexes
+ * the JSON-decoded markdown by code points (Python strings), while every
+ * frontend offset here is a UTF-16 unit. Astral characters (emoji) shift the
+ * two by one per occurrence before the position.
+ */
+const codePointOffset = (markdown: string, utf16Offset: number): number => [...markdown.slice(0, utf16Offset)].length;
+
 export function useCanvasController(conversationId: string | undefined, serverConversationId?: string): CanvasControllerInstance {
     // Assistant chats keep a prefixed local id for their chat history but talk
     // to the canvas endpoints with the plain backend conversation id.
@@ -522,7 +530,10 @@ export function useCanvasController(conversationId: string | undefined, serverCo
                 }
             };
             if (outsideTextblock(from) || outsideTextblock(to)) {
-                const fromOffset = from === 0 ? 0 : markdownOffsetAt(current, from);
+                const rawFrom = from === 0 ? 0 : markdownOffsetAt(current, from);
+                // A block content start slides to the line start, like the
+                // normal path, so the slice includes the block prefix there.
+                const fromOffset = rawFrom === null ? null : selectionStartOffset(markdown, current, from, rawFrom);
                 const toOffset = to >= doc.content.size ? markdown.length : markdownOffsetAt(current, to);
                 const sliceable = fromOffset !== null && toOffset !== null && fromOffset <= toOffset;
                 return sliceable ? markdown.slice(fromOffset, toOffset) : null;
@@ -571,7 +582,8 @@ export function useCanvasController(conversationId: string | undefined, serverCo
             if (cursorOffset !== null) {
                 // Selection-anchored cursors align with the selection slice
                 // (line start at a block content start).
-                cursor = caretPos === null ? selectionStartOffset(markdown, current, anchor, cursorOffset) : cursorOffset;
+                const aligned = caretPos === null ? selectionStartOffset(markdown, current, anchor, cursorOffset) : cursorOffset;
+                cursor = codePointOffset(markdown, aligned);
             }
         }
         const selection = isOpen ? getSelectionMarkdown() : null;

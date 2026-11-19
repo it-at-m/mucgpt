@@ -217,8 +217,7 @@ async def generate_chat_title(
     ) as observation:
         with propagate_attributes(
             user_id=hash_user_id(user_info.user_id),
-            tags=["chat-title"],
-            session_id=request.conversation_id,
+            tags=["chat-title", f"session_id:{request.conversation_id}"],
             trace_name="chat-title-generation",
         ):
             settings = get_settings()

@@ -279,7 +279,11 @@ async function generateAndStoreChatTitle(params: {
             currentTitle: stored?.name,
             previousTurn: params.previousTurn
         });
-        if (!chatName || chatName === stored?.name) {
+        const latestStored = await params.storageService.get(params.chatId);
+        if (latestStored?.manuallyRenamed) {
+            return;
+        }
+        if (!chatName || chatName === stored?.name || chatName === latestStored?.name) {
             return;
         }
         const renamed = await params.storageService.renameChat(params.chatId, chatName);
@@ -385,10 +389,16 @@ export const makeApiRequest = async (
             }
             if (serverConversationDeleted) {
                 const localId = assistant_id ? AssistantStorageService.GENERATE_BOT_CHAT_ID(assistant_id, conversationId) : conversationId;
+                let localConversationDeleted = false;
                 try {
                     await storageService.delete(localId);
+                    localConversationDeleted = true;
                 } catch (cleanupError) {
                     console.error("Failed to clean up the failed conversation locally:", cleanupError);
+                }
+                if (localConversationDeleted && activeChatRef.current === localId) {
+                    activeChatRef.current = undefined;
+                    dispatch({ type: "SET_ACTIVE_CHAT", payload: undefined });
                 }
             }
             try {

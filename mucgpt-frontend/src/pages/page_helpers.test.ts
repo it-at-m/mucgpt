@@ -154,8 +154,8 @@ describe("chat title generation", () => {
         expect(titleArgs.previousTurn).toBeUndefined();
 
         // The generated title replaces the placeholder name.
-        expect(storage.renameChat).toHaveBeenCalledWith("chat-1", "Generated title");
-        await vi.waitFor(() => expect(fetchHistory).toHaveBeenCalledTimes(2));
+        await vi.waitFor(() => expect(storage.renameChat).toHaveBeenCalledWith("chat-1", "Generated title"));
+        await vi.waitFor(() => expect(fetchHistory).toHaveBeenCalledTimes(3));
     });
 
     it("regenerates the title on the 3rd turn with the current title and previous turn", async () => {
@@ -184,7 +184,7 @@ describe("chat title generation", () => {
                 previousTurn: { query: "Second question", answer: "Second answer" }
             })
         );
-        expect(storage.renameChat).toHaveBeenCalledWith("chat-1", "Better title");
+        await vi.waitFor(() => expect(storage.renameChat).toHaveBeenCalledWith("chat-1", "Better title"));
     });
 
     it.each([[1], [3]])("does not regenerate the title on completed turn %s+1 (even turn)", async (priorTurnCount: number) => {

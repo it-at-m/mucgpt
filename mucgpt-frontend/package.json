@@ -120,5 +120,5 @@
         "watch": "tsc && vite build --watch"
     },
     "type": "module",
-    "version": "1.12.2"
+    "version": "1.13.0"
 }

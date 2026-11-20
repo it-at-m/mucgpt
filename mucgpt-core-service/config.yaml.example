@@ -46,6 +46,14 @@ ai_act_compliance_check_enabled: true
 # uses 4× this as request headroom). Both are exposed to the frontend via /config.
 canvas_content_max_chars: 262144
 canvas_editor_max_chars: 524288
+# HTML tag names allowed inside canvas markdown (besides GFM). GFM cannot express
+# underline, so <u>text</u> is allowed by default; the canvas tools reject every
+# other raw HTML tag and the frontend sanitizer escapes it to literal text.
+# Entries are lowercase plain tag names without attributes. The list may only
+# restrict the release's supported set — referencing an unsupported tag fails
+# startup (extending it requires a core+frontend release). An empty list
+# disables raw HTML in the canvas entirely.
+canvas_allowed_html_tags: ["u"]
 frontend_version: "unknown"
 assistant_version: "unknown"
 footer_link_url: ""

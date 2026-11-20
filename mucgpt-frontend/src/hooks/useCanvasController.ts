@@ -5,11 +5,13 @@ import type { Mark, Node as PMNode } from "@tiptap/pm/model";
 import { EditorState } from "@tiptap/pm/state";
 
 import type { CanvasState } from "../api/models";
+import { useConfigContext } from "../context/ConfigContext";
 import { useCanvasLimits } from "../components/Canvas/canvasLimits";
 import { loadCanvasRevisions, loadCanvasState, parseCanvasRevisions, type CanvasRevision, type CanvasRevisions } from "../service/canvasStorage";
 import type { CanvasStreamEvent } from "../utils/canvasStream";
 import { CANVAS_PERSISTENCE_RESET, persistentCaret, persistentSelection } from "../components/Canvas/canvasSelectionPersistence";
 import { canvasExtensions } from "../components/Canvas/canvasExtensions";
+import { effectiveAllowedTags, sanitizeCanvasMarkdown } from "../components/Canvas/canvasHtmlWhitelist";
 
 /**
  * Interface between the canvas UI and the chat page.
@@ -263,6 +265,16 @@ export function useCanvasController(conversationId: string | undefined, serverCo
     // to the canvas endpoints with the plain backend conversation id.
     const serverId = serverConversationId ?? conversationId;
     const limits = useCanvasLimits();
+    const { canvas_allowed_html_tags: allowedHtmlTags } = useConfigContext();
+    // Sanitize before the Markdown parser (html: true) sees the content: every
+    // tag outside the deployment allowlist becomes literal text. Config may
+    // only restrict; tags unknown to this frontend release are ignored.
+    const allowedTags = effectiveAllowedTags(allowedHtmlTags);
+    // Stable identity on purpose: the conversation-switch effect and the stream
+    // callbacks must not be torn down/re-run when the config loads.
+    const allowedTagsRef = useRef(allowedTags);
+    allowedTagsRef.current = allowedTags;
+    const sanitize = useCallback((md: string): string => sanitizeCanvasMarkdown(md, allowedTagsRef.current), []);
     const editor = useEditor(
         {
             extensions: canvasExtensions({ exportLimitChars: limits.editorLimitChars, warnChars: limits.warnChars }),
@@ -461,7 +473,7 @@ export function useCanvasController(conversationId: string | undefined, serverCo
                         if (pendingOpen && !cancelled) setIsOpen(true);
                         return;
                     }
-                    editor.commands.setContent(stored);
+                    editor.commands.setContent(sanitize(stored));
                     editor.view.dispatch(editor.state.tr.setMeta(CANVAS_PERSISTENCE_RESET, true));
                     setIsOpen(true);
                 } catch (error) {
@@ -546,9 +558,12 @@ export function useCanvasController(conversationId: string | undefined, serverCo
         return start <= offsets.endOffset ? markdown.slice(start, offsets.endOffset) : null;
     }, [getMarkdown]);
 
-    const setMarkdown = useCallback((md: string) => {
-        editorRef.current?.commands.setContent(md);
-    }, []);
+    const setMarkdown = useCallback(
+        (md: string) => {
+            editorRef.current?.commands.setContent(sanitize(md));
+        },
+        [sanitize]
+    );
 
     const toCanvasState = useCallback((): CanvasState | null => {
         // The canvas is always editable: whenever the document has content it is
@@ -595,34 +610,37 @@ export function useCanvasController(conversationId: string | undefined, serverCo
         };
     }, [isOpen, getMarkdown, getSelectionMarkdown, limits]);
 
-    const applyStreamEvent = useCallback((ev: CanvasStreamEvent) => {
-        const current = editorRef.current;
-        if (!current) return;
-        if (ev.state === "UPDATE") {
-            const revision = ev.metadata?.canvas_revision;
-            if (typeof revision === "number") {
-                if (revision <= lastStreamRevisionRef.current) return;
-                lastStreamRevisionRef.current = revision;
+    const applyStreamEvent = useCallback(
+        (ev: CanvasStreamEvent) => {
+            const current = editorRef.current;
+            if (!current) return;
+            if (ev.state === "UPDATE") {
+                const revision = ev.metadata?.canvas_revision;
+                if (typeof revision === "number") {
+                    if (revision <= lastStreamRevisionRef.current) return;
+                    lastStreamRevisionRef.current = revision;
+                }
+                current.commands.setContent(sanitize(ev.content));
+                // The agent replaced the document; a stale caret/selection there would be misleading.
+                current.view.dispatch(current.state.tr.setMeta(CANVAS_PERSISTENCE_RESET, true));
+            } else if (ev.state === "APPEND") {
+                const doc = current.state.doc;
+                const endPos = doc.content.size;
+                // Append inside the trailing paragraph when possible; when the document ends in a
+                // non-textblock (table, code block), insert after it as a new paragraph.
+                const insertPos = doc.resolve(Math.max(endPos - 1, 0)).parent.inlineContent ? endPos - 1 : endPos;
+                current
+                    .chain()
+                    .command(({ tr }) => {
+                        tr.setMeta(NO_HISTORY_META, false);
+                        return true;
+                    })
+                    .insertContentAt(insertPos, sanitize(ev.content))
+                    .run();
             }
-            current.commands.setContent(ev.content);
-            // The agent replaced the document; a stale caret/selection there would be misleading.
-            current.view.dispatch(current.state.tr.setMeta(CANVAS_PERSISTENCE_RESET, true));
-        } else if (ev.state === "APPEND") {
-            const doc = current.state.doc;
-            const endPos = doc.content.size;
-            // Append inside the trailing paragraph when possible; when the document ends in a
-            // non-textblock (table, code block), insert after it as a new paragraph.
-            const insertPos = doc.resolve(Math.max(endPos - 1, 0)).parent.inlineContent ? endPos - 1 : endPos;
-            current
-                .chain()
-                .command(({ tr }) => {
-                    tr.setMeta(NO_HISTORY_META, false);
-                    return true;
-                })
-                .insertContentAt(insertPos, ev.content)
-                .run();
-        }
-    }, []);
+        },
+        [sanitize]
+    );
 
     const subscribe = useCallback(
         (cb: (markdown: string) => void) => {

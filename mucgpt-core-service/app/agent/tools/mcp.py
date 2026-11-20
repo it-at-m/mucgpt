@@ -1,16 +1,12 @@
 import asyncio
 from typing import Any
 
-from httpx import Auth, Request
+from fastmcp import Client
+from fastmcp.client.elicitation import ElicitResult
+from fastmcp.client.transports import SSETransport, StreamableHttpTransport
+from httpx2 import Auth, Request
+from langchain.mcp import MCPAdapter, as_langchain_tool
 from langchain_core.tools import BaseTool
-from langchain_mcp_adapters.sessions import (
-    SSEConnection,
-    StreamableHttpConnection,
-    create_session,
-)
-from langchain_mcp_adapters.tools import convert_mcp_tool_to_langchain_tool
-from mcp import ClientSession
-from mcp.types import PaginatedRequestParams
 from mcp.types import Tool as MCPTool
 from redis.asyncio import Redis
 from redis.exceptions import LockError
@@ -26,9 +22,10 @@ from core.auth_models import AuthenticationResult
 from core.cache import RedisCache
 from core.logtools import getLogger
 
-# Mirrors langchain_mcp_adapters.tools.MAX_ITERATIONS: a safety bound on paginated
-# tools/list calls, not a real-world limit any MCP server is expected to hit.
-_MAX_LIST_TOOLS_ITERATIONS = 1000
+
+async def _decline_elicitation(*_args: Any, **_kwargs: Any) -> ElicitResult:
+    """Keep MCP elicitation out of the chat stream until the UI supports it."""
+    return ElicitResult(action="decline")
 
 
 class McpLoader:
@@ -40,7 +37,7 @@ class McpLoader:
     # with the wrong shape and crashing on the first read after a deploy. If this
     # cache's stored shape ever changes again, bump this suffix again rather than
     # reusing a prefix that may already hold a different payload shape.
-    _CACHE_PREFIX = "mcp_tools_raw"
+    _CACHE_PREFIX = "mcp_tools_raw_v2"
     _logger = getLogger(name="mucgpt-core-mcp-loader")
     _mcp_settings = get_mcp_settings()
 
@@ -101,7 +98,7 @@ class McpLoader:
             )
             if raw_dump is None:
                 return None
-            return McpLoader._wrap_raw_tools(raw_dump, user_info, sources)
+            return await McpLoader._wrap_raw_tools(raw_dump, user_info, sources)
 
         if not effective_force:
             cached = await cached_or_none()
@@ -126,20 +123,19 @@ class McpLoader:
                     f"with transport '{source_cfg.transport}'"
                 )
 
-                con = McpLoader._build_connection(source_id, source_cfg, user_info)
-                if con is None:
-                    # Unsupported transport: this source can never yield tools, so
-                    # count it as failed. Otherwise an all-unsupported config would
-                    # leave raw_by_source and failed_sources both empty, which takes
-                    # the "healthy load" branch below and caches an empty tool set
-                    # for the full TTL instead of the short-TTL failure path.
-                    failed_sources.add(source_id)
-                    continue
-
                 try:
-                    async with create_session(con) as session:
-                        await session.initialize()
-                        raw_tools = await McpLoader._list_all_tools_for_session(session)
+                    client = McpLoader._build_connection(
+                        source_id, source_cfg, user_info
+                    )
+                    if client is None:
+                        # Unsupported transport: this source can never yield tools, so
+                        # count it as failed rather than caching an empty healthy result.
+                        failed_sources.add(source_id)
+                        continue
+
+                    async with MCPAdapter(client) as adapter:
+                        live_tools = await adapter.list_tools()
+                    raw_tools = [McpLoader._to_raw_tool(tool) for tool in live_tools]
 
                     raw_by_source[source_id] = raw_tools
                     McpLoader._logger.debug(
@@ -190,7 +186,9 @@ class McpLoader:
                             "All MCP sources failed (%s); returning empty set without caching",
                             sorted(list(failed_sources)),
                         )
-                    return McpLoader._wrap_raw_tools(raw_by_source, user_info, sources)
+                    return await McpLoader._wrap_raw_tools(
+                        raw_by_source, user_info, sources
+                    )
 
                 # Healthy load: cache with full TTL
                 await RedisCache.set_object(
@@ -198,7 +196,9 @@ class McpLoader:
                     obj=raw_by_source,
                     ttl=McpLoader._mcp_settings.cache_ttl,
                 )
-                return McpLoader._wrap_raw_tools(raw_by_source, user_info, sources)
+                return await McpLoader._wrap_raw_tools(
+                    raw_by_source, user_info, sources
+                )
 
         except LockError:
             # Another worker is warming the cache. Wait for a bounded deadline
@@ -218,7 +218,7 @@ class McpLoader:
                 "Cache not ready after wait; performing uncached MCP tool load"
             )
             raw_by_source, _failed = await fetch_all_tools()
-            return McpLoader._wrap_raw_tools(raw_by_source, user_info, sources)
+            return await McpLoader._wrap_raw_tools(raw_by_source, user_info, sources)
         except Exception as e:
             McpLoader._logger.error(
                 "Failed to acquire/use MCP tools lock",
@@ -227,72 +227,19 @@ class McpLoader:
             raise
 
     @staticmethod
-    async def _list_all_tools_for_session(session: ClientSession) -> list[MCPTool]:
-        """List all available tools from an MCP session, following pagination.
-
-        Reimplemented locally (rather than importing langchain_mcp_adapters.tools's
-        underscore-private equivalent) since langchain-mcp-adapters is pinned with an
-        unbounded upper version (`>=0.2.2`) and private symbols aren't a stable contract.
-        """
-        current_cursor: str | None = None
-        all_tools: list[MCPTool] = []
-        iterations = 0
-
-        while True:
-            iterations += 1
-            if iterations > _MAX_LIST_TOOLS_ITERATIONS:
-                raise RuntimeError(
-                    f"Reached max of {_MAX_LIST_TOOLS_ITERATIONS} iterations while listing tools."
-                )
-
-            list_tools_page_result = await session.list_tools(
-                params=PaginatedRequestParams(cursor=current_cursor)
-                if current_cursor is not None
-                else None
-            )
-
-            if list_tools_page_result.tools:
-                all_tools.extend(list_tools_page_result.tools)
-
-            if not list_tools_page_result.nextCursor:
-                break
-
-            current_cursor = list_tools_page_result.nextCursor
-
-        return all_tools
-
-    @staticmethod
     def _build_connection(
         source_id: str,
         source_cfg: MCPSourceConfig,
         user_info: AuthenticationResult,
-    ) -> SSEConnection | StreamableHttpConnection | None:
-        """Build a connection dict with live headers/auth for a single MCP source.
+    ) -> Client | None:
+        """Build a live FastMCP client with headers/auth for one MCP source.
 
         This is the only place credentials are ever materialized. It must be called
         fresh for every use (discovery and tool invocation alike) and its result must
         never be cached, since it carries plaintext secrets (static headers, forwarded
         bearer tokens, auth overrides).
         """
-        if source_cfg.transport is MCPTransport.SSE:
-            con = SSEConnection(
-                transport=MCPTransport.SSE.value,
-                url=source_cfg.url,
-            )
-        elif source_cfg.transport is MCPTransport.STREAMABLE_HTTP:
-            con = StreamableHttpConnection(
-                transport=MCPTransport.STREAMABLE_HTTP.value,
-                url=source_cfg.url,
-            )
-        else:
-            McpLoader._logger.error(
-                f"Unsupported transport protocol {source_cfg.transport} "
-                f"for MCP source {source_id}"
-            )
-            return None
-
-        headers: dict[str, Any] = {}
-
+        headers: dict[str, str] = {}
         if source_cfg.headers:
             headers.update(
                 {
@@ -301,27 +248,60 @@ class McpLoader:
                     if header_name.lower() != "authorization"
                 }
             )
-        con["headers"] = headers
 
+        auth: McpBearerAuthProvider | None = None
         if source_cfg.forward_token:
             auth_override = (
                 source_cfg.forward_auth_override.get_secret_value()
                 if source_cfg.forward_auth_override
                 else None
             )
-
-            con["auth"] = McpBearerAuthProvider(
+            auth = McpBearerAuthProvider(
                 uid=user_info.user_id,
                 token=user_info.token,
                 auth_override=auth_override,
             )
+
+        if source_cfg.transport is MCPTransport.SSE:
+            transport = SSETransport(source_cfg.url, headers=headers)
+        elif source_cfg.transport is MCPTransport.STREAMABLE_HTTP:
+            transport = StreamableHttpTransport(source_cfg.url, headers=headers)
+        else:
+            McpLoader._logger.error(
+                f"Unsupported transport protocol {source_cfg.transport} "
+                f"for MCP source {source_id}"
+            )
+            return None
 
         header_names = sorted(headers.keys())
         McpLoader._logger.debug(
             f"Header names configured for source '{source_id}': {header_names}"
         )
 
-        return con
+        # Passing a handler prevents MCPAdapter from installing its default
+        # interrupt-based elicitation flow, which has no frontend counterpart yet.
+        return Client(transport, auth=auth, elicitation_handler=_decline_elicitation)
+
+    @staticmethod
+    def _to_raw_tool(tool: BaseTool) -> MCPTool:
+        """Extract only serializable tool metadata from a live LangChain tool."""
+        args_schema = tool.args_schema
+        if isinstance(args_schema, dict):
+            input_schema = args_schema
+        elif args_schema is not None:
+            model_json_schema = getattr(args_schema, "model_json_schema", None)
+            input_schema = (
+                model_json_schema()
+                if model_json_schema is not None
+                else args_schema.schema()  # ty: ignore[deprecated]  # Pydantic v1 compatibility.
+            )
+        else:
+            input_schema = {"type": "object", "properties": {}}
+        return MCPTool(
+            name=tool.name,
+            description=tool.description,
+            input_schema=input_schema,
+        )
 
     @staticmethod
     def _apply_tool_customizations(
@@ -364,7 +344,7 @@ class McpLoader:
         wrapped_tool.metadata = metadata
 
     @staticmethod
-    def _wrap_raw_tools(
+    async def _wrap_raw_tools(
         raw_by_source: dict[str, list[MCPTool]],
         user_info: AuthenticationResult,
         sources: dict[str, MCPSourceConfig],
@@ -386,27 +366,29 @@ class McpLoader:
 
             McpLoader._warn_about_unknown_overrides(source_id, source_cfg, raw_tools)
 
-            con = McpLoader._build_connection(source_id, source_cfg, user_info)
-            if con is None:
-                continue
+            try:
+                client = McpLoader._build_connection(source_id, source_cfg, user_info)
+                if client is None:
+                    continue
 
-            for raw_tool in raw_tools:
-                try:
-                    wrapped_tool = convert_mcp_tool_to_langchain_tool(
-                        session=None,
-                        tool=raw_tool,
-                        connection=con,
-                        server_name=source_id,
-                    )
-                    McpLoader._apply_tool_customizations(
-                        wrapped_tool, source_id, source_cfg
-                    )
-                    tools.append(wrapped_tool)
-                except Exception as e:
-                    McpLoader._logger.error(
-                        f"Failed to wrap cached MCP tool '{raw_tool.name}' from '{source_id}'",
-                        exc_info=e,
-                    )
+                async with client:
+                    for raw_tool in raw_tools:
+                        try:
+                            wrapped_tool = await as_langchain_tool(raw_tool, client)
+                            McpLoader._apply_tool_customizations(
+                                wrapped_tool, source_id, source_cfg
+                            )
+                            tools.append(wrapped_tool)
+                        except Exception as e:
+                            McpLoader._logger.error(
+                                f"Failed to wrap cached MCP tool '{raw_tool.name}' from '{source_id}'",
+                                exc_info=e,
+                            )
+            except Exception as e:
+                McpLoader._logger.error(
+                    f"Failed to open MCP connection for '{source_id}' while wrapping cached tools",
+                    exc_info=e,
+                )
 
         return tools
 

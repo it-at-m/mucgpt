@@ -126,10 +126,10 @@ uv run python scripts/licenses/collect_licenses.py
 
 Python service images generate the same `THIRD_PARTY_LICENSES/` layout at build
 time using `scripts/licenses/image_notices.py` (core, assistant and both
-migration images), which is shared with the collector. It is provided to the
-per-service build contexts as the `licensescripts` additional build context;
-direct builds need
-`podman build --build-context licensescripts=. -f mucgpt-core-service/Dockerfile mucgpt-core-service`.
+migration images), which is shared with the collector. Image builds use the
+repository root as their context so the license tooling is available to the
+classic Podman builder. A direct build can be run with
+`podman build -f mucgpt-core-service/Dockerfile .`.
 The frontend image generates the notices of its bundled (production) npm
 dependencies in the builder stage and ships them under
 `/usr/share/licenses/mucgpt-frontend/THIRD_PARTY_LICENSES/` (not web-served).

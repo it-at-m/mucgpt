@@ -189,10 +189,8 @@ services:
   ##############################
   core-service:
     build:
-      context: ../mucgpt-core-service
-      dockerfile: Dockerfile
-      additional_contexts:
-        licensescripts: ..
+      context: ..
+      dockerfile: mucgpt-core-service/Dockerfile
       args:
         - HTTPS_PROXY=${HTTPS_PROXY}
     env_file:
@@ -228,10 +226,8 @@ services:
 
   core-migrations:
     build:
-      context: ../mucgpt-core-service
-      dockerfile: Dockerfile.migrations
-      additional_contexts:
-        licensescripts: ..
+      context: ..
+      dockerfile: mucgpt-core-service/Dockerfile.migrations
       args:
         - HTTPS_PROXY=${HTTPS_PROXY}
     depends_on:
@@ -249,10 +245,8 @@ services:
 
   assistant-migrations:
     build:
-      context: ../mucgpt-assistant-service
-      dockerfile: Dockerfile.migrations
-      additional_contexts:
-        licensescripts: ..
+      context: ..
+      dockerfile: mucgpt-assistant-service/Dockerfile.migrations
       args:
         - HTTPS_PROXY=${HTTPS_PROXY}
     depends_on:
@@ -269,10 +263,8 @@ services:
 
   assistant-service:
     build:
-      context: ../mucgpt-assistant-service
-      dockerfile: Dockerfile
-      additional_contexts:
-        licensescripts: ..
+      context: ..
+      dockerfile: mucgpt-assistant-service/Dockerfile
       args:
         - HTTPS_PROXY=${HTTPS_PROXY}
     depends_on:
@@ -306,10 +298,8 @@ services:
 
   frontend:
     build:
-      context: ../mucgpt-frontend
-      dockerfile: Dockerfile
-      additional_contexts:
-        licensescripts: ..
+      context: ..
+      dockerfile: mucgpt-frontend/Dockerfile
       args:
         - HTTP_PROXY=${HTTP_PROXY:-}
         - HTTPS_PROXY=${HTTPS_PROXY}

@@ -22,7 +22,7 @@ WORKDIR /build
 # Use the npm version bundled with Node 24 for consistency with local and CI environments
 
 # Copy only dependency files first for better caching
-COPY package*.json .npmrc ./
+COPY mucgpt-frontend/package*.json mucgpt-frontend/.npmrc ./
 
 # Install dependencies in a separate layer that's cached unless dependencies change
 RUN --mount=type=cache,target=/root/.npm \
@@ -31,19 +31,19 @@ RUN --mount=type=cache,target=/root/.npm \
 # Third-party license notices for the shipped (production) dependencies.
 # python3 is only needed in the builder stage.
 RUN apk add --no-cache python3
-COPY --from=licensescripts scripts/licenses/*.py pyproject.toml /tmp/licenses/
+COPY scripts/licenses/*.py pyproject.toml /tmp/licenses/
 RUN python3 -c "import tomllib" && \
     MUCGPT_LICENSE_POLICY=/tmp/licenses/pyproject.toml MUCGPT_FRONTEND_DIR=/build \
     python3 /tmp/licenses/collect_licenses.py --targets mucgpt-frontend --output /tmp/notices
 
 # Copy build configuration files (these change less frequently than source)
-COPY tsconfig.json vite.config.ts index.html ./
+COPY mucgpt-frontend/tsconfig.json mucgpt-frontend/vite.config.ts mucgpt-frontend/index.html ./
 
 # Copy public assets (usually static)
-COPY public/ ./public/
+COPY mucgpt-frontend/public/ ./public/
 
 # Copy source code last (changes most frequently)
-COPY src/ ./src/
+COPY mucgpt-frontend/src/ ./src/
 
 # Build the application with cache mount for faster rebuilds
 RUN --mount=type=cache,target=/build/node_modules/.vite \
@@ -74,6 +74,6 @@ LABEL org.opencontainers.image.authors='Landeshauptstadt München <opensource@mu
 
 
 # Copy custom nginx configurations
-COPY docker/nginx/*.conf "${NGINX_DEFAULT_CONF_PATH}"
+COPY mucgpt-frontend/docker/nginx/*.conf "${NGINX_DEFAULT_CONF_PATH}"
 
 CMD nginx -g "daemon off;"

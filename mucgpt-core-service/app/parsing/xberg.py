@@ -1,4 +1,5 @@
 import httpx
+from anyio import fail_after, to_thread
 from fastapi import UploadFile
 
 from config.settings import get_settings
@@ -18,6 +19,11 @@ class XbergBackend(ParserBackend):
         logger.info(f"XbergBackend configured with URL {settings.xberg_url}")
 
     async def parse(self, file: UploadFile) -> str:
+        parser_timeout = get_settings().documents.parser_timeout
+        with fail_after(parser_timeout):
+            return await self._parse(file)
+
+    async def _parse(self, file: UploadFile) -> str:
         file_bytes = await file.read()
 
         # Use a list-of-tuples for multipart fields so repeated "files" is supported.
@@ -47,21 +53,24 @@ class XbergBackend(ParserBackend):
 
         response.raise_for_status()
 
-        payload = response.json()
+        payload = await to_thread.run_sync(response.json, abandon_on_cancel=True)
+        return await to_thread.run_sync(_extract_text, payload, abandon_on_cancel=True)
 
-        # Xberg >= 1.0 returns {"results": [...], "errors": [...], "summary": {...}}.
-        if isinstance(payload, dict):
-            results = payload.get("results", [])
-            errors = payload.get("errors") or []
-            if errors:
-                logger.warning("Xberg reported extraction errors: %s", errors)
-        elif isinstance(payload, list):
-            # Backward compatibility with older list-shaped responses.
-            results = payload
-        else:
-            logger.warning(
-                "Unexpected Xberg response shape: %s", type(payload).__name__
-            )
-            results = []
 
-        return "\n\n".join(r["content"] for r in results if r.get("content"))
+def _extract_text(payload: object) -> str:
+    """Accept both Xberg response formats without blocking the request deadline."""
+
+    # Xberg >= 1.0 returns {"results": [...], "errors": [...], "summary": {...}}.
+    if isinstance(payload, dict):
+        results = payload.get("results", [])
+        errors = payload.get("errors") or []
+        if errors:
+            logger.warning("Xberg reported extraction errors: %s", errors)
+    elif isinstance(payload, list):
+        # Backward compatibility with older list-shaped responses.
+        results = payload
+    else:
+        logger.warning("Unexpected Xberg response shape: %s", type(payload).__name__)
+        results = []
+
+    return "\n\n".join(r["content"] for r in results if r.get("content"))

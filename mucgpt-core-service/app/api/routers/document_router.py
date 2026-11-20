@@ -10,6 +10,7 @@ from core.auth_models import AuthenticationResult
 from core.document_service import (
     DocumentIngestionService,
     DocumentLibraryService,
+    DocumentOperationTimeoutError,
     DocumentProcessingDisabledError,
     DocumentProcessingError,
     DocumentSizeExceededError,
@@ -62,6 +63,7 @@ async def list_documents(
     responses={
         404: {"description": "Document unavailable"},
         409: {"description": "Document busy or still processing"},
+        503: {"description": "Document deletion timed out; retry deletion"},
         500: {"description": "Document cleanup failed; deletion can be retried"},
     },
 )
@@ -75,6 +77,10 @@ async def delete_document(
         raise HTTPException(status_code=404, detail=str(exc)) from exc
     except DocumentProcessingError as exc:
         raise HTTPException(status_code=409, detail=str(exc)) from exc
+    except DocumentOperationTimeoutError as exc:
+        raise HTTPException(
+            status_code=503, detail="Document deletion timed out. Retry deletion."
+        ) from exc
     except Exception as exc:
         logger.exception("Document library deletion failed")
         raise HTTPException(
@@ -129,6 +135,10 @@ async def upload_document(
     except DocumentProcessingDisabledError as exc:
         raise HTTPException(
             status_code=503, detail="Document processing is not enabled."
+        ) from exc
+    except DocumentOperationTimeoutError as exc:
+        raise HTTPException(
+            status_code=504, detail="Document processing timed out."
         ) from exc
     except httpx.TimeoutException as exc:
         raise HTTPException(

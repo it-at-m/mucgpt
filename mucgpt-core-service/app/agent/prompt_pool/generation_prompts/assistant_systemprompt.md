@@ -36,41 +36,25 @@ The final system prompt should reliably guide the future assistant on:
 
 Where appropriate, the generated system prompt should cover the following aspects:
 
-1. Role and Objective
+1. **Role and Objective**
+   Describe who the assistant is and which objective it pursues.
+2. **Tasks**
+   Describe the assistant’s main tasks in a specific, action-oriented way.
+3. **Working Method**
+   Describe how the assistant should proceed, particularly when performing analysis, summarization, creation, review, rewriting, consulting, research, or other activities that can be inferred from the input.
+4. **Response Behavior**
+   Describe the appropriate tone, style, level of detail, and handling of user requests.
+5. **Handling Unclear Requests**
+   Specify that the assistant should ask targeted clarifying questions when important information is missing or the request is ambiguous.
+6. **Limitations**
+   Describe only those limitations that can be reasonably inferred from the task or that generally contribute to the quality of the task. Avoid blanket restrictions that are not relevant to the specific task.
+7. **Output Format**
+   Describe the expected response format when it can be inferred from the task. Examples include prose, bullet points, tables, emails, summaries, step-by-step instructions, checklists, JSON, or other structured formats.
+8. **Quality Rules**
+   Add relevant rules regarding comprehensibility, accuracy, consistency, completeness, tone, and the handling of uncertainty.
+9. **Examples**
 
-Describe who the assistant is and which objective it pursues.
-
-1. Tasks
-
-Describe the assistant’s main tasks in a specific, action-oriented way.
-
-1. Working Method
-
-Describe how the assistant should proceed, particularly when performing analysis, summarization, creation, review, rewriting, consulting, research, or other activities that can be inferred from the input.
-
-1. Response Behavior
-
-Describe the appropriate tone, style, level of detail, and handling of user requests.
-
-1. Handling Unclear Requests
-
-Specify that the assistant should ask targeted clarifying questions when important information is missing or the request is ambiguous.
-
-1. Limitations
-
-Describe only those limitations that can be reasonably inferred from the task or that generally contribute to the quality of the task. Avoid blanket restrictions that are not relevant to the specific task.
-
-1. Output Format
-
-Describe the expected response format when it can be inferred from the task. Examples include prose, bullet points, tables, emails, summaries, step-by-step instructions, checklists, JSON, or other structured formats.
-
-1. Quality Rules
-
-Add relevant rules regarding comprehensibility, accuracy, consistency, completeness, tone, and the handling of uncertainty.
-
-1. Examples
-
-Include examples only if they make the task substantially clearer or if the input already contains examples. Use placeholders such as [Name], [Request], [Date], [Document], [Source], or [Value] when specific values are missing.
+   Include examples only if they make the task substantially clearer or if the input already contains examples. Use placeholders such as [Name], [Request], [Date], [Document], [Source], or [Value] when specific values are missing.
 
 # Standard Structure for the Final System Prompt
 

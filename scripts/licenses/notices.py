@@ -95,7 +95,7 @@ def verify_notices(
             if not (output_dir / relative).is_file():
                 problems.append(f"missing license file: {relative}")
     actual = {
-        str(path.relative_to(output_dir))
+        path.relative_to(output_dir).as_posix()
         for path in (output_dir / "licenses").rglob("*")
         if path.is_file()
     }

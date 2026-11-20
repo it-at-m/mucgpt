@@ -272,12 +272,13 @@ const Chat = () => {
             streamContentLimit: canvasLimits.editorLimitChars,
             onStreamEvent: event => {
                 const c = canvasRef.current;
-                if (!runHadCanvasActivity && event.state === "STARTED") {
+                if (!runHadCanvasActivity) {
                     runHadCanvasActivity = true;
-                    // Pre-edit snapshot exactly when the agent starts writing (the
-                    // editor still holds the pre-edit content); runs without canvas
-                    // activity stay out of the revision rings entirely.
-                    if (c.getMarkdown().trim()) c.snapshot("agent");
+                    // Pending review changes are accepted when the agent actually
+                    // writes again; the settled document becomes the diff baseline
+                    // of this turn (runs without canvas activity leave the pending
+                    // review and the revision rings untouched).
+                    c.beginAgentCanvasWrite();
                     // The canvas is always editable: an agent change while the
                     // panel is closed opens the view so the user follows along.
                     if (!c.isOpen) c.setIsOpen(true);
@@ -294,7 +295,7 @@ const Chat = () => {
             },
             onRunFinished: () => {
                 const c = canvasRef.current;
-                if (runHadCanvasActivity && c.isOpen && c.getMarkdown().trim()) c.snapshot("agent");
+                if (runHadCanvasActivity) c.finishAgentCanvasWrite();
                 runHadCanvasActivity = false;
                 c.unlock();
             }

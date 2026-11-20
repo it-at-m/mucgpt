@@ -8,6 +8,7 @@ import { Editor } from "@tiptap/core";
 import { canvasExtensions } from "../components/Canvas/canvasExtensions";
 import { caretMarkdownOffset, markdownStorage, tableSelectionMarkdownAt, useCanvasController, type CanvasControllerInstance } from "./useCanvasController";
 import { CANVAS_STREAM_CONTENT_LIMIT, parseCanvasStreamEvent } from "../utils/canvasStream";
+import { insertionHoverClass } from "../components/Canvas/canvasDiffReview";
 import { DEFAULT_APP_CONFIG } from "../constants";
 import type { CanvasRevisions } from "../service/canvasStorage";
 
@@ -920,5 +921,373 @@ describe("selection markdown and caret offsets with whitelisted HTML", () => {
         const markdown = harness.current.getMarkdown();
         expect(offset).toBe(markdown.indexOf("sser Welt"));
         expect(markdown.slice(offset!, offset! + 3)).toBe("sse");
+    });
+});
+
+describe("agent change review", () => {
+    const runCanvasTurn = (harness: ReturnType<typeof renderController>, before: string, after: string) => {
+        act(() => {
+            harness.current.setMarkdown(before);
+            harness.current.beginRun();
+            harness.current.beginAgentCanvasWrite();
+            harness.current.applyStreamEvent({ state: "UPDATE", content: after, metadata: { canvas_revision: 1 } });
+            harness.current.finishAgentCanvasWrite();
+        });
+    };
+
+    const reviewElement = (harness: ReturnType<typeof renderController>, action: "accept" | "reject") =>
+        harness.current.editor!.view.dom.querySelector(`[data-canvas-review-action="${action}"]`) as HTMLElement | null;
+
+    it("shows pending changes after a canvas turn and keeps the document semantic", () => {
+        const harness = renderController();
+        harness.render(undefined);
+
+        runCanvasTurn(harness, "Der Hund läuft schnell.", "Der Hund rennt sehr schnell.");
+
+        // Most of the sentence changed: one decision between the complete strings.
+        expect(harness.current.pendingChangeCount).toBe(1);
+        // Review markup is view-only: the agent and snapshots only ever see the new text.
+        expect(harness.current.getMarkdown()).toBe("Der Hund rennt sehr schnell.");
+        expect(harness.current.toCanvasState()?.content).toBe("Der Hund rennt sehr schnell.");
+        // One baseline revision (the pre-turn document) is stored per turn.
+        expect(harness.current.revisions.auto).toHaveLength(1);
+        expect(reviewElement(harness, "accept")).not.toBeNull();
+        expect(reviewElement(harness, "reject")).not.toBeNull();
+    });
+
+    it("auto-accepts pending changes when the agent writes again", () => {
+        const harness = renderController();
+        harness.render(undefined);
+        runCanvasTurn(harness, "Alt", "Neu");
+
+        act(() => {
+            harness.current.beginRun();
+            harness.current.beginAgentCanvasWrite();
+        });
+        expect(harness.current.pendingChangeCount).toBe(0);
+
+        act(() => {
+            harness.current.applyStreamEvent({ state: "UPDATE", content: "Noch neuer", metadata: { canvas_revision: 1 } });
+            harness.current.finishAgentCanvasWrite();
+        });
+        expect(harness.current.pendingChangeCount).toBe(1);
+        expect(harness.current.getMarkdown()).toBe("Noch neuer");
+        expect(harness.current.revisions.auto).toHaveLength(2);
+    });
+
+    it("leaves pending changes alone when the run does not touch the canvas", () => {
+        const harness = renderController();
+        harness.render(undefined);
+        runCanvasTurn(harness, "Alt", "Neu");
+
+        act(() => {
+            harness.current.beginRun();
+            harness.current.unlock();
+        });
+        expect(harness.current.pendingChangeCount).toBe(1);
+    });
+
+    it("accepts a change by clicking its green markup", () => {
+        const harness = renderController();
+        harness.render(undefined);
+        runCanvasTurn(harness, "Alt", "Neu");
+
+        act(() => {
+            reviewElement(harness, "accept")!.click();
+        });
+        expect(harness.current.pendingChangeCount).toBe(0);
+        expect(harness.current.getMarkdown()).toBe("Neu");
+        expect(reviewElement(harness, "accept")).toBeNull();
+    });
+
+    it("rejects a change by clicking its red strikethrough markup", () => {
+        const harness = renderController();
+        harness.render(undefined);
+        runCanvasTurn(harness, "Der Hund läuft schnell.", "Der Hund rennt sehr schnell.");
+
+        act(() => {
+            reviewElement(harness, "reject")!.click();
+        });
+        expect(harness.current.pendingChangeCount).toBe(0);
+        expect(harness.current.getMarkdown()).toBe("Der Hund läuft schnell.");
+    });
+
+    it("auto-accepts only the edited phrase hunk and rejects another independently", () => {
+        const harness = renderController();
+        harness.render(undefined);
+        runCanvasTurn(harness, "Der Hund läuft schnell und bellt laut.", "Der Hund rennt schnell und bellt leise.");
+        expect(harness.current.pendingChangeCount).toBe(2);
+
+        act(() => {
+            const editor = harness.current.editor!;
+            editor
+                .chain()
+                .insertContentAt(posOf(editor, "rennt") + 2, "X")
+                .run();
+        });
+        expect(harness.current.pendingChangeCount).toBe(1);
+        expect(harness.current.getMarkdown()).toContain("reXnnt");
+
+        act(() => {
+            reviewElement(harness, "reject")!.click();
+        });
+        expect(harness.current.pendingChangeCount).toBe(0);
+        expect(harness.current.getMarkdown()).toBe("Der Hund reXnnt schnell und bellt laut.");
+    });
+
+    it("rejects all changes by restoring the whole pre-turn document", () => {
+        const harness = renderController();
+        harness.render(undefined);
+        runCanvasTurn(harness, "Erster Absatz\n\nZweiter Absatz", "Geändert\n\nZweiter Absatz\n\nNeu");
+
+        act(() => {
+            harness.current.rejectAllChanges();
+        });
+        expect(harness.current.pendingChangeCount).toBe(0);
+        expect(harness.current.getMarkdown()).toBe("Erster Absatz\n\nZweiter Absatz");
+    });
+
+    it("renders and resolves block-level changes", () => {
+        const harness = renderController();
+        harness.render(undefined);
+        const table = "| A |\n| --- |\n| 1 |";
+
+        runCanvasTurn(harness, "Text", `Text\n\n${table}`);
+        expect(harness.current.pendingChangeCount).toBe(1);
+        act(() => {
+            reviewElement(harness, "accept")!.click();
+        });
+        expect(harness.current.pendingChangeCount).toBe(0);
+        expect(harness.current.getMarkdown()).toContain("| A |");
+
+        runCanvasTurn(harness, `Text\n\n${table}`, "Text");
+        expect(harness.current.pendingChangeCount).toBe(1);
+        act(() => {
+            reviewElement(harness, "reject")!.click();
+        });
+        expect(harness.current.pendingChangeCount).toBe(0);
+        expect(harness.current.getMarkdown()).toContain("| A |");
+    });
+
+    it("rejects all changes without discarding edits outside the changed blocks", () => {
+        const harness = renderController();
+        harness.render(undefined);
+        runCanvasTurn(harness, "Erster Absatz\n\nZweiter Absatz", "Erster Absatz\n\nGeänderter Absatz");
+
+        act(() => {
+            const editor = harness.current.editor!;
+            editor.chain().insertContentAt(3, "X").run();
+        });
+        expect(harness.current.pendingChangeCount).toBe(1);
+
+        act(() => {
+            harness.current.rejectAllChanges();
+        });
+        expect(harness.current.getMarkdown()).toBe("ErXster Absatz\n\nZweiter Absatz");
+    });
+
+    it("auto-approves the initial write into a canvas without text", () => {
+        const harness = renderController();
+        harness.render(undefined);
+
+        act(() => {
+            harness.current.beginAgentCanvasWrite();
+            harness.current.applyStreamEvent({ state: "UPDATE", content: "Erster Agententwurf", metadata: { canvas_revision: 1 } });
+            harness.current.finishAgentCanvasWrite();
+        });
+
+        expect(harness.current.pendingChangeCount).toBe(0);
+        expect(harness.current.getMarkdown()).toBe("Erster Agententwurf");
+        expect(harness.current.editor!.view.dom.querySelector("[data-canvas-review-change]")).toBeNull();
+        // The new document is kept as the recovery revision (empty-server reload fallback).
+        expect(harness.current.revisions.auto).toHaveLength(1);
+        expect(JSON.stringify(harness.current.revisions.auto[0].doc_json)).toContain("Erster Agententwurf");
+    });
+
+    it("also auto-approves the initial write when the canvas only holds whitespace", () => {
+        const harness = renderController();
+        harness.render(undefined);
+
+        act(() => {
+            harness.current.setMarkdown("   ");
+            harness.current.beginAgentCanvasWrite();
+            harness.current.applyStreamEvent({ state: "UPDATE", content: "Erster Agententwurf", metadata: { canvas_revision: 1 } });
+            harness.current.finishAgentCanvasWrite();
+        });
+
+        expect(harness.current.pendingChangeCount).toBe(0);
+        expect(harness.current.getMarkdown()).toBe("Erster Agententwurf");
+    });
+
+    it("does not add a revision or review when a restore restores the current document", () => {
+        const harness = renderController();
+        harness.render(undefined);
+        act(() => {
+            harness.current.setMarkdown("Version A");
+            harness.current.snapshot("manual");
+        });
+        const revision = harness.current.revisions.manual[0].revision;
+
+        act(() => {
+            harness.current.restore(revision);
+        });
+        expect(harness.current.pendingChangeCount).toBe(0);
+        expect(harness.current.revisions.auto).toHaveLength(0);
+    });
+
+    it("accepts all changes without touching the document", () => {
+        const harness = renderController();
+        harness.render(undefined);
+        runCanvasTurn(harness, "Alt", "Neu");
+
+        act(() => {
+            harness.current.acceptAllChanges();
+        });
+        expect(harness.current.pendingChangeCount).toBe(0);
+        expect(harness.current.getMarkdown()).toBe("Neu");
+    });
+
+    it("auto-accepts a change the user edits and keeps unrelated changes pending", () => {
+        const harness = renderController();
+        harness.render(undefined);
+        runCanvasTurn(harness, "Erster Absatz\n\nZweiter Absatz", "Erster Absatz\n\nGeänderter Absatz");
+        expect(harness.current.pendingChangeCount).toBe(1);
+
+        act(() => {
+            const editor = harness.current.editor!;
+            editor.chain().insertContentAt(3, "X").run();
+        });
+        // Editing the unchanged block must not settle the pending change.
+        expect(harness.current.pendingChangeCount).toBe(1);
+
+        act(() => {
+            const editor = harness.current.editor!;
+            editor
+                .chain()
+                .insertContentAt(posOf(editor, "Geänderter") + 2, "Y")
+                .run();
+        });
+        expect(harness.current.pendingChangeCount).toBe(0);
+        expect(harness.current.getMarkdown()).toContain("GeYänderter");
+    });
+
+    it("reviews and rejects only the changed bullet of a list", () => {
+        const harness = renderController();
+        harness.render(undefined);
+        runCanvasTurn(harness, "- Der Hund läuft schnell\n- Zweiter Punkt", "- Der Hund rennt schnell\n- Zweiter Punkt");
+
+        expect(harness.current.pendingChangeCount).toBe(1);
+        act(() => {
+            reviewElement(harness, "reject")!.click();
+        });
+        expect(harness.current.pendingChangeCount).toBe(0);
+        expect(harness.current.getMarkdown()).toBe("- Der Hund läuft schnell\n- Zweiter Punkt");
+    });
+
+    it("accepts an inserted bullet without touching the rest of the list", () => {
+        const harness = renderController();
+        harness.render(undefined);
+        runCanvasTurn(harness, "- A\n- B", "- A\n- Neuer Punkt\n- B");
+        expect(harness.current.pendingChangeCount).toBe(1);
+
+        act(() => {
+            reviewElement(harness, "accept")!.click();
+        });
+        expect(harness.current.pendingChangeCount).toBe(0);
+        expect(harness.current.getMarkdown()).toContain("Neuer Punkt");
+        expect(harness.current.getMarkdown()).toContain("- A");
+        expect(harness.current.getMarkdown()).toContain("- B");
+    });
+
+    it("renders the removed content formatted and activates it via keyboard", () => {
+        const harness = renderController();
+        harness.render(undefined);
+        runCanvasTurn(harness, "- Erster Punkt\n- Zweiter Punkt", "Ersetzt");
+
+        expect(harness.current.pendingChangeCount).toBe(1);
+        // The red removal box renders the real list structure, not plain text.
+        const redBox = harness.current.editor!.view.dom.querySelector('[data-canvas-review-action="reject"][role="button"]');
+        expect(redBox?.querySelector("ul li")).not.toBeNull();
+
+        act(() => {
+            redBox!.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true }));
+        });
+        expect(harness.current.pendingChangeCount).toBe(0);
+        expect(harness.current.getMarkdown()).toBe("- Erster Punkt\n- Zweiter Punkt");
+    });
+
+    it("highlights all green parts of a change on hover", () => {
+        const harness = renderController();
+        harness.render(undefined);
+        runCanvasTurn(harness, "Eins", "Eins\n\nZwei\n\nDrei");
+        expect(harness.current.pendingChangeCount).toBe(1);
+
+        const greenParts = Array.from(harness.current.editor!.view.dom.querySelectorAll<HTMLElement>('[data-canvas-review-action="accept"]:not(button)'));
+        expect(greenParts.length).toBeGreaterThan(1);
+
+        act(() => {
+            greenParts[0].dispatchEvent(new MouseEvent("mouseover", { bubbles: true }));
+        });
+        const hovered = greenParts.filter(element => element.classList.contains(insertionHoverClass));
+        expect(hovered).toHaveLength(greenParts.length);
+
+        act(() => {
+            greenParts[0].dispatchEvent(new MouseEvent("mouseout", { bubbles: true }));
+        });
+        expect(greenParts.some(element => element.classList.contains(insertionHoverClass))).toBe(false);
+    });
+
+    it("uses context-aware control tooltips per change kind", () => {
+        const harness = renderController();
+        harness.render(undefined);
+
+        // Delete-only: accepting removes the old text, rejecting keeps it.
+        runCanvasTurn(harness, "Erster Absatz\n\nZweiter Absatz", "Erster Absatz");
+        const redBox = harness.current.editor!.view.dom.querySelector('[data-canvas-review-action="reject"][role="button"]') as HTMLElement;
+        expect(redBox.title).toContain("canvas.review.keep_old:");
+        expect(redBox.title).toContain("Zweiter Absatz");
+        const check = harness.current.editor!.view.dom.querySelector('[data-canvas-review-action="accept"]') as HTMLElement;
+        expect(check.title).toContain("canvas.review.remove_old:");
+        expect(check.title).toContain("Zweiter Absatz");
+
+        act(() => {
+            harness.current.rejectAllChanges();
+        });
+
+        // Insert-only: rejecting removes the new text, accepting keeps it; the
+        // green block announces the same acceptance.
+        runCanvasTurn(harness, "Erster Absatz", "Erster Absatz\n\nNeuer Absatz");
+        const cross = harness.current.editor!.view.dom.querySelector('[data-canvas-review-action="reject"]') as HTMLElement;
+        expect(cross.title).toContain("canvas.review.remove_new:");
+        expect(cross.title).toContain("Neuer Absatz");
+        const acceptElements = Array.from(harness.current.editor!.view.dom.querySelectorAll<HTMLElement>('[data-canvas-review-action="accept"]'));
+        expect(acceptElements.length).toBeGreaterThan(1);
+        for (const element of acceptElements) {
+            expect(element.title).toContain("canvas.review.accept_new:");
+            expect(element.title).toContain("Neuer Absatz");
+        }
+    });
+
+    it("reviews a version restore and reverts it when rejected", () => {
+        const harness = renderController();
+        harness.render(undefined);
+        act(() => {
+            harness.current.setMarkdown("Version A");
+            harness.current.snapshot("manual");
+            harness.current.setMarkdown("Version B");
+        });
+        const revision = harness.current.revisions.manual[0].revision;
+
+        act(() => {
+            harness.current.restore(revision);
+        });
+        expect(harness.current.getMarkdown()).toBe("Version A");
+        expect(harness.current.pendingChangeCount).toBe(1);
+
+        act(() => {
+            harness.current.rejectAllChanges();
+        });
+        expect(harness.current.getMarkdown()).toBe("Version B");
+        expect(harness.current.pendingChangeCount).toBe(0);
     });
 });

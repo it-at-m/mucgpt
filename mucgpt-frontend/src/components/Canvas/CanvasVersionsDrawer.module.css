@@ -87,3 +87,73 @@
     justify-content: flex-end;
     padding: 0 var(--spacingHorizontalS) var(--spacingVerticalS);
 }
+
+.diffCaption {
+    margin: var(--spacingVerticalS) var(--spacingHorizontalS) 0;
+    color: var(--colorNeutralForeground3);
+    font-size: var(--fontSizeBase200);
+    line-height: var(--lineHeightBase200);
+}
+
+.diff {
+    margin: var(--spacingVerticalS);
+    padding: var(--spacingVerticalS) var(--spacingHorizontalS);
+    background-color: var(--colorNeutralBackground2);
+    border: 1px solid var(--colorNeutralStroke3);
+    border-radius: var(--borderRadiusMedium);
+    font-size: var(--fontSizeBase300);
+    line-height: var(--lineHeightBase300);
+    max-height: 140px;
+    overflow-y: auto;
+    overflow-wrap: break-word;
+}
+
+.diffEqual {
+    color: var(--colorNeutralForeground2);
+    white-space: pre-wrap;
+}
+
+.diffInsertion {
+    background-color: var(--colorStatusSuccessBackground2);
+    border-radius: var(--borderRadiusSmall);
+    white-space: pre-wrap;
+}
+
+.diffDeletion {
+    background-color: var(--colorStatusDangerBackground2);
+    border-radius: var(--borderRadiusSmall);
+    color: var(--colorStatusDangerForeground1);
+    text-decoration: line-through;
+    white-space: pre-wrap;
+}
+
+/* Formatted fragment content inside diff entries. */
+.diff :global(p) {
+    margin: 0 0 var(--spacingVerticalXXS);
+}
+
+.diff :global(ul),
+.diff :global(ol) {
+    margin: var(--spacingVerticalXXS) 0;
+    padding-inline-start: var(--spacingHorizontalL);
+}
+
+.diff :global(table) {
+    border-collapse: collapse;
+    margin: var(--spacingVerticalXXS) 0;
+}
+
+.diff :global(th),
+.diff :global(td) {
+    border: 1px solid var(--colorNeutralStroke1);
+    padding: 0 var(--spacingHorizontalXXS);
+    text-align: start;
+}
+
+.diff :global(h1),
+.diff :global(h2),
+.diff :global(h3) {
+    font-size: var(--fontSizeBase300);
+    font-weight: var(--fontWeightSemibold);
+    margin: var(--spacingVerticalXXS) 0;
+}

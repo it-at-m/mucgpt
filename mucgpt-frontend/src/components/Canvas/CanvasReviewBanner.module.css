@@ -1,0 +1,28 @@
+.banner {
+    margin: 0;
+}
+
+.body {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacingVerticalXXS);
+    min-width: 0;
+}
+
+.title {
+    font-weight: var(--fontWeightSemibold);
+}
+
+.hint {
+    color: var(--colorNeutralForeground2);
+    font-size: var(--fontSizeBase200);
+    line-height: var(--lineHeightBase200);
+}
+
+.actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacingHorizontalXS);
+    align-items: center;
+    margin-top: var(--spacingVerticalXS);
+}

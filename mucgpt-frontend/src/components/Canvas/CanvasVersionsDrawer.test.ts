@@ -10,6 +10,8 @@ vi.mock("react-i18next", () => ({
 }));
 
 import { CanvasVersionsDrawer } from "./CanvasVersionsDrawer";
+import { canvasExtensions } from "./canvasExtensions";
+import { getSchema } from "@tiptap/core";
 import { parseCanvasRevisions, type CanvasRevisions } from "../../service/canvasStorage";
 import type { CanvasControllerInstance } from "../../hooks/useCanvasController";
 
@@ -23,16 +25,18 @@ afterEach(() => {
     document.body.innerHTML = "";
 });
 
-const renderDrawer = (revisions: CanvasRevisions): HTMLElement[] => {
+const renderDrawerWith = (controller: CanvasControllerInstance): HTMLElement[] => {
     act(() => {
         const container = document.createElement("div");
         document.body.appendChild(container);
         const root: Root = createRoot(container);
-        root.render(createElement(CanvasVersionsDrawer, { open: true, onClose: () => {}, controller: controllerFor(revisions) }));
+        root.render(createElement(CanvasVersionsDrawer, { open: true, onClose: () => {}, controller }));
         cleanups.push(() => act(() => root.unmount()));
     });
     return Array.from(document.body.querySelectorAll("article"));
 };
+
+const renderDrawer = (revisions: CanvasRevisions): HTMLElement[] => renderDrawerWith(controllerFor(revisions));
 
 const previewOf = (article: HTMLElement): string => (article.querySelectorAll("div")[1] as HTMLElement).innerHTML;
 
@@ -62,6 +66,73 @@ describe("CanvasVersionsDrawer", () => {
         });
         expect(articles).toHaveLength(1);
         expect(previewOf(articles[0])).toContain("Hello preview");
+    });
+
+    it("renders a diff to the current text, the close action and the diff caption", () => {
+        const schema = getSchema(canvasExtensions());
+        const currentDoc = schema.nodeFromJSON({ type: "doc", content: [{ type: "paragraph", content: [{ type: "text", text: "Aktueller Text" }] }] });
+        renderDrawerWith({
+            revisions: {
+                auto: [
+                    {
+                        revision: 1,
+                        doc_json: { type: "doc", content: [{ type: "paragraph", content: [{ type: "text", text: "Alter Text" }] }] },
+                        timestamp: 1,
+                        source: "agent"
+                    }
+                ],
+                manual: []
+            },
+            restore: () => {},
+            editor: { state: { doc: currentDoc, schema } }
+        } as unknown as CanvasControllerInstance);
+
+        const text = document.body.textContent ?? "";
+        expect(text).toContain("canvas.versions.diff_caption");
+        expect(text).toContain("Alter");
+        expect(text).toContain("Aktueller");
+        expect(document.querySelector('[aria-label="canvas.versions.close"]')).not.toBeNull();
+    });
+
+    it("renders removed list content formatted in the diff", () => {
+        const schema = getSchema(canvasExtensions());
+        const paragraph = (text: string) => ({ type: "paragraph", content: [{ type: "text", text }] });
+        const currentDoc = schema.nodeFromJSON({
+            type: "doc",
+            content: [paragraph("Bleibt"), { type: "bulletList", content: [{ type: "listItem", content: [paragraph("Entfallener Punkt")] }] }]
+        });
+        const revisionDocJson = { type: "doc", content: [paragraph("Bleibt")] };
+
+        renderDrawerWith({
+            revisions: { auto: [{ revision: 1, doc_json: revisionDocJson, timestamp: 1, source: "agent" }], manual: [] },
+            restore: () => {},
+            editor: { state: { doc: currentDoc, schema } }
+        } as unknown as CanvasControllerInstance);
+
+        const redEntry = document.querySelector('[data-canvas-diff-kind="delete"]');
+        expect(redEntry?.querySelector("ul li")).not.toBeNull();
+        expect(redEntry?.textContent).toContain("Entfallener Punkt");
+    });
+
+    it("only marks the changed block and keeps unchanged blocks plain", () => {
+        const schema = getSchema(canvasExtensions());
+        const paragraph = (text: string) => ({ type: "paragraph", content: [{ type: "text", text }] });
+        const currentDoc = schema.nodeFromJSON({ type: "doc", content: [paragraph("Bleibt"), paragraph("Aktueller Text")] });
+        const revisionDocJson = { type: "doc", content: [paragraph("Bleibt"), paragraph("Alter Text")] };
+
+        renderDrawerWith({
+            revisions: { auto: [{ revision: 1, doc_json: revisionDocJson, timestamp: 1, source: "agent" }], manual: [] },
+            restore: () => {},
+            editor: { state: { doc: currentDoc, schema } }
+        } as unknown as CanvasControllerInstance);
+
+        const lines = (kind: string) => Array.from(document.querySelectorAll(`[data-canvas-diff-kind="${kind}"]`)).map(node => node.textContent);
+        expect(lines("equal")).toEqual(["Bleibt"]);
+        expect(lines("delete")).toEqual(["Aktueller"]);
+        expect(lines("insert")).toEqual(["Alter"]);
+        // Added text is shown before the removed text (matches the ✓/✕ order).
+        const order = Array.from(document.querySelectorAll("[data-canvas-diff-kind]")).map(node => node.getAttribute("data-canvas-diff-kind"));
+        expect(order).toEqual(["equal", "insert", "delete"]);
     });
 
     it("drops malformed-timestamp entries before render and renders the valid ones", () => {

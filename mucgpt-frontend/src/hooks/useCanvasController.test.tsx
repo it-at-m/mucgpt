@@ -54,7 +54,9 @@ const makeEditorStub = () => {
                 // equals the empty document unless (stubbed) content was set
                 eq: () => stub.markdownText.trim() === ""
             },
-            tr: { setMeta: () => ({}) }
+            // setMeta returns the transaction itself (ProseMirror semantics), so
+            // chained transaction calls (e.g. the review markup reset) work.
+            tr: { setMeta: () => stub.state.tr }
         },
         schema: { topNodeType: { createAndFill: () => ({}) } },
         storage: { markdown: { serializer: { serialize: () => stub.markdownText } } },

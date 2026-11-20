@@ -3,7 +3,9 @@ from contextlib import asynccontextmanager
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
+import anyio
 import cloudpickle
+import httpx2
 import pytest
 from langchain_core.tools import StructuredTool
 from mcp.types import Tool as MCPTool
@@ -137,6 +139,34 @@ class TestBuildConnection:
         assert client._elicitation_callback is not None
 
     @pytest.mark.asyncio
+    async def test_forwarded_auth_is_accepted_when_transport_opens(self) -> None:
+        captured: dict[str, Any] = {}
+
+        @asynccontextmanager
+        async def fake_sse_client(*_args: Any, auth: Any = None, **_kwargs: Any):
+            captured["auth"] = auth
+            send, receive = anyio.create_memory_object_stream(1)
+            try:
+                yield receive, send
+            finally:
+                await send.aclose()
+                await receive.aclose()
+
+        client = McpLoader._build_connection(
+            "src",
+            make_source("http://mcp.example/sse", forward_token=True),
+            make_user(),
+        )
+        assert client is not None
+        client.auto_initialize = False
+
+        with patch("fastmcp.client.transports.sse.sse_client", fake_sse_client):
+            async with client:
+                pass
+
+        assert isinstance(captured["auth"], httpx2.Auth)
+
+    @pytest.mark.asyncio
     async def test_elicitation_is_declined_until_chat_ui_supports_it(self) -> None:
         result = await _decline_elicitation()
         assert result.action == "decline"
@@ -217,6 +247,30 @@ class TestWrapRawTools:
     async def test_skips_source_no_longer_configured(self) -> None:
         raw = {"stale_source": [MCPTool(name="a", input_schema={"type": "object"})]}
         assert await McpLoader._wrap_raw_tools(raw, make_user(), {}) == []
+
+    @pytest.mark.asyncio
+    async def test_continues_wrapping_when_one_source_cannot_open(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        raw = {
+            "bad": [MCPTool(name="bad_tool", input_schema={"type": "object"})],
+            "good": [MCPTool(name="good_tool", input_schema={"type": "object"})],
+        }
+        sources = {
+            "bad": make_source("http://bad/sse"),
+            "good": make_source("http://good/sse"),
+        }
+
+        def build(source_id: str, *_args: Any) -> FakeClient:
+            if source_id == "bad":
+                raise RuntimeError("connection failed")
+            return FakeClient()
+
+        monkeypatch.setattr(McpLoader, "_build_connection", build)
+
+        tools = await McpLoader._wrap_raw_tools(raw, make_user(), sources)
+
+        assert [tool.name for tool in tools] == ["good_tool"]
 
 
 class TestLoadMcpTools:

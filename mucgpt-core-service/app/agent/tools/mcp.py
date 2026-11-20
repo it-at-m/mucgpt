@@ -4,7 +4,7 @@ from typing import Any
 from fastmcp import Client
 from fastmcp.client.elicitation import ElicitResult
 from fastmcp.client.transports import SSETransport, StreamableHttpTransport
-from httpx import Auth, Request
+from httpx2 import Auth, Request
 from langchain.mcp import MCPAdapter, as_langchain_tool
 from langchain_core.tools import BaseTool
 from mcp.types import Tool as MCPTool
@@ -366,23 +366,29 @@ class McpLoader:
 
             McpLoader._warn_about_unknown_overrides(source_id, source_cfg, raw_tools)
 
-            client = McpLoader._build_connection(source_id, source_cfg, user_info)
-            if client is None:
-                continue
+            try:
+                client = McpLoader._build_connection(source_id, source_cfg, user_info)
+                if client is None:
+                    continue
 
-            async with client:
-                for raw_tool in raw_tools:
-                    try:
-                        wrapped_tool = await as_langchain_tool(raw_tool, client)
-                        McpLoader._apply_tool_customizations(
-                            wrapped_tool, source_id, source_cfg
-                        )
-                        tools.append(wrapped_tool)
-                    except Exception as e:
-                        McpLoader._logger.error(
-                            f"Failed to wrap cached MCP tool '{raw_tool.name}' from '{source_id}'",
-                            exc_info=e,
-                        )
+                async with client:
+                    for raw_tool in raw_tools:
+                        try:
+                            wrapped_tool = await as_langchain_tool(raw_tool, client)
+                            McpLoader._apply_tool_customizations(
+                                wrapped_tool, source_id, source_cfg
+                            )
+                            tools.append(wrapped_tool)
+                        except Exception as e:
+                            McpLoader._logger.error(
+                                f"Failed to wrap cached MCP tool '{raw_tool.name}' from '{source_id}'",
+                                exc_info=e,
+                            )
+            except Exception as e:
+                McpLoader._logger.error(
+                    f"Failed to open MCP connection for '{source_id}' while wrapping cached tools",
+                    exc_info=e,
+                )
 
         return tools
 

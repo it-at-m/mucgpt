@@ -41,6 +41,15 @@ async def parse_file(file: UploadFile, user_info=Depends(authenticate_user)) -> 
         )
     try:
         content = await parser.parse(file)
+    except TimeoutError as exc:
+        logger.error(
+            f"Parser deadline exceeded while parsing file '{file.filename}': {exc}",
+            exc_info=True,
+        )
+        raise HTTPException(
+            status_code=504,
+            detail=f"Parser service timed out while processing '{file.filename}'.",
+        ) from exc
     except httpx.TimeoutException as exc:
         logger.error(
             f"Timeout while parsing file '{file.filename}': {exc}",

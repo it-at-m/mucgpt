@@ -2,11 +2,13 @@ from collections.abc import AsyncGenerator, Sequence
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
 from datetime import datetime
+from math import ceil
 from time import monotonic
 from uuid import UUID, uuid4
 
 from anyio import CancelScope, fail_after, to_thread
 from fastapi import UploadFile
+from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from config.settings import DocumentConfig, get_settings
@@ -68,6 +70,25 @@ async def document_deadline(timeout: float, phase: str) -> AsyncGenerator[None]:
     except TimeoutError:
         logger.warning("Document %s timed out after %.2fs", phase, timeout)
         raise DocumentOperationTimeoutError(f"Document {phase} timed out.") from None
+
+
+@asynccontextmanager
+async def catalog_transaction(
+    session_factory: async_sessionmaker[AsyncSession], timeout: float, phase: str
+) -> AsyncGenerator[AsyncSession]:
+    """Bound PostgreSQL statements and commit, while keeping test factories portable."""
+    async with document_deadline(timeout, phase):
+        async with session_factory.begin() as session:
+            if (
+                isinstance(session, AsyncSession)
+                and session.bind is not None
+                and session.bind.dialect.name == "postgresql"
+            ):
+                await session.execute(
+                    text("SELECT set_config('statement_timeout', :timeout, true)"),
+                    {"timeout": f"{ceil(timeout * 1000)}ms"},
+                )
+            yield session
 
 
 def create_initial_excerpt(text: str, settings: DocumentConfig) -> str:
@@ -207,33 +228,30 @@ class DocumentLibraryService:
                         raise DocumentProcessingError(
                             "Document is busy. Retry deletion."
                         )
-                    async with document_deadline(
-                        get_settings().documents.catalog_timeout, "catalog update"
-                    ):
-                        async with self.session_factory.begin() as session:
-                            repository = DocumentRepository(session)
-                            # Recheck after acquisition: another worker may have finished.
-                            document = await repository.get_document(
-                                user_info.user_id, document_id
+                    async with catalog_transaction(
+                        self.session_factory,
+                        get_settings().documents.catalog_timeout,
+                        "catalog update",
+                    ) as session:
+                        repository = DocumentRepository(session)
+                        # Recheck after acquisition: another worker may have finished.
+                        document = await repository.get_document(
+                            user_info.user_id, document_id
+                        )
+                        if document is None:
+                            raise DocumentUnavailableError("Document is unavailable.")
+                        if document.storage_key != get_document_storage_key(
+                            document_id
+                        ):
+                            raise DocumentStorageError(
+                                "Document storage key is inconsistent"
                             )
-                            if document is None:
-                                raise DocumentUnavailableError(
-                                    "Document is unavailable."
-                                )
-                            if document.storage_key != get_document_storage_key(
-                                document_id
-                            ):
-                                raise DocumentStorageError(
-                                    "Document storage key is inconsistent"
-                                )
-                            # Ingestion holds this lock for its whole lifetime, so a
-                            # processing row seen here is stale (e.g. worker crashed).
-                            if not await repository.mark_deleting(
-                                user_info.user_id, document_id, allow_processing=True
-                            ):
-                                raise DocumentUnavailableError(
-                                    "Document is unavailable."
-                                )
+                        # Ingestion holds this lock for its whole lifetime, so a
+                        # processing row seen here is stale (e.g. worker crashed).
+                        if not await repository.mark_deleting(
+                            user_info.user_id, document_id, allow_processing=True
+                        ):
+                            raise DocumentUnavailableError("Document is unavailable.")
 
                     # No database transaction spans the store operation. Missing bodies are
                     # already cleaned up, so retries use the same idempotent exact-key delete.
@@ -241,13 +259,14 @@ class DocumentLibraryService:
                         get_settings().documents.storage_timeout, "body cleanup"
                     ):
                         await delete_document_body(user_info.user_id, document_id)
-                    async with document_deadline(
-                        get_settings().documents.catalog_timeout, "catalog cleanup"
-                    ):
-                        async with self.session_factory.begin() as session:
-                            await DocumentRepository(session).remove_after_cleanup(
-                                user_info.user_id, document_id
-                            )
+                    async with catalog_transaction(
+                        self.session_factory,
+                        get_settings().documents.catalog_timeout,
+                        "catalog cleanup",
+                    ) as session:
+                        await DocumentRepository(session).remove_after_cleanup(
+                            user_info.user_id, document_id
+                        )
         logger.info("Document deletion completed in %.2fs", monotonic() - started_at)
 
 
@@ -294,13 +313,16 @@ class DocumentIngestionService:
         parser = get_parser()
         if parser is None:
             raise DocumentProcessingDisabledError("Document processing is not enabled")
-        original_size = await self._validate_upload_size(file)
-
-        reserved_id = str(uuid4())
         # Acquire before publishing processing metadata; keep ownership through
         # finalization or compensation, including failed/cancelled uploads.
         started_at = monotonic()
+        ingestion_deadline = started_at + self.settings.ingestion_timeout
         async with document_deadline(self.settings.ingestion_timeout, "ingestion"):
+            original_size = await self._validate_upload_size(file)
+
+        reserved_id = str(uuid4())
+        remaining_ingestion_timeout = ingestion_deadline - monotonic()
+        async with document_deadline(max(remaining_ingestion_timeout, 0), "ingestion"):
             async with document_work_lock(
                 self.session_factory, reserved_id
             ) as acquired:
@@ -314,21 +336,25 @@ class DocumentIngestionService:
                     # Shield reservation publication so cancellation cannot lose a committed
                     # row's ID before compensation can identify it.
                     with CancelScope(shield=True):
-                        async with document_deadline(
-                            self.settings.catalog_timeout, "catalog reservation"
-                        ):
-                            async with self.session_factory.begin() as session:
-                                document = await DocumentRepository(
-                                    session
-                                ).reserve_document(
-                                    user_info.user_id,
-                                    filename=filename,
-                                    mime_type=mime_type,
-                                    original_size=original_size,
-                                    document_id=reserved_id,
-                                )
-                                document_id = document.id
-                                created_at = document.created_at
+                        async with catalog_transaction(
+                            self.session_factory,
+                            min(
+                                self.settings.catalog_timeout,
+                                max(ingestion_deadline - monotonic(), 0),
+                            ),
+                            "catalog reservation",
+                        ) as session:
+                            document = await DocumentRepository(
+                                session
+                            ).reserve_document(
+                                user_info.user_id,
+                                filename=filename,
+                                mime_type=mime_type,
+                                original_size=original_size,
+                                document_id=reserved_id,
+                            )
+                            document_id = document.id
+                            created_at = document.created_at
 
                     if document_id is None:
                         raise DocumentStorageError(
@@ -367,19 +393,23 @@ class DocumentIngestionService:
                         created_at=created_at,
                     )
                     with CancelScope(shield=True):
-                        async with document_deadline(
-                            self.settings.catalog_timeout, "catalog publication"
-                        ):
-                            async with self.session_factory.begin() as session:
-                                if not await DocumentRepository(session).mark_ready(
-                                    user_info.user_id,
-                                    document_id,
-                                    text_length=len(text),
-                                    preview=preview,
-                                ):
-                                    raise DocumentStorageError(
-                                        "Document could not be marked ready"
-                                    )
+                        async with catalog_transaction(
+                            self.session_factory,
+                            min(
+                                self.settings.catalog_timeout,
+                                max(ingestion_deadline - monotonic(), 0),
+                            ),
+                            "catalog publication",
+                        ) as session:
+                            if not await DocumentRepository(session).mark_ready(
+                                user_info.user_id,
+                                document_id,
+                                text_length=len(text),
+                                preview=preview,
+                            ):
+                                raise DocumentStorageError(
+                                    "Document could not be marked ready"
+                                )
                     logger.info(
                         "Document ingestion completed in %.2fs",
                         monotonic() - started_at,
@@ -452,11 +482,15 @@ class DocumentIngestionService:
     ) -> None:
         # First hide even an ambiguously committed ready row. Never free capacity
         # before an uncertain/partial write has been deleted successfully.
-        async with self.session_factory.begin() as session:
+        async with catalog_transaction(
+            self.session_factory, self.settings.catalog_timeout, "catalog compensation"
+        ) as session:
             await DocumentRepository(session).mark_deleting(user_id, document_id)
         if write_attempted:
             await delete_document_body(user_id, document_id)
-        async with self.session_factory.begin() as session:
+        async with catalog_transaction(
+            self.session_factory, self.settings.catalog_timeout, "catalog compensation"
+        ) as session:
             await DocumentRepository(session).remove_after_cleanup(user_id, document_id)
 
 

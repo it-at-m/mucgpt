@@ -1612,7 +1612,7 @@ wheels = [
 
 [[package]]
 name = "mucgpt-core-service"
-version = "1.12.2"
+version = "1.12.3"
 source = { virtual = "." }
 dependencies = [
     { name = "ag-ui-langgraph", extra = ["fastapi"] },

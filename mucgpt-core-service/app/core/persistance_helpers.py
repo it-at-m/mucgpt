@@ -121,6 +121,7 @@ class PersistanceHelpers:
             conninfo="",
             max_size=20,
             open=False,
+            check=AsyncConnectionPool[AsyncConnection[dict[str, Any]]].check_connection,
             kwargs=_create_connection_args(settings),
         )
         engine, session_factory = create_engine_and_session_factory(settings)

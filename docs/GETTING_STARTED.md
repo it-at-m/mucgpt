@@ -231,7 +231,7 @@ MUCGPT stores data in two layers:
   - Assistants and their versions
   - Assistant subscriptions
 - Redis/Valkey (temporary cache):
-  - MCP tool metadata cache (core service, key prefix: `mcp_tools_raw:`)
+  - MCP tool metadata cache (core service, key prefix: `mcp_tools_raw_v2:`)
   - LDAP/Active Directory data cache (assistant service, key: `mucgpt:directory-tree:v1`)
   - Assistant compliance verification cache (key prefix: `mucgpt:assistant-compliance:v1:`)
 

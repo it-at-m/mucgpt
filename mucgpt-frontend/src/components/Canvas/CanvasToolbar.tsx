@@ -19,7 +19,8 @@ import {
     TextBold24Regular,
     TextBulletListLtr24Regular,
     TextItalic24Regular,
-    TextNumberListLtr24Regular
+    TextNumberListLtr24Regular,
+    TextUnderline24Regular
 } from "@fluentui/react-icons";
 import { useEditorState } from "@tiptap/react";
 import { useTranslation } from "react-i18next";
@@ -71,6 +72,7 @@ export const CanvasToolbar = ({ editor, controller, onOpenVersions, disabled }: 
                 canRedo: ctx.editor.can().redo(),
                 bold: ctx.editor.isActive("bold"),
                 italic: ctx.editor.isActive("italic"),
+                underline: ctx.editor.isActive("underline"),
                 bulletList: ctx.editor.isActive("bulletList"),
                 orderedList: ctx.editor.isActive("orderedList"),
                 inTable: ctx.editor.isActive("table"),
@@ -168,6 +170,18 @@ export const CanvasToolbar = ({ editor, controller, onOpenVersions, disabled }: 
                     onClick={run(chain => chain.toggleItalic())}
                     aria-label={t("canvas.toolbar.italic")}
                     aria-pressed={state?.italic}
+                />
+            </Tooltip>
+            <Tooltip content={t("canvas.toolbar.underline")} relationship="label" positioning={tooltipPositioning}>
+                <Button
+                    appearance="subtle"
+                    size="small"
+                    icon={<TextUnderline24Regular />}
+                    disabled={disabled}
+                    className={state?.underline ? styles.active : undefined}
+                    onClick={run(chain => chain.toggleUnderline())}
+                    aria-label={t("canvas.toolbar.underline")}
+                    aria-pressed={state?.underline}
                 />
             </Tooltip>
 

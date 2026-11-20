@@ -42,6 +42,11 @@ ai_act_compliance_check_enabled: true
 # Canvas limits (characters); exposed to the frontend via /config
 canvas_content_max_chars: 262144
 canvas_editor_max_chars: 524288
+# HTML tag names allowed inside canvas markdown (e.g. <u> for underline, which
+# GFM cannot express); exposed to the frontend via /config. Lowercase plain tag
+# names without attributes; the list may only restrict the release's supported
+# set (an unsupported tag fails core startup). Empty list disables raw HTML.
+canvas_allowed_html_tags: ["u"]
 app_version: "2.0"
 frontend_version: "0.0.2"
 assistant_version: "0.0.3"

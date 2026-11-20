@@ -28,3 +28,6 @@ __pycache__/
 # !src/
 # !pyproject.toml
 # !uv.lock
+
+# Generated license notices (produced inside the build; never build input)
+THIRD_PARTY_LICENSES/

@@ -2,9 +2,28 @@
 /app/backend/static
 /app/frontend/dist
 **/*.pyc
-.venv/
+**/.venv/
 /tests
 /notebooks
 /infra
 *.ipynb
 **/node_modules
+
+# Local caches and generated build output
+**/__pycache__/
+**/.pytest_cache/
+**/.ruff_cache/
+**/.coverage
+**/dist/
+**/build/
+
+# Never copy local secrets or credentials into the build context
+**/.env
+**/.env.*
+**/*.env
+**/*.pem
+**/*.key
+**/secrets/
+
+# Generated license notices (produced inside the build; never build input)
+THIRD_PARTY_LICENSES/

@@ -82,7 +82,7 @@ jobs:
         id: build
         uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
         with:
-          context: ./mucgpt-assistant-service
+          context: .
           file: ./mucgpt-assistant-service/Dockerfile.migrations
           push: true
           sbom: true

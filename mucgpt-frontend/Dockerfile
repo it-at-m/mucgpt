@@ -22,20 +22,28 @@ WORKDIR /build
 # Use the npm version bundled with Node 24 for consistency with local and CI environments
 
 # Copy only dependency files first for better caching
-COPY package*.json .npmrc ./
+COPY mucgpt-frontend/package*.json mucgpt-frontend/.npmrc ./
 
 # Install dependencies in a separate layer that's cached unless dependencies change
 RUN --mount=type=cache,target=/root/.npm \
     npm ci --verbose
 
+# Third-party license notices for the shipped (production) dependencies.
+# python3 is only needed in the builder stage.
+RUN apk add --no-cache python3
+COPY scripts/licenses/*.py pyproject.toml /tmp/licenses/
+RUN python3 -c "import tomllib" && \
+    MUCGPT_LICENSE_POLICY=/tmp/licenses/pyproject.toml MUCGPT_FRONTEND_DIR=/build \
+    python3 /tmp/licenses/collect_licenses.py --targets mucgpt-frontend --output /tmp/notices
+
 # Copy build configuration files (these change less frequently than source)
-COPY tsconfig.json vite.config.ts index.html ./
+COPY mucgpt-frontend/tsconfig.json mucgpt-frontend/vite.config.ts mucgpt-frontend/index.html ./
 
 # Copy public assets (usually static)
-COPY public/ ./public/
+COPY mucgpt-frontend/public/ ./public/
 
 # Copy source code last (changes most frequently)
-COPY src/ ./src/
+COPY mucgpt-frontend/src/ ./src/
 
 # Build the application with cache mount for faster rebuilds
 RUN --mount=type=cache,target=/build/node_modules/.vite \
@@ -45,6 +53,9 @@ FROM registry.access.redhat.com/ubi9/nginx-124:9.8-1793639597@sha256:d5cec86a9ad
 
 # Copy built web application
 COPY --from=builder /build/dist ./
+
+# Third-party license notices of the bundled dependencies (not web-served)
+COPY --from=builder /tmp/notices/mucgpt-frontend/THIRD_PARTY_LICENSES /usr/share/licenses/mucgpt-frontend/THIRD_PARTY_LICENSES/
 
 ARG IMAGE_CREATED="unknown"
 ARG IMAGE_REVISION="unknown"
@@ -63,6 +74,6 @@ LABEL org.opencontainers.image.authors='Landeshauptstadt München <opensource@mu
 
 
 # Copy custom nginx configurations
-COPY docker/nginx/*.conf "${NGINX_DEFAULT_CONF_PATH}"
+COPY mucgpt-frontend/docker/nginx/*.conf "${NGINX_DEFAULT_CONF_PATH}"
 
 CMD nginx -g "daemon off;"

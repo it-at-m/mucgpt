@@ -12,7 +12,7 @@ ENV UV_COMPILE_BYTECODE=1
 ENV UV_LINK_MODE=copy
 
 # Leverage layer cache
-COPY pyproject.toml uv.lock .python-version ./
+COPY mucgpt-assistant-service/pyproject.toml mucgpt-assistant-service/uv.lock mucgpt-assistant-service/.python-version ./
 
 # Install build dependencies for packages with C extensions
 RUN microdnf install -y gcc python3-devel
@@ -21,8 +21,14 @@ RUN microdnf install -y gcc python3-devel
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --no-dev --locked --no-install-project
 
+# Third-party license notices, generated from the venv that ships in this image.
+COPY scripts/licenses/*.py pyproject.toml /tmp/licenses/
+RUN MUCGPT_LICENSE_POLICY=/tmp/licenses/pyproject.toml \
+    /app/.venv/bin/python /tmp/licenses/image_notices.py /app && \
+    rm -rf /tmp/licenses
+
 # copy the application files
-COPY /app  .
+COPY mucgpt-assistant-service/app .
 
 # Install the project
 RUN --mount=type=cache,target=/root/.cache/uv \

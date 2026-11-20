@@ -9,6 +9,7 @@ import pytest
 from pydantic import ValidationError
 
 from config.settings import (
+    DocumentConfig,
     MCPTransport,
     ModelsConfig,
     ParserBackendType,
@@ -138,6 +139,40 @@ class TestSettings:
             settings = Settings()
             assert len(settings.models) == 0
             assert settings.unauthorized_user_redirect_url == ""
+
+    def test_document_timeout_defaults_and_fractional_seconds(self):
+        defaults = DocumentConfig()
+        assert defaults.ingestion_timeout == 300.0
+        assert defaults.deletion_timeout == 90.0
+        assert defaults.parser_timeout == 180.0
+        assert defaults.storage_timeout == 60.0
+        assert defaults.catalog_timeout == 15.0
+        assert defaults.cleanup_timeout == 60.0
+        assert defaults.lock_connect_timeout == 10.0
+        assert defaults.lock_query_timeout == 10.0
+        assert defaults.lock_close_timeout == 10.0
+        assert DocumentConfig(catalog_timeout=0.25).catalog_timeout == 0.25
+
+    @pytest.mark.parametrize(
+        "field_name",
+        [
+            "ingestion_timeout",
+            "deletion_timeout",
+            "parser_timeout",
+            "storage_timeout",
+            "catalog_timeout",
+            "cleanup_timeout",
+            "lock_connect_timeout",
+            "lock_query_timeout",
+            "lock_close_timeout",
+        ],
+    )
+    @pytest.mark.parametrize("invalid_value", [float("nan"), float("inf"), 0.0])
+    def test_document_timeouts_reject_non_finite_and_non_positive_values(
+        self, field_name, invalid_value
+    ):
+        with pytest.raises(ValidationError):
+            DocumentConfig(**{field_name: invalid_value})
 
     def test_sso_role_defaults_are_unset(self):
         """Test SSO role defaults remain open unless explicitly configured."""

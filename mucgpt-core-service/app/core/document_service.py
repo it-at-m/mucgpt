@@ -190,12 +190,15 @@ class DocumentLibraryService:
             ):
                 # Check ownership before attempting a lock, so foreign IDs remain
                 # unavailable even when their workers are active.
-                async with self.session_factory() as session:
-                    document = await DocumentRepository(session).get_document(
-                        user_info.user_id, document_id
-                    )
-                    if document is None:
-                        raise DocumentUnavailableError("Document is unavailable.")
+                async with document_deadline(
+                    get_settings().documents.catalog_timeout, "catalog lookup"
+                ):
+                    async with self.session_factory() as session:
+                        document = await DocumentRepository(session).get_document(
+                            user_info.user_id, document_id
+                        )
+                        if document is None:
+                            raise DocumentUnavailableError("Document is unavailable.")
 
                 async with document_work_lock(
                     self.session_factory, document_id

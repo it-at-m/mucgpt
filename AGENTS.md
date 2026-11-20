@@ -12,9 +12,10 @@ MUCGPT is a web interface to LLMs for public administration (it@M / City of Muni
 
 ## Monorepo layout
 
-Four independently-versioned, independently-deployed components, each with its own `pyproject.toml`/`package.json`, `Dockerfile`, `uv.lock`, and CI workflow:
+Five independently-versioned, independently-deployed components, each with its own `pyproject.toml`/`package.json`, `Dockerfile`, `uv.lock`, and CI workflow:
 
-- **`mucgpt-core-service/`** — Python 3.13 / FastAPI. LLM agent orchestration (LangGraph/Deep Agents), tools, document parsing. The heart of the system.
+- **`mucgpt-core-service/`** — Python 3.13 / FastAPI. LLM agent orchestration (LangGraph/Deep Agents), tools, document parsing, conversation persistence (Postgres). The heart of the system.
+- **`mucgpt-core-service/migrations/`** — Alembic migrations for the core service's Postgres schema (`chats`, `canvas_documents`, `documents`, store), released as a run-once container (`Dockerfile.migrations`, same `MIGRATION_*` env vars as the assistant migrations, DB settings via `MUCGPT_CORE_`).
 - **`mucgpt-assistant-service/`** — Python 3.13 / FastAPI. CRUD + sharing of assistant configurations; departments/users via LDAP; talks to Postgres.
 - **`mucgpt-assistant-service/migrations/`** — Alembic migrations for the assistant service's Postgres schema, released as a run-once container.
 - **`mucgpt-frontend/`** — React 19 + TypeScript + Vite 8 (Rolldown), Fluent UI v9, i18next, PWA. MSW mocks the backend in dev.
@@ -72,19 +73,21 @@ Migration notes for older configs: (a) lowercase the `config.yaml` keys, (b) mov
 
 ## Core service architecture (`mucgpt-core-service/app/`)
 
-Entry: `app.py` → `backend.py` builds the FastAPI app, mounts `api_app` at `/api/`, and includes routers from `api/routers/`: `chat`, `compliance`, `generation`, `parsing`, `system`, `tools` (all under `/v1`). `init_app.py` has `warmup_app`/`destroy_app` lifespan hooks; `init_agent()` builds the tool collection + agent **per message** (known TODO, see `chat_router.py`).
+Entry: `app.py` → `backend.py` builds the FastAPI app, mounts `api_app` at `/api/`, and includes routers from `api/routers/`: `chat`, `compliance`, `generation`, `parsing`, `system`, `tools`, `document`, `export` (all under `/v1`). `init_app.py` has `warmup_app`/`destroy_app` lifespan hooks; `init_agent()` builds the tool collection + agent **per message** (known TODO, see `chat_router.py`).
 
-**Agent** (`agent/`): `deep_agent.py::MUCGPTAgent` wraps LangChain **Deep Agents** (`deepagents.create_deep_agent`) in `_ConfiguredLangChainDeepAgentGraph`. The graph is compiled once and reused; `DefaultAgentState` is fixed at compile time (per-request schema selection is no longer supported — see comment after PR #1177; `agent/tools/tools.py::select_agent_state_schema` still exists but its result is not used for the compiled graph). `agent_executor.py` drives the agent and emits OpenAI-compatible `ChatCompletionChunk` streams with Langfuse tracing.
+**Agent** (`agent/`): `deep_agent.py::MUCGPTAgent` wraps LangChain **Deep Agents** (`deepagents.create_deep_agent`) in `_ConfiguredLangChainDeepAgentGraph`; `init_agent()` builds it per request. `DefaultAgentState` is always the state schema (per-request schema selection is no longer supported — see comment after PR #1177; `agent/tools/tools.py::select_agent_state_schema` still exists but its result is not used for the graph). Model-specific Deep Agents built-ins and extra middleware (summarization, todo list, tool-call limits, sub-agent) come from a harness profile registered per model at startup (`config/harness_profiles.py`). `agent_executor.py::run_agui_with_streaming` drives the agent and emits AG-UI events with Langfuse tracing; the only chat endpoint is `POST /v1/chat/v2/completions` (AG-UI SSE). The OpenAI-style `run_with_streaming`/`run_without_streaming` methods still exist but no router calls them.
 
-- **`checkpointer=None` is deliberate** in `create_deep_agent`. Chat persistence is request-authoritative: the client resends full history each turn; `conversation_id` is accepted but unused server-side (history lives client-side in IndexedDB). Don't "fix" this by attaching the checkpointer.
+- **Conversation persistence is server-side** (`persist=true`, the frontend default): `chat_router` checks/creates the `chats` ownership row, a Valkey lock allows one run per conversation (HTTP 409 otherwise), and the agent gets `FencedPostgresSaver` as checkpointer (`thread_id = conversation_id`). The first turn seeds the checkpoint with the client history; afterwards only the newest user message is sent. With `persist=false` the agent is stateless (no checkpointer, full client history, tools that require approval are dropped). IndexedDB in the browser is only a cache synced with the server's conversation list. Details: `docs/conversation-persistence.md`.
+- Tools whose metadata sets `require_approval` are wired into `interrupt_on`: the run stops with an interrupt outcome on `RUN_FINISHED`, and the client resumes it with approval decisions (persisted chats only).
+- Documents and scratch files use a Deep Agents `CompositeBackend` (`core/virtual_file_system_helper.py`): chat-local files live in graph state, and the user's uploaded documents (extracted text, max 10 per user) are mounted read-only at `/documents/` from an `AsyncPostgresStore`.
 - Request-specific settings (`model`, `extra_body`, `user`, temperature, `enabled_tools`, `data_sources`) flow through `RequestContext` (the graph's `context_schema`); `middleware.py` (`ContextMiddleware`, `ToolStatusMiddleware`, `ToolErrorMiddleware`, `TokenUsageMiddleware`) applies them per model request. `ContextMiddleware` injects request `data_sources` into the prompt. `ToolStatusMiddleware` adds a required `status_message` argument to every tool definition and strips it again before the tool runs (the frontend shows it as the live activity label) — it must stay **after** `ContextMiddleware`, which filters tools as `BaseTool` objects; from there on tools are flat `{name, description, parameters}` dicts.
 
 **Tools** (`agent/tools/`): **read `agent/tools/README.md` first** — it's the authoritative guide.
 - Local tools use the `LocalTool` spec pattern (`spec.py`): add a module with `TOOL = LocalTool(id=..., factory=..., metadata=..., is_configured=...)` and register it in `LOCAL_TOOLS` in `tools.py`; `get_tools()` and `GET /v1/tools` pick it up automatically.
-- MCP tools are a **config change only** (`MCP` settings / `MUCGPT_CORE_MCP__...`), loaded per-user by `mcp.py::McpLoader` and cached in Redis with distributed locking — that caching is load-bearing, don't simplify it away. `McpBearerAuthProvider` forwards the per-user token to MCP servers.
+- MCP tools are a **config change only** (`MCP` settings / `MUCGPT_CORE_MCP__...`), loaded per-user by `mcp.py::McpLoader` and cached in Valkey/Redis with distributed locking — that caching is load-bearing, don't simplify it away. `McpBearerAuthProvider` forwards the per-user token to MCP servers.
 - Internet search is provided through a configured MCP server, not a local tool.
 
-**Prompts** are Markdown files in `agent/prompt_pool/` (incl. `generation_prompts/` for assistant title/description/system-prompt generation and `compliance_prompts/`), read at import time — edit the `.md`, not string literals.
+**Prompts** are resolved by `core/lf_prompts.py::PromptPool`: prompts configured under `prompts:` in `config.yaml` are loaded from Langfuse, with optional local Markdown fallbacks in `agent/prompt_pool/` (same name without `.md`; the repo currently ships none). This covers the agent's `default_instructions`, `generation_prompts` (assistant title/description/system prompt) and the compliance prompts — don't hard-code prompt strings.
 
 **Compliance**: `compliance_router` + `core/compliance.py` screen assistant prompts against EU AI Act high-risk categories (feature flag `ai_act_compliance_check_enabled`). Tuning workflow: `app/scripts/run_compliance_experiment.py` + the repo skill `compliance-prompt-improvement` (`.agents/skills/`).
 
@@ -111,7 +114,7 @@ Standard FastAPI + SQLAlchemy (async) + Postgres. Routers in `api/routers/` (`as
 
 ## Release / deploy
 
-Images are released per component by pushing a tag `mucgpt-{frontend,core,assistant,assistant-migrations}-<version>` (triggers the matching `docker-release-*.yml` workflow); a frontend tag also redeploys GitHub Pages. Use the interactive `tag-version.ps1` (bumps the manifest version via `uv version`/package.json and creates+pushes the tag) or tag manually per `docs/DEVELOPMENT.md`.
+Images are released per component by pushing a tag `mucgpt-{frontend,core,core-migrations,assistant,assistant-migrations}-<version>` (triggers the matching `docker-release-*.yml` workflow); a frontend tag also redeploys GitHub Pages. Use the interactive `tag-version.ps1` (bumps the manifest version via `uv version`/package.json and creates+pushes the tag) or tag manually per `docs/DEVELOPMENT.md`.
 
 ## Docs worth reading
 

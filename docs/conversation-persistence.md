@@ -2,7 +2,7 @@
 
 ## Request and transcript behavior
 
-Both chat endpoints validate the model before preparing persistence. An unknown
+The chat endpoint (`POST /v1/chat/v2/completions`) validates the model before preparing persistence. An unknown
 model returns HTTP 400; an uninitialized model registry returns HTTP 500. Neither
 case creates an ownership row or initializes an agent.
 
@@ -10,8 +10,9 @@ With `persist=true`, the first request claims a fresh conversation ID for its
 authenticated owner and seeds the checkpoint with client history. Once a
 checkpoint exists, only the newest user message is appended. With `persist=false`,
 the full client history is used without persisted ownership/checkpoint preparation.
-The v1 endpoint supports streaming and non-streaming responses; v2 always streams
-AG-UI events, regardless of the request's `stream` flag.
+The endpoint always streams AG-UI events, regardless of the request's `stream`
+flag. Persisted runs hold a per-conversation Valkey lock, so a second concurrent
+run on the same conversation gets HTTP 409.
 
 Conversation listing returns only live metadata owned by the caller. Transcript
 reads check live ownership before reading through the fenced saver. Unknown,
@@ -125,7 +126,7 @@ MUCGPT_LIFECYCLE_POSTGRES_HOST=127.0.0.1 MUCGPT_LIFECYCLE_POSTGRES_PORT=5433 uv 
 Optional credentials use `MUCGPT_LIFECYCLE_POSTGRES_USER` and
 `MUCGPT_LIFECYCLE_POSTGRES_PASSWORD`. The suite covers paused checkpoint writers,
 independent saver pools, lock waits, erasure rollback/retry, ID reuse, legacy
-migration, both endpoints, generation failures, and cancellation/disconnect teardown.
+migration, the chat endpoint, generation failures, and cancellation/disconnect teardown.
 Router mocks and SQL compilation tests alone cannot establish the race invariant.
 
 From `mucgpt-frontend`:

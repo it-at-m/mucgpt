@@ -411,23 +411,22 @@ describe("conversation id assignment", () => {
         expect(harness.current.getMarkdown()).toBe("# Mine");
     });
 
-    it("keeps a pending open request across a fresh-chat reset and reopens for the new chat", async () => {
+    it("reports whether the document has content, independent of the open state", async () => {
         loadCanvasStateMock.mockResolvedValue(null);
         loadCanvasRevisionsMock.mockResolvedValue(emptyRevisions());
 
         const harness = renderController();
-        harness.render("old-conv");
-        await harness.rerender("old-conv");
-        act(() => harness.current.requestOpen());
-        expect(harness.current.isOpen).toBe(true);
+        harness.render("conv-1");
+        await harness.rerender("conv-1");
+        expect(harness.current.hasContent).toBe(false);
 
-        // startFreshChat resets the active chat: the switch effect closes the canvas
-        await harness.rerender(undefined);
+        act(() => harness.current.setMarkdown("# Draft"));
+        expect(harness.current.hasContent).toBe(true);
         expect(harness.current.isOpen).toBe(false);
 
-        // the fresh chat's first prompt assigns its id: the pending request reopens
-        await harness.rerender("new-conv");
-        expect(harness.current.isOpen).toBe(true);
+        // switching to a conversation without a stored canvas clears it
+        await harness.rerender("conv-2");
+        expect(harness.current.hasContent).toBe(false);
     });
 
     it("clears a canvas holding only a horizontal rule when switching conversations", async () => {

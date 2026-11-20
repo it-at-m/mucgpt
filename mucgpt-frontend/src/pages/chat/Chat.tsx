@@ -641,7 +641,7 @@ const Chat = () => {
         } else if (questionFromUrl || newChatRequested) {
             lastHandledNewChatTokenRef.current = newChatToken;
             if (newChatRequested && canvasRequested) {
-                canvasRef.current.requestOpen();
+                canvasRef.current.setIsOpen(true);
             }
             setPendingQuestion(questionFromUrl);
             Promise.resolve(
@@ -699,7 +699,7 @@ const Chat = () => {
 
         lastHandledNewChatTokenRef.current = newChatToken;
         if (canvasRequested) {
-            canvasRef.current.requestOpen();
+            canvasRef.current.setIsOpen(true);
         }
         if (isCurrentChatEmpty) {
             clearNavigationQueryParams();
@@ -958,7 +958,8 @@ const Chat = () => {
             isLoading,
             showAgUiEventLog,
             isEventDrawerOpen,
-            agUiEvents
+            agUiEvents,
+            canvas
         ]
     );
 

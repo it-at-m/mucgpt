@@ -1164,8 +1164,7 @@ export const handlers = [
             resume?: { interruptId: string; status: string; payload?: { decision?: string } }[];
         };
         const enabledTools = raw.forwardedProps?.mucgpt?.enabled_tools ?? raw.enabled_tools;
-        const mockCanvas = raw.forwardedProps?.mucgpt?.canvas ?? raw.canvas;
-        // Canvas tools are auto-added while the canvas is open; the generic
+        // Canvas tool ids are base tools, not a user selection; the generic
         // demo tool call must not fire from those.
         const mockToolName = enabledTools?.find(id => !(CANVAS_TOOL_IDS as readonly string[]).includes(id));
         const latestUserMessage =
@@ -1279,7 +1278,7 @@ export const handlers = [
                 }
 
                 const wantsRichMarkdownMock = /^\s*rich\s*$/i.test(latestUserMessage);
-                const wantsCanvasMock = Boolean(mockCanvas) && /^\s*canvas-demo\s*$/i.test(latestUserMessage);
+                const wantsCanvasMock = /^\s*canvas-demo\s*$/i.test(latestUserMessage);
 
                 if (wantsCanvasMock) {
                     for (const event of buildCanvasToolCallEvents(messageId, threadId)) {

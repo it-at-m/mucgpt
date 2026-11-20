@@ -18,8 +18,8 @@ import { canvasExtensions } from "../components/Canvas/canvasExtensions";
 export interface CanvasController {
     isOpen: boolean;
     setIsOpen(open: boolean): void;
-    /** Sets an open request that survives a pending fresh-chat reset. */
-    requestOpen(): void;
+    /** True when the document is non-empty, regardless of whether the panel is open */
+    hasContent: boolean;
     /** True while the agent is writing */
     isLocked: boolean;
     unlock(): void;
@@ -393,10 +393,6 @@ export function useCanvasController(conversationId: string | undefined, serverCo
     useEffect(() => {
         const previous = prevConversationIdRef.current;
         prevConversationIdRef.current = conversationId;
-        // An open request made before a fresh-chat reset stays pending while the
-        // switch runs; it is consumed as soon as the new chat has an id.
-        const pendingOpen = pendingOpenRef.current;
-        if (conversationId) pendingOpenRef.current = false;
         // The undefined→id transition is ambiguous: either the first prompt of this
         // new chat just got its id (same logical conversation — the canvas is open
         // and/or holds content: keep everything) or a page reload is restoring an
@@ -444,21 +440,14 @@ export function useCanvasController(conversationId: string | undefined, serverCo
                     }
                     const stored = await loadCanvasState(loadedServerId);
                     const editor = editorRef.current;
-                    if (cancelled || !editor || stored === null) {
-                        if (pendingOpen && !cancelled) setIsOpen(true);
-                        return;
-                    }
+                    if (cancelled || !editor || stored === null) return;
                     if (!stored.trim()) {
                         const latestRevision = [...rings.auto, ...rings.manual].sort((left, right) => right.revision - left.revision)[0];
                         if (latestRevision) {
                             editor.commands.setContent(latestRevision.doc_json as Content);
                             editor.view.dispatch(editor.state.tr.setMeta(CANVAS_PERSISTENCE_RESET, true));
                             setIsOpen(true);
-                            return;
                         }
-                        // An open request of a fresh chat reopens the canvas even
-                        // when there is nothing to restore yet.
-                        if (pendingOpen && !cancelled) setIsOpen(true);
                         return;
                     }
                     editor.commands.setContent(stored);
@@ -479,14 +468,16 @@ export function useCanvasController(conversationId: string | undefined, serverCo
         setIsOpenState(open);
     }, []);
 
-    // Partnership between the page and the switch effect: a canvas-open request
-    // must survive a pending fresh-chat reset (the switch effect clears the
-    // editor and closes the canvas), then reopen the canvas for the new chat.
-    const pendingOpenRef = useRef(false);
-    const requestOpen = useCallback(() => {
-        pendingOpenRef.current = true;
-        setIsOpen(true);
-    }, []);
+    const [hasContent, setHasContent] = useState(false);
+    useEffect(() => {
+        if (!editor) return;
+        const syncHasContent = () => setHasContent(hasCanvasContent());
+        syncHasContent();
+        editor.on("transaction", syncHasContent);
+        return () => {
+            editor.off("transaction", syncHasContent);
+        };
+    }, [editor, hasCanvasContent]);
 
     // Called on RUN_STARTED: the server numbers canvas_revision per run,
     // so the monotonicity guard must reset per run, not per conversation.
@@ -702,7 +693,7 @@ export function useCanvasController(conversationId: string | undefined, serverCo
         () => ({
             isOpen,
             setIsOpen,
-            requestOpen,
+            hasContent,
             isLocked,
             beginRun,
             unlock,
@@ -721,7 +712,7 @@ export function useCanvasController(conversationId: string | undefined, serverCo
         [
             isOpen,
             setIsOpen,
-            requestOpen,
+            hasContent,
             isLocked,
             beginRun,
             unlock,

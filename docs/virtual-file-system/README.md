@@ -1,115 +1,184 @@
-# Virtual filesystem implementation plan
+# Virtual filesystem and document library
 
-Status: proposed implementation; these documents describe future changes, not
-features already shipped. Repository and library behavior reviewed on 2026-10-30.
-The repository lockfile resolves Deep Agents 0.7.6; confirm the installed API when
-implementing, particularly middleware overrides and filesystem permissions.
+Status: implemented in `mucgpt-core-service` (Deep Agents 0.7.34 per `uv.lock`).
+This page describes the shipped behavior; the code is the source of truth.
 
-## Agreed scope
+## Summary
 
-- Use a `CompositeBackend` with `StateBackend` as its default backend.
-- Keep chat-local working files, oversized tool results, and archived conversation
-  context in graph state, persisted by the existing PostgreSQL checkpointer.
-- Mount a user-scoped `StoreBackend` at `/documents/`, backed by
-  `AsyncPostgresStore`, for documents available across the user's chats.
-- Retain complete extracted text and metadata, not the original PDF/DOCX binary.
-- Allow at most **10 documents per user**, enforced server-side under concurrency.
-- Expose only documents selected for the current chat, read-only to the agent.
-- Initially inject a bounded initial excerpt and a stable document path into the
-  effective system prompt. Generate document summaries in a later release.
-- Reuse Deep Agents' filesystem tools and backend implementations.
-- Keep `app/core/persistance_helpers.py` unchanged. Own filesystem infrastructure
-  in a new `app/core/virtual_file_system_helper.py`.
+- The agent gets a Deep Agents `CompositeBackend` per request
+  (`core/virtual_file_system_helper.py::create_backend`).
+- Chat-local files (Deep Agents scratch files, evicted large tool results,
+  summarization archives) use the default `StateBackend`: they live in graph state
+  and are persisted by the conversation checkpointer. With `persist=false` they
+  only survive the current run.
+- A user's uploaded documents are mounted read-only at `/documents/` through
+  `core/document_backend.py::DocumentBackend`, a `StoreBackend` subclass on
+  `AsyncPostgresStore`.
+- Only the extracted text is stored, never the original PDF/DOCX binary.
+- At most **10 documents per user**, enforced by the database.
+- The agent can only read documents attached to the current turn
+  (`document_ids` in the chat request), revalidated server-side on every turn.
+- The system prompt lists the attached documents with path, length and an initial
+  excerpt; the agent reads the rest with `read_file` / `grep`.
 
 ## Architecture
 
 ```text
 Deep Agent + FilesystemMiddleware
     |
-    +-- CompositeBackend
+    +-- CompositeBackend                       (built per request in init_agent)
           |
-          +-- Default: StateBackend
-          |     /large_tool_results/...
-          |     /conversation_history/...
-          |     other chat-local working files
+          +-- default: StateBackend
+          |     scratch files, large tool results, summarization archives
           |         |
-          |         +-- graph state -> existing PostgreSQL checkpointer
+          |         +-- graph state -> FencedPostgresSaver (only if persist=true)
           |
-          +-- /documents/: StoreBackend
-                /<document-id>.txt
+          +-- /documents/: DocumentBackend (read-only StoreBackend)
+                /<document-uuid>.txt   (only the attached documents)
                     |
-                    +-- AsyncPostgresStore
-                        namespace: ("user_documents", authenticated_user_id)
+                    +-- AsyncPostgresStore  (table "store")
+                        namespace: ("user_documents", <authenticated user id>)
 ```
 
-`StateBackend` is thread-scoped, not necessarily short-lived: the checkpointer
-persists its files across turns and restarts. With `persist=False`, these files
-survive only the current invocation. The global document store remains durable
-regardless of whether a particular chat uses checkpoint persistence.
+`CompositeBackend` strips the mount prefix before delegating, so the same document
+has three identifiers. All are derived in `virtual_file_system_helper.py`:
 
-`CompositeBackend` strips a mounted route prefix before delegating. Therefore:
+| Identifier | Example | Helper |
+| --- | --- | --- |
+| Model-visible path | `/documents/<uuid>.txt` | `get_document_path` |
+| Store key | `/<uuid>.txt` | `get_document_storage_key` |
+| Store namespace | `("user_documents", <user id>)` | `get_document_namespace` |
 
-| Identifier | Example |
-| --- | --- |
-| Model-visible path | `/documents/<uuid>.txt` |
-| StoreBackend-relative key | `/<uuid>.txt` |
-| Store namespace | `("user_documents", authenticated_user_id)` |
+The namespace always comes from the authenticated user, never from the client or
+the model. User IDs with characters outside `[A-Za-z0-9-_.@+:~]` (or starting
+with `utf8:`) are stored as `utf8:<hex>` so they can't act as glob characters.
+Filenames never appear in paths.
 
-Centralize this mapping so uploads and agent reads address exactly the same key.
-Do not place user identity in a model-controlled path or accept a client-supplied
-namespace.
-
-## Responsibility boundaries
+## Components
 
 | Component | Responsibility |
 | --- | --- |
-| Existing `core/persistance_helpers.py` | Checkpointer, conversation ownership/history/deletion. |
-| New `core/virtual_file_system_helper.py` | Store lifecycle, namespace/path conventions, backend and permission construction. |
-| New `core/document_service.py` | Upload/parse/excerpt/storage workflow, authorization, quotas, and deletion. |
-| New `database/document_repo.py` | Document catalog and transactional quota reservations. |
-| New `api/routers/document_router.py` | Document-library HTTP API. |
-| Existing `agent/middleware.py` | Request-time document manifest and retrieval instructions. |
+| `core/virtual_file_system_helper.py` | `FileStoreManager` (store connection pool), namespace/path helpers, `create_backend`, `create_permissions`, `get_documents_for_agent`, `delete_document_body`. |
+| `core/document_backend.py` | `DocumentBackend`: read-only agent mount restricted to the attached documents. |
+| `core/document_service.py` | `DocumentIngestionService` (upload), `DocumentLibraryService` (list/delete), `DocumentService` (resolve a turn's selection). |
+| `database/document_repo.py` | `documents` catalog: slot reservation, status transitions. |
+| `database/document_catalog.py` | `DocumentCatalogManager`: SQLAlchemy sessions for the catalog. |
+| `database/document_lock.py` | Per-document PostgreSQL advisory lock for upload/delete. |
+| `core/document_context.py` | Renders the `<attached-documents>` block for the system prompt. |
+| `agent/middleware.py::ContextMiddleware` | Appends that block to the system message on every model call. |
+| `api/routers/document_router.py` | `GET/POST /v1/documents`, `DELETE /v1/documents/{id}`. |
+| `migrations/versions/0002_documents_and_store.py` | Creates `documents` and the LangGraph `store` tables (Alembic, not `store.setup()`). |
 
-The filesystem helper owns infrastructure. The document service owns the
-user-facing workflow. Parsing remains in the existing parsing implementation.
+`FileStoreManager`, `DocumentCatalogManager` and `PersistanceHelpers` are
+initialized independently in `init_app.py::warmup_app`.
 
-## Implementation order
+## Document library
 
-1. [Filesystem infrastructure](01-filesystem-infrastructure.md)
-2. [Document library and upload API](02-document-library-api.md)
-3. [Chat attachments and agent context](03-agent-chat-integration.md)
-4. [Frontend integration](04-frontend-integration.md)
-5. [Verification and rollout](05-verification-and-rollout.md)
-6. [Later release: long-document retrieval and summaries](06-future-long-document-retrieval.md)
+### Catalog and quota
 
-Steps 1-5 deliver the first release. Step 6 records follow-up work explicitly,
-including reading **N lines around a key phrase**.
+Each `documents` row has `id`, `user_id`, `slot`, `filename`, `mime_type`,
+`original_size`, `text_length`, `preview`, `preview_kind`, `storage_key`, `status`
+and `created_at`.
 
-## Existing implementation to replace or extend
+- The quota is a unique `(user_id, slot)` index with `0 <= slot < 10`.
+  `reserve_document` tries the slots in order; there is no count-then-insert, so
+  concurrent uploads on several instances can't exceed the limit.
+- `status` is `processing` → `ready` → `deleting`. Rows in every status occupy a
+  slot. A slot is freed only after the body has been deleted from the store.
+- Only `ready` rows can be attached to chats.
 
-- `app/agent/deep_agent.py` already uses `create_deep_agent` and the checkpointer,
-  but has not wired the imported filesystem backends into agent construction.
-- `app/config/harness_profiles.py` controls filesystem tools and summarization.
-- `app/api/routers/parsing_router.py` extracts text but does not persist documents.
-- `app/agent/middleware.py` currently injects full `data_sources` text into model
-  requests; `DefaultAgentState` also persists these payloads.
-- Frontend `src/service/parsedDocumentStorage.ts` currently saves parsed bodies in
-  browser local storage and permits up to 50 documents.
+### Upload (`POST /v1/documents`)
 
-## Why no custom SQL filesystem tools are needed
+`DocumentIngestionService.ingest_document`:
 
-The built-in `ls`, `grep`, and `read_file` are Python tools, not shell commands.
-`FilesystemMiddleware` calls `StoreBackend`, which invokes the store API;
-`AsyncPostgresStore` supplies the SQL implementation.
+1. Validate the filename (≤ 255 chars) and the upload size (bounded reads up to
+   `documents.max_upload_bytes`). The browser MIME type is kept for display only;
+   the parser decides whether the format is supported.
+2. Take the advisory lock for a new server-generated UUID.
+3. Reserve a slot (`processing`).
+4. Parse with the configured parser (Xberg). Reject empty text, NUL characters, and
+   text above `documents.max_text_bytes`.
+5. Store the text verbatim at `/<uuid>.txt` and keep the first
+   `documents.preview_max_chars` characters as the excerpt.
+6. Mark the row `ready` and return its metadata.
 
-The standard backend fetches namespace entries and performs directory/path
-filtering and literal text matching in Python. `grep` is not PostgreSQL full-text
-search. This reduces model context, but not necessarily database reads or
-application memory usage. Ten size-bounded documents are an appropriate initial
-scope; measure large-document behavior before expanding it.
+On any failure or cancellation the row is marked `deleting`, the body is deleted if
+a write was attempted, and then the row is removed.
 
-Document-catalog SQL is application work; SQL for standard virtual filesystem
-operations is supplied by the libraries.
+Status codes: 400 invalid upload or parser rejection, 409 limit reached,
+413 too large, 415 unsupported format, 422 no usable or invalid text,
+502/504 parser errors, 503 no parser configured.
+
+### List and delete
+
+- `GET /v1/documents` returns metadata and excerpts from the catalog only; it never
+  reads document bodies. Rows in `processing` and `deleting` are included because
+  they use a slot.
+- `DELETE /v1/documents/{id}` checks ownership, takes the advisory lock (409 if
+  busy), marks the row `deleting`, deletes the exact store key (idempotent), then
+  removes the row. It isn't interrupted if the client disconnects. A failed
+  cleanup leaves the row in `deleting`, so the delete can be retried.
+
+### Limits (`config.yaml` → `documents:`)
+
+| Setting | Default |
+| --- | --- |
+| `max_upload_bytes` | 104857600 (100 MiB) |
+| `max_text_bytes` | 5242880 (5 MiB) |
+| `preview_max_chars` | 1000 |
+
+The 10-document limit is fixed (`DOCUMENT_LIMIT` and a database check constraint).
+
+## Documents in a chat
+
+1. The chat request carries `document_ids`.
+   `get_documents_for_agent` → `DocumentService.resolve_selected_documents`
+   canonicalizes and deduplicates the IDs and loads only the caller's `ready` rows.
+   More than 10 IDs or invalid UUIDs → 400; any missing, foreign or not-ready
+   document → 404. This happens before any conversation persistence.
+2. `init_agent` builds `create_backend(user_id, selected_ids)` and
+   `create_permissions(selected_ids)`:
+   - Filesystem permissions allow `read` on `/documents`, `/documents/` and the
+     selected paths, and deny read/write on everything else under `/documents/`.
+     With no selection the whole mount is denied.
+   - `DocumentBackend` enforces the same rule itself: `read_file` only works on
+     attached keys, `grep` only searches attached keys, `ls` and `glob` on the
+     mount are disabled, and every write, edit, delete, upload or download returns
+     "permission denied".
+3. `ContextMiddleware` adds the `document_instructions` prompt (from the
+   PromptPool, with a built-in fallback) and an `<attached-documents>` block with
+   filename, path, text length and initial excerpt to the system message on each
+   model call. This block isn't written to checkpoint state, so changing the
+   selection on the next turn takes effect immediately.
+4. For persisted chats the selection (`document_ids` and filenames) is saved on
+   the `chats` row so the UI can restore it when the chat is reopened. An empty
+   list clears it; omitting the field leaves it unchanged.
+
+## Frontend
+
+- `src/api/documents-client.ts` calls `/api/backend/v1/documents`.
+- `pages/documents/Documents.tsx` is the library page (upload, list, delete).
+- `components/ChatDocuments/*` provides the attach menu and the chips in the chat
+  input, and sends `document_ids` with each turn.
+- `service/parsedDocumentStorage.ts` is legacy: documents previously parsed into
+  browser local storage are only shown on the library page, where they can be moved
+  to the server library (uploaded as `.txt`) or deleted. Nothing new is written
+  there.
+
+The older inline `data_sources` request field is still accepted by the backend
+(injected as a guarded message by `ContextMiddleware`), but the current UI no
+longer sends it.
+
+## Search behavior and limits
+
+`ls`, `grep` and `read_file` are Deep Agents Python tools, not shell commands. For
+`/documents/`, `grep` loads each attached document from the store and matches in
+Python. It isn't PostgreSQL full-text search. This saves model context, not
+database reads or memory. With at most 10 size-bounded documents per user this is
+acceptable. Measure before raising the limits.
+
+Not implemented yet: document summaries, and retrieval for long documents (such as
+reading N lines around a key phrase).
 
 ## References
 
@@ -117,4 +186,3 @@ operations is supplied by the libraries.
 - [Filesystem permissions](https://docs.langchain.com/oss/python/deepagents/permissions)
 - [Filesystem tools and customization](https://docs.langchain.com/oss/python/deepagents/customization)
 - [PostgreSQL store and checkpointer](https://docs.langchain.com/oss/python/langgraph/add-memory#use-in-production)
-- [Deep Agents 0.7.6 StoreBackend source](https://github.com/langchain-ai/deepagents/blob/deepagents%3D%3D0.7.6/libs/deepagents/deepagents/backends/store.py)

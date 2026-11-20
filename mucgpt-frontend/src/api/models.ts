@@ -44,9 +44,13 @@ export type DataSource = {
 export type CanvasState = {
     /** Full GFM markdown document */
     content: string;
-    /** Serialized markdown of the current selection, if any */
+    /** Exact markdown substring covering the selection, if any; structural
+     * operators ("- ", "# ", "**") included only when the selection covers
+     * their boundary side. Table selections use a coordinate annotation
+     * instead of a verbatim substring. */
     selection: string | null;
-    /** Caret position as character offset in the markdown document (selection start when text is selected) */
+    /** Offset of the user's focus in the markdown: caret, or selection start
+     * while a passage is selected; sent whenever one exists. */
     cursor?: number | null;
     /** True when the editor document exceeds the persistence limit and content
      * is only its beginning: the backend then skips persistence and the canvas

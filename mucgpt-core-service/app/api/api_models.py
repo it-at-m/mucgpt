@@ -165,13 +165,16 @@ class CanvasState(BaseModel):
     selection: str | None = Field(
         None,
         max_length=CANVAS_CONTENT_MAX_CHARS,
-        description="Serialized markdown of the current selection, if any",
+        description=(
+            "Exact markdown substring covering the selection, if any; table "
+            "selections use a coordinate annotation instead."
+        ),
     )
     cursor: int | None = Field(
         None,
         description=(
-            "Caret position as character offset into the markdown document "
-            "(selection start when text is selected)"
+            "Offset of the user's focus in the markdown: caret, or selection "
+            "start while a passage is selected. Sent whenever one exists."
         ),
     )
     truncated: bool = Field(

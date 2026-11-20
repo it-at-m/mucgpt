@@ -253,7 +253,8 @@ def test_canvas_edit_replaces_first_occurrence_and_streams(monkeypatch: Any) -> 
     assert writer.chunks[-1].metadata is None
 
 
-def test_canvas_edit_keeps_selection_in_state_update(monkeypatch: Any) -> None:
+def test_canvas_edit_clears_selection_in_state_update(monkeypatch: Any) -> None:
+    """A successful edit clears the highlight and keeps (or moves) the caret."""
     writer = RecordingWriter()
     monkeypatch.setattr(canvas, "_get_writer", lambda: writer)
     tool = canvas.make_canvas_edit_tool(_logger())
@@ -269,8 +270,44 @@ def test_canvas_edit_keeps_selection_in_state_update(monkeypatch: Any) -> None:
     )
 
     assert runtime.context.canvas_working == CanvasState(
-        content="revised text", selection="revised text"
+        content="revised text", selection=None
     )
+
+    cursor_runtime = _runtime()
+    tool.invoke(
+        {
+            "old_text": "selected text",
+            "new_text": "revised text",
+            "canvas_state": CanvasState(
+                content="selected text", selection="selected text", cursor=8
+            ),
+            "runtime": cursor_runtime,
+        }
+    )
+    # the caret sat inside the edit, so it moves to the edit start
+    assert cursor_runtime.context.canvas_working == CanvasState(
+        content="revised text", selection=None, cursor=0
+    )
+
+
+def test_canvas_edit_failure_keeps_selection(monkeypatch: Any) -> None:
+    """A failed edit never mutates the working canvas, so the highlight survives."""
+    writer = RecordingWriter()
+    monkeypatch.setattr(canvas, "_get_writer", lambda: writer)
+    tool = canvas.make_canvas_edit_tool(_logger())
+    runtime = _runtime()
+
+    result = tool.invoke(
+        {
+            "old_text": "missing passage",
+            "new_text": "x",
+            "canvas_state": _canvas("Hello world", selection="world"),
+            "runtime": runtime,
+        }
+    )
+
+    assert result.startswith("Error:")
+    assert runtime.context.canvas_working is None
 
 
 def test_canvas_write_then_edit_build_on_previous_update(monkeypatch: Any) -> None:
@@ -346,22 +383,62 @@ def test_canvas_edit_with_ambiguous_match_errors(monkeypatch: Any) -> None:
     assert writer.chunks == []
 
 
-def test_canvas_edit_must_target_active_selection(monkeypatch: Any) -> None:
+def test_canvas_edit_targets_anything_even_with_selection(monkeypatch: Any) -> None:
+    """Edits outside the selection succeed and clear the highlight like any
+    other successful edit."""
+    writer = RecordingWriter()
+    monkeypatch.setattr(canvas, "_get_writer", lambda: writer)
+    tool = canvas.make_canvas_edit_tool(_logger())
+    runtime = _runtime()
+
+    result = tool.invoke(
+        {
+            "old_text": "outside",
+            "new_text": "changed",
+            "canvas_state": _canvas(
+                "outside text selected text", selection="selected text"
+            ),
+            "runtime": runtime,
+        }
+    )
+
+    assert result.startswith(CONFIRMATION)
+    assert runtime.context.canvas_working == CanvasState(
+        content="changed text selected text", selection=None
+    )
+
+
+def test_canvas_edit_unresolvable_ambiguity_despite_selection(monkeypatch: Any) -> None:
+    """Selections do not disambiguate duplicates; plain ambiguity error."""
     writer = RecordingWriter()
     monkeypatch.setattr(canvas, "_get_writer", lambda: writer)
     tool = canvas.make_canvas_edit_tool(_logger())
 
     result = tool.invoke(
         {
-            "old_text": "outside",
+            "old_text": "dup",
             "new_text": "x",
-            "canvas_state": _canvas("outside text selected text", "selected text"),
+            "canvas_state": _canvas("dup and dup", selection="dup"),
         }
     )
 
     assert result.startswith("Error:")
-    assert "selected" in result
+    assert "2 times" in result
+    assert "Extend old_text" in result
+    assert "highlighted" not in result
     assert writer.chunks == []
+
+
+def test_canvas_read_reports_selection_verbatim() -> None:
+    """The model sees the exact highlighted characters, spaces included."""
+    tool = canvas.make_canvas_read_tool(_logger())
+
+    result = tool.invoke(
+        {"canvas_state": _canvas("Katzen und Hunde", selection="und ")}
+    )
+
+    assert "hint, not a constraint" in result
+    assert "\nund \n" in result
 
 
 def test_canvas_edit_rejects_result_over_limit(monkeypatch: Any) -> None:
@@ -397,7 +474,7 @@ def test_canvas_read_returns_document_with_context_info(monkeypatch: Any) -> Non
     assert "# Doc\n\ncontent" in result
     assert "Full document (14 characters)" in result
     assert "selected text" in result
-    assert "canvas_edit's old_text must be part of it" in result
+    assert "hint, not a constraint" in result
     # no cursor: no cursor line, and no table-annotation note for plain selections
     assert "Cursor" not in result
     assert "[table, row" not in result
@@ -412,7 +489,7 @@ def test_canvas_read_reports_cursor_and_table_selection() -> None:
         {"canvas_state": CanvasState(content=doc, selection=selection, cursor=10)}
     )
 
-    assert "Cursor (the user's 'here') at character offset 10" in result
+    assert "at character offset 10" in result
     assert 'after "| a | b |\n"' in result
     assert 'before "| --- | --- |\n| 1 | 2 |"' in result
     assert selection in result

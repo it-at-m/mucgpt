@@ -5,6 +5,7 @@ from typing import cast
 from unittest.mock import AsyncMock, MagicMock
 from uuid import UUID
 
+import anyio
 import httpx
 import pytest
 from fastapi.testclient import TestClient
@@ -235,6 +236,23 @@ def test_parser_failures_compensate_and_hide_internals(upload_api, error, expect
     response = post_document(client)
     assert response.status_code == expected
     assert "secret" not in response.text
+    assert rows(engine) == []
+    assert store.search(get_document_namespace(owner.user_id)) == []
+
+
+def test_document_operation_timeout_returns_a_sanitized_gateway_timeout(upload_api):
+    client, service, parser, engine, store, owner, _ = upload_api
+    service.settings = DocumentConfig(
+        parser_timeout=0.01, ingestion_timeout=1, cleanup_timeout=0.1
+    )
+
+    async def parse(_):
+        await anyio.sleep_forever()
+
+    parser.parse.side_effect = parse
+    response = post_document(client)
+    assert response.status_code == 504
+    assert response.json() == {"detail": "Document processing timed out."}
     assert rows(engine) == []
     assert store.search(get_document_namespace(owner.user_id)) == []
 

@@ -1,9 +1,11 @@
-from collections.abc import Sequence
+from collections.abc import AsyncGenerator, Sequence
+from contextlib import asynccontextmanager
 from dataclasses import dataclass
 from datetime import datetime
+from time import monotonic
 from uuid import UUID, uuid4
 
-from anyio import CancelScope, to_thread
+from anyio import CancelScope, fail_after, to_thread
 from fastapi import UploadFile
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
@@ -51,6 +53,21 @@ class DocumentProcessingDisabledError(RuntimeError):
 
 class DocumentStorageError(RuntimeError):
     """The body write or catalog finalization did not succeed."""
+
+
+class DocumentOperationTimeoutError(RuntimeError):
+    """A bounded document operation did not complete in time."""
+
+
+@asynccontextmanager
+async def document_deadline(timeout: float, phase: str) -> AsyncGenerator[None]:
+    """Translate a cancellation deadline into a public document-operation error."""
+    try:
+        with fail_after(timeout):
+            yield
+    except TimeoutError:
+        logger.warning("Document %s timed out after %.2fs", phase, timeout)
+        raise DocumentOperationTimeoutError(f"Document {phase} timed out.") from None
 
 
 def create_initial_excerpt(text: str, settings: DocumentConfig) -> str:
@@ -165,48 +182,70 @@ class DocumentLibraryService:
     ) -> None:
         """Hide -> delete exact body -> free slot, retaining deleting rows on failure."""
         document_id = str(UUID(document_id))
+        started_at = monotonic()
         # Finish an authorized deletion even if its HTTP caller disconnects.
         with CancelScope(shield=True):
-            # Check ownership before attempting a lock, so foreign IDs remain
-            # unavailable even when their workers are active.
-            async with self.session_factory() as session:
-                document = await DocumentRepository(session).get_document(
-                    user_info.user_id, document_id
-                )
-                if document is None:
-                    raise DocumentUnavailableError("Document is unavailable.")
-
-            async with document_work_lock(
-                self.session_factory, document_id
-            ) as acquired:
-                if not acquired:
-                    raise DocumentProcessingError("Document is busy. Retry deletion.")
-                async with self.session_factory.begin() as session:
-                    repository = DocumentRepository(session)
-                    # Recheck after acquisition: another worker may have finished.
-                    document = await repository.get_document(
+            async with document_deadline(
+                get_settings().documents.deletion_timeout, "deletion"
+            ):
+                # Check ownership before attempting a lock, so foreign IDs remain
+                # unavailable even when their workers are active.
+                async with self.session_factory() as session:
+                    document = await DocumentRepository(session).get_document(
                         user_info.user_id, document_id
                     )
                     if document is None:
                         raise DocumentUnavailableError("Document is unavailable.")
-                    if document.storage_key != get_document_storage_key(document_id):
-                        raise DocumentStorageError(
-                            "Document storage key is inconsistent"
-                        )
-                    # Ingestion holds this lock for its whole lifetime, so a
-                    # processing row seen here is stale (e.g. worker crashed).
-                    if not await repository.mark_deleting(
-                        user_info.user_id, document_id, allow_processing=True
-                    ):
-                        raise DocumentUnavailableError("Document is unavailable.")
 
-                # No database transaction spans the store operation. Missing bodies are
-                # already cleaned up, so retries use the same idempotent exact-key delete.
-                await delete_document_body(user_info.user_id, document_id)
-                async with self.session_factory.begin() as session:
-                    await DocumentRepository(session).remove_after_cleanup(
-                        user_info.user_id, document_id
-                    )
+                async with document_work_lock(
+                    self.session_factory, document_id
+                ) as acquired:
+                    if not acquired:
+                        raise DocumentProcessingError(
+                            "Document is busy. Retry deletion."
+                        )
+                    async with document_deadline(
+                        get_settings().documents.catalog_timeout, "catalog update"
+                    ):
+                        async with self.session_factory.begin() as session:
+                            repository = DocumentRepository(session)
+                            # Recheck after acquisition: another worker may have finished.
+                            document = await repository.get_document(
+                                user_info.user_id, document_id
+                            )
+                            if document is None:
+                                raise DocumentUnavailableError(
+                                    "Document is unavailable."
+                                )
+                            if document.storage_key != get_document_storage_key(
+                                document_id
+                            ):
+                                raise DocumentStorageError(
+                                    "Document storage key is inconsistent"
+                                )
+                            # Ingestion holds this lock for its whole lifetime, so a
+                            # processing row seen here is stale (e.g. worker crashed).
+                            if not await repository.mark_deleting(
+                                user_info.user_id, document_id, allow_processing=True
+                            ):
+                                raise DocumentUnavailableError(
+                                    "Document is unavailable."
+                                )
+
+                    # No database transaction spans the store operation. Missing bodies are
+                    # already cleaned up, so retries use the same idempotent exact-key delete.
+                    async with document_deadline(
+                        get_settings().documents.storage_timeout, "body cleanup"
+                    ):
+                        await delete_document_body(user_info.user_id, document_id)
+                    async with document_deadline(
+                        get_settings().documents.catalog_timeout, "catalog cleanup"
+                    ):
+                        async with self.session_factory.begin() as session:
+                            await DocumentRepository(session).remove_after_cleanup(
+                                user_info.user_id, document_id
+                            )
+        logger.info("Document deletion completed in %.2fs", monotonic() - started_at)
 
 
 class DocumentIngestionService:
@@ -257,78 +296,108 @@ class DocumentIngestionService:
         reserved_id = str(uuid4())
         # Acquire before publishing processing metadata; keep ownership through
         # finalization or compensation, including failed/cancelled uploads.
-        async with document_work_lock(self.session_factory, reserved_id) as acquired:
-            if not acquired:
-                raise DocumentStorageError("Document work lock could not be acquired")
-            document_id = None
-            write_attempted = False
-            try:
-                # Shield reservation publication so cancellation cannot lose a committed
-                # row's ID before compensation can identify it.
-                with CancelScope(shield=True):
-                    async with self.session_factory.begin() as session:
-                        document = await DocumentRepository(session).reserve_document(
-                            user_info.user_id,
-                            filename=filename,
-                            mime_type=mime_type,
-                            original_size=original_size,
-                            document_id=reserved_id,
-                        )
-                        document_id = document.id
-                        created_at = document.created_at
-
-                if document_id is None:
-                    raise DocumentStorageError("Document reservation was not published")
-
-                text = await parser.parse(file)
-                self._validate_text(text)
-                preview = await to_thread.run_sync(
-                    create_initial_excerpt, text, self.settings
-                )
-                backend = create_document_backend(user_info.user_id)
-                write_attempted = True
-                result = await backend.awrite(
-                    get_document_storage_key(document_id), text
-                )
-                if result.error:
-                    raise DocumentStorageError("Document body could not be stored")
-
-                # Construct metadata before publication: no fallible work after commit.
-                metadata = SelectedDocument(
-                    id=document_id,
-                    filename=filename,
-                    mime_type=mime_type,
-                    original_size=original_size,
-                    text_length=len(text),
-                    preview=preview,
-                    preview_kind="initial_excerpt",
-                    path=get_document_path(document_id),
-                    created_at=created_at,
-                )
-                with CancelScope(shield=True):
-                    async with self.session_factory.begin() as session:
-                        if not await DocumentRepository(session).mark_ready(
-                            user_info.user_id,
-                            document_id,
-                            text_length=len(text),
-                            preview=preview,
-                        ):
-                            raise DocumentStorageError(
-                                "Document could not be marked ready"
-                            )
-                return metadata
-            except BaseException:
-                if document_id is not None:
+        started_at = monotonic()
+        async with document_deadline(self.settings.ingestion_timeout, "ingestion"):
+            async with document_work_lock(
+                self.session_factory, reserved_id
+            ) as acquired:
+                if not acquired:
+                    raise DocumentStorageError(
+                        "Document work lock could not be acquired"
+                    )
+                document_id = None
+                write_attempted = False
+                try:
+                    # Shield reservation publication so cancellation cannot lose a committed
+                    # row's ID before compensation can identify it.
                     with CancelScope(shield=True):
-                        try:
-                            await self._compensate(
-                                user_info.user_id, document_id, write_attempted
-                            )
-                        except Exception:
-                            logger.exception(
-                                "Document ingestion cleanup failed for %s", document_id
-                            )
-                raise
+                        async with document_deadline(
+                            self.settings.catalog_timeout, "catalog reservation"
+                        ):
+                            async with self.session_factory.begin() as session:
+                                document = await DocumentRepository(
+                                    session
+                                ).reserve_document(
+                                    user_info.user_id,
+                                    filename=filename,
+                                    mime_type=mime_type,
+                                    original_size=original_size,
+                                    document_id=reserved_id,
+                                )
+                                document_id = document.id
+                                created_at = document.created_at
+
+                    if document_id is None:
+                        raise DocumentStorageError(
+                            "Document reservation was not published"
+                        )
+
+                    async with document_deadline(
+                        self.settings.parser_timeout, "parsing"
+                    ):
+                        text = await parser.parse(file)
+                    self._validate_text(text)
+                    preview = await to_thread.run_sync(
+                        create_initial_excerpt, text, self.settings
+                    )
+                    backend = create_document_backend(user_info.user_id)
+                    write_attempted = True
+                    async with document_deadline(
+                        self.settings.storage_timeout, "storage"
+                    ):
+                        result = await backend.awrite(
+                            get_document_storage_key(document_id), text
+                        )
+                    if result.error:
+                        raise DocumentStorageError("Document body could not be stored")
+
+                    # Construct metadata before publication: no fallible work after commit.
+                    metadata = SelectedDocument(
+                        id=document_id,
+                        filename=filename,
+                        mime_type=mime_type,
+                        original_size=original_size,
+                        text_length=len(text),
+                        preview=preview,
+                        preview_kind="initial_excerpt",
+                        path=get_document_path(document_id),
+                        created_at=created_at,
+                    )
+                    with CancelScope(shield=True):
+                        async with document_deadline(
+                            self.settings.catalog_timeout, "catalog publication"
+                        ):
+                            async with self.session_factory.begin() as session:
+                                if not await DocumentRepository(session).mark_ready(
+                                    user_info.user_id,
+                                    document_id,
+                                    text_length=len(text),
+                                    preview=preview,
+                                ):
+                                    raise DocumentStorageError(
+                                        "Document could not be marked ready"
+                                    )
+                    logger.info(
+                        "Document ingestion completed in %.2fs",
+                        monotonic() - started_at,
+                    )
+                    return metadata
+                except BaseException:
+                    if document_id is not None:
+                        with CancelScope(shield=True):
+                            try:
+                                async with document_deadline(
+                                    self.settings.cleanup_timeout, "ingestion cleanup"
+                                ):
+                                    await self._compensate(
+                                        user_info.user_id, document_id, write_attempted
+                                    )
+                            except Exception:
+                                logger.exception(
+                                    "Document ingestion cleanup failed for %s",
+                                    document_id,
+                                )
+                    raise
 
     async def _validate_upload_size(self, file: UploadFile) -> int:
         """Count with bounded reads even when the supplied size is absent/inaccurate.

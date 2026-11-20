@@ -1,4 +1,5 @@
 import httpx
+from anyio import fail_after
 from fastapi import UploadFile
 
 from config.settings import get_settings
@@ -18,6 +19,11 @@ class XbergBackend(ParserBackend):
         logger.info(f"XbergBackend configured with URL {settings.xberg_url}")
 
     async def parse(self, file: UploadFile) -> str:
+        parser_timeout = get_settings().documents.parser_timeout
+        with fail_after(parser_timeout):
+            return await self._parse(file)
+
+    async def _parse(self, file: UploadFile) -> str:
         file_bytes = await file.read()
 
         # Use a list-of-tuples for multipart fields so repeated "files" is supported.

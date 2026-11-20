@@ -12,6 +12,7 @@ from pydantic import (
     ConfigDict,
     Field,
     HttpUrl,
+    PositiveFloat,
     PositiveInt,
     PrivateAttr,
     SecretStr,
@@ -548,6 +549,15 @@ class DocumentConfig(BaseModel):
     max_upload_bytes: PositiveInt = 100 * 1024 * 1024
     max_text_bytes: PositiveInt = 5 * 1024 * 1024
     preview_max_chars: PositiveInt = 1000
+    ingestion_timeout: PositiveFloat = 300.0
+    deletion_timeout: PositiveFloat = 90.0
+    parser_timeout: PositiveFloat = 180.0
+    storage_timeout: PositiveFloat = 60.0
+    catalog_timeout: PositiveFloat = 15.0
+    cleanup_timeout: PositiveFloat = 60.0
+    lock_connect_timeout: PositiveFloat = 10.0
+    lock_query_timeout: PositiveFloat = 10.0
+    lock_close_timeout: PositiveFloat = 10.0
 
 
 class PromptConfig(BaseModel):

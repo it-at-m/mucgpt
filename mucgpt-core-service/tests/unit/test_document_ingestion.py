@@ -339,6 +339,62 @@ async def test_parser_errors_and_cancellation_compensate(ingestion, error_type):
 
 
 @pytest.mark.asyncio
+async def test_parser_deadline_compensates_and_releases_the_work_lock(ingestion):
+    service, sessions, _, parser = ingestion
+    service.settings = DocumentConfig(
+        parser_timeout=0.01, ingestion_timeout=1, cleanup_timeout=0.1
+    )
+
+    async def parse(_):
+        await anyio.sleep_forever()
+
+    parser.parse.side_effect = parse
+    with pytest.raises(services.DocumentOperationTimeoutError, match="parsing"):
+        await service.ingest_document(user(), upload())
+    assert sessions.rows() == []
+    assert sessions.locked_ids == set()
+
+
+@pytest.mark.asyncio
+async def test_storage_deadline_compensates_and_releases_the_work_lock(
+    ingestion, monkeypatch
+):
+    service, sessions, _, _ = ingestion
+    service.settings = DocumentConfig(
+        storage_timeout=0.01, ingestion_timeout=1, cleanup_timeout=0.1
+    )
+
+    async def write(*_):
+        await anyio.sleep_forever()
+
+    monkeypatch.setattr(
+        services,
+        "create_document_backend",
+        lambda _: MagicMock(awrite=AsyncMock(side_effect=write)),
+    )
+    with pytest.raises(services.DocumentOperationTimeoutError, match="storage"):
+        await service.ingest_document(user(), upload())
+    assert sessions.rows() == []
+    assert sessions.locked_ids == set()
+
+
+@pytest.mark.asyncio
+async def test_cleanup_deadline_retains_the_deleting_row(ingestion, monkeypatch):
+    service, sessions, _, _ = ingestion
+    service.settings = DocumentConfig(cleanup_timeout=0.01, ingestion_timeout=1)
+    monkeypatch.setattr(DocumentRepository, "mark_ready", AsyncMock(return_value=False))
+
+    async def delete_body(*_):
+        await anyio.sleep_forever()
+
+    monkeypatch.setattr(services, "delete_document_body", delete_body)
+    with pytest.raises(services.DocumentStorageError, match="marked ready"):
+        await service.ingest_document(user(), upload())
+    assert sessions.rows()[0].status == "deleting"
+    assert sessions.locked_ids == set()
+
+
+@pytest.mark.asyncio
 async def test_anyio_level_cancellation_shields_compensation(ingestion):
     service, sessions, _, parser = ingestion
     with anyio.CancelScope() as scope:
@@ -509,3 +565,28 @@ async def test_catalog_cleanup_failure_keeps_a_recoverable_row(
     await service._compensate(user().user_id, row.id, True)
     assert sessions.rows() == []
     assert store.search(get_document_namespace(user().user_id)) == []
+
+
+@pytest.mark.asyncio
+async def test_xberg_total_deadline_bounds_a_trickle_or_hung_request(monkeypatch):
+    settings = services.get_settings().model_copy(
+        update={
+            "xberg_url": "http://xberg.test",
+            "documents": DocumentConfig(parser_timeout=0.01),
+        }
+    )
+    monkeypatch.setattr(xberg, "get_settings", lambda: settings)
+
+    class HangingClient:
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, *_):
+            return None
+
+        async def post(self, *_args, **_kwargs):
+            await anyio.sleep_forever()
+
+    monkeypatch.setattr(xberg.httpx, "AsyncClient", HangingClient)
+    with pytest.raises(TimeoutError):
+        await xberg.XbergBackend().parse(upload())

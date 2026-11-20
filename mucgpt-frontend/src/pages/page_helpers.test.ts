@@ -158,7 +158,7 @@ describe("chat title generation", () => {
         await vi.waitFor(() => expect(fetchHistory).toHaveBeenCalledTimes(3));
     });
 
-    it("regenerates the title on the 3rd turn with the current title and previous turn", async () => {
+    it("regenerates the title on the 2nd turn with the current title and previous turn", async () => {
         vi.stubGlobal("requestAnimationFrame", vi.fn());
         const { createChatName } = await import("../api/core-client");
         vi.mocked(createChatName).mockResolvedValue("Better title");
@@ -166,10 +166,7 @@ describe("chat title generation", () => {
 
         await makeApiRequest(
             ...baseArgs({
-                0: [
-                    { user: "First question", response: { answer: "First answer" } },
-                    { user: "Second question", response: { answer: "Second answer" } }
-                ],
+                0: [{ user: "First question", response: { answer: "First answer" } }],
                 4: { current: "chat-1" },
                 5: storage
             })
@@ -181,13 +178,26 @@ describe("chat title generation", () => {
             expect.objectContaining({
                 conversationId: "chat-1",
                 currentTitle: "Old title",
-                previousTurn: { query: "Second question", answer: "Second answer" }
+                previousTurn: { query: "First question", answer: "First answer" }
             })
         );
         await vi.waitFor(() => expect(storage.renameChat).toHaveBeenCalledWith("chat-1", "Better title"));
     });
 
-    it.each([[1], [3]])("does not regenerate the title on completed turn %s+1 (even turn)", async (priorTurnCount: number) => {
+    it("regenerates the title on the 4th turn", async () => {
+        vi.stubGlobal("requestAnimationFrame", vi.fn());
+        const { createChatName } = await import("../api/core-client");
+        vi.mocked(createChatName).mockResolvedValue("Fourth turn title");
+        const storage = makeStorage();
+        const answers = Array.from({ length: 3 }, (_, i) => ({ user: `Q${i}`, response: { answer: `A${i}` } }));
+
+        await makeApiRequest(...baseArgs({ 0: answers, 4: { current: "chat-1" }, 5: storage }));
+        await vi.waitFor(() => expect(createChatName).toHaveBeenCalledTimes(1));
+
+        await vi.waitFor(() => expect(storage.renameChat).toHaveBeenCalledWith("chat-1", "Fourth turn title"));
+    });
+
+    it.each([[2], [4], [5]])("does not regenerate the title on completed turn %s+1", async (priorTurnCount: number) => {
         vi.stubGlobal("requestAnimationFrame", vi.fn());
         const { createChatName } = await import("../api/core-client");
         const storage = makeStorage();
@@ -261,7 +271,7 @@ describe("chat title generation", () => {
         // First send: chat created, initial title generation starts and stays pending.
         await makeApiRequest(...baseArgs({ 2: vi.fn(), 4: { current: undefined }, 5: storage, 10: fetchHistory }));
 
-        // Second send on the same chat reaches the 3rd turn while the first
+        // Second send on the same chat reaches the 2nd turn while the first
         // title generation is still running: the in-flight guard skips it.
         const answers = [
             { user: "Q", response: { answer: "A" } },
@@ -279,7 +289,7 @@ describe("chat title generation", () => {
         expect(storage.renameChat).toHaveBeenCalledWith("chat-1", "Final title");
 
         vi.mocked(createChatName).mockResolvedValue("Another title");
-        const answers2 = [...answers, { user: "Q3", response: { answer: "A3" } }, { user: "Q4", response: { answer: "A4" } }];
+        const answers2 = [...answers, { user: "Q3", response: { answer: "A3" } }];
         await makeApiRequest(...baseArgs({ 0: answers2, 4: { current: "chat-1" }, 5: storage, 10: fetchHistory }));
         await flushMicrotasks();
         await vi.waitFor(() => expect(createChatName).toHaveBeenCalledTimes(2));

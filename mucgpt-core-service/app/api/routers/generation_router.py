@@ -252,8 +252,8 @@ def _build_chat_title_user_content(request: ChatTitleRequest) -> str:
             "Current chat title:\n"
             f"{_truncate_title_text(request.current_title)}\n\n"
             "Decide whether the current chat title still fits the conversation "
-            "below. Return decision \"keep_title\" with no title if it does. Only "
-            "return decision \"new_title\" with a new title if the current one "
+            'below. Return decision "keep_title" with no title if it does. Only '
+            'return decision "new_title" with a new title if the current one '
             "no longer fits the conversation."
         )
     for turn in (request.previous_turns or [])[-_TITLE_TURN_LIMIT:]:
@@ -264,7 +264,7 @@ def _build_chat_title_user_content(request: ChatTitleRequest) -> str:
     if request.language:
         parts.append(
             "Title language:\n"
-            f'Write the chat title in the language with ISO 639 code '
+            f"Write the chat title in the language with ISO 639 code "
             f'"{request.language}".'
         )
     return "\n\n".join(parts)
@@ -353,32 +353,44 @@ async def generate_chat_title(
                     normalized = request.current_title
                 else:
                     normalized = _normalize_chat_title(decision.title or "")
+                    should_persist = True
                     if not normalized:
-                        normalized = _normalize_chat_title(request.query) or "New Chat"
+                        if request.current_title:
+                            # An unusable replacement must not overwrite a usable
+                            # existing title or fall back to the current query.
+                            normalized = request.current_title
+                            should_persist = False
+                        else:
+                            normalized = (
+                                _normalize_chat_title(request.query) or "New Chat"
+                            )
 
                     # Persist the title, scoped to the requesting user. A False
                     # result means the conversation already exists and belongs to
                     # someone else.
-                    title_persisted = (
-                        await PersistanceHelpers.set_chat_title_for_conversation(
-                            conversation_id=request.conversation_id,
-                            user_id=user_info.user_id,
-                            title=normalized,
+                    if should_persist:
+                        title_persisted = (
+                            await PersistanceHelpers.set_chat_title_for_conversation(
+                                conversation_id=request.conversation_id,
+                                user_id=user_info.user_id,
+                                title=normalized,
+                            )
                         )
-                    )
-                    if not title_persisted:
-                        logger.warning(
-                            "chat-title: user %s may not set the title for conversation %s",
-                            user_info.user_id,
-                            request.conversation_id,
-                        )
-                        raise HTTPException(
-                            status_code=403,
-                            detail="Not allowed to modify this conversation",
-                        )
+                        if not title_persisted:
+                            logger.warning(
+                                "chat-title: user %s may not set the title for conversation %s",
+                                user_info.user_id,
+                                request.conversation_id,
+                            )
+                            raise HTTPException(
+                                status_code=403,
+                                detail="Not allowed to modify this conversation",
+                            )
 
                 result = ChatTitleResult(title=normalized)
-                observation.update(output={**result.model_dump(), "decision": decision.decision})
+                observation.update(
+                    output={**result.model_dump(), "decision": decision.decision}
+                )
                 return result
             except HTTPException:
                 raise

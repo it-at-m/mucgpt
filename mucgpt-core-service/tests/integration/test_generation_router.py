@@ -182,9 +182,7 @@ def test_generate_chat_title_direct_model(
         session_id="conv-1",
         trace_name="chat-title-generation",
     )
-    observation.update.assert_called_once_with(
-        output={**body, "decision": "new_title"}
-    )
+    observation.update.assert_called_once_with(output={**body, "decision": "new_title"})
 
 
 @pytest.mark.integration
@@ -215,6 +213,36 @@ def test_generate_chat_title_fallback_when_empty(
     assert resp.status_code == 200, resp.text
     body = resp.json()
     assert body["title"] == "Bitte um Statusupdate zum"
+
+
+@pytest.mark.integration
+@patch(
+    "api.routers.generation_router.PersistanceHelpers.set_chat_title_for_conversation",
+    new_callable=AsyncMock,
+)
+@patch("core.llm_helpers.ModelRegistry.get_model")
+def test_generate_chat_title_preserves_current_title_when_replacement_is_empty(
+    mock_get_model, mock_set_title, test_client: TestClient
+) -> None:
+    mock_get_model.return_value = _FakeConfiguredModel(
+        structured_response_by_run_name={
+            "chat-title-generation": {"decision": "new_title", "title": "   "}
+        }
+    )
+
+    resp = test_client.post(
+        "/v1/generations/chat-title",
+        json={
+            "conversation_id": "conv-2",
+            "query": "Bitte um Statusupdate zum Projekt",
+            "answer": "Der Status ist gruen.",
+            "current_title": "Bestehender Titel",
+        },
+    )
+
+    assert resp.status_code == 200, resp.text
+    assert resp.json()["title"] == "Bestehender Titel"
+    mock_set_title.assert_not_awaited()
 
 
 @pytest.mark.integration

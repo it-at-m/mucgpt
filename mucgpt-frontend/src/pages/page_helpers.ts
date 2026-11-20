@@ -231,11 +231,10 @@ interface TitleContextTurn {
 }
 
 /**
- * The first regeneration happens on the 3rd completed turn (the initial title is
- * generated after the 1st), then again on every 2nd turn (5th, 7th, ...).
+ * Titles are generated on completed turns 1, 2, 4, 8, ... . This keeps title
+ * generation frequent early in a conversation while reducing calls over time.
  */
-const CHAT_TITLE_FIRST_REGENERATION_TURN = 3;
-const CHAT_TITLE_TURN_INTERVAL = 2;
+const isChatTitleGenerationTurn = (completedTurns: number): boolean => completedTurns > 0 && (completedTurns & (completedTurns - 1)) === 0;
 
 /** Chat ids whose title generation is currently running; guards against duplicate LLM calls. */
 const titleGenerationInFlight = new Set<string>();
@@ -678,14 +677,12 @@ export const makeApiRequest = async (
         await storageService.appendMessage(finalMessage, activeChatRef.current, options);
         if (fetchHistory) fetchHistory();
 
-        // Title handling: the initial title is generated after the 1st completed
-        // turn, then the title is reconsidered on every 2nd turn (3, 5, 7, ...)
-        // with the current title and the previous turn as context.
+        // Title handling: generate on completed turns 1, 2, 4, 8, ... with the
+        // current title and the previous turn as context after the first turn.
         const completedTurns = answers.length + 1;
-        const isInitialTitle = completedTurns === 1;
-        const isRegenerationTurn =
-            completedTurns >= CHAT_TITLE_FIRST_REGENERATION_TURN && (completedTurns - CHAT_TITLE_FIRST_REGENERATION_TURN) % CHAT_TITLE_TURN_INTERVAL === 0;
-        if (isInitialTitle || isRegenerationTurn) {
+        const isTitleGenerationTurn = isChatTitleGenerationTurn(completedTurns);
+        const isRegenerationTurn = completedTurns > 1 && isTitleGenerationTurn;
+        if (isTitleGenerationTurn) {
             const priorTurn = answers[answers.length - 1] as { user: string; response: { answer: string } } | undefined;
             const previousTurn: TitleContextTurn | undefined =
                 isRegenerationTurn && priorTurn ? { query: priorTurn.user, answer: priorTurn.response.answer } : undefined;

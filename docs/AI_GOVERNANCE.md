@@ -204,6 +204,12 @@ The category prompts are maintained in the core-service prompt pool and can be
 evaluated with the compliance experiment documented in
 [`mucgpt-core-service/docs/compliance-experiments.md`](../mucgpt-core-service/docs/compliance-experiments.md).
 
+The committed category prompts are a general example implementation of this
+screening. They are not legal advice and not a guarantee of compliance;
+deployments can tune or replace them per use case through the Langfuse prompt
+configuration. The screening itself stays advisory regardless of the prompts
+in use.
+
 ## Limitations And Failure Handling
 
 - The check evaluates the system prompt, not future inputs, outputs, tools,

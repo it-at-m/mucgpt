@@ -14,19 +14,14 @@ def reset_prompt_pool() -> None:
     PromptPool.init(None, PromptPoolConfig())
 
 
-@pytest.mark.skip(reason="Local prompt-pool Markdown fallbacks are no longer shipped")
 def test_local_prompts_are_used_without_langfuse() -> None:
     assert (
         PromptPool.get_prompt("default_instructions")
         == (PromptPool._defaults["default_instructions"])
     )
-    assert (
-        PromptPool.get_prompt("prompt_for_chat_title")
-        == (PromptPool._defaults["prompt_for_chat_title"])
-    )
+    assert PromptPool.get_prompt("chat_title") == PromptPool._defaults["chat_title"]
 
 
-@pytest.mark.skip(reason="Local prompt-pool Markdown fallbacks are no longer shipped")
 def test_get_prompt_uses_configured_folder_name_label_and_local_fallback() -> None:
     lf_client = MagicMock()
     lf_client.get_prompt.return_value = SimpleNamespace(prompt="from langfuse")
@@ -52,7 +47,6 @@ def test_get_prompt_uses_configured_folder_name_label_and_local_fallback() -> No
     )
 
 
-@pytest.mark.skip(reason="Local prompt-pool Markdown fallbacks are no longer shipped")
 def test_configured_prompt_name_is_used_for_langfuse_and_local_fallback() -> None:
     lf_client = MagicMock()
     lf_client.get_prompt.return_value = SimpleNamespace(prompt="remote prompt")
@@ -61,18 +55,18 @@ def test_configured_prompt_name_is_used_for_langfuse_and_local_fallback() -> Non
             PromptFolderConfig(
                 name="generation_prompts",
                 prompts=[
-                    PromptConfig(name="prompt_for_systemprompt", label="production")
+                    PromptConfig(name="assistant_systemprompt", label="production")
                 ],
             )
         ]
     )
     PromptPool.init(lf_client, config)
 
-    assert PromptPool.get_prompt("prompt_for_systemprompt") == "remote prompt"
+    assert PromptPool.get_prompt("assistant_systemprompt") == "remote prompt"
     lf_client.get_prompt.assert_called_once_with(
-        "generation_prompts/prompt_for_systemprompt",
+        "generation_prompts/assistant_systemprompt",
         label="production",
-        fallback=PromptPool._defaults["prompt_for_systemprompt"],
+        fallback=PromptPool._defaults["assistant_systemprompt"],
     )
 
 
@@ -93,7 +87,7 @@ def test_compliance_prompt_uses_category_as_langfuse_prompt_name() -> None:
     lf_client.get_prompt.assert_called_once_with(
         "compliance/education",
         label="production",
-        fallback=None,
+        fallback=PromptPool._defaults["education"],
     )
 
 
@@ -117,7 +111,6 @@ def test_resolved_prompt_retains_remote_prompt_metadata() -> None:
     assert resolved.langfuse_prompt is remote_prompt
 
 
-@pytest.mark.skip(reason="Local prompt-pool Markdown fallbacks are no longer shipped")
 def test_langfuse_error_uses_matching_local_prompt() -> None:
     lf_client = MagicMock()
     lf_client.get_prompt.side_effect = RuntimeError("unreachable")
@@ -137,7 +130,6 @@ def test_langfuse_error_uses_matching_local_prompt() -> None:
     )
 
 
-@pytest.mark.skip(reason="Local prompt-pool Markdown fallbacks are no longer shipped")
 def test_unconfigured_prompt_uses_local_fallback_even_with_langfuse() -> None:
     lf_client = MagicMock()
     PromptPool.init(lf_client, PromptPoolConfig())
@@ -177,20 +169,29 @@ def test_configured_remote_only_prompt_without_local_file_uses_langfuse() -> Non
         folders=[
             PromptFolderConfig(
                 name="generation_prompts",
-                prompts=[
-                    PromptConfig(name="assistant_description", label="production")
-                ],
+                prompts=[PromptConfig(name="no_such_local_prompt", label="production")],
             )
         ]
     )
     PromptPool.init(lf_client, config)
 
-    assert PromptPool.get_prompt("assistant_description") == "remote only"
+    assert PromptPool.get_prompt("no_such_local_prompt") == "remote only"
     lf_client.get_prompt.assert_called_once_with(
-        "generation_prompts/assistant_description",
+        "generation_prompts/no_such_local_prompt",
         label="production",
         fallback=None,
     )
+
+
+def test_stem_lookup_resolves_prompt_from_subfolder_without_folder_name() -> None:
+    lf_client = MagicMock()
+    PromptPool.init(lf_client, PromptPoolConfig())
+
+    assert (
+        PromptPool.get_prompt("document_instructions")
+        == PromptPool._defaults["document_instructions"]
+    )
+    lf_client.get_prompt.assert_not_called()
 
 
 def test_unknown_prompt_raises_key_error() -> None:

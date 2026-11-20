@@ -104,11 +104,24 @@ responsibilities.
 The optional `prompts` section maps prompt names used by the core service to prompts stored in [langfuse](https://langfuse.com/docs/prompt-management/overview). Each prompt is configured under its Langfuse folder (`prompts.folders`) with the label to use; folder and prompt names must match Langfuse exactly. See `mucgpt-core-service/config.yaml.example` for the complete YAML structure.
 
 - `defaults/default_instructions`: general system instructions for regular chat.
+- `defaults/document_instructions`: instructs the agent on how to work with attached documents on the read-only `/documents/` mount.
 - `generation_prompts/chat_title`: generates concise chat titles.
 - `generation_prompts/assistant_name`: generates assistant names from prompt seeds.
 - `generation_prompts/assistant_description`: generates assistant descriptions from prompt seeds.
 - `generation_prompts/assistant_systemprompt`: generates assistant system prompts from prompt seeds.
 - `compliance_prompts/*`: screens assistant prompts for high-risk use cases (eu-ai-act) in migration/asylum/border control, public services, employment, and education.
+
+#### Local fallback prompts
+
+Every prompt above also ships as a committed Markdown fallback in
+`mucgpt-core-service/app/agent/prompt_pool/` (with `defaults/`,
+`generation_prompts/`, and `compliance_prompts/` subfolders). All fallbacks
+are written in English. Without a Langfuse configuration these files are
+authoritative. With Langfuse configured, the local content is passed to
+Langfuse as a fallback: Langfuse prompts win when they are available, and the
+committed files keep the service working when they are not. Deployments can
+override any prompt through the `prompts` mapping above; the committed files
+then serve as the base to start from.
 
 ### Document Parsing Configuration (YAML)
 
@@ -479,4 +492,4 @@ The core service does not create or upgrade database schema at startup. For ever
 
 ## 🔧 Troubleshooting
 
-- **Chat requests fail with `Prompt configuration missing`:** prompts are fetched from Langfuse when configured; otherwise the core service uses the local fallback files in `mucgpt-core-service/app/agent/prompt_pool/` (see [Prompt Configuration](#prompt-configuration)). Create the missing `.md` files there and rebuild the core-service image.
+- **Chat requests fail with `Prompt configuration missing`:** prompts are fetched from Langfuse when configured; otherwise the core service uses the committed fallback files in `mucgpt-core-service/app/agent/prompt_pool/` (see [Prompt Configuration](#prompt-configuration)). A missing prompt means the file was removed or renamed: restore it or configure a Langfuse prompt for that name, then rebuild the core-service image.

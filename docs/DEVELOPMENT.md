@@ -55,6 +55,35 @@ uv remove pydantic
 uv run pytest
 ```
 
+## Analyze a Langfuse trace
+
+The core service includes a diagnostic script for investigating a single trace.
+It prints a chronological observation timeline, including model, finish reason,
+tool calls, and an explicit `CONTENT_FILTERED` marker when the provider stops a
+generation with `content_filter` or `content_policy_violation`.
+
+Run it from `mucgpt-core-service/`:
+
+```bash
+uv run python app/scripts/analyze_langfuse_trace.py <trace-id>
+```
+
+Credentials are read from `LANGFUSE_PUBLIC_KEY`, `LANGFUSE_SECRET_KEY`, and
+`LANGFUSE_HOST`. When those variables are not already in the shell, the script
+loads `stack/.env` by default. Use `--env-file <path>` to select a different
+dotenv file.
+
+The default report excludes observation inputs and outputs, which can contain
+user data. Inspect bounded content only in an approved environment:
+
+```bash
+uv run python app/scripts/analyze_langfuse_trace.py <trace-id> --show-content
+```
+
+Use `--max-content-chars <n>` to change the default 500-character content
+limit. The script supports the trace endpoint available on current Langfuse and
+self-hosted v3 deployments.
+
 ## Linting
 
 ```bash

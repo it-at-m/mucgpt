@@ -10,6 +10,16 @@ With `persist=true`, the first request claims a fresh conversation ID for its
 authenticated owner and seeds the checkpoint with client history. Once a
 checkpoint exists, only the newest user message is appended. With `persist=false`,
 the full client history is used without persisted ownership/checkpoint preparation.
+
+The system prompt is request-scoped. The client sends the current one with every
+request; the agent moves it out of the graph input into `RequestContext.system_prompt`,
+so it never reaches the checkpoint. `ContextMiddleware` replaces the leading system
+messages with it on every model call. Edited assistant or custom prompts therefore
+apply to existing chats from the next turn on, and checkpoints written before this
+change, which still carry a frozen prompt, are corrected without a data migration.
+System messages further down the history (inserted by deepagents) are kept. A
+request without messages, such as a HITL resume, leaves the stored messages untouched.
+
 The v1 endpoint supports streaming and non-streaming responses; v2 always streams
 AG-UI events, regardless of the request's `stream` flag.
 
@@ -58,6 +68,62 @@ Assistant cleanup retains configuration until all required chat cleanup succeeds
 On partial failure, completed deletions remain complete and failed/unattempted
 records remain retryable. Higher-level assistant deletion/unsubscribe reports
 failure rather than complete success when required cleanup fails.
+
+## Browser chat migration (temporary)
+
+Chats that only exist in a browser's IndexedDB are uploaded once, so they are
+available on every device. The browser pushes; there is no server-side job,
+because only the browser has the data.
+
+**Frontend** (`src/service/chatMigration/`): `syncHistory()` calls
+`migrateLocalChatsToBackend()` before listing server conversations. Listing marks
+every server chat as `backendPersisted`, so running the migration first ensures a
+chat is only marked after its own import succeeded. For each local chat (normal
+and assistant chats, assistant configs excluded) without `backendPersisted`:
+
+- Only finished turns are sent: turns with `response.error` or an empty answer are
+  dropped. A chat with no turns left (e.g. the placeholder of a failed first turn)
+  is not sent and stays local.
+- The conversation ID is the local key, minus the `CHAT_<assistantId>_` prefix for
+  assistant chats. Keys that are not UUIDs (legacy records) get a fresh UUID and are
+  re-keyed locally in the same IndexedDB transaction that marks them.
+- Chats are uploaded one at a time. On success the unchanged record is written back
+  with `backendPersisted: true`; `_last_edited` is kept so the order stays the same.
+- HTTP 403/409/413/422 keep the chat local and continue with the next one. Network
+  errors, 5xx and expired logins stop the run; it resumes on the next app start.
+- Nothing is deleted locally. The run is idempotent and needs no "done" flag: it is
+  finished when no unpersisted chat with turns is left.
+
+The MSW mock answers 409 on purpose: mock mode lists no conversations, so marked
+chats would be removed locally by the next history sync.
+
+**Backend** (`app/chat_migration/`): `POST /v1/conversations/import` takes
+`conversation_id`, `title`, optional `assistant_id`, optional `last_edited` and the
+`turns`. It runs under the same per-conversation run lock as chat turns.
+
+| Case | Result |
+| --- | --- |
+| New ID | Claimed for the caller, checkpoint written → `imported` |
+| Owned, checkpoint exists | Nothing written, server state wins → `skipped` |
+| Owned, no checkpoint (e.g. retry after a failed write) | Checkpoint written → `imported` |
+| Foreign or retired ID | HTTP 409 |
+| Chat turn currently running | HTTP 409 |
+| No turns, blank texts, over the limits | HTTP 422 |
+
+The transcript is written as a regular checkpoint through a minimal LangGraph graph
+compiled with the shared fenced checkpointer, so readback and later chat turns work
+unchanged. It contains only user/assistant messages: no system prompt (applied per
+request), no tool traces, usage or documents. Title, `updated_at` and a missing
+`assistant_id` are set in one update; `updated_at` takes `last_edited`, capped at
+the current time so a client clock running ahead can't pin a chat to the top.
+Owned IDs are checked before claiming, so `skipped` chats keep their position.
+
+**Removal:** once the migration window is over, delete `app/chat_migration/`,
+`src/service/chatMigration/` and their tests, and the lines marked
+`TODO: remove after the browser chat migration` (`backend.py`, `mocks/handlers.ts`,
+`conversationHistory.ts`, `conversationHistory.test.ts`). Browser-only fallbacks
+such as the local rename in `unifiedHistoryStorage.ts` can go at the same time.
+Chats of users who never opened MUCGPT during the window stay browser-only.
 
 ## Durable deletion invariant
 
@@ -110,6 +176,8 @@ From `mucgpt-core-service`, run the configured router/repository checks:
 ```bash
 uv run pytest tests/integration/test_chat_router.py
 uv run pytest tests/unit/test_conversation_repo.py
+uv run pytest tests/unit/test_request_system_prompt.py
+uv run pytest tests/unit/test_chat_migration.py tests/integration/test_chat_migration_router.py
 uv run ruff check app tests
 uv run ruff format --check app tests
 ```
@@ -133,7 +201,7 @@ From `mucgpt-frontend`:
 ```bash
 npm run lint
 npm run type-check
-npx vitest run src/service/conversationHistory.test.ts src/api/conversations-client.test.ts src/service/assistantstorage.test.ts src/components/UnifiedHistory/unifiedHistoryStorage.test.ts src/pages/assistant/AssistantStrategy.test.ts src/pages/page_helpers.test.ts src/components/Answer/Answer.test.tsx
+npx vitest run src/service/conversationHistory.test.ts src/service/chatMigration src/api/conversations-client.test.ts src/service/assistantstorage.test.ts src/components/UnifiedHistory/unifiedHistoryStorage.test.ts src/pages/assistant/AssistantStrategy.test.ts src/pages/page_helpers.test.ts src/components/Answer/Answer.test.tsx
 ```
 
 Actual runs, environment blockers, browser scenario evidence, and outstanding PR

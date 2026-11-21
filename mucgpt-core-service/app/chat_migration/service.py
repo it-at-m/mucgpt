@@ -1,5 +1,6 @@
 """Writes an imported browser chat into the checkpoint and the chats table."""
 
+from datetime import UTC, datetime
 from typing import Any, Literal
 
 from langchain_core.messages import AIMessage, HumanMessage
@@ -16,6 +17,17 @@ _import_graph: CompiledStateGraph | None = None
 
 class ImportConflictError(Exception):
     """ID belongs to someone else or was deleted, the chat stays local."""
+
+
+def _activity_time(last_edited: datetime | None) -> datetime:
+    """Browser timestamp for the history order, never in the future."""
+    now = datetime.now(UTC)
+    if last_edited is None:
+        return now
+    if last_edited.tzinfo is None:
+        last_edited = last_edited.replace(tzinfo=UTC)
+    # a client clock running ahead would pin the chat on top forever
+    return min(last_edited, now)
 
 
 def _noop(_state: MessagesState) -> dict[str, Any]:
@@ -69,7 +81,7 @@ async def import_chat(
             .where(Chat.conversation_id == conversation_id, Chat.user_id == user_id)
             .values(
                 chat_title=request.title,
-                updated_at=request.last_edited or func.now(),
+                updated_at=_activity_time(request.last_edited), # ensure chat ordering is preserved if possible!
                 assistant_id=func.coalesce(Chat.assistant_id, request.assistant_id),
             )
         )

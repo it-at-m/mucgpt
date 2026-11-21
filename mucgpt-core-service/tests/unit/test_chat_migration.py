@@ -234,3 +234,16 @@ async def test_imported_chat_can_be_continued(
         ("AIMessage", "a2"),
         ("HumanMessage", "q3"),
     ]
+
+
+@pytest.mark.asyncio
+async def test_future_timestamp_is_capped(monkeypatch, saver, chats):
+    # client clock running ahead must not pin the chat on top
+    _ownership(monkeypatch, owned=True)
+    _add_row(chats)
+    before = datetime.now(UTC).replace(tzinfo=None)
+
+    await import_chat(_request(last_edited=datetime(2999, 1, 1, tzinfo=UTC)), "owner")
+
+    updated_at = _row(chats).updated_at.replace(tzinfo=None)
+    assert before <= updated_at <= datetime.now(UTC).replace(tzinfo=None)

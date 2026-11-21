@@ -107,7 +107,10 @@ class _ConfiguredLangChainDeepAgentGraph:
         )
 
     def _prepare_run(
-        self, input_data: dict[str, Any] | Command, config: RunnableConfig | None
+        self,
+        input_data: dict[str, Any] | Command,
+        config: RunnableConfig | None,
+        system_prompt: str | None = None,
     ) -> tuple[
         list[Any],
         list[dict[str, Any]] | None,
@@ -133,11 +136,12 @@ class _ConfiguredLangChainDeepAgentGraph:
         )
         # the system prompt is request-scoped (see ContextMiddleware), keep it out
         # of the graph input so it never ends up in the checkpoint
-        system_prompt = (
-            "\n\n".join(m.text for m in messages if isinstance(m, SystemMessage))
-            if messages
-            else None
-        )
+        if messages:
+            system_prompt = "\n\n".join(
+                m.text for m in messages if isinstance(m, SystemMessage)
+            )
+        # else: a resume has no messages, so the caller hands the prompt over
+        # directly (not via configurable, that gets copied into checkpoint metadata)
         messages = [m for m in messages if not isinstance(m, SystemMessage)]
         data_sources = configurable.get("data_sources", [])
         canvas = configurable.get("canvas")
@@ -169,9 +173,12 @@ class _ConfiguredLangChainDeepAgentGraph:
         stream_mode: list[str] | str | None = None,
         config: RunnableConfig | None = None,
         resume_decisions: list[dict[str, str]] | None = None,
+        system_prompt: str | None = None,
         **kwargs,
     ):
-        messages, data_sources, request_context = self._prepare_run(input_data, config)
+        messages, data_sources, request_context = self._prepare_run(
+            input_data, config, system_prompt
+        )
 
         # Keep the stable graph schema visible in trace metadata without
         # mutating the caller's config dict.

@@ -277,6 +277,8 @@ def _inject_data_sources(
         )
     )
 
+     # TODO: make this more robust: if there is a system message inserted mid chat, lets say by a loaded skill, 
+     # the data sources will be inserted after that message and not at after the first system message
     insert_idx = 0
     for i, msg in enumerate(messages):
         if isinstance(msg, SystemMessage):

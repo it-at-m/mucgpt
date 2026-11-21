@@ -17,8 +17,11 @@ so it never reaches the checkpoint. `ContextMiddleware` replaces the leading sys
 messages with it on every model call. Edited assistant or custom prompts therefore
 apply to existing chats from the next turn on, and checkpoints written before this
 change, which still carry a frozen prompt, are corrected without a data migration.
-System messages further down the history (inserted by deepagents) are kept. A
-request without messages, such as a HITL resume, leaves the stored messages untouched.
+System messages further down the history (inserted by deepagents) are kept. A HITL
+resume has no graph input messages, so the router takes the prompt from the resume
+request and hands it to the agent separately (not via `configurable`: LangGraph copies
+plain configurable values into the checkpoint metadata). Only a request without any
+messages leaves the stored messages untouched.
 
 The v1 endpoint supports streaming and non-streaming responses; v2 always streams
 AG-UI events, regardless of the request's `stream` flag.
@@ -176,7 +179,7 @@ From `mucgpt-core-service`, run the configured router/repository checks:
 ```bash
 uv run pytest tests/integration/test_chat_router.py
 uv run pytest tests/unit/test_conversation_repo.py
-uv run pytest tests/unit/test_request_system_prompt.py
+uv run pytest tests/unit/test_request_system_prompt.py tests/unit/test_tool_approval.py
 uv run pytest tests/unit/test_chat_migration.py tests/integration/test_chat_migration_router.py
 uv run ruff check app tests
 uv run ruff format --check app tests

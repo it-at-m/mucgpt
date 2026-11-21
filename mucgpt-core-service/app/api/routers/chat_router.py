@@ -555,6 +555,15 @@ async def ag_ui_chat_endpoint(
             reasoning_effort=chat_request.reasoning_effort,
             run_id=parsed.run_id,
             language=chat_request.language,
+            # a resume sends no messages to the agent, but the request still has
+            # the current prompt; without it the rest of the run would miss it
+            system_prompt=(
+                "\n\n".join(
+                    m.content for m in chat_request.messages if m.role == "system"
+                )
+                if chat_request.messages
+                else None
+            ),
             resume=generic_resume,
             resume_decisions=resume_decisions,
         )

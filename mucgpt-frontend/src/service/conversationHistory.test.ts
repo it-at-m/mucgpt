@@ -5,10 +5,16 @@ import { getConversationMessagesApi, listConversationsApi } from "../api/convers
 import { StorageService } from "./storage";
 import { ASSISTANT_STORE, CHAT_STORE } from "../constants";
 import { loadConversation, syncConversationHistory, toChatTurns } from "./conversationHistory";
+import { migrateLocalChatsToBackend } from "./chatMigration/chatMigration";
 
 vi.mock("../api/conversations-client", () => ({
     getConversationMessagesApi: vi.fn(),
     listConversationsApi: vi.fn()
+}));
+
+// TODO: remove after the browser chat migration
+vi.mock("./chatMigration/chatMigration", () => ({
+    migrateLocalChatsToBackend: vi.fn()
 }));
 
 describe("conversation history", () => {
@@ -21,6 +27,7 @@ describe("conversation history", () => {
         vi.spyOn(StorageService.prototype, "connectToDB").mockResolvedValue({ put, close } as never);
         vi.spyOn(StorageService.prototype, "get").mockResolvedValue(undefined);
         vi.spyOn(StorageService.prototype, "getAll").mockResolvedValue([]);
+        vi.mocked(migrateLocalChatsToBackend).mockResolvedValue(undefined);
         vi.mocked(listConversationsApi).mockResolvedValue([
             {
                 conversation_id: "thread",
@@ -31,6 +38,31 @@ describe("conversation history", () => {
                 document_ids: []
             }
         ]);
+    });
+
+    it("migrates local chats before listing the server ones", async () => {
+        const order: string[] = [];
+        vi.mocked(migrateLocalChatsToBackend).mockImplementation(async () => {
+            order.push("migrate");
+        });
+        vi.mocked(listConversationsApi).mockImplementation(async () => {
+            order.push("list");
+            return [];
+        });
+
+        await syncConversationHistory();
+
+        expect(order).toEqual(["migrate", "list"]);
+    });
+
+    it("still syncs when the migration fails", async () => {
+        vi.spyOn(console, "error").mockImplementation(() => {});
+        vi.mocked(migrateLocalChatsToBackend).mockRejectedValue(new Error("boom"));
+
+        await syncConversationHistory();
+
+        expect(listConversationsApi).toHaveBeenCalledTimes(1);
+        expect(put).toHaveBeenCalledWith(CHAT_STORE.objectStore_name, expect.objectContaining({ id: "thread" }));
     });
 
     it("restores ordinary and assistant metadata in an empty browser without fetching transcripts", async () => {

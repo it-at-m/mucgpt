@@ -100,6 +100,10 @@ class RequestContext:
     # The user's interface language, for the deliberate-default response
     # language instruction injected with the system message (issue #1448).
     language: str | None = None
+    # system prompt of the current request (custom or assistant prompt), applied
+    # per model call instead of living in the checkpoint so changes take effect.
+    # None = request sent no messages (e.g. resume), keep whatever is stored
+    system_prompt: str | None = None
     canvas: CanvasState | None = None
     # Monotonic within one run; bumped for each canvas_write/canvas_edit call so
     # the streamed UPDATE chunks carry an ordering key for the editor.
@@ -273,6 +277,8 @@ def _inject_data_sources(
         )
     )
 
+    # TODO: make this more robust: if there is a system message inserted mid chat, lets say by a loaded skill,
+    # the data sources will be inserted after that message and not at after the first system message
     insert_idx = 0
     for i, msg in enumerate(messages):
         if isinstance(msg, SystemMessage):
@@ -365,6 +371,24 @@ def _normalize_assistant_messages(messages: list[AnyMessage]) -> list[AnyMessage
         else:
             normalized.append(message)
     return normalized if changed else messages
+
+
+def _apply_request_system_prompt(request: ModelRequest) -> ModelRequest:
+    """Swap the leading stored system prompt for the one sent with this request."""
+    runtime_context = _get_request_context(request)
+    if runtime_context is None or runtime_context.system_prompt is None:
+        return request
+    # only the leading ones: older checkpoints froze the prompt there, deepagents
+    # inserts its own system messages further down which must stay
+    start = 0
+    while start < len(request.messages) and isinstance(
+        request.messages[start], SystemMessage
+    ):
+        start += 1
+    messages = list(request.messages[start:])
+    if runtime_context.system_prompt:
+        messages.insert(0, SystemMessage(content=runtime_context.system_prompt))
+    return request.override(messages=messages)
 
 
 def _get_request_context(request: ModelRequest) -> RequestContext | None:
@@ -577,6 +601,8 @@ class ContextMiddleware(AgentMiddleware):
         assistant_id = _get_assistant_id_from_request(request)
         if not assistant_id:
             request = policy.modify_system_message(request)
+        # before the data sources, they are inserted right after the system prompt
+        request = _apply_request_system_prompt(request)
 
         state_data_sources = (
             request.state.get("data_sources", [])
@@ -626,6 +652,8 @@ class ContextMiddleware(AgentMiddleware):
         assistant_id = _get_assistant_id_from_request(request)
         if not assistant_id:
             request = await policy.amodify_system_message(request)
+        # before the data sources, they are inserted right after the system prompt
+        request = _apply_request_system_prompt(request)
 
         state_data_sources = (
             request.state.get("data_sources", [])

@@ -109,8 +109,9 @@ async def get_messages_for_agent(
 
     A stateless request (``persist=False``) runs on the full client history. A
     persisted conversation is seeded with the full history on its first turn so
-    the system prompt and existing browser-held turns are retained; once state
-    exists, only the newest user message is appended to avoid duplicating it.
+    existing browser-held turns are retained; once state exists, only the newest
+    user message is appended to avoid duplicating it. The system prompt is always
+    passed along; the agent applies it per request and never stores it.
     Retired/foreign IDs are rejected. This prepares new turns, not replace/resume
     operations; local history edits do not rewind an existing checkpoint.
     """
@@ -144,7 +145,10 @@ async def get_messages_for_agent(
         )
 
     if await PersistanceHelpers.has_checkpoint(conversation_id):
-        return [request.messages[-1]]
+        # keep the current system prompt, the agent applies it per request so
+        # changed assistant or custom prompts also reach existing chats
+        system_messages = [m for m in request.messages if m.role == "system"]
+        return [*system_messages, request.messages[-1]]
     return request.messages
 
 

@@ -6,7 +6,7 @@ from deepagents import DeepAgentState, FilesystemPermission, create_deep_agent
 from deepagents.backends.protocol import BackendProtocol
 from langchain.agents.middleware import InterruptOnConfig
 from langchain_core.language_models import BaseChatModel
-from langchain_core.messages import AIMessage
+from langchain_core.messages import AIMessage, SystemMessage
 from langchain_core.runnables import RunnableConfig
 from langchain_core.runnables.config import merge_configs
 from langchain_core.tools.base import BaseTool
@@ -131,6 +131,14 @@ class _ConfiguredLangChainDeepAgentGraph:
         messages = (
             input_data.get("messages", []) if isinstance(input_data, dict) else []
         )
+        # the system prompt is request-scoped (see ContextMiddleware), keep it out
+        # of the graph input so it never ends up in the checkpoint
+        system_prompt = (
+            "\n\n".join(m.text for m in messages if isinstance(m, SystemMessage))
+            if messages
+            else None
+        )
+        messages = [m for m in messages if not isinstance(m, SystemMessage)]
         data_sources = configurable.get("data_sources", [])
         canvas = configurable.get("canvas")
 
@@ -149,6 +157,7 @@ class _ConfiguredLangChainDeepAgentGraph:
             ),
             canvas=canvas,
             language=configurable.get("language"),
+            system_prompt=system_prompt,
         )
 
         return messages, data_sources, request_context

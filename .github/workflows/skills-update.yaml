@@ -19,7 +19,7 @@ on:
 jobs:
   update_skills:
     name: Update agent skills and open PR
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     permissions:
       contents: write # push the chore/agent-skills-upgrade branch
       pull-requests: write # create the PR

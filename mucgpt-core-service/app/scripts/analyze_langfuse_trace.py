@@ -85,18 +85,23 @@ def _model_name(observation: Any) -> str | None:
 
 
 def _find_finish_reason(value: Any) -> str | None:
+    reasons = list(_finish_reasons(value))
+    return next(
+        (reason for reason in reasons if reason in _FILTER_FINISH_REASONS),
+        reasons[0] if reasons else None,
+    )
+
+
+def _finish_reasons(value: Any) -> Iterable[str]:
     if isinstance(value, dict):
         metadata = value.get("response_metadata")
         if isinstance(metadata, dict) and (reason := metadata.get("finish_reason")):
-            return str(reason)
+            yield str(reason)
         for nested_value in value.values():
-            if reason := _find_finish_reason(nested_value):
-                return reason
+            yield from _finish_reasons(nested_value)
     elif isinstance(value, list):
         for nested_value in value:
-            if reason := _find_finish_reason(nested_value):
-                return reason
-    return None
+            yield from _finish_reasons(nested_value)
 
 
 def _observation_lines(

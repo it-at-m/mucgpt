@@ -42,13 +42,13 @@ def _suppress_coverage_gate_for_partial_runs(config: pytest.Config) -> None:
     if config.option.cov_fail_under is None:
         return
     if any(
-        str(arg).startswith("--cov-fail-under")
-        for arg in config.invocation_params.args
+        str(arg).startswith("--cov-fail-under") for arg in config.invocation_params.args
     ):
         return  # explicitly requested on the command line — respect it
     args = [str(arg) for arg in config.args]
     testpaths = [str(path) for path in config.getini("testpaths")]
-    if not args or (testpaths and args == testpaths):
+    has_test_selection = bool(config.option.keyword or config.option.markexpr)
+    if not has_test_selection and (not args or (testpaths and args == testpaths)):
         return  # full run — keep the gate
     config.option.cov_fail_under = 0
     known_args = getattr(config, "known_args_namespace", None)

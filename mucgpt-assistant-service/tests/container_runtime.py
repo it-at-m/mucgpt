@@ -15,6 +15,7 @@ import os
 from collections.abc import Callable
 from pathlib import Path
 from typing import Protocol, Self
+from urllib.parse import quote_plus
 
 POSTGRES_IMAGE = "postgres:17.4"
 
@@ -127,9 +128,10 @@ def _try_start[TContainer: StartableContainer](
 
 def postgres_engine_url(container) -> str:
     """SQLAlchemy asyncpg URL for a running PostgresContainer."""
+    username = quote_plus(os.environ.get("MUCGPT_TEST_POSTGRES_USER", "admin"))
+    password = quote_plus(os.environ.get("MUCGPT_TEST_POSTGRES_PASSWORD", "admin"))
     return (
         "postgresql+asyncpg://"
-        f"{os.environ.get('MUCGPT_TEST_POSTGRES_USER', 'admin')}:"
-        f"{os.environ.get('MUCGPT_TEST_POSTGRES_PASSWORD', 'admin')}"
+        f"{username}:{password}"
         f"@{container.get_container_host_ip()}:{int(container.get_exposed_port(5432))}/postgres"
     )

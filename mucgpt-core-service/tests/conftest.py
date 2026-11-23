@@ -1,4 +1,6 @@
+import asyncio
 import os
+import sys
 from pathlib import Path
 from unittest.mock import AsyncMock, Mock
 
@@ -75,6 +77,13 @@ def pytest_configure(config: pytest.Config) -> None:
     """
     global _POSTGRES_CONTAINER
     _suppress_coverage_gate_for_partial_runs(config)
+    if sys.platform == "win32":
+        # psycopg's async driver does not support Windows' default
+        # ProactorEventLoop.  Set the selector policy before unittest's
+        # IsolatedAsyncioTestCase creates its per-test loops.
+        asyncio.set_event_loop_policy(  # ty: ignore[deprecated] — required by psycopg
+            asyncio.WindowsSelectorEventLoopPolicy()
+        )
     if os.getenv("MUCGPT_LIFECYCLE_POSTGRES_HOST"):
         return
     if os.getenv("MUCGPT_TEST_POSTGRES", "auto").strip().lower() in {

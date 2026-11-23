@@ -14,6 +14,8 @@ Knobs:
 from __future__ import annotations
 
 import os
+import shutil
+import subprocess
 from collections.abc import Callable
 from pathlib import Path
 from typing import TYPE_CHECKING, Protocol, Self
@@ -43,6 +45,37 @@ def _podman_socket_candidates() -> list[Path]:
     return candidates
 
 
+def _podman_pipe_candidates() -> list[str]:
+    """Return running Podman machine API pipes on Windows."""
+    if os.name != "nt" or shutil.which("podman") is None:
+        return []
+    result = subprocess.run(
+        [
+            "podman",
+            "machine",
+            "inspect",
+            "--format",
+            "{{.ConnectionInfo.PodmanPipe.Path}}",
+        ],
+        capture_output=True,
+        check=False,
+        text=True,
+    )
+    candidates = []
+    for line in result.stdout.splitlines():
+        pipe = line.strip()
+        if not pipe:
+            continue
+        try:
+            if Path(pipe).exists():
+                candidates.append(pipe)
+        except OSError:
+            # A busy named pipe is still a live endpoint; Windows reports
+            # ERROR_PIPE_BUSY while another client is connected to it.
+            candidates.append(pipe)
+    return candidates
+
+
 def configure_podman_runtime(socket: Path) -> bool:
     os.environ["DOCKER_HOST"] = f"unix://{socket}"
     socket_override = os.environ.get("TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE")
@@ -55,6 +88,15 @@ def configure_podman_runtime(socket: Path) -> bool:
 
     testcontainers_config.ryuk_docker_socket = socket_override
     return helper_set_socket_override
+
+
+def configure_podman_pipe(pipe: str) -> None:
+    """Configure docker-py for a Windows Podman machine named pipe."""
+    pipe_name = pipe.removeprefix("\\\\.\\pipe\\")
+    os.environ["DOCKER_HOST"] = f"npipe:////./pipe/{pipe_name}"
+    # A Linux Ryuk container cannot mount or address a Windows named pipe.
+    # pytest's process-scoped teardown stops the containers explicitly instead.
+    os.environ.setdefault("TESTCONTAINERS_RYUK_DISABLED", "true")
 
 
 def _disabled(name: str) -> bool:
@@ -112,6 +154,11 @@ def start_container[TContainer: StartableContainer](
             return container
         if helper_set_socket_override:
             os.environ.pop("TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE", None)
+    for pipe in _podman_pipe_candidates():
+        configure_podman_pipe(pipe)
+        container = _try_start(factory)
+        if container is not None:
+            return container
     return None
 
 

@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 
 from agent.state_models.default_state import DefaultAgentState
+from agent.state_models.registry import registry
 from agent.tools.spec import LocalTool
 from agent.tools.tools import ToolCollection, select_agent_state_schema
 from core.auth import AuthenticationResult
@@ -18,20 +19,30 @@ def _tool(name: str, metadata=None) -> MagicMock:
 
 
 class TestSelectAgentStateSchema:
+    @pytest.fixture
+    def registered_schema(self, monkeypatch):
+        class TestAgentState(DefaultAgentState):
+            pass
+
+        monkeypatch.setitem(registry, "default", TestAgentState)
+        return TestAgentState
+
     def test_no_tools_yields_default_schema(self):
         assert select_agent_state_schema([]) is DefaultAgentState
 
     def test_tools_without_metadata_yield_default_schema(self):
-        assert select_agent_state_schema([_tool("t1"), _tool("t2")]) is DefaultAgentState
+        assert (
+            select_agent_state_schema([_tool("t1"), _tool("t2")]) is DefaultAgentState
+        )
 
-    def test_single_registered_group_yields_registry_schema(self):
+    def test_single_registered_group_yields_registry_schema(self, registered_schema):
         """All tools in the registered 'default' group resolve to the registry entry."""
         tools = [
             _tool("t1", {"mcp_group": "default", "mcp_source": "src-a"}),
             _tool("t2", {"mcp_group": "default", "mcp_source": "src-b"}),
         ]
 
-        assert select_agent_state_schema(tools) is DefaultAgentState
+        assert select_agent_state_schema(tools) is registered_schema
 
     def test_single_unregistered_group_falls_back_to_default_schema(self):
         tools = [_tool("canvas_write", {"mcp_group": "Canvas", "mcp_source": None})]
@@ -46,7 +57,7 @@ class TestSelectAgentStateSchema:
 
         assert select_agent_state_schema(tools) is DefaultAgentState
 
-    def test_empty_mcp_group_treated_as_default(self):
+    def test_empty_mcp_group_treated_as_default(self, registered_schema):
         """None/empty mcp_group falls back to the 'default' group, not a separate one."""
         tools = [
             _tool("t1", {"mcp_group": None, "mcp_source": "s1"}),
@@ -54,9 +65,9 @@ class TestSelectAgentStateSchema:
             _tool("t3", {"mcp_group": "default", "mcp_source": "s3"}),
         ]
 
-        assert select_agent_state_schema(tools) is DefaultAgentState
+        assert select_agent_state_schema(tools) is registered_schema
 
-    def test_metadata_as_object_uses_getattr(self):
+    def test_metadata_as_object_uses_getattr(self, registered_schema):
         tool = MagicMock()
         tool.name = "t1"
 
@@ -66,7 +77,7 @@ class TestSelectAgentStateSchema:
 
         tool.metadata = Meta()
 
-        assert select_agent_state_schema([tool]) is DefaultAgentState
+        assert select_agent_state_schema([tool]) is registered_schema
 
 
 class TestToolCollection:

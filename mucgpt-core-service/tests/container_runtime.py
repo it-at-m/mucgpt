@@ -43,9 +43,18 @@ def _podman_socket_candidates() -> list[Path]:
     return candidates
 
 
-def configure_podman_runtime(socket: Path) -> None:
+def configure_podman_runtime(socket: Path) -> bool:
     os.environ["DOCKER_HOST"] = f"unix://{socket}"
-    os.environ.setdefault("TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE", str(socket))
+    socket_override = os.environ.get("TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE")
+    helper_set_socket_override = socket_override is None
+    if socket_override is None:
+        socket_override = str(socket)
+        os.environ["TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE"] = socket_override
+
+    from testcontainers.core.config import testcontainers_config
+
+    testcontainers_config.ryuk_docker_socket = socket_override
+    return helper_set_socket_override
 
 
 def _disabled(name: str) -> bool:
@@ -97,10 +106,12 @@ def start_container[TContainer: StartableContainer](
     for socket in _podman_socket_candidates():
         if not socket.exists():
             continue
-        configure_podman_runtime(socket)
+        helper_set_socket_override = configure_podman_runtime(socket)
         container = _try_start(factory)
         if container is not None:
             return container
+        if helper_set_socket_override:
+            os.environ.pop("TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE", None)
     return None
 
 

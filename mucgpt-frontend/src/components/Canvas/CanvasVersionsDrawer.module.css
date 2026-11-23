@@ -3,7 +3,7 @@
 }
 
 .groupTitle {
-    font-size: var(--fontSizeBase350);
+    font-size: var(--fontSizeBase400);
     font-weight: var(--fontWeightSemibold);
     line-height: var(--lineHeightBase400);
     color: var(--colorNeutralForeground2);
@@ -56,9 +56,14 @@
     margin: 0 0 var(--spacingVerticalXXS);
 }
 
+/* Compact preview: every heading level flattens to one size, including the
+   agent-authored h4-h6 that share the h3 style in the editor. */
 .preview :global(h1),
 .preview :global(h2),
-.preview :global(h3) {
+.preview :global(h3),
+.preview :global(h4),
+.preview :global(h5),
+.preview :global(h6) {
     font-size: var(--fontSizeBase300);
     font-weight: var(--fontWeightSemibold);
     margin: var(--spacingVerticalXXS) 0;

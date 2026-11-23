@@ -1,7 +1,8 @@
+from typing import Any, cast
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
-from langchain.agents.middleware import ModelRequest, ModelResponse
+from langchain.agents.middleware import AgentState, ModelRequest, ModelResponse
 from langchain_core.language_models.fake_chat_models import FakeListChatModel
 from langchain_core.messages import AIMessage, SystemMessage, ToolCall
 from langchain_core.tools import tool
@@ -14,6 +15,7 @@ from agent.middleware import (
     TokenUsage,
     TokenUsageMiddleware,
 )
+from api.exception import ContentFilterError
 from config.model_provider import ModelRegistry, ModelsConfigurationException
 from config.settings import ModelsConfig
 
@@ -57,12 +59,12 @@ def second_tool() -> str:
     return "second"
 
 
-def _model_request(context: RequestContext | None) -> ModelRequest:
+def _model_request(context: RequestContext | None) -> ModelRequest[Any]:
     return ModelRequest(
         model=FakeListChatModel(responses=["bootstrap"]),
         messages=[],
         tools=[first_tool, second_tool],
-        state={},
+        state=cast("AgentState[Any]", {}),
         runtime=Runtime(context=context),
         model_settings={"existing": "value"},
     )
@@ -317,6 +319,34 @@ async def test_token_usage_middleware_accumulates_calls_and_keeps_latest_context
     assert snapshots[1]["context_tokens"] == 24
     assert snapshots[1]["user_tokens"] == 30
     assert snapshots[1]["tokens"] == 6
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("async_call", [False, True], ids=["sync", "async"])
+async def test_token_usage_middleware_stops_filtered_model_responses(
+    async_call: bool,
+) -> None:
+    request = _model_request(RequestContext(token_usage=TokenUsage()))
+    response = ModelResponse(
+        result=[
+            AIMessage(
+                content="I'm sorry, but I cannot assist with that request.",
+                response_metadata={"finish_reason": "content_filter"},
+                usage_metadata={
+                    "input_tokens": 0,
+                    "output_tokens": 0,
+                    "total_tokens": 0,
+                },
+            )
+        ]
+    )
+    middleware = TokenUsageMiddleware()
+
+    with pytest.raises(ContentFilterError):
+        if async_call:
+            await middleware.awrap_model_call(request, AsyncMock(return_value=response))
+        else:
+            middleware.wrap_model_call(request, MagicMock(return_value=response))
 
 
 def test_usage_snapshot_preserves_selected_model_settings_and_cached_cost(monkeypatch):

@@ -44,9 +44,13 @@ export type DataSource = {
 export type CanvasState = {
     /** Full GFM markdown document */
     content: string;
-    /** Serialized markdown of the current selection, if any */
+    /** Exact markdown substring covering the selection, if any; structural
+     * operators ("- ", "# ", "**") included only when the selection covers
+     * their boundary side. Table selections use a coordinate annotation
+     * instead of a verbatim substring. */
     selection: string | null;
-    /** Caret position as character offset in the markdown document (selection start when text is selected) */
+    /** Offset of the user's focus in the markdown: caret, or selection start
+     * while a passage is selected; sent whenever one exists. */
     cursor?: number | null;
     /** True when the editor document exceeds the persistence limit and content
      * is only its beginning: the backend then skips persistence and the canvas
@@ -123,6 +127,8 @@ export interface ApplicationConfig {
     canvas_content_max_chars: number;
     /** Maximum canvas editor input length (characters). */
     canvas_editor_max_chars: number;
+    /** HTML tag names allowed inside canvas markdown (e.g. "u"); everything else is escaped to literal text by the canvas sanitizer. */
+    canvas_allowed_html_tags: string[];
     footer_link_url?: string;
     footer_label?: string;
     faq_url?: string;

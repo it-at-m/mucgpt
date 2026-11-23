@@ -52,6 +52,10 @@ PROVIDER_ERROR_CODES: Final[frozenset[str]] = frozenset(
 )
 
 
+class ContentFilterError(Exception):
+    """Raised when a streamed model response is terminated by a content filter."""
+
+
 class ProviderErrorPayload(BaseModel):
     """Machine-readable chat/provider error carried to the frontend.
 
@@ -112,6 +116,8 @@ def _mentions_context_length(ex: Exception) -> bool:
 
 def _error_code(ex: Exception) -> str:
     """Classify an exception into one of the stable error codes."""
+    if isinstance(ex, ContentFilterError):
+        return CONTENT_FILTER
     if isinstance(ex, openai.APITimeoutError):
         return REQUEST_TIMEOUT
     if isinstance(ex, openai.APIConnectionError):

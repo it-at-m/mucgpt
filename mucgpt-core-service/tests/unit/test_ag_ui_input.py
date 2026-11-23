@@ -1,6 +1,7 @@
 """Tests for the native AG-UI run-input mapper (issue #1448, Path A)."""
 
 from types import SimpleNamespace
+from typing import Any, cast
 
 import pytest
 from fastapi import HTTPException
@@ -123,7 +124,8 @@ class TestChatRequestMapping:
             to_chat_completion_request(parse_run_agent_input(body))
 
         assert exc.value.status_code == 422
-        assert exc.value.detail[0]["loc"] == ("enabled_tools",)
+        details = cast(list[dict[str, Any]], exc.value.detail)
+        assert details[0]["loc"] == ("enabled_tools",)
 
     def test_message_roles_map_and_media_flattens(self):
         body = native_body()

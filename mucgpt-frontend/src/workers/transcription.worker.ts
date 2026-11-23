@@ -15,6 +15,7 @@ export type WorkerInMessage =
           fileSizes?: Record<string, number>;
           dtype?: Record<string, string> | string;
           webgpu_only?: boolean;
+          graph_optimization?: "disabled" | "basic" | "all";
           language?: string;
           runtime?: TranscriptionRuntime;
           files?: NemoModelFiles;
@@ -108,9 +109,15 @@ function cancelAutoStop(): void {
     }
 }
 
-/** True when the WebGPU API is exposed (gates webgpu_only models). */
-function detectWebGPU(): boolean {
-    return typeof navigator !== "undefined" && "gpu" in navigator;
+/** True when WebGPU can provide an adapter (gates webgpu_only models). */
+async function detectWebGPU(): Promise<boolean> {
+    if (typeof navigator === "undefined" || !("gpu" in navigator)) return false;
+    try {
+        const gpu = (navigator as Navigator & { gpu?: { requestAdapter: () => Promise<unknown | null> } }).gpu;
+        return gpu !== undefined && (await gpu.requestAdapter()) !== null;
+    } catch {
+        return false;
+    }
 }
 
 /** Maps q4f16 to q4 for WASM loads (fp16 is a WebGPU-only dtype in transformers.js). */
@@ -151,20 +158,20 @@ async function loadModel(request: Extract<WorkerInMessage, { type: "load" }>) {
     isLoading = true;
 
     try {
+        hasWebGPU = await detectWebGPU();
+        log("[transcription-worker] WebGPU detection result:", hasWebGPU);
+        if (request.webgpu_only && !hasWebGPU) {
+            self.postMessage({
+                type: "error",
+                requestId,
+                message: "This model requires WebGPU, which is not available in your browser. Try Chrome or Edge 113+.",
+                messageKey: "transcription.webgpu_only_error"
+            } satisfies WorkerOutMessage);
+            return;
+        }
         if (request.runtime === "canary" || request.runtime === "parakeet") {
             await loadNemoTranscriber(request);
         } else {
-            hasWebGPU = detectWebGPU();
-            log("[transcription-worker] WebGPU detection result:", hasWebGPU);
-            if (request.webgpu_only && !hasWebGPU) {
-                self.postMessage({
-                    type: "error",
-                    requestId,
-                    message: "This model requires WebGPU, which is not available in your browser. Try Chrome or Edge 113+.",
-                    messageKey: "transcription.webgpu_only_error"
-                } satisfies WorkerOutMessage);
-                return;
-            }
             await loadTransformersTranscriber(request);
         }
         await loadVad();
@@ -318,8 +325,14 @@ async function loadNemoTranscriber(request: Extract<WorkerInMessage, { type: "lo
     };
 
     log("[transcription-worker] loading NeMo sessions", { modelId, runtime });
-    const encoderPromise = createOrtSessionFromUrl(files.encoder, track("encoder"));
-    const decoderPromise = createOrtSessionFromUrl(files.decoder, track("decoder"));
+    // webgpu_only indicates that the encoder graph cannot run on the WASM
+    // execution provider; the flag was validated above, so the encoder session
+    // goes to WebGPU while the per-step decoder stays on WASM (small repeated
+    // inferences, avoids GPU contention).
+    const encoderEp: "wasm" | "webgpu" = request.webgpu_only ? "webgpu" : "wasm";
+    const graphOptimization = request.graph_optimization ?? "all";
+    const encoderPromise = createOrtSessionFromUrl(files.encoder, track("encoder"), encoderEp, graphOptimization);
+    const decoderPromise = createOrtSessionFromUrl(files.decoder, track("decoder"), "wasm", graphOptimization);
     let encoderSession: OrtSessionLikeContent | null = null;
     let decoderSession: OrtSessionLikeContent | null = null;
     let vocabText: string;

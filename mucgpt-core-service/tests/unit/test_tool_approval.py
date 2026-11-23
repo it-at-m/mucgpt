@@ -1,6 +1,6 @@
 import logging
 from types import SimpleNamespace
-from typing import Any
+from typing import Any, cast
 from unittest.mock import AsyncMock
 
 import pytest
@@ -89,7 +89,7 @@ class TestApprovalConfig:
             data_classification="internal",
         )
 
-        built = spec.build(model=None, logger=logging.getLogger())  # type: ignore[arg-type]
+        built = spec.build(model=cast(BaseChatModel, None), logger=logging.getLogger())
 
         assert requires_approval(built)
         assert data_classification(built) == "internal"
@@ -235,7 +235,7 @@ class TestPausedRun:
             llm=model,
             tools=[web_search, instance_info],
             logger=logging.getLogger(),
-            checkpointer=InMemorySaver(),
+            checkpointer=cast(Any, InMemorySaver()),
         )
 
     @pytest.fixture

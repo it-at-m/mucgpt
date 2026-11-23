@@ -23,12 +23,16 @@ def _token(payload: dict) -> str:
 
 class TestParseJwtPayload:
     def test_bearer_prefix_is_stripped(self):
-        payload = AuthenticationHelper(role=None).parse_jwt_payload("Bearer " + _token({"sub": "u"}))
+        payload = AuthenticationHelper(role=None).parse_jwt_payload(
+            "Bearer " + _token({"sub": "u"})
+        )
 
         assert payload["sub"] == "u"
 
     def test_token_without_prefix_is_accepted(self):
-        payload = AuthenticationHelper(role=None).parse_jwt_payload(_token({"sub": "u"}))
+        payload = AuthenticationHelper(role=None).parse_jwt_payload(
+            _token({"sub": "u"})
+        )
 
         assert payload["sub"] == "u"
 
@@ -38,7 +42,9 @@ class TestParseJwtPayload:
 
     def test_unparseable_payload_is_rejected(self):
         with pytest.raises(AuthError, match="Invalid JWT token"):
-            AuthenticationHelper(role=None).parse_jwt_payload("header.!!!not-base64!!!.signature")
+            AuthenticationHelper(role=None).parse_jwt_payload(
+                "header.!!!not-base64!!!.signature"
+            )
 
 
 class TestRoleExtraction:
@@ -64,7 +70,9 @@ class TestRoleExtraction:
             AuthenticationHelper(role=None).getName({"givenname": "  Max  "})
             == "  Max  "
         )
-        assert AuthenticationHelper(role=None).getName({"name": "Fallback"}) == "Fallback"
+        assert (
+            AuthenticationHelper(role=None).getName({"name": "Fallback"}) == "Fallback"
+        )
         assert (
             AuthenticationHelper(role=None).getName({"preferred_username": "maxm"})
             == "maxm"
@@ -121,7 +129,7 @@ class TestAuthenticateUserDependency:
 
 class TestRequireAdmin:
     def test_non_admin_is_forbidden(self):
-        user = AuthenticationResult(user_id="u", token="t", department="d")
+        user = AuthenticationResult(user_id="u", department="d")
 
         with pytest.raises(HTTPException) as exc_info:
             require_admin(user)
@@ -129,8 +137,6 @@ class TestRequireAdmin:
         assert exc_info.value.status_code == 403
 
     def test_admin_passes_through(self):
-        user = AuthenticationResult(
-            user_id="u", token="t", department="d", is_admin=True
-        )
+        user = AuthenticationResult(user_id="u", department="d", is_admin=True)
 
         assert require_admin(user) is user

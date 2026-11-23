@@ -135,4 +135,5 @@ async def test_list_tool_metadata_force_reload_is_forwarded() -> None:
             force_reload=True,
         )
 
+    assert loader.await_args is not None
     assert loader.await_args.kwargs["force_reload"] is True

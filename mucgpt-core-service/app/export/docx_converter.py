@@ -18,8 +18,8 @@ _LIST_STYLES = {
     (True, 3): "List Number 3",
 }
 
-# The canvas schema is the gatekeeper and produces only GFM nodes; anything
-# else degrades to plain runs here.
+# The canvas schema produces GFM nodes plus the deployment-whitelisted raw HTML
+# tags (e.g. <u>); anything else degrades to plain runs here.
 _INLINE_FORMAT: dict[str, dict[str, bool]] = {
     "strong": {"bold": True},
     "b": {"bold": True},
@@ -27,6 +27,7 @@ _INLINE_FORMAT: dict[str, dict[str, bool]] = {
     "i": {"italic": True},
     "s": {"strike": True},
     "del": {"strike": True},
+    "u": {"underline": True},
     "code": {"mono": True},
 }
 
@@ -46,6 +47,7 @@ def _add_run(
     bold: bool = False,
     italic: bool = False,
     strike: bool = False,
+    underline: bool = False,
     mono: bool = False,
 ) -> None:
     run = paragraph.add_run(text)
@@ -55,6 +57,8 @@ def _add_run(
         run.italic = True
     if strike:
         run.font.strike = True
+    if underline:
+        run.underline = True
     if mono:
         run.font.name = _MONO_FONT
 
@@ -129,9 +133,11 @@ def _render_list(doc: Any, tag: Tag, *, ordered: bool, level: int = 1) -> None:
 
 def _ordered_list_start(tag: Tag) -> int:
     raw = tag.get("start")
+    if not isinstance(raw, str):
+        return 1
     try:
-        return max(int(raw), 1) if raw is not None else 1
-    except (TypeError, ValueError):
+        return max(int(raw), 1)
+    except ValueError:
         return 1
 
 

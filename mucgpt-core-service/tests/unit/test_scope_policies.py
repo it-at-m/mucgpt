@@ -1,8 +1,10 @@
 """Unit tests for agent scope policies and their message-text helpers."""
 
 from types import SimpleNamespace
+from typing import cast
 
 import pytest
+from langchain.agents.middleware import ModelRequest
 
 from agent.tools.policies import (
     DefaultScopePolicy,
@@ -15,19 +17,22 @@ from agent.tools.policies import (
 
 class TestHelpers:
     def test_last_messages_slices_tail(self):
-        request = SimpleNamespace(
-            messages=[f"msg-{i}" for i in range(6)]
-        )
+        request = SimpleNamespace(messages=[f"msg-{i}" for i in range(6)])
 
-        assert _last_messages(request) == ["msg-2", "msg-3", "msg-4", "msg-5"]
+        assert _last_messages(cast(ModelRequest, request)) == [
+            "msg-2",
+            "msg-3",
+            "msg-4",
+            "msg-5",
+        ]
 
     def test_last_messages_shorter_than_n(self):
         request = SimpleNamespace(messages=["only"])
 
-        assert _last_messages(request) == ["only"]
+        assert _last_messages(cast(ModelRequest, request)) == ["only"]
 
     def test_last_messages_none(self):
-        assert _last_messages(SimpleNamespace(messages=None)) == []
+        assert _last_messages(cast(ModelRequest, SimpleNamespace(messages=None))) == []
 
     @pytest.mark.parametrize(
         ("message", "expected"),
@@ -65,9 +70,12 @@ class TestHelpers:
 
 
 class TestDefaultScopePolicy:
-    def _request(self) -> SimpleNamespace:
-        return SimpleNamespace(
-            messages=["m1", "m2"], tools=["t1", "t2"], system_message="sys"
+    def _request(self) -> ModelRequest:
+        return cast(
+            ModelRequest,
+            SimpleNamespace(
+                messages=["m1", "m2"], tools=["t1", "t2"], system_message="sys"
+            ),
         )
 
     def test_infer_scope_returns_request_unchanged(self):
@@ -91,7 +99,9 @@ class TestDefaultScopePolicy:
     def test_select_tools_empty(self):
         policy = DefaultScopePolicy()
 
-        assert policy.select_tools(SimpleNamespace(tools=None)) == []
+        assert (
+            policy.select_tools(cast(ModelRequest, SimpleNamespace(tools=None))) == []
+        )
 
     def test_modify_system_message_returns_request_unchanged(self):
         request = self._request()

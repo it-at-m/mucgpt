@@ -1,4 +1,4 @@
-import { getCanvasApi, getCanvasRevisionsApi } from "../api/core-client";
+import { getCanvasApi, getCanvasRevisionsApi, putCanvasContentApi } from "../api/core-client";
 
 /** Lossless ProseMirror snapshot of the canvas document. */
 export interface CanvasRevision {
@@ -7,7 +7,7 @@ export interface CanvasRevision {
     /** ProseMirror document (editor.getJSON()) */
     doc_json: unknown;
     timestamp: number;
-    source: "agent" | "manual" | "restore";
+    source: "agent" | "manual" | "restore" | "autosave" | "cleared";
 }
 
 /** Two client-owned FIFO rings; the caps and eviction logic live in the controller. */
@@ -62,5 +62,18 @@ export async function loadCanvasRevisions(conversationId: string): Promise<Canva
     return getCanvasRevisionsApi(conversationId).catch(error => {
         console.error(`Failed to load canvas revisions ${conversationId} from the server`, error);
         return null;
+    });
+}
+
+/**
+ * Autosaves the canvas content for a conversation. Resolves true when the
+ * server copy was updated, false when the save could not happen yet (unknown
+ * conversation, network error) — callers keep the content in memory and the
+ * next chat turn carries it implicitly.
+ */
+export async function saveCanvasContent(conversationId: string, content: string, keepalive = false): Promise<boolean> {
+    return putCanvasContentApi(conversationId, content, keepalive).catch(error => {
+        console.error(`Failed to autosave canvas ${conversationId}`, error);
+        return false;
     });
 }

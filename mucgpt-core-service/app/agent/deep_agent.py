@@ -1,7 +1,8 @@
+from collections.abc import Sequence
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, cast
 
-from deepagents import FilesystemPermission, create_deep_agent
+from deepagents import DeepAgentState, FilesystemPermission, create_deep_agent
 from deepagents.backends.protocol import BackendProtocol
 from langchain.agents.middleware import InterruptOnConfig
 from langchain_core.language_models import BaseChatModel
@@ -10,7 +11,7 @@ from langchain_core.runnables import RunnableConfig
 from langchain_core.runnables.config import merge_configs
 from langchain_core.tools.base import BaseTool
 from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
-from langgraph.types import Command, Durability
+from langgraph.types import Command, Durability, StreamMode
 
 from agent.middleware import (
     TOOL_STATUS_ARG,
@@ -93,7 +94,10 @@ class _ConfiguredLangChainDeepAgentGraph:
             ],  # type: ignore
             system_prompt=default_prompt.content,
             debug=self.debug,
-            state_schema=self.state_schema,
+            # DefaultAgentState is a sibling of DeepAgentState (both extend
+            # langchain's AgentState); deepagents only accepts a compiled
+            # TypedDict as schema, so widen the annotation at this boundary.
+            state_schema=cast("type[DeepAgentState]", self.state_schema),
             context_schema=RequestContext,
             checkpointer=checkpointer,
             backend=backend,
@@ -168,19 +172,21 @@ class _ConfiguredLangChainDeepAgentGraph:
         )
 
         if isinstance(input_data, Command):
-            graph_input = input_data
+            graph_input: dict[str, Any] | Command = input_data
         elif resume_decisions is not None:
             graph_input = Command(resume={"decisions": resume_decisions})
         else:
             graph_input = {"messages": messages}
             if data_sources:
-                graph_input["data_sources"] = data_sources  # type: ignore
+                graph_input["data_sources"] = data_sources
             if request_context.canvas:
-                graph_input["canvas"] = request_context.canvas  # type: ignore
+                graph_input["canvas"] = request_context.canvas
 
         stream = self.agent.astream(
             graph_input,
-            stream_mode=stream_mode,
+            # langgraph stubs narrow stream_mode to its literal values; callers
+            # pass validated mode names, so widen at this boundary.
+            stream_mode=cast("StreamMode | Sequence[StreamMode] | None", stream_mode),
             config=config,
             context=request_context,
             durability=CHECKPOINT_DURABILITY,

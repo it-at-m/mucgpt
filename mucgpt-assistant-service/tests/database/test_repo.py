@@ -182,5 +182,6 @@ class TestRepository:
 
         # Assert
         # Due to session.refresh() in create(), the instances are the same
+        assert fetched is not None
         assert created.id == fetched.id
         assert created.name == fetched.name

@@ -175,6 +175,7 @@ class FileStoreManager:
             conninfo="",
             max_size=20,
             open=False,
+            check=AsyncConnectionPool.check_connection,
             kwargs=_create_connection_args(settings),
         )
         try:

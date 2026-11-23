@@ -7,6 +7,8 @@ runtime is reachable or when MUCGPT_TEST_VALKEY=off.
 """
 
 import asyncio
+from collections.abc import Awaitable
+from typing import cast
 from unittest.mock import AsyncMock
 
 import pytest
@@ -62,7 +64,7 @@ async def valkey_client(valkey_container):
         host=valkey_container.get_container_host_ip(),
         port=valkey_container.get_exposed_port(),
     )
-    await client.ping()
+    await cast(Awaitable[bool], client.ping())
     pytest.MonkeyPatch().setattr(
         RedisCache, "get_redis", staticmethod(AsyncMock(return_value=client))
     )
@@ -126,6 +128,6 @@ async def test_init_redis_with_real_valkey(valkey_container, monkeypatch):
     await RedisCache.init_redis()
 
     client = await RedisCache.get_redis()
-    assert await client.ping() is True
+    assert await cast(Awaitable[bool], client.ping()) is True
 
     RedisCache._redis_client = None

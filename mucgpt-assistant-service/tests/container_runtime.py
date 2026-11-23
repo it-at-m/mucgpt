@@ -12,9 +12,19 @@ Knobs:
 """
 
 import os
+from collections.abc import Callable
 from pathlib import Path
+from typing import Protocol, Self
 
 POSTGRES_IMAGE = "postgres:17.4"
+
+
+class StartableContainer(Protocol):
+    """Minimal testcontainers lifecycle contract used by the runtime helper."""
+
+    def start(self) -> Self: ...
+
+    def stop(self) -> None: ...
 
 
 def _podman_socket_candidates() -> list[Path]:
@@ -72,7 +82,9 @@ def start_postgres_container():
     )
 
 
-def start_container(factory) -> object | None:
+def start_container[TContainer: StartableContainer](
+    factory: Callable[[], TContainer],
+) -> TContainer | None:
     """Start a container via `factory()`, trying Docker and then Podman.
 
     Returns the started container, or None when no container runtime is
@@ -99,7 +111,9 @@ def start_container(factory) -> object | None:
     return None
 
 
-def _try_start(factory) -> object | None:
+def _try_start[TContainer: StartableContainer](
+    factory: Callable[[], TContainer],
+) -> TContainer | None:
     container = None
     try:
         container = factory()

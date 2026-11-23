@@ -1,6 +1,7 @@
 from typing import Any
 from unittest.mock import MagicMock
 
+from langchain_core.language_models.fake_chat_models import FakeListChatModel
 from langchain_core.messages import AIMessage, ToolMessage
 from langchain_core.utils.function_calling import convert_to_openai_function
 from langgraph.prebuilt import ToolRuntime
@@ -28,12 +29,14 @@ def _logger() -> MagicMock:
     return MagicMock()
 
 
-def _runtime(revision: int = 0, tool_call_id: str = "call-1") -> ToolRuntime:
+def _runtime(
+    revision: int = 0, tool_call_id: str = "call-1"
+) -> ToolRuntime[RequestContext, dict[str, Any]]:
     return ToolRuntime(
         state={},
         context=RequestContext(canvas_revision=revision),
         config={},
-        stream_writer=None,
+        stream_writer=lambda _raw: None,
         tool_call_id=tool_call_id,
         store=None,
     )
@@ -125,14 +128,50 @@ def test_canvas_write_rejects_empty_content(monkeypatch: Any) -> None:
     assert writer.chunks == []
 
 
-def test_canvas_write_rejects_raw_html(monkeypatch: Any) -> None:
+def test_canvas_write_rejects_non_whitelisted_html(monkeypatch: Any) -> None:
     writer = RecordingWriter()
     monkeypatch.setattr(canvas, "_get_writer", lambda: writer)
     tool = canvas.make_canvas_write_tool(_logger())
 
     result = tool.invoke(
         {
-            "content": "Hello <u>underlined</u> world",
+            "content": "Hello <b>bold</b> world",
+            "canvas_state": _canvas(),
+            "runtime": _runtime(),
+        }
+    )
+
+    assert result.startswith("Error:")
+    assert "GitHub-Flavored Markdown" in result
+    assert writer.chunks == []
+
+
+def test_canvas_write_allows_whitelisted_underline_tag(monkeypatch: Any) -> None:
+    writer = RecordingWriter()
+    monkeypatch.setattr(canvas, "_get_writer", lambda: writer)
+    tool = canvas.make_canvas_write_tool(_logger())
+
+    content = "Hello <u>underlined</u> world"
+    runtime = _runtime()
+    result = tool.invoke(
+        {"content": content, "canvas_state": _canvas(), "runtime": runtime}
+    )
+
+    assert result.startswith(CONFIRMATION)
+    assert runtime.context.canvas_working is not None
+    assert runtime.context.canvas_working.content == content
+
+
+def test_canvas_write_rejects_attributes_on_whitelisted_tag(
+    monkeypatch: Any,
+) -> None:
+    writer = RecordingWriter()
+    monkeypatch.setattr(canvas, "_get_writer", lambda: writer)
+    tool = canvas.make_canvas_write_tool(_logger())
+
+    result = tool.invoke(
+        {
+            "content": 'Hello <u onclick="steal()">x</u>',
             "canvas_state": _canvas(),
             "runtime": _runtime(),
         }
@@ -203,7 +242,31 @@ def test_canvas_write_allows_html_inside_code(monkeypatch: Any) -> None:
     assert result.startswith(CONFIRMATION)
 
 
-def test_canvas_edit_rejects_raw_html_in_new_text(monkeypatch: Any) -> None:
+def test_canvas_edit_accepts_whitelisted_html_in_old_and_new_text(
+    monkeypatch: Any,
+) -> None:
+    writer = RecordingWriter()
+    monkeypatch.setattr(canvas, "_get_writer", lambda: writer)
+    tool = canvas.make_canvas_edit_tool(_logger())
+
+    runtime = _runtime(revision=1)
+    result = tool.invoke(
+        {
+            "old_text": "<u>world</u>",
+            "new_text": "<u>there</u>",
+            "canvas_state": _canvas("Hello <u>world</u>"),
+            "runtime": runtime,
+        }
+    )
+
+    assert result.startswith(CONFIRMATION)
+    assert runtime.context.canvas_working is not None
+    assert runtime.context.canvas_working.content == "Hello <u>there</u>"
+
+
+def test_canvas_edit_rejects_non_whitelisted_html_in_new_text(
+    monkeypatch: Any,
+) -> None:
     writer = RecordingWriter()
     monkeypatch.setattr(canvas, "_get_writer", lambda: writer)
     tool = canvas.make_canvas_edit_tool(_logger())
@@ -211,7 +274,26 @@ def test_canvas_edit_rejects_raw_html_in_new_text(monkeypatch: Any) -> None:
     result = tool.invoke(
         {
             "old_text": "world",
-            "new_text": "<u>there</u>",
+            "new_text": "<b>there</b>",
+            "canvas_state": _canvas("Hello world"),
+            "runtime": _runtime(),
+        }
+    )
+
+    assert result.startswith("Error:")
+    assert "GitHub-Flavored Markdown" in result
+    assert writer.chunks == []
+
+
+def test_canvas_edit_rejects_attributes_in_new_text(monkeypatch: Any) -> None:
+    writer = RecordingWriter()
+    monkeypatch.setattr(canvas, "_get_writer", lambda: writer)
+    tool = canvas.make_canvas_edit_tool(_logger())
+
+    result = tool.invoke(
+        {
+            "old_text": "world",
+            "new_text": '<u style="color:red">there</u>',
             "canvas_state": _canvas("Hello world"),
             "runtime": _runtime(),
         }
@@ -250,7 +332,8 @@ def test_canvas_edit_replaces_first_occurrence_and_streams(monkeypatch: Any) -> 
     assert writer.chunks[-1].metadata is None
 
 
-def test_canvas_edit_keeps_selection_in_state_update(monkeypatch: Any) -> None:
+def test_canvas_edit_clears_selection_in_state_update(monkeypatch: Any) -> None:
+    """A successful edit clears the highlight and keeps (or moves) the caret."""
     writer = RecordingWriter()
     monkeypatch.setattr(canvas, "_get_writer", lambda: writer)
     tool = canvas.make_canvas_edit_tool(_logger())
@@ -266,8 +349,44 @@ def test_canvas_edit_keeps_selection_in_state_update(monkeypatch: Any) -> None:
     )
 
     assert runtime.context.canvas_working == CanvasState(
-        content="revised text", selection="revised text"
+        content="revised text", selection=None
     )
+
+    cursor_runtime = _runtime()
+    tool.invoke(
+        {
+            "old_text": "selected text",
+            "new_text": "revised text",
+            "canvas_state": CanvasState(
+                content="selected text", selection="selected text", cursor=8
+            ),
+            "runtime": cursor_runtime,
+        }
+    )
+    # the caret sat inside the edit, so it moves to the edit start
+    assert cursor_runtime.context.canvas_working == CanvasState(
+        content="revised text", selection=None, cursor=0
+    )
+
+
+def test_canvas_edit_failure_keeps_selection(monkeypatch: Any) -> None:
+    """A failed edit never mutates the working canvas, so the highlight survives."""
+    writer = RecordingWriter()
+    monkeypatch.setattr(canvas, "_get_writer", lambda: writer)
+    tool = canvas.make_canvas_edit_tool(_logger())
+    runtime = _runtime()
+
+    result = tool.invoke(
+        {
+            "old_text": "missing passage",
+            "new_text": "x",
+            "canvas_state": _canvas("Hello world", selection="world"),
+            "runtime": runtime,
+        }
+    )
+
+    assert result.startswith("Error:")
+    assert runtime.context.canvas_working is None
 
 
 def test_canvas_write_then_edit_build_on_previous_update(monkeypatch: Any) -> None:
@@ -297,6 +416,7 @@ def test_canvas_write_then_edit_build_on_previous_update(monkeypatch: Any) -> No
         }
     )
     assert result.startswith(CONFIRMATION)
+    assert runtime.context.canvas_working is not None
     assert runtime.context.canvas_working.content == "Hello there"
     updates = [
         chunk for chunk in writer.chunks if chunk.state == ToolStreamState.UPDATE
@@ -342,22 +462,62 @@ def test_canvas_edit_with_ambiguous_match_errors(monkeypatch: Any) -> None:
     assert writer.chunks == []
 
 
-def test_canvas_edit_must_target_active_selection(monkeypatch: Any) -> None:
+def test_canvas_edit_targets_anything_even_with_selection(monkeypatch: Any) -> None:
+    """Edits outside the selection succeed and clear the highlight like any
+    other successful edit."""
+    writer = RecordingWriter()
+    monkeypatch.setattr(canvas, "_get_writer", lambda: writer)
+    tool = canvas.make_canvas_edit_tool(_logger())
+    runtime = _runtime()
+
+    result = tool.invoke(
+        {
+            "old_text": "outside",
+            "new_text": "changed",
+            "canvas_state": _canvas(
+                "outside text selected text", selection="selected text"
+            ),
+            "runtime": runtime,
+        }
+    )
+
+    assert result.startswith(CONFIRMATION)
+    assert runtime.context.canvas_working == CanvasState(
+        content="changed text selected text", selection=None
+    )
+
+
+def test_canvas_edit_unresolvable_ambiguity_despite_selection(monkeypatch: Any) -> None:
+    """Selections do not disambiguate duplicates; plain ambiguity error."""
     writer = RecordingWriter()
     monkeypatch.setattr(canvas, "_get_writer", lambda: writer)
     tool = canvas.make_canvas_edit_tool(_logger())
 
     result = tool.invoke(
         {
-            "old_text": "outside",
+            "old_text": "dup",
             "new_text": "x",
-            "canvas_state": _canvas("outside text selected text", "selected text"),
+            "canvas_state": _canvas("dup and dup", selection="dup"),
         }
     )
 
     assert result.startswith("Error:")
-    assert "selected" in result
+    assert "2 times" in result
+    assert "Extend old_text" in result
+    assert "highlighted" not in result
     assert writer.chunks == []
+
+
+def test_canvas_read_reports_selection_verbatim() -> None:
+    """The model sees the exact highlighted characters, spaces included."""
+    tool = canvas.make_canvas_read_tool(_logger())
+
+    result = tool.invoke(
+        {"canvas_state": _canvas("Katzen und Hunde", selection="und ")}
+    )
+
+    assert "hint, not a constraint" in result
+    assert "\nund \n" in result
 
 
 def test_canvas_edit_rejects_result_over_limit(monkeypatch: Any) -> None:
@@ -393,7 +553,7 @@ def test_canvas_read_returns_document_with_context_info(monkeypatch: Any) -> Non
     assert "# Doc\n\ncontent" in result
     assert "Full document (14 characters)" in result
     assert "selected text" in result
-    assert "canvas_edit's old_text must be part of it" in result
+    assert "hint, not a constraint" in result
     # no cursor: no cursor line, and no table-annotation note for plain selections
     assert "Cursor" not in result
     assert "[table, row" not in result
@@ -408,7 +568,7 @@ def test_canvas_read_reports_cursor_and_table_selection() -> None:
         {"canvas_state": CanvasState(content=doc, selection=selection, cursor=10)}
     )
 
-    assert "Cursor (the user's 'here') at character offset 10" in result
+    assert "at character offset 10" in result
     assert 'after "| a | b |\n"' in result
     assert 'before "| --- | --- |\n| 1 | 2 |"' in result
     assert selection in result
@@ -526,7 +686,9 @@ def test_model_visible_schemas_contain_only_contract_args() -> None:
         (canvas.READ_TOOL, {"around_cursor"}),
     ]
     for local_tool, visible_args in expected:
-        spec = convert_to_openai_function(local_tool.build(None, _logger()))
+        spec = convert_to_openai_function(
+            local_tool.build(FakeListChatModel(responses=["ok"]), _logger())
+        )
         properties = set(spec["parameters"].get("properties", {}))
         assert properties == visible_args
         for hidden in ("canvas_state", "canvas_revision", "status_message", "messages"):
@@ -612,7 +774,7 @@ def test_parallel_canvas_edits_chain_in_receival_order() -> None:
             state={},
             context=context,
             config={},
-            stream_writer=None,
+            stream_writer=lambda _raw: None,
             tool_call_id="call-1",
             store=None,
         ),
@@ -620,7 +782,7 @@ def test_parallel_canvas_edits_chain_in_receival_order() -> None:
             state={},
             context=context,
             config={},
-            stream_writer=None,
+            stream_writer=lambda _raw: None,
             tool_call_id="call-2",
             store=None,
         ),
@@ -657,7 +819,7 @@ def test_failed_canvas_edit_skips_the_rest_of_the_batch() -> None:
         state={},
         context=context,
         config={},
-        stream_writer=None,
+        stream_writer=lambda _raw: None,
         tool_call_id="call-1",
         store=None,
     )
@@ -665,7 +827,7 @@ def test_failed_canvas_edit_skips_the_rest_of_the_batch() -> None:
         state={},
         context=context,
         config={},
-        stream_writer=None,
+        stream_writer=lambda _raw: None,
         tool_call_id="call-2",
         store=None,
     )
@@ -703,4 +865,5 @@ def test_failed_canvas_edit_skips_the_rest_of_the_batch() -> None:
         }
     )
     assert result.startswith(CONFIRMATION)
+    assert context.canvas_working is not None
     assert context.canvas_working.content == "Hi world"

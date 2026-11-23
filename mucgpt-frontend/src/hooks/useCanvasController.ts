@@ -1,15 +1,17 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { Content, Editor } from "@tiptap/core";
 import { useEditor } from "@tiptap/react";
-import type { Node as PMNode } from "@tiptap/pm/model";
-import type { EditorState } from "@tiptap/pm/state";
+import type { Mark, Node as PMNode } from "@tiptap/pm/model";
+import { EditorState } from "@tiptap/pm/state";
 
 import type { CanvasState } from "../api/models";
+import { useConfigContext } from "../context/ConfigContext";
 import { useCanvasLimits } from "../components/Canvas/canvasLimits";
 import { loadCanvasRevisions, loadCanvasState, parseCanvasRevisions, type CanvasRevision, type CanvasRevisions } from "../service/canvasStorage";
 import type { CanvasStreamEvent } from "../utils/canvasStream";
-import { CANVAS_PERSISTENCE_RESET, persistentCaret } from "../components/Canvas/canvasSelectionPersistence";
+import { CANVAS_PERSISTENCE_RESET, persistentCaret, persistentSelection } from "../components/Canvas/canvasSelectionPersistence";
 import { canvasExtensions } from "../components/Canvas/canvasExtensions";
+import { effectiveAllowedTags, sanitizeCanvasMarkdown } from "../components/Canvas/canvasHtmlWhitelist";
 
 /**
  * Interface between the canvas UI and the chat page.
@@ -39,7 +41,7 @@ export interface CanvasController {
     /** Debounced; used for autosave */
     subscribe(cb: (markdown: string) => void): () => void;
     /** PM-JSON snapshot into the revision rings */
-    snapshot(source: "agent" | "manual" | "restore"): void;
+    snapshot(source: CanvasRevision["source"]): void;
     listRevisions(): CanvasRevisions;
     /** Non-destructive: setContent(doc_json) as new transaction; undoable via Ctrl+Z */
     restore(revision: number): void;
@@ -65,19 +67,39 @@ export const markdownStorage = (editor: Editor): MarkdownEditorStorage =>
 
 const pushCapped = (ring: CanvasRevision[], revision: CanvasRevision, cap: number): CanvasRevision[] => [...ring, revision].slice(-cap);
 
+/**
+ * Pushing a pre-clear rollback checkpoint into a full auto ring evicts the
+ * oldest autosave entry first, so frequent clear/save cycles cannot push out
+ * agent versions; plain FIFO applies only when no backups exist.
+ */
+const pushAutoCapped = (ring: CanvasRevision[], revision: CanvasRevision, cap: number): CanvasRevision[] => {
+    if (ring.length < cap) return [...ring, revision];
+    if (revision.source === "autosave") {
+        const oldestBackup = ring.findIndex(entry => entry.source === "autosave");
+        if (oldestBackup !== -1) {
+            const next = [...ring];
+            next.splice(oldestBackup, 1);
+            return [...next, revision];
+        }
+    }
+    return [...ring.slice(1), revision];
+};
+
 const emptyRevisions = (): CanvasRevisions => ({ auto: [], manual: [] });
 
 /**
  * Selection starting inside a table: the cut document's first row is a partial
  * body row, which the GFM serializer rejects (it would collapse to "[table]"),
- * so quote coordinates plus the verbatim cell text instead. The text stays a
- * document substring, which canvas_edit's selection check relies on.
+ * so quote coordinates plus the verbatim cell text instead; the backend can
+ * still locate the passage via the "referenced text". The annotation is not a
+ * document substring.
  * Row 1 is the header row; the canvas schema allows no colspans, so the cell
  * index is the column index. The highlighted text may be a partial cell, hence
  * "referenced text" rather than "cell content".
  */
-export const tableSelectionMarkdown = (state: EditorState): string | null => {
-    const { $from, $to, from, to } = state.selection;
+export const tableSelectionMarkdownAt = (doc: PMNode, from: number, to: number): string | null => {
+    const $from = doc.resolve(from);
+    const $to = doc.resolve(to);
     let tableDepth = 0;
     for (let d = $from.depth; d > 0; d--) {
         if ($from.node(d).type.name === "table") {
@@ -98,31 +120,161 @@ export const tableSelectionMarkdown = (state: EditorState): string | null => {
     const headerCell = startRow > 1 ? table.child(0)?.child(startCol - 1) : null;
     const col = headerCell?.type.name === "tableHeader" && headerCell.textContent.trim() ? `col "${headerCell.textContent.trim()}"` : `col ${startCol}`;
 
-    const text = state.doc.textBetween(from, to, " ", " ");
+    const text = doc.textBetween(from, to, " ", " ");
     return `[table, ${range("row", startRow, endRow)}, ${endCol > startCol ? range("col", startCol, endCol) : col}, referenced text: "${text}"]`;
 };
 
 /**
- * Caret position as character offset into the serialized markdown, so the agent
- * can anchor edits near "where the user is" in the same text it sees. Uses the
- * selection start, so a selected passage reports where it begins.
+ * Invisible separator chars that pin ProseMirror positions: one inserted at
+ * a position into a throwaway doc copy yields the exact markdown offset via
+ * indexOf in the serialization. Rare in user content; checked before use.
  */
-export const caretMarkdownOffset = (editor: Editor | null, pos?: number): number | null => {
+const OFFSET_SENTINELS = ["\u2063", "\u2062", "\u2064"] as const;
+
+type OffsetBoundary = { pos: number; sentinel: string; marks: readonly Mark[] };
+
+/**
+ * Marks continuing across the boundary at `pos` (intersection of both sides).
+ * A sentinel carries them, so it lands inside covered mark runs and skips
+ * operators opening/closing at the boundary. Block prefixes are handled by the
+ * line-start slide in selectionMarkdownOffsets.
+ */
+const continuationMarks = (doc: PMNode, pos: number): readonly Mark[] => {
+    const $pos = doc.resolve(pos);
+    const parent = $pos.parent;
+    if (!parent.type.isTextblock || !parent.type.inlineContent) return [];
+    const offset = $pos.parentOffset;
+    const before = offset > 0 ? $pos.nodeBefore : null;
+    const after = offset < parent.content.size ? $pos.nodeAfter : null;
+    const marksBefore = before?.isInline ? before.marks : [];
+    const marksAfter = after?.isInline ? after.marks : [];
+    return marksBefore.filter(mark => marksAfter.some(other => other.eq(mark)));
+};
+
+/**
+ * Serializes `doc` with one sentinel per boundary (larger position first, so
+ * earlier insertions never shift later ones).
+ */
+const serializeWithSentinels = (editor: Editor, boundaries: OffsetBoundary[]): string | null => {
+    const storage = markdownStorage(editor);
+    if (!storage) return null;
+    const doc = editor.state.doc;
+    for (const { pos } of boundaries) {
+        try {
+            const $pos = doc.resolve(pos);
+            if (!$pos.parent.type.isTextblock || $pos.parentOffset > $pos.parent.content.size) return null;
+        } catch {
+            return null;
+        }
+    }
+    const state = EditorState.create({ doc, schema: editor.state.schema });
+    const tr = state.tr;
+    for (const { pos, sentinel, marks } of [...boundaries].sort((left, right) => right.pos - left.pos)) {
+        tr.insert(pos, editor.state.schema.text(sentinel, [...marks]));
+    }
+    return storage.serializer.serialize(state.apply(tr).doc);
+};
+
+/**
+ * Markdown offset of the character at a ProseMirror position (sentinel
+ * method, with a serialized-prefix fallback when the throwaway serialization
+ * diverges). Null when the serializer is unavailable.
+ */
+const markdownOffsetAt = (editor: Editor, pos: number): number | null => {
+    const full = markdownStorage(editor)?.serializer.serialize(editor.state.doc);
+    if (full === undefined) return null;
+    const sentinel = OFFSET_SENTINELS.find(candidate => !full.includes(candidate));
+    if (sentinel === undefined) return null;
+    const marked = serializeWithSentinels(editor, [{ pos, sentinel, marks: continuationMarks(editor.state.doc, pos) }]);
+    if (marked === null) {
+        // Boundaries outside a textblock: fall back to the serialized prefix.
+        const { doc } = editor.state;
+        const prefix = markdownStorage(editor)?.serializer.serialize(doc.cut(0, pos));
+        return prefix === undefined ? null : prefix.replace(/\n$/, "").length;
+    }
+    if (marked.replace(sentinel, "") !== full) {
+        // The serializer rendered the sentinel doc differently (e.g. it lost
+        // a line-start escape): its indices cannot slice `full`.
+        return null;
+    }
+    const index = marked.indexOf(sentinel);
+    return index < 0 ? null : index;
+};
+
+/**
+ * Markdown offset of a ProseMirror position. Callers align selection-anchored
+ * offsets with the selection slice via selectionStartOffset.
+ */
+export const caretMarkdownOffset = (editor: Editor | null, pos: number): number | null => {
     if (!editor) return null;
-    const { doc, selection } = editor.state;
-    const at = pos ?? selection.from;
-    if (at >= doc.content.size) {
+    const { doc } = editor.state;
+    if (pos >= doc.content.size) {
         return markdownStorage(editor)?.serializer.serialize(doc).length ?? null;
     }
-    const prefix = markdownStorage(editor)?.serializer.serialize(doc.cut(0, at));
-    return prefix === undefined ? null : prefix.replace(/\n$/, "").length;
+    return markdownOffsetAt(editor, pos);
 };
+
+/**
+ * Markdown offsets of a non-empty selection: markdown.slice(startOffset,
+ * endOffset) is the exact covered substring. Operators ("- ", "# ", "**")
+ * belong to it only when the selection covers their boundary side; the line
+ * start slide for block starts is the caller's job.
+ */
+const selectionMarkdownOffsets = (editor: Editor, from: number, to: number, full: string): { startOffset: number; endOffset: number } | null => {
+    const usable = OFFSET_SENTINELS.filter(candidate => !full.includes(candidate));
+    if (usable.length < 2) return null;
+    const doc = editor.state.doc;
+    const serialized = serializeWithSentinels(editor, [
+        { pos: from, sentinel: usable[0], marks: continuationMarks(doc, from) },
+        { pos: to, sentinel: usable[1], marks: continuationMarks(doc, to) }
+    ]);
+    if (serialized === null) return null;
+    const fromIndex = serialized.indexOf(usable[0]);
+    // The to-sentinel sits one char past its offset: the from-sentinel lands first.
+    const toIndex = serialized.indexOf(usable[1]) - 1;
+    if (fromIndex < 0 || toIndex < 0 || fromIndex > toIndex) return null;
+    if (serialized.replace(usable[0], "").replace(usable[1], "") !== full) {
+        // The serializer rendered the sentinel doc differently (e.g. it lost
+        // a line-start escape): its indices cannot slice `full`.
+        return null;
+    }
+    return { startOffset: fromIndex, endOffset: toIndex };
+};
+
+/** Markdown index of the line start containing `offset` (0-safe for offset 0). */
+const lineStart = (markdown: string, offset: number): number => markdown.lastIndexOf("\n", Math.max(offset - 1, 0)) + 1;
+
+/**
+ * Markdown offset aligned with the selection slice: a block content start
+ * slides to the line start (the slice includes the block prefix there). Used
+ * by both the selection serializer and the cursor so they cannot drift apart.
+ */
+const selectionStartOffset = (markdown: string, editor: Editor, anchor: number, offset: number): number =>
+    editor.state.doc.resolve(anchor).parentOffset === 0 ? lineStart(markdown, offset) : offset;
+
+/**
+ * UTF-16 string index converted to a code-point offset: the backend indexes
+ * the JSON-decoded markdown by code points (Python strings), while every
+ * frontend offset here is a UTF-16 unit. Astral characters (emoji) shift the
+ * two by one per occurrence before the position.
+ */
+const codePointOffset = (markdown: string, utf16Offset: number): number => [...markdown.slice(0, utf16Offset)].length;
 
 export function useCanvasController(conversationId: string | undefined, serverConversationId?: string): CanvasControllerInstance {
     // Assistant chats keep a prefixed local id for their chat history but talk
     // to the canvas endpoints with the plain backend conversation id.
     const serverId = serverConversationId ?? conversationId;
     const limits = useCanvasLimits();
+    const { canvas_allowed_html_tags: allowedHtmlTags } = useConfigContext();
+    // Sanitize before the Markdown parser (html: true) sees the content: every
+    // tag outside the deployment allowlist becomes literal text. Config may
+    // only restrict; tags unknown to this frontend release are ignored.
+    const allowedTags = effectiveAllowedTags(allowedHtmlTags);
+    // Stable identity on purpose: the conversation-switch effect and the stream
+    // callbacks must not be torn down/re-run when the config loads.
+    const allowedTagsRef = useRef(allowedTags);
+    allowedTagsRef.current = allowedTags;
+    const sanitize = useCallback((md: string): string => sanitizeCanvasMarkdown(md, allowedTagsRef.current), []);
     const editor = useEditor(
         {
             extensions: canvasExtensions({ exportLimitChars: limits.editorLimitChars, warnChars: limits.warnChars }),
@@ -149,6 +301,17 @@ export function useCanvasController(conversationId: string | undefined, serverCo
     const isOpenRef = useRef(false);
     const subscribersRef = useRef(new Set<(markdown: string) => void>());
     const notifyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    // Markdown captured when the debounced notification was scheduled; typical
+    // cleanups (unmount) can run after the editor was destroyed, so the flush
+    // must not rely on reading the editor again.
+    const pendingNotifyRef = useRef<string | null>(null);
+    // Last nonempty document, captured with each editor update; feeds the
+    // pre-clear rollback checkpoints (snapshot("autosave")).
+    const lastNonEmptyDocRef = useRef<Record<string, unknown> | null>(null);
+    // Latest editor document including empty content; the editor recreation
+    // restore must respect an intentional clear and reapply emptiness, so it
+    // cannot reuse the nonempty checkpoint.
+    const lastCurrentDocRef = useRef<Record<string, unknown> | null>(null);
     const revisionsRef = useRef(revisions);
     revisionsRef.current = revisions;
 
@@ -175,12 +338,45 @@ export function useCanvasController(conversationId: string | undefined, serverCo
 
     const notifySubscribers = useCallback(() => {
         if (notifyTimerRef.current) clearTimeout(notifyTimerRef.current);
+        pendingNotifyRef.current = getMarkdown();
+        // Captures at edit time: a clear arriving before the debounced
+        // delivery would otherwise replace the nonempty backup capture with
+        // the delivered "" — and snapshots do not read the editor at all, so
+        // the captures must be maintained here.
+        const current = editorRef.current;
+        if (current && !current.isDestroyed) {
+            lastCurrentDocRef.current = current.getJSON();
+            if (pendingNotifyRef.current.trim()) lastNonEmptyDocRef.current = lastCurrentDocRef.current;
+        }
         notifyTimerRef.current = setTimeout(() => {
             notifyTimerRef.current = null;
-            const markdown = getMarkdown();
-            subscribersRef.current.forEach(cb => cb(markdown));
+            const markdown = pendingNotifyRef.current;
+            pendingNotifyRef.current = null;
+            if (markdown !== null) subscribersRef.current.forEach(cb => cb(markdown));
         }, AUTOSAVE_DEBOUNCE_MS);
     }, [getMarkdown]);
+
+    // Delivers the captured markdown of a pending debounced notification
+    // synchronously; a no-op when nothing is pending.
+    const flushPendingNotify = useCallback(() => {
+        if (notifyTimerRef.current === null) return;
+        clearTimeout(notifyTimerRef.current);
+        notifyTimerRef.current = null;
+        const markdown = pendingNotifyRef.current;
+        pendingNotifyRef.current = null;
+        if (markdown !== null) subscribersRef.current.forEach(cb => cb(markdown));
+    }, []);
+
+    // Drops a pending debounced notification without delivering it. Used for
+    // the conversation switch's editor clear: that "" is not a user edit and
+    // must not be captured as one.
+    const clearPendingNotify = useCallback(() => {
+        if (notifyTimerRef.current !== null) {
+            clearTimeout(notifyTimerRef.current);
+            notifyTimerRef.current = null;
+        }
+        pendingNotifyRef.current = null;
+    }, []);
 
     useEffect(() => {
         if (!editor) return;
@@ -189,6 +385,19 @@ export function useCanvasController(conversationId: string | undefined, serverCo
             editor.off("update", notifySubscribers);
         };
     }, [editor, notifySubscribers]);
+
+    // Editor recreation (e.g. the limits config arriving) starts empty and the
+    // conversation-switch effect does not re-run for it. Reapply the latest
+    // document — including an intentional clear — so a recreated empty editor
+    // cannot be mistaken for a user clear (which would wipe the stored copy)
+    // and cannot resurrect cleared content.
+    useEffect(() => {
+        if (!editor || editor.isDestroyed || hasCanvasContent()) return;
+        const docJson = lastCurrentDocRef.current;
+        if (docJson === null) return;
+        editor.commands.setContent(docJson as Content);
+        editor.view.dispatch(editor.state.tr.setMeta(CANVAS_PERSISTENCE_RESET, true));
+    }, [editor, hasCanvasContent]);
 
     // Conversation switch: reset run-scoped state, clear the editor and reopen only
     // when the conversation's stored canvas has content — the open state is derived
@@ -213,12 +422,22 @@ export function useCanvasController(conversationId: string | undefined, serverCo
         setIsLocked(false);
         setIsOpen(false);
         setRevisions(emptyRevisions());
+        lastNonEmptyDocRef.current = null;
+        lastCurrentDocRef.current = null;
+        // Deliver the outgoing conversation's pending edit before the editor is
+        // cleared; clearPendingNotify would otherwise capture "" and the
+        // notification would carry empty content (or drop the edit, depending
+        // on cleanup ordering).
+        flushPendingNotify();
         const current = editorRef.current;
         if (current && hasCanvasContent()) {
             current.commands.setContent("");
             // A stale caret/selection must not leak into another conversation's document.
             current.view.dispatch(current.state.tr.setMeta(CANVAS_PERSISTENCE_RESET, true));
         }
+        // The setContent above triggered an editor update whose "" capture is
+        // the switch's doing, not a user edit.
+        clearPendingNotify();
         let cancelled = false;
         if (conversationId) {
             const loadedServerId = serverConversationId ?? conversationId;
@@ -254,7 +473,7 @@ export function useCanvasController(conversationId: string | undefined, serverCo
                         if (pendingOpen && !cancelled) setIsOpen(true);
                         return;
                     }
-                    editor.commands.setContent(stored);
+                    editor.commands.setContent(sanitize(stored));
                     editor.view.dispatch(editor.state.tr.setMeta(CANVAS_PERSISTENCE_RESET, true));
                     setIsOpen(true);
                 } catch (error) {
@@ -265,7 +484,7 @@ export function useCanvasController(conversationId: string | undefined, serverCo
         return () => {
             cancelled = true;
         };
-    }, [conversationId, hasCanvasContent, serverId]);
+    }, [conversationId, hasCanvasContent, serverId, flushPendingNotify, clearPendingNotify]);
 
     const setIsOpen = useCallback((open: boolean) => {
         isOpenRef.current = open;
@@ -295,14 +514,56 @@ export function useCanvasController(conversationId: string | undefined, serverCo
     const getSelectionMarkdown = useCallback((): string | null => {
         const current = editorRef.current;
         if (!current) return null;
-        const { from, to, empty } = current.state.selection;
-        if (empty) return null;
-        return tableSelectionMarkdown(current.state) ?? markdownStorage(current)?.serializer.serialize(current.state.doc.cut(from, to)) ?? null;
-    }, []);
+        // Read the visualized selection (persistence plugin), not the live
+        // state: what the agent receives is by construction what the user
+        // sees highlighted.
+        const range = persistentSelection(current);
+        if (!range) return null;
+        const { from, to } = range;
+        // Table selections keep the coordinate annotation: the serializer
+        // rejects a partial table cut and the annotation carries row/column context.
+        const table = tableSelectionMarkdownAt(current.state.doc, from, to);
+        if (table) return table;
+        const markdown = getMarkdown();
+        if (!markdown) return null;
+        const offsets = selectionMarkdownOffsets(current, from, to, markdown);
+        if (!offsets) {
+            // A selection the sentinel path cannot serve. Where a boundary is
+            // the document start or end, clamp it and slice the full markdown
+            // (serializing a cut would fabricate mark delimiters at the cut);
+            // where the throwaway serialization diverged from the document
+            // (e.g. a lost line-start escape), the cut stays the exact fallback.
+            const doc = current.state.doc;
+            const outsideTextblock = (pos: number) => {
+                try {
+                    return !doc.resolve(pos).parent.type.isTextblock;
+                } catch {
+                    return true;
+                }
+            };
+            if (outsideTextblock(from) || outsideTextblock(to)) {
+                const rawFrom = from === 0 ? 0 : markdownOffsetAt(current, from);
+                // A block content start slides to the line start, like the
+                // normal path, so the slice includes the block prefix there.
+                const fromOffset = rawFrom === null ? null : selectionStartOffset(markdown, current, from, rawFrom);
+                const toOffset = to >= doc.content.size ? markdown.length : markdownOffsetAt(current, to);
+                const sliceable = fromOffset !== null && toOffset !== null && fromOffset <= toOffset;
+                return sliceable ? markdown.slice(fromOffset, toOffset) : null;
+            }
+            return markdownStorage(current)?.serializer.serialize(doc.cut(from, to)) ?? null;
+        }
+        // A selection starting at a block's content start covers the block prefix;
+        // slide to the line start. Mid-block: keep the exact covered characters.
+        const start = selectionStartOffset(markdown, current, from, offsets.startOffset);
+        return start <= offsets.endOffset ? markdown.slice(start, offsets.endOffset) : null;
+    }, [getMarkdown]);
 
-    const setMarkdown = useCallback((md: string) => {
-        editorRef.current?.commands.setContent(md);
-    }, []);
+    const setMarkdown = useCallback(
+        (md: string) => {
+            editorRef.current?.commands.setContent(sanitize(md));
+        },
+        [sanitize]
+    );
 
     const toCanvasState = useCallback((): CanvasState | null => {
         // The canvas is always editable: whenever the document has content it is
@@ -322,8 +583,24 @@ export function useCanvasController(conversationId: string | undefined, serverCo
         if (!isOpen && !markdown?.trim()) return null;
         const truncated = markdown.length > limits.contentLimitChars;
         const content = truncated ? markdown.slice(0, limits.contentLimitChars) : markdown;
-        const caretPos = persistentCaret(editorRef.current);
-        const cursor = caretPos === null ? null : caretMarkdownOffset(editorRef.current, caretPos);
+        // Both anchors come from the persistence plugin — the visualized
+        // selection and caret — so the agent always receives exactly the
+        // focus the user sees. The caret takes precedence (a collapsed
+        // selection); otherwise the selection start anchors the cursor.
+        const current = editorRef.current;
+        const selectionRange = persistentSelection(current);
+        const caretPos = persistentCaret(current);
+        const anchor = caretPos ?? selectionRange?.from ?? null;
+        let cursor: number | null = null;
+        if (anchor !== null && current) {
+            const cursorOffset = caretMarkdownOffset(current, anchor);
+            if (cursorOffset !== null) {
+                // Selection-anchored cursors align with the selection slice
+                // (line start at a block content start).
+                const aligned = caretPos === null ? selectionStartOffset(markdown, current, anchor, cursorOffset) : cursorOffset;
+                cursor = codePointOffset(markdown, aligned);
+            }
+        }
         const selection = isOpen ? getSelectionMarkdown() : null;
         return {
             content,
@@ -333,34 +610,37 @@ export function useCanvasController(conversationId: string | undefined, serverCo
         };
     }, [isOpen, getMarkdown, getSelectionMarkdown, limits]);
 
-    const applyStreamEvent = useCallback((ev: CanvasStreamEvent) => {
-        const current = editorRef.current;
-        if (!current) return;
-        if (ev.state === "UPDATE") {
-            const revision = ev.metadata?.canvas_revision;
-            if (typeof revision === "number") {
-                if (revision <= lastStreamRevisionRef.current) return;
-                lastStreamRevisionRef.current = revision;
+    const applyStreamEvent = useCallback(
+        (ev: CanvasStreamEvent) => {
+            const current = editorRef.current;
+            if (!current) return;
+            if (ev.state === "UPDATE") {
+                const revision = ev.metadata?.canvas_revision;
+                if (typeof revision === "number") {
+                    if (revision <= lastStreamRevisionRef.current) return;
+                    lastStreamRevisionRef.current = revision;
+                }
+                current.commands.setContent(sanitize(ev.content));
+                // The agent replaced the document; a stale caret/selection there would be misleading.
+                current.view.dispatch(current.state.tr.setMeta(CANVAS_PERSISTENCE_RESET, true));
+            } else if (ev.state === "APPEND") {
+                const doc = current.state.doc;
+                const endPos = doc.content.size;
+                // Append inside the trailing paragraph when possible; when the document ends in a
+                // non-textblock (table, code block), insert after it as a new paragraph.
+                const insertPos = doc.resolve(Math.max(endPos - 1, 0)).parent.inlineContent ? endPos - 1 : endPos;
+                current
+                    .chain()
+                    .command(({ tr }) => {
+                        tr.setMeta(NO_HISTORY_META, false);
+                        return true;
+                    })
+                    .insertContentAt(insertPos, sanitize(ev.content))
+                    .run();
             }
-            current.commands.setContent(ev.content);
-            // The agent replaced the document; a stale caret/selection there would be misleading.
-            current.view.dispatch(current.state.tr.setMeta(CANVAS_PERSISTENCE_RESET, true));
-        } else if (ev.state === "APPEND") {
-            const doc = current.state.doc;
-            const endPos = doc.content.size;
-            // Append inside the trailing paragraph when possible; when the document ends in a
-            // non-textblock (table, code block), insert after it as a new paragraph.
-            const insertPos = doc.resolve(Math.max(endPos - 1, 0)).parent.inlineContent ? endPos - 1 : endPos;
-            current
-                .chain()
-                .command(({ tr }) => {
-                    tr.setMeta(NO_HISTORY_META, false);
-                    return true;
-                })
-                .insertContentAt(insertPos, ev.content)
-                .run();
-        }
-    }, []);
+        },
+        [sanitize]
+    );
 
     const subscribe = useCallback(
         (cb: (markdown: string) => void) => {
@@ -368,28 +648,36 @@ export function useCanvasController(conversationId: string | undefined, serverCo
             return () => {
                 // Final synchronous flush so edits inside the debounce window are not
                 // lost when the panel unsubscribes (canvas close / unmount).
-                if (notifyTimerRef.current) {
-                    clearTimeout(notifyTimerRef.current);
-                    notifyTimerRef.current = null;
-                    const markdown = getMarkdown();
-                    subscribersRef.current.forEach(subscriber => subscriber(markdown));
-                }
+                flushPendingNotify();
                 subscribersRef.current.delete(cb);
             };
         },
-        [getMarkdown]
+        [flushPendingNotify]
     );
 
     useEffect(() => {
-        return () => {
-            if (notifyTimerRef.current) {
-                clearTimeout(notifyTimerRef.current);
-                notifyTimerRef.current = null;
-            }
-        };
-    }, []);
+        // On unmount the cleanups of the owning component run before this hook's
+        // subscribers unsubscribed — a plain timer clear would silently drop the
+        // pending markdown. Flush the captured content instead.
+        return flushPendingNotify;
+    }, [flushPendingNotify]);
 
     const snapshot = useCallback((source: CanvasRevision["source"]) => {
+        // Pre-clear rollback checkpoint: stores the last captured nonempty
+        // document (the editor is already empty at clear time). A backup-aware
+        // eviction protects agent versions in the shared auto ring.
+        if (source === "autosave") {
+            const docJson = lastNonEmptyDocRef.current;
+            if (docJson === null) return;
+            const revision: CanvasRevision = {
+                revision: nextRevisionRef.current++,
+                doc_json: docJson,
+                timestamp: Date.now(),
+                source
+            };
+            setRevisions(prev => ({ ...prev, auto: pushAutoCapped(prev.auto, revision, AUTO_RING_CAP) }));
+            return;
+        }
         const current = editorRef.current;
         if (!current) return;
         const revision: CanvasRevision = {

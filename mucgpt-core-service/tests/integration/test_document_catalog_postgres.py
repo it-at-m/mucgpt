@@ -15,6 +15,7 @@ from alembic import command
 from alembic.config import Config
 from migrations.settings import get_migration_settings
 from psycopg import sql
+from psycopg.conninfo import make_conninfo
 from sqlalchemy.ext.asyncio import async_sessionmaker
 
 from config.settings import DBConfig, Settings
@@ -31,14 +32,15 @@ from database.document_repo import DocumentQuotaExceededError, DocumentRepositor
 class DocumentCatalogPostgresTests(unittest.IsolatedAsyncioTestCase):
     async def asyncSetUp(self):
         self.database = "document_test_" + uuid4().hex
+        # PostgreSQL conninfo keywords: all values as strings.
         self.connection_args = {
             "host": os.environ["MUCGPT_LIFECYCLE_POSTGRES_HOST"],
-            "port": int(os.getenv("MUCGPT_LIFECYCLE_POSTGRES_PORT", "5432")),
+            "port": os.getenv("MUCGPT_LIFECYCLE_POSTGRES_PORT", "5432"),
             "user": os.getenv("MUCGPT_LIFECYCLE_POSTGRES_USER", "admin"),
             "password": os.getenv("MUCGPT_LIFECYCLE_POSTGRES_PASSWORD", "admin"),
         }
         async with await psycopg.AsyncConnection.connect(
-            **self.connection_args, dbname="postgres", autocommit=True
+            make_conninfo(**self.connection_args, dbname="postgres"), autocommit=True
         ) as connection:
             await connection.execute(
                 sql.SQL("CREATE DATABASE {}").format(sql.Identifier(self.database))
@@ -56,7 +58,7 @@ class DocumentCatalogPostgresTests(unittest.IsolatedAsyncioTestCase):
 
     async def drop_database(self):
         async with await psycopg.AsyncConnection.connect(
-            **self.connection_args, dbname="postgres", autocommit=True
+            make_conninfo(**self.connection_args, dbname="postgres"), autocommit=True
         ) as connection:
             await connection.execute(
                 sql.SQL("DROP DATABASE {} WITH (FORCE)").format(

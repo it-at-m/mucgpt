@@ -11,15 +11,25 @@ Knobs:
 - MUCGPT_TEST_POSTGRES=off disables PostgreSQL-based tests entirely.
 """
 
+from __future__ import annotations
+
 import os
 from collections.abc import Callable
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Protocol, Self
 
 if TYPE_CHECKING:
     from testcontainers.postgres import PostgresContainer
 
 POSTGRES_IMAGE = "postgres:17.4"
+
+
+class StartableContainer(Protocol):
+    """Minimal testcontainers lifecycle contract used by the runtime helper."""
+
+    def start(self) -> Self: ...
+
+    def stop(self) -> None: ...
 
 
 def _podman_socket_candidates() -> list[Path]:
@@ -69,7 +79,9 @@ def start_postgres_container() -> PostgresContainer | None:
     )
 
 
-def start_container[TContainer](factory: Callable[[], TContainer]) -> TContainer | None:
+def start_container[TContainer: StartableContainer](
+    factory: Callable[[], TContainer],
+) -> TContainer | None:
     """Start a container via `factory()`, trying Docker and then Podman.
 
     Returns the started container, or None when no container runtime is
@@ -92,7 +104,9 @@ def start_container[TContainer](factory: Callable[[], TContainer]) -> TContainer
     return None
 
 
-def _try_start[TContainer](factory: Callable[[], TContainer]) -> TContainer | None:
+def _try_start[TContainer: StartableContainer](
+    factory: Callable[[], TContainer],
+) -> TContainer | None:
     container = None
     try:
         container = factory()

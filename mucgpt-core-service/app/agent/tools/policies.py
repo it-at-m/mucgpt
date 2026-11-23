@@ -83,7 +83,6 @@ class DefaultScopePolicy:
         return request
 
 
-
 # ---------------------------------------------------------------------------
 # Registry
 # ---------------------------------------------------------------------------
@@ -108,12 +107,12 @@ _POLICY_REGISTRY: dict[type, DefaultScopePolicy] | None = None
 _DEFAULT_POLICY = DefaultScopePolicy()
 
 
-def get_policy_for_state(state_type: type) -> DefaultScopePolicy:
+def get_policy_for_state(state_type: type | None) -> DefaultScopePolicy:
     global _POLICY_REGISTRY
     if _POLICY_REGISTRY is None:
         _POLICY_REGISTRY = _build_policy_registry()
 
-    policy = _POLICY_REGISTRY.get(state_type)
+    policy = _POLICY_REGISTRY.get(state_type) if state_type is not None else None
     if policy is None:
         logger.warning(
             "Policy decision: using %s because no policy is registered for state type '%s'.",

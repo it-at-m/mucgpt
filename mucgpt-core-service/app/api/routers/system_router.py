@@ -103,6 +103,7 @@ async def get_config(user_info=Depends(authenticate_user)) -> ConfigResponse:
         owner_profile_url_template=settings.owner_profile_url_template,
         canvas_content_max_chars=settings.canvas_content_max_chars,
         canvas_editor_max_chars=settings.canvas_editor_max_chars,
+        canvas_allowed_html_tags=sorted(settings.canvas_allowed_html_tags),
     )
 
     models = settings.models

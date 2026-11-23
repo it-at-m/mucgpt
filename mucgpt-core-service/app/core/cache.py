@@ -1,4 +1,5 @@
-from typing import Any
+from collections.abc import Awaitable
+from typing import Any, cast
 
 import cloudpickle
 from redis.asyncio import Redis
@@ -16,13 +17,13 @@ class RedisCache:
             password = RedisCache._redis_settings.password
             username = RedisCache._redis_settings.username
             client = Redis(
-                host=RedisCache._redis_settings.host,
+                host=RedisCache._redis_settings.host or "localhost",
                 port=RedisCache._redis_settings.port,
                 username=username.get_secret_value() if username else None,
                 password=password.get_secret_value() if password else None,
             )
             try:
-                await client.ping()
+                await cast("Awaitable[bool]", client.ping())
             except Exception as e:
                 await client.close()
                 raise e

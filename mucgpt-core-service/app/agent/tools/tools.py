@@ -81,7 +81,9 @@ def select_agent_state_schema(tools: list[BaseTool]) -> type[DefaultAgentState]:
 class ToolCollection:
     """Collection of chat tools for brainstorming and simplification."""
 
-    def __init__(self, model: RunnableSerializable, logger: logging.Logger = None):
+    def __init__(
+        self, model: RunnableSerializable, logger: logging.Logger | None = None
+    ):
         self.model = model
         self.logger = logger or getLogger(name="mucgpt-core-tools")
 
@@ -95,7 +97,7 @@ class ToolCollection:
     async def get_tools(
         self,
         user_info: AuthenticationResult,
-        enabled_tools: list[str] = None,
+        enabled_tools: list[str] | None = None,
     ) -> list[BaseTool]:
         """Return the tools available for this request, filtered by enabled_tools if given."""
         tools = self._build_tools() + await McpLoader.load_mcp_tools(

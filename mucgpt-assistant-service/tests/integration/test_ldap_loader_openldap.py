@@ -100,6 +100,7 @@ def ldap_container():
     _container = container
     _seed(container)
     yield container
+    assert container is not None
     container.stop()
     _container = None
 

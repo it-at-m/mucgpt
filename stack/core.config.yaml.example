@@ -32,12 +32,21 @@ transcription_enabled: false
 # The single model id used for transcription by every user (must match an
 # entry of the frontend's TRANSCRIPTION_MODELS list). There is no default —
 # the feature stays disabled while this is unset. Recommended (runs entirely
-# on WASM, no WebGPU needed): "istupakov/canary-180m-flash-onnx".
-transcription_model: "istupakov/canary-180m-flash-onnx"
+# on WASM, no WebGPU needed): "Olicorne/parakeet-tdt-0.6b-v3-ultra-onnx"
+# (Parakeet Ultra: 25 languages incl. Ukrainian + punctuation, ~410 MB
+# download), "mrfakename/parakeet-redux-ONNX" (Parakeet Redux: smaller,
+# weaker German/French/Ukrainian + noise robustness) or
+# "istupakov/canary-180m-flash-onnx" (compact, 4 languages).
+transcription_model: "Olicorne/parakeet-tdt-0.6b-v3-ultra-onnx"
 ai_act_compliance_check_enabled: true
 # Canvas limits (characters); exposed to the frontend via /config
 canvas_content_max_chars: 262144
 canvas_editor_max_chars: 524288
+# HTML tag names allowed inside canvas markdown (e.g. <u> for underline, which
+# GFM cannot express); exposed to the frontend via /config. Lowercase plain tag
+# names without attributes; the list may only restrict the release's supported
+# set (an unsupported tag fails core startup). Empty list disables raw HTML.
+canvas_allowed_html_tags: ["u"]
 app_version: "2.0"
 frontend_version: "0.0.2"
 assistant_version: "0.0.3"

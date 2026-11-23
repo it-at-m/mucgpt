@@ -1,8 +1,10 @@
 """Tests for agent tool schema selection and the ToolCollection assembly."""
 
+from typing import cast
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
+from langchain_core.tools.base import BaseTool
 
 from agent.state_models.default_state import DefaultAgentState
 from agent.state_models.registry import registry
@@ -11,11 +13,11 @@ from agent.tools.tools import ToolCollection, select_agent_state_schema
 from core.auth import AuthenticationResult
 
 
-def _tool(name: str, metadata: object | None = None) -> MagicMock:
+def _tool(name: str, metadata: object | None = None) -> BaseTool:
     tool = MagicMock()
     tool.name = name
     tool.metadata = metadata
-    return tool
+    return cast(BaseTool, tool)
 
 
 class TestSelectAgentStateSchema:

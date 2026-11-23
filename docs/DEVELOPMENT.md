@@ -68,6 +68,17 @@ Run it from `mucgpt-core-service/`:
 uv run python app/scripts/analyze_langfuse_trace.py <trace-id>
 ```
 
+The script uses the legacy Langfuse v3 trace API by default. For Langfuse v4,
+select the supported Observations API v2 explicitly:
+
+```bash
+uv run python app/scripts/analyze_langfuse_trace.py <trace-id> --api-version v4
+```
+
+The v4 path retrieves observations for the trace in a bounded seven-day window
+and follows cursor pagination. Set `--from-start-time` and `--to-start-time`
+with timezone-aware ISO-8601 timestamps when the trace is outside that window.
+
 Credentials are read from `LANGFUSE_PUBLIC_KEY`, `LANGFUSE_SECRET_KEY`, and
 `LANGFUSE_HOST`. When those variables are not already in the shell, the script
 loads `stack/.env` by default. Use `--env-file <path>` to select a different
@@ -81,8 +92,8 @@ uv run python app/scripts/analyze_langfuse_trace.py <trace-id> --show-content
 ```
 
 Use `--max-content-chars <n>` to change the default 500-character content
-limit. The script supports the trace endpoint available on current Langfuse and
-self-hosted v3 deployments.
+limit. The v3 option is retained for self-hosted v3 compatibility; v4
+deployments must use `--api-version v4`.
 
 ## Linting
 

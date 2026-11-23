@@ -9,7 +9,9 @@ import argparse
 import os
 import sys
 from collections.abc import Iterable
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
+from types import SimpleNamespace
 from typing import Any
 
 from dotenv import load_dotenv
@@ -25,6 +27,15 @@ def parse_args() -> argparse.Namespace:
         description="Print a diagnostic timeline for a Langfuse trace."
     )
     parser.add_argument("trace_id", help="Langfuse trace ID")
+    parser.add_argument(
+        "--api-version",
+        choices=("v4", "v3"),
+        default="v3",
+        help=(
+            "Langfuse API version: v4 uses Observations API v2; v3 uses the "
+            "legacy trace endpoint for self-hosted v3 (default: v3)"
+        ),
+    )
     parser.add_argument(
         "--env-file",
         type=Path,
@@ -42,7 +53,24 @@ def parse_args() -> argparse.Namespace:
         default=500,
         help="Maximum characters printed per input/output value (default: 500)",
     )
+    parser.add_argument(
+        "--from-start-time",
+        type=_parse_datetime,
+        help="Inclusive v4 observation window start (ISO-8601; default: 7 days ago)",
+    )
+    parser.add_argument(
+        "--to-start-time",
+        type=_parse_datetime,
+        help="Exclusive v4 observation window end (ISO-8601; default: now)",
+    )
     return parser.parse_args()
+
+
+def _parse_datetime(value: str) -> datetime:
+    parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+    if parsed.tzinfo is None:
+        raise argparse.ArgumentTypeError("datetime must include a timezone")
+    return parsed
 
 
 def _load_environment(env_file: Path) -> None:
@@ -138,8 +166,99 @@ def _observation_lines(
                 yield f"  {label}: {_compact(value, max_content_chars)}"
 
 
-def analyze_trace(trace_id: str, *, show_content: bool, max_content_chars: int) -> None:
-    trace = Langfuse().api.trace.get(trace_id)
+def _trace_from_observations(trace_id: str, observations: list[Any]) -> Any:
+    observations = sorted(
+        observations,
+        key=lambda observation: getattr(observation, "start_time", None) or "",
+    )
+    root = next(
+        (
+            observation
+            for observation in observations
+            if getattr(observation, "parent_observation_id", None) is None
+        ),
+        None,
+    )
+    name = next(
+        (
+            getattr(observation, "trace_name", None)
+            for observation in observations
+            if getattr(observation, "trace_name", None)
+        ),
+        getattr(root, "name", None),
+    )
+    return SimpleNamespace(
+        id=trace_id,
+        name=name,
+        timestamp=(
+            getattr(observations[0], "start_time", None) if observations else None
+        ),
+        observations=observations,
+    )
+
+
+def _get_v4_trace(
+    client: Any,
+    trace_id: str,
+    *,
+    from_start_time: datetime,
+    to_start_time: datetime,
+) -> Any:
+    observations: list[Any] = []
+    cursor = None
+    while True:
+        page = client.api.observations.get_many(
+            trace_id=trace_id,
+            fields="core,basic,io,metadata,model,trace_context",
+            from_start_time=from_start_time,
+            to_start_time=to_start_time,
+            limit=1000,
+            cursor=cursor,
+        )
+        observations.extend(page.data)
+        cursor = getattr(getattr(page, "meta", None), "cursor", None)
+        if not cursor:
+            break
+    return _trace_from_observations(trace_id, observations)
+
+
+def _get_trace(
+    trace_id: str,
+    *,
+    api_version: str,
+    from_start_time: datetime,
+    to_start_time: datetime,
+) -> Any:
+    client = Langfuse()
+    if api_version == "v3":
+        return client.api.trace.get(trace_id)
+    return _get_v4_trace(
+        client,
+        trace_id,
+        from_start_time=from_start_time,
+        to_start_time=to_start_time,
+    )
+
+
+def analyze_trace(
+    trace_id: str,
+    *,
+    api_version: str = "v4",
+    from_start_time: datetime | None = None,
+    to_start_time: datetime | None = None,
+    show_content: bool,
+    max_content_chars: int,
+) -> None:
+    to_start_time = to_start_time or datetime.now(UTC)
+    from_start_time = from_start_time or to_start_time - timedelta(days=7)
+    if from_start_time >= to_start_time:
+        raise ValueError("--from-start-time must be before --to-start-time")
+    trace = _get_trace(
+        trace_id,
+        api_version=api_version,
+        from_start_time=from_start_time,
+        to_start_time=to_start_time,
+    )
     observations = sorted(
         trace.observations,
         key=lambda observation: getattr(observation, "start_time", None) or "",
@@ -170,6 +289,9 @@ def main() -> None:
     _load_environment(args.env_file)
     analyze_trace(
         args.trace_id,
+        api_version=args.api_version,
+        from_start_time=args.from_start_time,
+        to_start_time=args.to_start_time,
         show_content=args.show_content,
         max_content_chars=args.max_content_chars,
     )

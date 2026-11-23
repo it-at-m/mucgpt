@@ -4,7 +4,9 @@ Prefers the already-configured Docker endpoint; otherwise falls back to the
 Podman API socket, because Podman is the preferred local container runtime
 (see stack/README.md). testcontainers talks to the Docker-compatible Podman
 API via docker-py (DOCKER_HOST); Ryuk additionally needs the socket mounted
-at the same path (TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE).
+at the same path (TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE). On Windows, Podman's
+CLI starts PostgreSQL directly because docker-py's named-pipe transport can
+block indefinitely.
 
 Knobs:
 - MUCGPT_TEST_CONTAINER_RUNTIME=auto|docker|podman (default auto)
@@ -16,9 +18,11 @@ from __future__ import annotations
 import os
 import shutil
 import subprocess
+import time
 from collections.abc import Callable
 from pathlib import Path
 from typing import TYPE_CHECKING, Protocol, Self
+from uuid import uuid4
 
 if TYPE_CHECKING:
     from testcontainers.community.postgres import PostgresContainer
@@ -32,6 +36,48 @@ class StartableContainer(Protocol):
     def start(self) -> Self: ...
 
     def stop(self) -> None: ...
+
+
+class RunningNetworkContainer(StartableContainer, Protocol):
+    """Container operations the pytest lifecycle needs after startup."""
+
+    def get_container_host_ip(self) -> str: ...
+
+    def get_exposed_port(self, port: int) -> int: ...
+
+
+class WindowsPodmanContainer:
+    """Small Testcontainers-compatible wrapper around a Podman CLI container.
+
+    docker-py's named-pipe transport can block indefinitely on Windows when it
+    talks to a Podman machine.  The Podman CLI does not have that limitation,
+    so lifecycle tests use it directly on Windows while keeping the same
+    process-scoped container lifecycle as Testcontainers.
+    """
+
+    def __init__(self, name: str, port: int, container_port: int) -> None:
+        self.name = name
+        self.port = port
+        self.container_port = container_port
+
+    def start(self) -> Self:
+        return self
+
+    def stop(self) -> None:
+        try:
+            _run_podman("rm", "--force", self.name, check=False)
+        except (OSError, subprocess.SubprocessError):
+            pass
+
+    def get_container_host_ip(self) -> str:
+        return "127.0.0.1"
+
+    def get_exposed_port(self, port: int | None = None) -> int:
+        if port is not None and port != self.container_port:
+            raise ValueError(
+                f"Container only exposes port {self.container_port}, not {port}"
+            )
+        return self.port
 
 
 def _podman_socket_candidates() -> list[Path]:
@@ -118,21 +164,127 @@ def postgres_container_requested() -> bool:
     if requested == "docker":
         return True
     if requested == "podman":
+        if os.name == "nt":
+            return shutil.which("podman") is not None
         return any(socket.exists() for socket in _podman_socket_candidates())
     return True
 
 
-def start_postgres_container() -> PostgresContainer | None:
+def start_postgres_container() -> RunningNetworkContainer | None:
     """Start a throwaway PostgreSQL server, trying Docker and then Podman.
 
     Returns the started container, or None when no container runtime is
     reachable. Raises on import errors (dependency missing).
     """
+    if os.name == "nt":
+        requested = os.getenv("MUCGPT_TEST_CONTAINER_RUNTIME", "auto").strip().lower()
+        if requested in {"auto", "podman"}:
+            container = _start_windows_podman_postgres()
+            if container is not None:
+                return container
+            if requested == "podman":
+                return None
+
     from testcontainers.community.postgres import PostgresContainer
 
     return start_container(
         lambda: PostgresContainer(POSTGRES_IMAGE, username="admin", password="admin")
     )
+
+
+def start_valkey_container() -> StartableContainer | None:
+    """Start Valkey, using Podman's CLI on Windows when available."""
+    if os.name == "nt":
+        requested = os.getenv("MUCGPT_TEST_CONTAINER_RUNTIME", "auto").strip().lower()
+        if requested in {"auto", "podman"}:
+            container = _start_windows_podman_container(
+                image="valkey/valkey:8.1",
+                container_port=6379,
+                readiness_command=("valkey-cli", "ping"),
+            )
+            if container is not None:
+                return container
+            if requested == "podman":
+                return None
+
+    from testcontainers.community.valkey import ValkeyContainer
+
+    return start_container(lambda: ValkeyContainer("valkey/valkey:8.1"))
+
+
+def _run_podman(*args: str, check: bool = True) -> subprocess.CompletedProcess[str]:
+    """Run Podman with a bounded wait so test startup cannot hang forever."""
+    return subprocess.run(
+        ["podman", *args],
+        capture_output=True,
+        check=check,
+        text=True,
+        timeout=30,
+    )
+
+
+def _start_windows_podman_postgres() -> WindowsPodmanContainer | None:
+    """Start PostgreSQL through the reliable Windows Podman CLI transport."""
+    return _start_windows_podman_container(
+        image=POSTGRES_IMAGE,
+        container_port=5432,
+        environment=("POSTGRES_USER=admin", "POSTGRES_PASSWORD=admin"),
+        readiness_command=("pg_isready", "--username", "admin"),
+    )
+
+
+def _start_windows_podman_container(
+    *,
+    image: str,
+    container_port: int,
+    environment: tuple[str, ...] = (),
+    readiness_command: tuple[str, ...],
+) -> WindowsPodmanContainer | None:
+    """Start and readiness-check a disposable Podman container on Windows."""
+    if shutil.which("podman") is None:
+        return None
+
+    image_name = image.replace("/", "-").replace(":", "-")
+    name = f"mucgpt-test-{image_name}-{uuid4().hex}"
+    try:
+        run_args = [
+            "run",
+            "--detach",
+            "--rm",
+            "--name",
+            name,
+            "--publish",
+            f"127.0.0.1::{container_port}",
+        ]
+        for value in environment:
+            run_args.extend(("--env", value))
+        run_args.append(image)
+        _run_podman(*run_args)
+        port_output = _run_podman("port", name, f"{container_port}/tcp").stdout.strip()
+        port = _podman_published_port(port_output)
+        deadline = time.monotonic() + 30
+        while time.monotonic() < deadline:
+            result = _run_podman("exec", name, *readiness_command, check=False)
+            if result.returncode == 0:
+                return WindowsPodmanContainer(name, port, container_port)
+            time.sleep(0.25)
+    except (OSError, subprocess.SubprocessError, ValueError):
+        pass
+
+    try:
+        _run_podman("rm", "--force", name, check=False)
+    except (OSError, subprocess.SubprocessError):
+        pass
+    return None
+
+
+def _podman_published_port(output: str) -> int:
+    """Extract the host port from ``podman port`` output."""
+    for line in output.splitlines():
+        host, separator, port = line.strip().rpartition(":")
+        if separator and host and port.isdecimal():
+            return int(port)
+    raise ValueError(f"Podman did not report a published PostgreSQL port: {output!r}")
 
 
 def start_container[TContainer: StartableContainer](

@@ -62,9 +62,9 @@ npm run build        # tsc && vite build
 - The process-scoped Testcontainers lifecycle is managed by
   `mucgpt-core-service/tests/conftest.py`. It includes explicit cleanup for
   normal teardown, `atexit`, Ctrl+C, and termination signals. On Windows with
-  Podman, Ryuk is disabled because it cannot mount a Windows named pipe.
-- Windows requires a running Podman machine. The harness discovers its
-  Docker-compatible named pipe automatically; `MUCGPT_TEST_CONTAINER_RUNTIME=podman`
+  Podman, lifecycle PostgreSQL uses the Podman CLI rather than Ryuk.
+- Windows requires a running Podman machine. The harness starts its disposable
+  PostgreSQL container through the Podman CLI automatically; `MUCGPT_TEST_CONTAINER_RUNTIME=podman`
   can force that runtime.
 - Prefer `MUCGPT_LIFECYCLE_POSTGRES_*` settings when CI or another process
   provides PostgreSQL. When these settings are present, tests must not start a

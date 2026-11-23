@@ -72,7 +72,9 @@ container. Their behavior differs:
 - otherwise: a container starts automatically when a container runtime is reachable.
   Docker is tried first, then the Podman API socket (rootless before rootful) —
   Podman is the preferred local runtime; the socket service must be enabled
-  (`systemctl --user enable --now podman.socket`).
+  (`systemctl --user enable --now podman.socket`). On Windows, the running
+  Podman machine is managed through the `podman` CLI instead, avoiding the
+  unreliable Docker SDK named-pipe transport.
 - `MUCGPT_TEST_CONTAINER_RUNTIME=docker|podman` forces one runtime.
 - No container runtime reachable: the affected tests skip gracefully; nothing fails.
 
@@ -85,8 +87,9 @@ podman machine start
 podman machine list
 ```
 
-The test harness discovers the running machine's Docker-compatible named pipe
-automatically. You can force the Podman path when troubleshooting:
+The test harness starts and removes a disposable PostgreSQL container through
+the Podman CLI automatically; no lifecycle database environment variables are
+required. You can force the Podman path when troubleshooting:
 
 ```powershell
 $env:MUCGPT_TEST_CONTAINER_RUNTIME = "podman"

@@ -1,4 +1,5 @@
 import os
+import subprocess
 from pathlib import Path
 from typing import Self
 
@@ -76,3 +77,64 @@ def test_configure_podman_pipe_disables_ryuk_in_loaded_configuration(
     assert os.environ["DOCKER_HOST"] == "npipe:////./pipe/podman-machine-default"
     assert os.environ["TESTCONTAINERS_RYUK_DISABLED"] == "true"
     assert testcontainers_config.ryuk_disabled is True
+
+
+def test_start_windows_podman_postgres_uses_cli_and_waits_for_readiness(
+    monkeypatch,
+) -> None:
+    commands: list[tuple[str, ...]] = []
+
+    def run_podman(*args: str, check: bool = True) -> subprocess.CompletedProcess[str]:
+        commands.append(args)
+        if args[0] == "port":
+            return subprocess.CompletedProcess(args, 0, "127.0.0.1:49123\n", "")
+        if args[0] == "exec":
+            return subprocess.CompletedProcess(args, 0, "", "")
+        return subprocess.CompletedProcess(args, 0, "container-id\n", "")
+
+    monkeypatch.setattr(container_runtime.shutil, "which", lambda _name: "podman")
+    monkeypatch.setattr(container_runtime, "_run_podman", run_podman)
+
+    container = container_runtime._start_windows_podman_postgres()
+
+    assert container is not None
+    assert container.get_container_host_ip() == "127.0.0.1"
+    assert container.get_exposed_port(5432) == 49123
+    assert commands[0][0] == "run"
+    assert commands[1][0] == "port"
+    assert commands[2][0] == "exec"
+
+
+def test_podman_published_port_rejects_unexpected_output() -> None:
+    assert container_runtime._podman_published_port("[::1]:49123\n") == 49123
+    try:
+        container_runtime._podman_published_port("not a port")
+    except ValueError as error:
+        assert "published PostgreSQL port" in str(error)
+    else:
+        raise AssertionError("invalid Podman port output should be rejected")
+
+
+def test_start_windows_podman_container_supports_valkey_readiness(monkeypatch) -> None:
+    commands: list[tuple[str, ...]] = []
+
+    def run_podman(*args: str, check: bool = True) -> subprocess.CompletedProcess[str]:
+        commands.append(args)
+        if args[0] == "port":
+            return subprocess.CompletedProcess(args, 0, "127.0.0.1:49124\n", "")
+        return subprocess.CompletedProcess(args, 0, "", "")
+
+    monkeypatch.setattr(container_runtime.shutil, "which", lambda _name: "podman")
+    monkeypatch.setattr(container_runtime, "_run_podman", run_podman)
+
+    container = container_runtime._start_windows_podman_container(
+        image="valkey/valkey:8.1",
+        container_port=6379,
+        readiness_command=("valkey-cli", "ping"),
+    )
+
+    assert container is not None
+    assert container.get_exposed_port(6379) == 49124
+    assert container.get_exposed_port() == 49124
+    assert commands[0][-1] == "valkey/valkey:8.1"
+    assert commands[2][-2:] == ("valkey-cli", "ping")

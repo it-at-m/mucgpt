@@ -27,3 +27,14 @@
 
 # Generated license notices (produced inside the build; never build input)
 THIRD_PARTY_LICENSES/
+
+# Inherited from the obsolete per-service ignore files (sources, caches and
+# editor data are never shipped; *.md is deliberately NOT ignored because
+# app/agent/prompt_pool/*.md is runtime data for the core service).
+**/tests/
+**/.vscode/
+**/.idea/
+**/*.secrets
+
+# Ignored per-service entries that exist in this checkout
+**/coverage/

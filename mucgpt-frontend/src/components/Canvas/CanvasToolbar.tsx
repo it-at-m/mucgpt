@@ -46,10 +46,10 @@ const EXPORT_FILE_EXTENSIONS: Record<ExportTarget, string> = {
     xlsx: "xlsx"
 };
 
-// Fluent's small Button ships minWidth: 64px plus wide padding. Griffel-styled
-// overrides must go through mergeClasses (user className is merged last inside
-// Button, so its atomic dedup replaces those rules); a plain CSS module class
-// loses the cascade against griffel's runtime-injected rules.
+// Griffel-styled overrides for Fluent Button rest-state atoms: Fluent injects
+// its rules at runtime with equal specificity, and Griffel registers this
+// file's atoms after Fluent's, so the later rule wins the cascade. Plain CSS
+// module classes are injected earlier and lose that tie.
 const useHeadingStyles = makeStyles({
     headingButton: {
         minWidth: "0px",
@@ -58,10 +58,23 @@ const useHeadingStyles = makeStyles({
     }
 });
 
+// Pressed surface of the state buttons, paired with aria-pressed so state
+// never relies on color alone.
+const useActiveStyles = makeStyles({
+    active: {
+        backgroundColor: tokens.colorNeutralBackground3,
+        ":hover": {
+            backgroundColor: tokens.colorNeutralBackground3Hover
+        }
+    }
+});
+
 export const CanvasToolbar = ({ editor, controller, onOpenVersions, disabled }: Props) => {
     const { t } = useTranslation();
     const { showError, showSuccess } = useGlobalToastContext();
     const headingStyles = useHeadingStyles();
+    const activeStyles = useActiveStyles();
+    const activeClass = activeStyles.active;
     const [isExporting, setIsExporting] = useState<ExportTarget | null>(null);
 
     const state = useEditorState({
@@ -78,10 +91,10 @@ export const CanvasToolbar = ({ editor, controller, onOpenVersions, disabled }: 
                 inTable: ctx.editor.isActive("table"),
                 // heading state must ride the selector: caret moves between
                 // headings and paragraphs change none of the values above and
-                // useEditorState's deep-equal would skip the rerender
-                heading1: ctx.editor.isActive("heading", { level: 1 }),
-                heading2: ctx.editor.isActive("heading", { level: 2 }),
-                heading3: ctx.editor.isActive("heading", { level: 3 })
+                // useEditorState's deep-equal would skip the rerender.
+                // headingLevel drives all three heading buttons; levels >= 3
+                // belong to the H3 button (see CanvasEditor.module.css).
+                headingLevel: ctx.editor.isActive("heading") ? (ctx.editor.getAttributes("heading").level ?? null) : null
             }
     });
 
@@ -122,6 +135,8 @@ export const CanvasToolbar = ({ editor, controller, onOpenVersions, disabled }: 
 
     const canUndo = !disabled && (state?.canUndo ?? false);
     const canRedo = !disabled && (state?.canRedo ?? false);
+    const headingLevel = state?.headingLevel ?? null;
+    const deepHeading = (headingLevel ?? 0) >= 3;
 
     return (
         <div className={styles.toolbar} role="toolbar" aria-label={t("canvas.toolbar.label")}>
@@ -154,7 +169,7 @@ export const CanvasToolbar = ({ editor, controller, onOpenVersions, disabled }: 
                     size="small"
                     icon={<TextBold24Regular />}
                     disabled={disabled}
-                    className={state?.bold ? styles.active : undefined}
+                    className={state?.bold && !disabled ? activeClass : undefined}
                     onClick={run(chain => chain.toggleBold())}
                     aria-label={t("canvas.toolbar.bold")}
                     aria-pressed={state?.bold}
@@ -166,7 +181,7 @@ export const CanvasToolbar = ({ editor, controller, onOpenVersions, disabled }: 
                     size="small"
                     icon={<TextItalic24Regular />}
                     disabled={disabled}
-                    className={state?.italic ? styles.active : undefined}
+                    className={state?.italic && !disabled ? activeClass : undefined}
                     onClick={run(chain => chain.toggleItalic())}
                     aria-label={t("canvas.toolbar.italic")}
                     aria-pressed={state?.italic}
@@ -178,7 +193,7 @@ export const CanvasToolbar = ({ editor, controller, onOpenVersions, disabled }: 
                     size="small"
                     icon={<TextUnderline24Regular />}
                     disabled={disabled}
-                    className={state?.underline ? styles.active : undefined}
+                    className={state?.underline && !disabled ? activeClass : undefined}
                     onClick={run(chain => chain.toggleUnderline())}
                     aria-label={t("canvas.toolbar.underline")}
                     aria-pressed={state?.underline}
@@ -188,15 +203,17 @@ export const CanvasToolbar = ({ editor, controller, onOpenVersions, disabled }: 
             <div className={styles.divider} />
 
             {(["1", "2", "3"] as const).map(level => {
-                const active = level === "1" ? state?.heading1 : level === "2" ? state?.heading2 : state?.heading3;
+                const active = level === "1" ? headingLevel === 1 : level === "2" ? headingLevel === 2 : deepHeading;
                 return (
                     <Button
                         key={level}
                         appearance="subtle"
                         size="small"
                         disabled={disabled}
-                        className={mergeClasses(headingStyles.headingButton, active && styles.active)}
-                        onClick={run(chain => chain.toggleHeading({ level: Number(level) as 1 | 2 | 3 }))}
+                        className={mergeClasses(headingStyles.headingButton, active && !disabled && activeClass)}
+                        onClick={run(chain =>
+                            level === "3" && deepHeading ? chain.setParagraph() : chain.toggleHeading({ level: Number(level) as 1 | 2 | 3 })
+                        )}
                         aria-label={t(`canvas.toolbar.heading_${level}`)}
                         aria-pressed={active}
                     >
@@ -213,7 +230,7 @@ export const CanvasToolbar = ({ editor, controller, onOpenVersions, disabled }: 
                     size="small"
                     icon={<TextBulletListLtr24Regular />}
                     disabled={disabled}
-                    className={state?.bulletList ? styles.active : undefined}
+                    className={state?.bulletList && !disabled ? activeClass : undefined}
                     onClick={run(chain => chain.toggleBulletList())}
                     aria-label={t("canvas.toolbar.bullet_list")}
                     aria-pressed={state?.bulletList}
@@ -225,7 +242,7 @@ export const CanvasToolbar = ({ editor, controller, onOpenVersions, disabled }: 
                     size="small"
                     icon={<TextNumberListLtr24Regular />}
                     disabled={disabled}
-                    className={state?.orderedList ? styles.active : undefined}
+                    className={state?.orderedList && !disabled ? activeClass : undefined}
                     onClick={run(chain => chain.toggleOrderedList())}
                     aria-label={t("canvas.toolbar.ordered_list")}
                     aria-pressed={state?.orderedList}

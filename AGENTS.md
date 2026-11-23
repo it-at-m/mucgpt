@@ -64,6 +64,14 @@ Model connection settings live in a **`providers`** section (`type: "openai"|"az
 
 Langfuse is **not** part of the config: the Langfuse SDK reads the standard `LANGFUSE_PUBLIC_KEY` / `LANGFUSE_SECRET_KEY` / `LANGFUSE_HOST` env vars directly (host defaults to Langfuse cloud if unset). **`MUCGPT_CORE_LANGFUSE__*` env vars are no longer read (silently ignored)** — likely migration error; tracing degrades gracefully (log + disabled) when unset.
 
+### Langfuse trace analysis
+
+When investigating a failed or interrupted agent response, use the trace ID with `uv run python app/scripts/analyze_langfuse_trace.py <trace-id>` from `mucgpt-core-service/`. The script loads `stack/.env` by default, prints a chronological observation timeline, and marks provider terminations as `CONTENT_FILTERED`. Do not print prompts, tool arguments, or model output by default: use `--show-content` only when the user explicitly authorizes content inspection in an approved environment.
+
+- Check the model generation and enclosing `model` chain for `finish_reason`, error level, model name, and tool calls before changing application code.
+- `content_filter` and `content_policy_violation` originate with the model provider/gateway. Fix MUCGPT so it reports the structured failure and never executes partial tool calls, but do not claim the application can remove the provider policy; category details require provider/gateway logs when absent from the trace.
+- Inspect the complete timeline for repeated model/tool cycles. A terminal provider response that contains a partial tool call must not be treated as a successful tool request.
+
 Source priority (core): constructor/init (tests) > env vars > `config.yaml` > `shared-config.yaml` > `.env`. Core config covers providers/models/prompts/MCP/Redis/SSO/db; assistant config covers db/redis/ldap/sso.
 
 Secrets doctrine: real secrets (passwords, API keys, tokens) belong in **environment variables** (prefix + `__`), never in `config.yaml` (ConfigMap/etcd/Git leak risk). Provider API keys are configured per provider and are env-overridable via `MUCGPT_CORE_PROVIDERS__<PROVIDER>__API_KEY`; whole sections can be replaced via the `MUCGPT_CORE_PROVIDERS` / `MUCGPT_CORE_MODELS` JSON env vars.

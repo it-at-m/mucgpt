@@ -31,6 +31,7 @@ from langgraph.types import Command
 from agent.state_models.default_state import DefaultAgentState
 from agent.tools.policies import get_policy_for_state
 from api.api_models import CanvasState, ConversationUsage
+from api.exception import ContentFilterError
 from config.harness_profiles import DEEP_AGENT_BUILTIN_TOOLS
 from config.langfuse_provider import LangfuseProvider
 from config.model_provider import ModelRegistry
@@ -885,6 +886,16 @@ class TokenUsageMiddleware(AgentMiddleware):
             "mucgpt_usage": snapshot.model_dump(exclude_none=True),
         }
 
+    @staticmethod
+    def _raise_if_filtered(model_response: ModelResponse) -> None:
+        if not model_response.result:
+            return
+        finish_reason = model_response.result[-1].response_metadata.get("finish_reason")
+        if finish_reason in {"content_filter", "content_policy_violation"}:
+            raise ContentFilterError(
+                "The model response was blocked by a content filter"
+            )
+
     def wrap_model_call(
         self,
         request: ModelRequest,
@@ -892,6 +903,7 @@ class TokenUsageMiddleware(AgentMiddleware):
     ) -> ModelResponse:
         model_response: ModelResponse = handler(request)
         self._record_usage(request, model_response)
+        self._raise_if_filtered(model_response)
         return model_response
 
     async def awrap_model_call(
@@ -901,4 +913,5 @@ class TokenUsageMiddleware(AgentMiddleware):
     ) -> ModelResponse:
         model_response = await handler(request)
         self._record_usage(request, model_response)
+        self._raise_if_filtered(model_response)
         return model_response

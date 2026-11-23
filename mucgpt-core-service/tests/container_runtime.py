@@ -21,7 +21,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Protocol, Self
 
 if TYPE_CHECKING:
-    from testcontainers.postgres import PostgresContainer
+    from testcontainers.community.postgres import PostgresContainer
 
 POSTGRES_IMAGE = "postgres:17.4"
 

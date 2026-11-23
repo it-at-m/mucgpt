@@ -58,6 +58,10 @@ description:
       - KI-Chat
       - Assistenten erstellen und teilen
       - Erweiterbare Tools (z. B. Brainstorming, Einfache Sprache)
+      - Tool-Bestätigung durch Nutzer*innen (Human in the loop)
+      - Canvas: Gemeinsames Schreiben und Bearbeiten von Dokumenten
+      - Spracheingabe (Browser-Spracherkennung)
+      - Chat mit Dokumenten (Upload, Auswahl, schreibgeschützter Modellzugriff)
     screenshots:
       - docs/startpage.png
       - docs/chatscreen.png
@@ -102,6 +106,10 @@ description:
       - create and share assistants
       - extensible tools (e.g., brainstorming, easy language)
       - summarization
+      - human-in-the-loop tool confirmation
+      - canvas: collaborative document writing and editing
+      - speech input (browser speech recognition)
+      - chat with documents (upload, per-conversation selection, read-only model access)
     screenshots:
       - docs/startpage.png
       - docs/chatscreen.png

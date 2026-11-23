@@ -77,7 +77,11 @@ def _metadata(observation: Any) -> dict[str, Any]:
 
 def _model_name(observation: Any) -> str | None:
     metadata = _metadata(observation)
-    return metadata.get("ls_model_name") or metadata.get("model_name")
+    return (
+        getattr(observation, "model", None)
+        or metadata.get("ls_model_name")
+        or metadata.get("model_name")
+    )
 
 
 def _find_finish_reason(value: Any) -> str | None:

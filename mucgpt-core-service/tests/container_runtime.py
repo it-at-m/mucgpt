@@ -128,7 +128,7 @@ def start_postgres_container() -> PostgresContainer | None:
     Returns the started container, or None when no container runtime is
     reachable. Raises on import errors (dependency missing).
     """
-    from testcontainers.postgres import PostgresContainer
+    from testcontainers.community.postgres import PostgresContainer
 
     return start_container(
         lambda: PostgresContainer(POSTGRES_IMAGE, username="admin", password="admin")

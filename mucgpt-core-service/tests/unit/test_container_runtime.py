@@ -62,3 +62,17 @@ def test_configure_podman_runtime_preserves_user_socket_override(monkeypatch) ->
     )
     assert os.environ["TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE"] == user_socket
     assert testcontainers_config.ryuk_docker_socket == user_socket
+
+
+def test_configure_podman_pipe_disables_ryuk_in_loaded_configuration(
+    monkeypatch,
+) -> None:
+    monkeypatch.delenv("DOCKER_HOST", raising=False)
+    monkeypatch.delenv("TESTCONTAINERS_RYUK_DISABLED", raising=False)
+    monkeypatch.setattr(testcontainers_config, "_ryuk_disabled", None)
+
+    container_runtime.configure_podman_pipe(r"\\.\pipe\podman-machine-default")
+
+    assert os.environ["DOCKER_HOST"] == "npipe:////./pipe/podman-machine-default"
+    assert os.environ["TESTCONTAINERS_RYUK_DISABLED"] == "true"
+    assert testcontainers_config.ryuk_disabled is True

@@ -28,6 +28,14 @@ COPY mucgpt-frontend/package*.json mucgpt-frontend/.npmrc ./
 RUN --mount=type=cache,target=/root/.npm \
     npm ci --verbose
 
+# Copy build configuration files (these change less frequently than source)
+COPY mucgpt-frontend/tsconfig.json mucgpt-frontend/vite.config.ts mucgpt-frontend/index.html ./
+
+# Copy public assets (usually static). Vendored components under public/vendor
+# are part of the license inventory, so they must exist before the notices are
+# generated below.
+COPY mucgpt-frontend/public/ ./public/
+
 # Third-party license notices for the shipped (production) dependencies.
 # python3 is only needed in the builder stage.
 RUN apk add --no-cache python3
@@ -35,12 +43,6 @@ COPY scripts/licenses/*.py pyproject.toml /tmp/licenses/
 RUN python3 -c "import tomllib" && \
     MUCGPT_LICENSE_POLICY=/tmp/licenses/pyproject.toml MUCGPT_FRONTEND_DIR=/build \
     python3 /tmp/licenses/collect_licenses.py --targets mucgpt-frontend --output /tmp/notices
-
-# Copy build configuration files (these change less frequently than source)
-COPY mucgpt-frontend/tsconfig.json mucgpt-frontend/vite.config.ts mucgpt-frontend/index.html ./
-
-# Copy public assets (usually static)
-COPY mucgpt-frontend/public/ ./public/
 
 # Copy source code last (changes most frequently)
 COPY mucgpt-frontend/src/ ./src/

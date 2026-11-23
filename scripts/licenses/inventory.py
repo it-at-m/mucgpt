@@ -170,25 +170,45 @@ def _npm_license_field(meta: dict) -> str:
     return str(value or "")
 
 
-def _walk_node_modules(node_modules: Path) -> list[Path]:
-    """All package directories under node_modules, including scoped and nested ones."""
-    found = []
+def _walk_node_modules(node_modules: Path, prefix: str = "") -> list[tuple[Path, str]]:
+    """All package directories under node_modules with their lockfile identity.
+
+    ``ident`` is the package directory path relative to the root node_modules
+    directory (e.g. ``@scope/pkg`` or ``parent/node_modules/child``) - exactly
+    the npm lockfile key minus its leading ``node_modules/`` segment. npm
+    aliases keep the alias as the directory name, so identity is path-based,
+    not name-based.
+    """
+    found: list[tuple[Path, str]] = []
     if not node_modules.is_dir():
         return found
-    for scope in node_modules.iterdir():
+    for scope in sorted(node_modules.iterdir()):
         if not scope.is_dir() or scope.name == ".bin":
             continue
         if scope.name.startswith("@"):
             for pkg_dir in sorted(scope.iterdir()):
                 if pkg_dir.is_dir() and (pkg_dir / "package.json").is_file():
-                    found.append(pkg_dir)
-                    # Nested dependencies of scoped packages live here.
-                    found.extend(_walk_node_modules(pkg_dir / "node_modules"))
+                    ident = f"{prefix}{scope.name}/{pkg_dir.name}"
+                    found.append((pkg_dir, ident))
+                    # Nested dependencies of scoped packages live here; the
+                    # lockfile identity keeps the literal node_modules segment.
+                    found.extend(
+                        _walk_node_modules(
+                            pkg_dir / "node_modules", ident + "/node_modules/"
+                        )
+                    )
         elif (scope / "package.json").is_file():
-            found.append(scope)
-            found.extend(_walk_node_modules(scope / "node_modules"))
+            ident = f"{prefix}{scope.name}"
+            found.append((scope, ident))
+            found.extend(
+                _walk_node_modules(scope / "node_modules", ident + "/node_modules/")
+            )
         else:
-            found.extend(_walk_node_modules(scope / "node_modules"))
+            found.extend(
+                _walk_node_modules(
+                    scope / "node_modules", prefix + scope.name + "/node_modules/"
+                )
+            )
     return found
 
 
@@ -198,13 +218,13 @@ def _frontend_dir(target: str) -> Path:
     return Path(override) if override else REPO_ROOT / target
 
 
-def _prod_closure_from_lock(target: str) -> set[str]:
-    """Package names shipped to production, from package-lock.json.
+def _lockfile_table(target: str) -> dict[str, dict]:
+    """npm lockfile ``packages`` entries keyed by their install identity.
 
-    Traverses the lockfile's ``packages`` entries and keeps every package that
-    is not flagged as a dev dependency. This is deterministic, needs no npm
-    subprocess and fails closed: a missing or unreadable lockfile raises
-    instead of degrading to an empty (all-pass) closure.
+    The key is the lockfile key minus its leading ``node_modules/`` segment -
+    the identity ``_walk_node_modules`` computes for an installed package
+    directory. Entries carry npm's metadata (``version``, ``dev`` flag, ...).
+    Fails closed when the lockfile is missing or unreadable.
     """
     lock_path = _frontend_dir(target) / "package-lock.json"
     try:
@@ -217,16 +237,14 @@ def _prod_closure_from_lock(target: str) -> set[str]:
             f"{target} first."
         ) from error
 
-    names = set()
+    table: dict[str, dict] = {}
     for key, entry in lock.get("packages", {}).items():
         if key == "" or not isinstance(entry, dict):
             continue
-        if entry.get("dev"):
+        if not key.startswith("node_modules/"):
             continue
-        name = key.split("node_modules/")[-1]
-        if name:
-            names.add(name)
-    return names
+        table[key[len("node_modules/") :]] = entry
+    return table
 
 
 def _parse_source_file(path: Path) -> dict[str, str]:
@@ -256,9 +274,9 @@ def _vendored_packages(frontend_dir: Path) -> list[Package]:
         return []
     packages = []
     for component_dir in sorted(p for p in vendor_dir.iterdir() if p.is_dir()):
+        # Components without a discoverable license text are kept: their
+        # declared (or missing) license is still evaluated by the policy.
         license_files = find_license_files(component_dir)
-        if not license_files:
-            continue
         metadata = _parse_source_file(component_dir / "SOURCE.txt")
         license_str = metadata.get("License", "").split("(")[0].strip()
         packages.append(
@@ -276,40 +294,60 @@ def _vendored_packages(frontend_dir: Path) -> list[Package]:
 
 
 def frontend_packages(target: str) -> list[Package]:
-    """Inventory of the frontend target, from node_modules package.json files."""
+    """Inventory of the frontend target, from node_modules package.json files.
+
+    Membership in the production bundle is decided per installation identity
+    (the package directory path relative to the root node_modules directory),
+    not by package name: npm aliases install under the alias directory name,
+    and nested duplicates can mix production and dev-only instances of one
+    package.
+    """
     project_dir = _frontend_dir(target)
     node_modules = project_dir / "node_modules"
+    if not node_modules.is_dir():
+        raise RuntimeError(
+            f"Cannot inventory {target}: {node_modules} is missing. The frontend "
+            "license check treats this as a failure (fail-closed); run 'npm ci' in "
+            f"{target} first."
+        )
     with open(project_dir / "package.json", "rb") as f:
         manifest = json.load(f)
     local_name = manifest.get("name", "")
-    prod_closure = _prod_closure_from_lock(target)
+    lock_table = _lockfile_table(target)
 
-    packages = []
-    seen = set()
-    for pkg_dir in _walk_node_modules(node_modules):
+    by_key: dict[tuple[str, str], Package] = {}
+    prod_keys: set[tuple[str, str]] = set()
+    for pkg_dir, ident in _walk_node_modules(node_modules):
         with open(pkg_dir / "package.json", "rb") as f:
             meta = json.load(f)
         name = meta.get("name", "")
         version = str(meta.get("version", "Unknown"))
         if not name or name == local_name:
             continue
+        entry = lock_table.get(ident)
+        # Unknown installation identity: fail closed and classify as shipped.
+        shipped = True if entry is None else not entry.get("dev", False)
         key = (name, version)
-        if key in seen:
+        if shipped:
+            prod_keys.add(key)
+        if key in by_key:
             continue
-        seen.add(key)
-        packages.append(
-            Package(
-                name=name,
-                version=version,
-                license=_npm_license_field(meta),
-                author=(meta.get("author") or {}).get("name", "")
-                if isinstance(meta.get("author"), dict)
-                else str(meta.get("author") or ""),
-                url=_npm_repo_url(meta.get("repository")),
-                shipped=name in prod_closure,
-                license_files=find_license_files(pkg_dir),
-            )
+        by_key[key] = Package(
+            name=name,
+            version=version,
+            license=_npm_license_field(meta),
+            author=(meta.get("author") or {}).get("name", "")
+            if isinstance(meta.get("author"), dict)
+            else str(meta.get("author") or ""),
+            url=_npm_repo_url(meta.get("repository")),
+            shipped=False,
+            license_files=find_license_files(pkg_dir),
         )
+    # Deduplicate by (name, version): production membership wins when the
+    # same package is installed multiple times (nested duplicates).
+    for key in prod_keys:
+        by_key[key].shipped = True
+    packages = list(by_key.values())
     packages.extend(_vendored_packages(project_dir))
     packages.sort(key=lambda p: (not p.shipped, p.name.lower()))
     return packages

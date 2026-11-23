@@ -95,17 +95,19 @@ async def test_alist_denies_unscoped_listing():
 
 
 @pytest.mark.asyncio
-async def test_live_saver_locks_live_ownership_row():
+async def test_live_saver_locks_live_ownership_row(monkeypatch):
     """A live conversation is fenced with a SHARE lock bound to one connection."""
     saver, connection = _make_saver(row=("conv-1",))
+    expected = object()
+    inner_saver = MagicMock(aget_tuple=AsyncMock(return_value=expected))
+    monkeypatch.setattr(
+        "database.fenced_checkpointer.AsyncPostgresSaver",
+        MagicMock(return_value=inner_saver),
+    )
 
-    # Delegation to the inner AsyncPostgresSaver executes more SQL against the
-    # same connection; the fence must have issued its SHARE-lock query first.
     connection.execute.assert_not_called()
-    with pytest.raises(Exception):
-        # The mocked inner saver cannot complete a real read; any failure is
-        # acceptable — the assertion below is about the fence query itself.
-        await saver.aget_tuple(CONFIG)
+    assert await saver.aget_tuple(CONFIG) is expected
+    inner_saver.aget_tuple.assert_awaited_once_with(CONFIG)
 
     fence_call = connection.execute.call_args_list[0]
     assert "FOR SHARE" in fence_call.args[0]

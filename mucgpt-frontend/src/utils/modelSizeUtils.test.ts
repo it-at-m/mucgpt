@@ -31,15 +31,11 @@ describe("fetchModelFileSizes", () => {
     });
 
     it("requests the repo root when treePath is empty", async () => {
-        vi.stubGlobal(
-            "fetch",
-            vi.fn(async (url: unknown) => {
-                expect(String(url)).toBe("https://huggingface.co/api/models/org/model/tree/main/");
-                return new Response(JSON.stringify([]), { status: 200 });
-            })
-        );
+        const fetchMock = vi.fn(async () => new Response(JSON.stringify([]), { status: 200 }));
+        vi.stubGlobal("fetch", fetchMock);
 
         await expect(fetchModelFileSizes("org/model", "")).resolves.toEqual({});
+        expect(fetchMock).toHaveBeenCalledWith("https://huggingface.co/api/models/org/model/tree/main/");
     });
 
     it("returns an empty map when the Hub API answers with an HTTP error", async () => {

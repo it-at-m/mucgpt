@@ -51,16 +51,11 @@ def postgres_container_requested() -> bool:
     if _disabled("MUCGPT_TEST_CONTAINER_RUNTIME"):
         return False
     requested = os.getenv("MUCGPT_TEST_CONTAINER_RUNTIME", "auto").strip().lower()
-    user_managed = (
-        bool(os.getenv("DOCKER_HOST")) or Path("/var/run/docker.sock").exists()
-    )
     if requested == "docker":
-        return user_managed
+        return True
     if requested == "podman":
         return any(socket.exists() for socket in _podman_socket_candidates())
-    return user_managed or any(
-        socket.exists() for socket in _podman_socket_candidates()
-    )
+    return True
 
 
 def start_postgres_container() -> PostgresContainer | None:
@@ -83,11 +78,7 @@ def start_container(factory: Callable[[], TContainer]) -> TContainer | None:
     reachable.
     """
     requested = os.getenv("MUCGPT_TEST_CONTAINER_RUNTIME", "auto").strip().lower()
-    user_managed = (
-        bool(os.getenv("DOCKER_HOST")) or Path("/var/run/docker.sock").exists()
-    )
-
-    if user_managed and requested in {"auto", "docker"}:
+    if requested in {"auto", "docker"}:
         container = _try_start(factory)
         if container is not None or requested == "docker":
             return container
@@ -110,7 +101,10 @@ def _try_start(factory: Callable[[], TContainer]) -> TContainer | None:
         container.start()
     except Exception:  # noqa: BLE001 — any runtime failure means "try next"
         if container is not None:
-            container.stop()
+            try:
+                container.stop()
+            except Exception:  # noqa: BLE001 — cleanup must not block fallback
+                pass
         return None
     return container
 

@@ -55,8 +55,8 @@ it("throws an ApiError with the API detail for failed deletes", async () => {
 });
 
 it("falls back to the default message when the error body has no string detail", async () => {
-    fetchMock.mockResolvedValue(new Response(JSON.stringify({ detail: { complex: true } }), { status: 500 }));
-    fetchMock.mockResolvedValue(new Response("<html>", { status: 500 }));
+    fetchMock.mockResolvedValueOnce(new Response(JSON.stringify({ detail: { complex: true } }), { status: 500 }));
+    fetchMock.mockResolvedValueOnce(new Response("<html>", { status: 500 }));
 
     await expect(deleteDocumentApi("doc-1")).rejects.toMatchObject({ message: "Failed to delete document", status: 500 });
     await expect(deleteDocumentApi("doc-1")).rejects.toMatchObject({ message: "Failed to delete document", status: 500 });

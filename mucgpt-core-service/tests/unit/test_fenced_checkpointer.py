@@ -10,6 +10,7 @@ unscoped listing must be impossible.
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
+from psycopg_pool import AsyncConnectionPool
 
 from database.fenced_checkpointer import (
     ConversationDeletedError,
@@ -45,7 +46,7 @@ def _make_saver(row):
     connection = MagicMock()
     connection.execute = AsyncMock(return_value=_FakeResult(row))
     connection.transaction = MagicMock(return_value=_AsyncContext(None))
-    pool = MagicMock()
+    pool = MagicMock(spec=AsyncConnectionPool)
     pool.connection = MagicMock(return_value=_AsyncContext(connection))
     return FencedPostgresSaver(conn=pool), connection
 

@@ -163,12 +163,12 @@ class TestLdapOrganizationLoaderOpenLdap:
 
         root = directory.roots[0]
         assert root.name == "Muenchen"
-        assert root.attributes["businessCategory"] == "DEPT-ORG"
+        assert root.attributes["businessCategory"] == ["DEPT-ORG"]
 
         assert [child.name for child in root.children] == ["IT"]
         child = root.children[0]
-        assert child.attributes["businessCategory"] == "DEPT-IT"
-        assert child.attributes["description"] == "IT-Referat"
+        assert child.attributes["businessCategory"] == ["DEPT-IT"]
+        assert child.attributes["description"] == ["IT-Referat"]
 
     def test_bad_credentials_raise_loader_error(self, ldap_container):
         settings = _settings_for(ldap_container)

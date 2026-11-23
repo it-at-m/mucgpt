@@ -55,6 +55,37 @@ uv remove pydantic
 uv run pytest
 ```
 
+### Real PostgreSQL in tests via Testcontainers
+
+The core-service opt-in lifecycle tests (`tests/integration/test_*_postgres.py`) and
+the assistant-service database tests (`tests/database/`, parameterized `postgres` runs)
+can use [Testcontainers](https://testcontainers.com) with a throwaway `postgres:17.4`
+container. Their behavior differs:
+
+- Core: when `MUCGPT_LIFECYCLE_POSTGRES_HOST` is set (as in CI), tests use that
+  server and do so even when `MUCGPT_TEST_POSTGRES=off`. Otherwise,
+  `MUCGPT_TEST_POSTGRES=off` prevents container startup and the affected tests skip.
+- Assistant: the database fixture ignores `MUCGPT_LIFECYCLE_POSTGRES_HOST`; it
+  starts a container when available, or omits PostgreSQL parameterized runs when
+  container tests are disabled or no runtime is detected. Assistant tests may not
+  use the configured lifecycle PostgreSQL server.
+- otherwise: a container starts automatically when a container runtime is reachable.
+  Docker is tried first, then the Podman API socket (rootless before rootful) —
+  Podman is the preferred local runtime; the socket service must be enabled
+  (`systemctl --user enable --now podman.socket`).
+- `MUCGPT_TEST_CONTAINER_RUNTIME=docker|podman` forces one runtime.
+- No container runtime reachable: the affected tests skip gracefully; nothing fails.
+
+Coverage gates are enforced on full-suite runs (`--cov-fail-under` in each
+service's `pyproject.toml` addopts and `thresholds` in the frontend's
+`vitest.config.ts`; partial runs like `pytest tests/unit` skip the gate). If you
+add code, raise the floor instead of lowering it.
+
+```bash
+# Frontend (inside mucgpt-frontend/) — runs tests with coverage and thresholds
+npm run test
+```
+
 ## Analyze a Langfuse trace
 
 The core service includes a diagnostic script for investigating a single trace.

@@ -22,7 +22,8 @@ def _podman_socket_candidates() -> list[Path]:
     candidates: list[Path] = []
     if xdg_runtime_dir := os.environ.get("XDG_RUNTIME_DIR"):
         candidates.append(Path(xdg_runtime_dir) / "podman" / "podman.sock")
-    candidates.append(Path(f"/run/user/{os.getuid()}/podman/podman.sock"))
+    if getuid := getattr(os, "getuid", None):
+        candidates.append(Path(f"/run/user/{getuid()}/podman/podman.sock"))
     candidates.append(Path("/run/podman/podman.sock"))
     return candidates
 
@@ -43,12 +44,16 @@ def postgres_container_requested() -> bool:
     if _disabled("MUCGPT_TEST_CONTAINER_RUNTIME"):
         return False
     requested = os.getenv("MUCGPT_TEST_CONTAINER_RUNTIME", "auto").strip().lower()
-    user_managed = bool(os.getenv("DOCKER_HOST")) or Path("/var/run/docker.sock").exists()
+    user_managed = (
+        bool(os.getenv("DOCKER_HOST")) or Path("/var/run/docker.sock").exists()
+    )
     if requested == "docker":
         return user_managed
     if requested == "podman":
         return any(socket.exists() for socket in _podman_socket_candidates())
-    return user_managed or any(socket.exists() for socket in _podman_socket_candidates())
+    return user_managed or any(
+        socket.exists() for socket in _podman_socket_candidates()
+    )
 
 
 def start_postgres_container():
@@ -71,7 +76,9 @@ def start_container(factory) -> object | None:
     reachable.
     """
     requested = os.getenv("MUCGPT_TEST_CONTAINER_RUNTIME", "auto").strip().lower()
-    user_managed = bool(os.getenv("DOCKER_HOST")) or Path("/var/run/docker.sock").exists()
+    user_managed = (
+        bool(os.getenv("DOCKER_HOST")) or Path("/var/run/docker.sock").exists()
+    )
 
     if user_managed and requested in {"auto", "docker"}:
         container = _try_start(factory)

@@ -98,11 +98,13 @@ def start_container(factory) -> object | None:
 
 
 def _try_start(factory) -> object | None:
-    container = factory()
+    container = None
     try:
+        container = factory()
         container.start()
     except Exception:  # noqa: BLE001 — any runtime failure means "try next"
-        container.stop()
+        if container is not None:
+            container.stop()
         return None
     return container
 

@@ -97,6 +97,11 @@ def configure_podman_pipe(pipe: str) -> None:
     # A Linux Ryuk container cannot mount or address a Windows named pipe.
     # pytest's process-scoped teardown stops the containers explicitly instead.
     os.environ.setdefault("TESTCONTAINERS_RYUK_DISABLED", "true")
+    from testcontainers.core.config import testcontainers_config
+
+    # conftest imports Testcontainers before this function runs, so changing
+    # the environment alone is too late for the already-loaded configuration.
+    testcontainers_config.ryuk_disabled = True
 
 
 def _disabled(name: str) -> bool:

@@ -8,10 +8,12 @@ from core.cache import RedisCache
 
 
 @pytest.fixture(autouse=True)
-def reset_redis_cache() -> None:
-    RedisCache._redis_client = None
-    RedisCache._redis_settings = RedisConfig(
-        host="redis.example", port=6380, username="cache-user"
+def reset_redis_cache(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(RedisCache, "_redis_client", None)
+    monkeypatch.setattr(
+        RedisCache,
+        "_redis_settings",
+        RedisConfig(host="redis.example", port=6380, username="cache-user"),
     )
 
 

@@ -27,22 +27,19 @@ _ADMIN_DN = f"cn=admin,{_SEARCH_BASE}"
 _ADMIN_PASSWORD = "admin"
 
 # Lightweight custom schema: exactly the attributes the loader reads.
-SCHEMA_LDIF = """dn: cn=mucgpt,cn=schema,cn=config
-objectClass: olcSchemaConfig
-cn: mucgpt
-olcAttributeTypes: ( 1.3.6.1.4.1.9527.1.1 NAME 'departmentCode'
+SCHEMA = """attributetype ( 1.3.6.1.4.1.9527.1.1 NAME 'departmentCode'
   DESC 'Stable shortname of an organization unit'
   EQUALITY caseIgnoreMatch SUBSTR caseIgnoreSubstringsMatch
   SYNTAX 1.3.6.1.4.1.1466.115.121.1.15 SINGLE-VALUE )
-olcAttributeTypes: ( 1.3.6.1.4.1.9527.1.2 NAME 'departmentName'
+attributetype ( 1.3.6.1.4.1.9527.1.2 NAME 'departmentName'
   DESC 'Human-readable name of an organization unit'
   EQUALITY caseIgnoreMatch SUBSTR caseIgnoreSubstringsMatch
   SYNTAX 1.3.6.1.4.1.1466.115.121.1.15 SINGLE-VALUE )
-olcAttributeTypes: ( 1.3.6.1.4.1.9527.1.3 NAME 'parentDepartment'
+attributetype ( 1.3.6.1.4.1.9527.1.3 NAME 'parentDepartment'
   DESC 'DN of the parent organization unit'
   EQUALITY distinguishedNameMatch
   SYNTAX 1.3.6.1.4.1.1466.115.121.1.12 SINGLE-VALUE )
-olcObjectClasses: ( 1.3.6.1.4.1.9527.2.1 NAME 'mucgptDepartment'
+objectclass ( 1.3.6.1.4.1.9527.2.1 NAME 'mucgptDepartment'
   DESC 'Marks an organizationalUnit as an MUCGPT department'
   SUP top AUXILIARY
   MAY ( departmentCode $ departmentName $ parentDepartment ) )
@@ -107,8 +104,8 @@ def ldap_container(tmp_path_factory: pytest.TempPathFactory):
     except ModuleNotFoundError:
         pytest.skip("testcontainers not installed")
 
-    schema_path = tmp_path_factory.mktemp("ldap-schema") / "mucgpt.ldif"
-    schema_path.write_text(SCHEMA_LDIF, encoding="utf-8")
+    schema_path = tmp_path_factory.mktemp("ldap-schema") / "mucgpt.schema"
+    schema_path.write_text(SCHEMA, encoding="utf-8")
     schema_path.chmod(0o644)  # osixia refuses unreadable schema files
 
     def _factory():
@@ -121,7 +118,7 @@ def ldap_container(tmp_path_factory: pytest.TempPathFactory):
                 str(schema_path),
                 # Bootstrap dir: schema files here are loaded on first start.
                 # Writable mount: osixia chowns/bootstrap-modifies the file.
-                "/container/service/slapd/assets/config/bootstrap/schema/custom/mucgpt.ldif",
+                "/container/service/slapd/assets/config/bootstrap/schema/custom/mucgpt.schema",
                 mode="rw",
             )
             .with_exposed_ports(389)

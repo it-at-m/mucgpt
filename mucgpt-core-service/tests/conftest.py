@@ -104,7 +104,7 @@ def pytest_configure(config: pytest.Config) -> None:
         # psycopg's async driver does not support Windows' default
         # ProactorEventLoop.  Set the selector policy before unittest's
         # IsolatedAsyncioTestCase creates its per-test loops.
-        asyncio.set_event_loop_policy(  # ty: ignore[deprecated] — required by psycopg
+        getattr(asyncio, "set_event_loop_policy")(
             asyncio.WindowsSelectorEventLoopPolicy()
         )
     if os.getenv("MUCGPT_LIFECYCLE_POSTGRES_HOST"):

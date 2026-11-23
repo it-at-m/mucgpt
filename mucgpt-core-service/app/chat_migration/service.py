@@ -6,7 +6,7 @@ from typing import Any, Literal
 from langchain_core.messages import AIMessage, HumanMessage
 from langgraph.graph import START, MessagesState, StateGraph
 from langgraph.graph.state import CompiledStateGraph
-from sqlalchemy import func, update
+from sqlalchemy import delete, func, update
 
 from chat_migration.models import ConversationImportRequest
 from core.persistance_helpers import PersistanceHelpers
@@ -54,35 +54,51 @@ async def import_chat(
 ) -> Literal["imported", "skipped"]:
     """Store a browser chat once; repeating it is harmless."""
     conversation_id = request.conversation_id
+    claimed = False
     if await PersistanceHelpers.is_user_in_conversation(user_id, conversation_id):
         # already migrated or chatted in since persistence exists, server wins
         if await PersistanceHelpers.has_checkpoint(conversation_id):
             return "skipped"
     # claims a fresh id, rejects foreign or deleted ones
-    elif not await PersistanceHelpers.verify_user_in_conversation(
+    elif await PersistanceHelpers.verify_user_in_conversation(
         user_id, conversation_id, request.assistant_id
     ):
+        claimed = True
+    else:
         raise ImportConflictError(conversation_id)
 
     messages: list[HumanMessage | AIMessage] = []
     for turn in request.turns:
         messages += [HumanMessage(content=turn.user), AIMessage(content=turn.assistant)]
-    # as_node marks the run as finished, the next chat turn starts normally
-    await _get_import_graph().aupdate_state(
-        {"configurable": {"thread_id": conversation_id}},
-        {"messages": messages},
-        as_node="import",
+    live_row = (
+        Chat.conversation_id == conversation_id,
+        Chat.user_id == user_id,
+        Chat.deleted_at.is_(None),  # never touch a chat deleted meanwhile
     )
-
-    # update chats table also
-    async with PersistanceHelpers._get_session_factory().begin() as session:
-        await session.execute(
-            update(Chat)
-            .where(Chat.conversation_id == conversation_id, Chat.user_id == user_id)
-            .values(
-                chat_title=request.title,
-                updated_at=_activity_time(request.last_edited), # ensure chat ordering is preserved if possible!
-                assistant_id=func.coalesce(Chat.assistant_id, request.assistant_id),
+    try:
+        # metadata first: the checkpoint marks the import as done, a retry skips it
+        async with PersistanceHelpers._get_session_factory().begin() as session:
+            await session.execute(
+                update(Chat)
+                .where(*live_row)
+                .values(
+                    chat_title=request.title,
+                    updated_at=_activity_time(request.last_edited), # ensure chat ordering is preserved if possible!
+                    assistant_id=func.coalesce(Chat.assistant_id, request.assistant_id),
+                )
             )
+        # as_node marks the run as finished, the next chat turn starts normally
+        await _get_import_graph().aupdate_state(
+            {"configurable": {"thread_id": conversation_id}},
+            {"messages": messages},
+            as_node="import",
         )
+    except Exception:
+        if claimed:
+            # drop the row we just claimed, otherwise the history listing marks the
+            # chat as persisted and the frontend never retries the import.
+            # hard delete, a retired id could not be claimed again
+            async with PersistanceHelpers._get_session_factory().begin() as session:
+                await session.execute(delete(Chat).where(*live_row))
+        raise
     return "imported"

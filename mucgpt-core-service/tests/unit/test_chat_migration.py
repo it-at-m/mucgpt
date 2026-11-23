@@ -183,6 +183,75 @@ async def test_owned_row_without_checkpoint_is_imported(monkeypatch, saver, chat
     assert len(await _stored_messages(saver)) == 4
 
 
+def _fail_checkpoint(monkeypatch):
+    monkeypatch.setattr(
+        InMemorySaver, "aput", AsyncMock(side_effect=RuntimeError("db down"))
+    )
+
+
+@pytest.mark.asyncio
+async def test_failed_checkpoint_drops_claimed_row(monkeypatch, saver, chats):
+    # a left over row would be listed as persisted and never imported again
+    _ownership(monkeypatch, owned=False)
+    _add_row(chats)
+    _fail_checkpoint(monkeypatch)
+
+    with pytest.raises(RuntimeError):
+        await import_chat(_request(), "owner")
+
+    with Session(chats) as session:
+        assert session.execute(select(Chat)).first() is None
+
+
+@pytest.mark.asyncio
+async def test_failed_checkpoint_keeps_preexisting_row(monkeypatch, saver, chats):
+    _ownership(monkeypatch, owned=True)
+    _add_row(chats)
+    _fail_checkpoint(monkeypatch)
+
+    with pytest.raises(RuntimeError):
+        await import_chat(_request(), "owner")
+
+    assert _row(chats).conversation_id == "chat-1"
+
+
+@pytest.mark.asyncio
+async def test_metadata_is_written_before_checkpoint(monkeypatch, saver, chats):
+    # a retry after a failed metadata write must not see a checkpoint and skip
+    _ownership(monkeypatch, owned=True)
+    _add_row(chats)
+    monkeypatch.setattr(
+        PersistanceHelpers,
+        "_session_factory",
+        Mock(begin=Mock(side_effect=RuntimeError("db down"))),
+    )
+
+    with pytest.raises(RuntimeError):
+        await import_chat(_request(), "owner")
+
+    assert (
+        await saver.aget_tuple(RunnableConfig(configurable={"thread_id": "chat-1"}))
+        is None
+    )
+
+
+@pytest.mark.asyncio
+async def test_deleted_row_is_not_revived(monkeypatch, saver, chats):
+    # delete committing while the import runs
+    _ownership(monkeypatch, owned=True)
+    _add_row(chats, assistant_id=None)
+    with Session(chats) as session:
+        row = session.execute(select(Chat)).scalar_one()
+        row.deleted_at = datetime.now(UTC)
+        session.commit()
+
+    await import_chat(_request(), "owner")
+
+    row = _row(chats)
+    assert row.chat_title != "Kita Gebühren"
+    assert row.assistant_id is None
+
+
 class _RecordingModel(GenericFakeChatModel):
     """Fake model that remembers what it was sent."""
 

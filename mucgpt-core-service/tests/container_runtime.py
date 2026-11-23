@@ -12,7 +12,14 @@ Knobs:
 """
 
 import os
+from collections.abc import Callable
 from pathlib import Path
+from typing import TYPE_CHECKING, TypeVar
+
+if TYPE_CHECKING:
+    from testcontainers.postgres import PostgresContainer
+
+TContainer = TypeVar("TContainer")
 
 POSTGRES_IMAGE = "postgres:17.4"
 
@@ -56,7 +63,7 @@ def postgres_container_requested() -> bool:
     )
 
 
-def start_postgres_container():
+def start_postgres_container() -> PostgresContainer | None:
     """Start a throwaway PostgreSQL server, trying Docker and then Podman.
 
     Returns the started container, or None when no container runtime is
@@ -69,7 +76,7 @@ def start_postgres_container():
     )
 
 
-def start_container(factory) -> object | None:
+def start_container(factory: Callable[[], TContainer]) -> TContainer | None:
     """Start a container via `factory()`, trying Docker and then Podman.
 
     Returns the started container, or None when no container runtime is
@@ -96,7 +103,7 @@ def start_container(factory) -> object | None:
     return None
 
 
-def _try_start(factory) -> object | None:
+def _try_start(factory: Callable[[], TContainer]) -> TContainer | None:
     container = None
     try:
         container = factory()
@@ -108,7 +115,7 @@ def _try_start(factory) -> object | None:
     return container
 
 
-def postgres_engine_url(container) -> str:
+def postgres_engine_url(container: PostgresContainer) -> str:
     """SQLAlchemy asyncpg URL for a running PostgresContainer."""
     return (
         "postgresql+asyncpg://"

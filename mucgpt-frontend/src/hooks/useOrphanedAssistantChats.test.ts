@@ -107,6 +107,7 @@ describe("useOrphanedAssistantChats", () => {
                 excludeIds: new Set<string>()
             })
         );
+        await waitFor(() => expect(resolveOrphanedAssistantChats).toHaveBeenCalled());
         unmount();
         resolvePromise([resolvedOrphan("assistant-a", 100)]);
 

@@ -8,7 +8,6 @@ when no container runtime is reachable or when MUCGPT_TEST_LDAP=off.
 
 import os
 import time
-from pathlib import Path
 
 import pytest
 from ldap3 import ALL, Connection, Server
@@ -90,7 +89,7 @@ def _loader(settings: LDAPSettings) -> LDAPOrganizationLoader:
 
 
 @pytest.fixture(scope="module")
-def ldap_container():
+def ldap_container(tmp_path_factory: pytest.TempPathFactory):
     """Start one lightweight OpenLDAP container for this module."""
     global _container
     if _container is not None:
@@ -108,8 +107,7 @@ def ldap_container():
     except ModuleNotFoundError:
         pytest.skip("testcontainers not installed")
 
-    schema_path = Path(f"/tmp/opencode/mucgpt-test-ldap-schema-{os.getpid()}.ldif")
-    schema_path.unlink(missing_ok=True)
+    schema_path = tmp_path_factory.mktemp("ldap-schema") / "mucgpt.ldif"
     schema_path.write_text(SCHEMA_LDIF, encoding="utf-8")
     schema_path.chmod(0o644)  # osixia refuses unreadable schema files
 
@@ -210,7 +208,5 @@ class TestLdapOrganizationLoaderOpenLdap:
             update={"bind_password": SecretStr("wrong-password")}
         )
 
-        with pytest.raises(
-            LDAPOrganizationLoaderError, match="Failed to bind"
-        ):
+        with pytest.raises(LDAPOrganizationLoaderError, match="Failed to bind"):
             _loader(settings).load_directory()

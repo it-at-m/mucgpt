@@ -1,9 +1,9 @@
 """Integration tests for LDAPOrganizationLoader against a real OpenLDAP container.
 
-Lightweight by design: one osixia/openldap container, a minimal custom schema
-(three attributeTypes + one auxiliary objectClass) and two department OUs —
-the same custom-attribute pattern the production LDAP exposes. Tests skip
-when no container runtime is reachable or when MUCGPT_TEST_LDAP=off.
+Lightweight by design: one osixia/openldap container and two department OUs.
+The standard LDAP attributes below exercise the loader's configurable attribute
+mapping without relying on image-specific custom-schema bootstrap behavior.
+Tests skip when no container runtime is reachable or when MUCGPT_TEST_LDAP=off.
 """
 
 import os
@@ -26,54 +26,35 @@ _SEARCH_BASE = f"dc={_DOMAIN.split('.')[0]},dc={_DOMAIN.split('.')[1]}"
 _ADMIN_DN = f"cn=admin,{_SEARCH_BASE}"
 _ADMIN_PASSWORD = "admin"
 
-# Lightweight custom schema: exactly the attributes the loader reads.
-SCHEMA = """attributetype ( 1.3.6.1.4.1.9527.1.1 NAME 'departmentCode'
-  DESC 'Stable shortname of an organization unit'
-  EQUALITY caseIgnoreMatch SUBSTR caseIgnoreSubstringsMatch
-  SYNTAX 1.3.6.1.4.1.1466.115.121.1.15 SINGLE-VALUE )
-attributetype ( 1.3.6.1.4.1.9527.1.2 NAME 'departmentName'
-  DESC 'Human-readable name of an organization unit'
-  EQUALITY caseIgnoreMatch SUBSTR caseIgnoreSubstringsMatch
-  SYNTAX 1.3.6.1.4.1.1466.115.121.1.15 SINGLE-VALUE )
-attributetype ( 1.3.6.1.4.1.9527.1.3 NAME 'parentDepartment'
-  DESC 'DN of the parent organization unit'
-  EQUALITY distinguishedNameMatch
-  SYNTAX 1.3.6.1.4.1.1466.115.121.1.12 SINGLE-VALUE )
-objectclass ( 1.3.6.1.4.1.9527.2.1 NAME 'mucgptDepartment'
-  DESC 'Marks an organizationalUnit as an MUCGPT department'
-  SUP top AUXILIARY
-  MAY ( departmentCode $ departmentName $ parentDepartment ) )
-"""
-
 # Two departments in a parent/child chain plus one ignored placeholder OU
 # (the "_" prefix is ignored by the default configuration).
 SEED_ENTRIES = [
     (
         f"ou=Muenchen,{_SEARCH_BASE}",
         {
-            "objectClass": ["organizationalUnit", "mucgptDepartment"],
+            "objectClass": ["organizationalUnit"],
             "ou": ["Muenchen"],
-            "departmentCode": ["DEPT-ORG"],
-            "departmentName": ["Landeshauptstadt Muenchen"],
+            "businessCategory": ["DEPT-ORG"],
+            "description": ["Landeshauptstadt Muenchen"],
         },
     ),
     (
         f"ou=IT,ou=Muenchen,{_SEARCH_BASE}",
         {
-            "objectClass": ["organizationalUnit", "mucgptDepartment"],
+            "objectClass": ["organizationalUnit"],
             "ou": ["IT"],
-            "departmentCode": ["DEPT-IT"],
-            "departmentName": ["IT-Referat"],
-            "parentDepartment": [f"ou=Muenchen,{_SEARCH_BASE}"],
+            "businessCategory": ["DEPT-IT"],
+            "description": ["IT-Referat"],
+            "seeAlso": [f"ou=Muenchen,{_SEARCH_BASE}"],
         },
     ),
     (
         f"ou=_Placeholder,{_SEARCH_BASE}",
         {
-            "objectClass": ["organizationalUnit", "mucgptDepartment"],
+            "objectClass": ["organizationalUnit"],
             "ou": ["_Placeholder"],
-            "departmentCode": ["DEPT-PLACEHOLDER"],
-            "departmentName": ["Ignored placeholder"],
+            "businessCategory": ["DEPT-PLACEHOLDER"],
+            "description": ["Ignored placeholder"],
         },
     ),
 ]
@@ -86,7 +67,7 @@ def _loader(settings: LDAPSettings) -> LDAPOrganizationLoader:
 
 
 @pytest.fixture(scope="module")
-def ldap_container(tmp_path_factory: pytest.TempPathFactory):
+def ldap_container():
     """Start one lightweight OpenLDAP container for this module."""
     global _container
     if _container is not None:
@@ -104,23 +85,12 @@ def ldap_container(tmp_path_factory: pytest.TempPathFactory):
     except ModuleNotFoundError:
         pytest.skip("testcontainers not installed")
 
-    schema_path = tmp_path_factory.mktemp("ldap-schema") / "mucgpt.schema"
-    schema_path.write_text(SCHEMA, encoding="utf-8")
-    schema_path.chmod(0o644)  # osixia refuses unreadable schema files
-
     def _factory():
         return (
             DockerContainer(_LDAP_IMAGE)
             .with_env("LDAP_ORGANISATION", "MUCGPT")
             .with_env("LDAP_DOMAIN", _DOMAIN)
             .with_env("LDAP_ADMIN_PASSWORD", _ADMIN_PASSWORD)
-            .with_volume_mapping(
-                str(schema_path),
-                # Bootstrap dir: schema files here are loaded on first start.
-                # Writable mount: osixia chowns/bootstrap-modifies the file.
-                "/container/service/slapd/assets/config/bootstrap/schema/custom/mucgpt.schema",
-                mode="rw",
-            )
             .with_exposed_ports(389)
         )
 
@@ -163,7 +133,7 @@ def _seed(container) -> None:
     connection = _connect(container)
     assert connection.bind()
     for dn, attributes in SEED_ENTRIES:
-        connection.add(dn, attributes=attributes)
+        assert connection.add(dn, attributes=attributes), connection.result
     connection.unbind()
 
 
@@ -177,8 +147,9 @@ def _settings_for(container) -> LDAPSettings:
         bind_dn=_ADMIN_DN,
         bind_password=SecretStr(_ADMIN_PASSWORD),
         search_base=_SEARCH_BASE,
-        required_attributes=["departmentName"],
-        parent_attribute="parentDepartment",
+        shortname_attribute="businessCategory",
+        required_attributes=["description"],
+        parent_attribute="seeAlso",
         page_size=2,  # force paged search round-trips
     )
 
@@ -192,12 +163,12 @@ class TestLdapOrganizationLoaderOpenLdap:
 
         root = directory.roots[0]
         assert root.name == "Muenchen"
-        assert root.attributes["departmentCode"] == "DEPT-ORG"
+        assert root.attributes["businessCategory"] == "DEPT-ORG"
 
         assert [child.name for child in root.children] == ["IT"]
         child = root.children[0]
-        assert child.attributes["departmentCode"] == "DEPT-IT"
-        assert child.attributes["departmentName"] == "IT-Referat"
+        assert child.attributes["businessCategory"] == "DEPT-IT"
+        assert child.attributes["description"] == "IT-Referat"
 
     def test_bad_credentials_raise_loader_error(self, ldap_container):
         settings = _settings_for(ldap_container)

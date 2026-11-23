@@ -43,12 +43,16 @@ def postgres_container_requested() -> bool:
     if _disabled("MUCGPT_TEST_CONTAINER_RUNTIME"):
         return False
     requested = os.getenv("MUCGPT_TEST_CONTAINER_RUNTIME", "auto").strip().lower()
-    user_managed = bool(os.getenv("DOCKER_HOST")) or Path("/var/run/docker.sock").exists()
+    user_managed = (
+        bool(os.getenv("DOCKER_HOST")) or Path("/var/run/docker.sock").exists()
+    )
     if requested == "docker":
         return user_managed
     if requested == "podman":
         return any(socket.exists() for socket in _podman_socket_candidates())
-    return user_managed or any(socket.exists() for socket in _podman_socket_candidates())
+    return user_managed or any(
+        socket.exists() for socket in _podman_socket_candidates()
+    )
 
 
 def start_postgres_container():
@@ -59,8 +63,10 @@ def start_postgres_container():
     """
     from testcontainers.postgres import PostgresContainer
 
+    username = os.environ.get("MUCGPT_TEST_POSTGRES_USER", "admin")
+    password = os.environ.get("MUCGPT_TEST_POSTGRES_PASSWORD", "admin")
     return start_container(
-        lambda: PostgresContainer(POSTGRES_IMAGE, username="admin", password="admin")
+        lambda: PostgresContainer(POSTGRES_IMAGE, username=username, password=password)
     )
 
 
@@ -71,7 +77,9 @@ def start_container(factory) -> object | None:
     reachable.
     """
     requested = os.getenv("MUCGPT_TEST_CONTAINER_RUNTIME", "auto").strip().lower()
-    user_managed = bool(os.getenv("DOCKER_HOST")) or Path("/var/run/docker.sock").exists()
+    user_managed = (
+        bool(os.getenv("DOCKER_HOST")) or Path("/var/run/docker.sock").exists()
+    )
 
     if user_managed and requested in {"auto", "docker"}:
         container = _try_start(factory)

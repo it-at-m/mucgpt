@@ -59,11 +59,16 @@ uv run pytest
 
 The core-service opt-in lifecycle tests (`tests/integration/test_*_postgres.py`) and
 the assistant-service database tests (`tests/database/`, parameterized `postgres` runs)
-use [Testcontainers](https://testcontainers.com) to start a throwaway `postgres:17.4`
-container automatically. Behavior:
+can use [Testcontainers](https://testcontainers.com) with a throwaway `postgres:17.4`
+container. Their behavior differs:
 
-- `MUCGPT_LIFECYCLE_POSTGRES_HOST` set (as in CI): that server is used, no container is started.
-- `MUCGPT_TEST_POSTGRES=off`: containers are never started; the affected tests skip.
+- Core: when `MUCGPT_LIFECYCLE_POSTGRES_HOST` is set (as in CI), tests use that
+  server and do so even when `MUCGPT_TEST_POSTGRES=off`. Otherwise,
+  `MUCGPT_TEST_POSTGRES=off` prevents container startup and the affected tests skip.
+- Assistant: the database fixture ignores `MUCGPT_LIFECYCLE_POSTGRES_HOST`; it
+  starts a container when available, or omits PostgreSQL parameterized runs when
+  container tests are disabled or no runtime is detected. Assistant tests may not
+  use the configured lifecycle PostgreSQL server.
 - otherwise: a container starts automatically when a container runtime is reachable.
   Docker is tried first, then the Podman API socket (rootless before rootful) —
   Podman is the preferred local runtime; the socket service must be enabled

@@ -35,7 +35,10 @@ describe("fetchModelFileSizes", () => {
         vi.stubGlobal("fetch", fetchMock);
 
         await expect(fetchModelFileSizes("org/model", "")).resolves.toEqual({});
-        expect(fetchMock).toHaveBeenCalledWith("https://huggingface.co/api/models/org/model/tree/main/");
+        expect(fetchMock).toHaveBeenCalledWith(
+            "https://huggingface.co/api/models/org/model/tree/main/",
+            expect.objectContaining({ headers: { Accept: "application/json" }, signal: expect.any(AbortSignal) })
+        );
     });
 
     it("returns an empty map when the Hub API answers with an HTTP error", async () => {

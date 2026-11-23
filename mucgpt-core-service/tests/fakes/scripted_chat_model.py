@@ -8,10 +8,19 @@ tool binding for assertions.
 import asyncio
 from collections.abc import AsyncIterator, Iterator, Sequence
 from dataclasses import dataclass
-from typing import Any, Literal
+from typing import Any, Literal, cast
 
+from langchain_core.callbacks.manager import (
+    AsyncCallbackManagerForLLMRun,
+    CallbackManagerForLLMRun,
+)
 from langchain_core.language_models import BaseChatModel
-from langchain_core.messages import AIMessage, AIMessageChunk, BaseMessage
+from langchain_core.messages import (
+    AIMessage,
+    AIMessageChunk,
+    BaseMessage,
+    message_chunk_to_message,
+)
 from langchain_core.outputs import ChatGeneration, ChatGenerationChunk, ChatResult
 from langchain_core.tools import BaseTool
 from langchain_core.utils.function_calling import convert_to_openai_function
@@ -180,24 +189,60 @@ class ScriptedChatModel(BaseChatModel):
             assert step.message is not None
             return step.message
         if step.kind == "stream":
-            return AIMessage(
-                content="".join(str(chunk.content) for chunk in step.chunks)
-            )
+            if not step.chunks:
+                return AIMessage(content="")
+            aggregate = step.chunks[0]
+            for chunk in step.chunks[1:]:
+                aggregate += chunk
+            return cast(AIMessage, message_chunk_to_message(aggregate))
         raise AssertionError("wait and error steps do not produce a message")
 
+    @staticmethod
+    def _chunk_from_message(message: AIMessage) -> AIMessageChunk:
+        return AIMessageChunk(
+            content=message.content,
+            additional_kwargs=message.additional_kwargs,
+            response_metadata=message.response_metadata,
+            name=message.name,
+            id=message.id,
+            tool_calls=message.tool_calls,
+            invalid_tool_calls=message.invalid_tool_calls,
+            usage_metadata=message.usage_metadata,
+        )
+
+    @staticmethod
+    def _settings_with_stop(
+        kwargs: dict[str, Any], stop: list[str] | None
+    ) -> dict[str, Any]:
+        if stop is None:
+            return kwargs
+        return {**kwargs, "stop": stop}
+
     def _generate(
-        self, messages, stop=None, run_manager=None, **kwargs: Any
+        self,
+        messages: list[BaseMessage],
+        stop: list[str] | None = None,
+        run_manager: CallbackManagerForLLMRun | None = None,
+        **kwargs: Any,
     ) -> ChatResult:
-        step = self._next_step(messages, kwargs, "invoke")
+        step = self._next_step(
+            messages, self._settings_with_stop(kwargs, stop), "invoke"
+        )
         self._raise_or_reject_wait(step)
         return ChatResult(
             generations=[ChatGeneration(message=self._message_from_step(step))]
         )
 
     async def _agenerate(
-        self, messages, stop=None, run_manager=None, **kwargs: Any
+        self,
+        messages: list[BaseMessage],
+        stop: list[str] | None = None,
+        run_manager: AsyncCallbackManagerForLLMRun | None = None,
+        **kwargs: Any,
     ) -> ChatResult:
-        step = self._next_step(messages, kwargs, "invoke")
+        step = self._next_step(
+            messages, self._settings_with_stop(kwargs, stop), "invoke"
+        )
         if step.kind == "wait":
             assert step.event is not None
             await step.event.wait()
@@ -210,14 +255,20 @@ class ScriptedChatModel(BaseChatModel):
         )
 
     def _stream(
-        self, messages, stop=None, run_manager=None, **kwargs: Any
+        self,
+        messages: list[BaseMessage],
+        stop: list[str] | None = None,
+        run_manager: CallbackManagerForLLMRun | None = None,
+        **kwargs: Any,
     ) -> Iterator[ChatGenerationChunk]:
-        step = self._next_step(messages, kwargs, "stream")
+        step = self._next_step(
+            messages, self._settings_with_stop(kwargs, stop), "stream"
+        )
         self._raise_or_reject_wait(step)
         chunks = (
             step.chunks
             if step.kind == "stream"
-            else (AIMessageChunk(content=self._message_from_step(step).content),)
+            else (self._chunk_from_message(self._message_from_step(step)),)
         )
         for chunk in chunks:
             yield ChatGenerationChunk(message=chunk)
@@ -225,9 +276,15 @@ class ScriptedChatModel(BaseChatModel):
             raise step.stream_error
 
     async def _astream(
-        self, messages, stop=None, run_manager=None, **kwargs: Any
+        self,
+        messages: list[BaseMessage],
+        stop: list[str] | None = None,
+        run_manager: AsyncCallbackManagerForLLMRun | None = None,
+        **kwargs: Any,
     ) -> AsyncIterator[ChatGenerationChunk]:
-        step = self._next_step(messages, kwargs, "stream")
+        step = self._next_step(
+            messages, self._settings_with_stop(kwargs, stop), "stream"
+        )
         if step.kind == "wait":
             assert step.event is not None
             await step.event.wait()
@@ -237,7 +294,7 @@ class ScriptedChatModel(BaseChatModel):
         chunks = (
             step.chunks
             if step.kind == "stream"
-            else (AIMessageChunk(content=self._message_from_step(step).content),)
+            else (self._chunk_from_message(self._message_from_step(step)),)
         )
         for chunk in chunks:
             yield ChatGenerationChunk(message=chunk)

@@ -1,7 +1,7 @@
 import asyncio
 
 import pytest
-from langchain_core.messages import AIMessage, HumanMessage
+from langchain_core.messages import AIMessage, AIMessageChunk, HumanMessage
 from langchain_core.tools import tool
 from tests.fakes.scripted_chat_model import (
     ScriptedChatModel,
@@ -63,6 +63,80 @@ def test_stream_preserves_chunk_order() -> None:
     assert [chunk.content for chunk in chunks] == ["one", " two", " three", ""]
     assert model.recorded_inputs[0].mode == "stream"
     model.assert_consumed()
+
+
+def test_stream_step_invocation_preserves_tool_calls() -> None:
+    tool_call_chunk = AIMessageChunk(
+        content=[{"type": "text", "text": "Reading the file."}],
+        tool_calls=[
+            {
+                "name": "read_file",
+                "args": {"file_path": "/documents/a.txt"},
+                "id": "read-1",
+                "type": "tool_call",
+            }
+        ],
+    )
+    model = ScriptedChatModel(script=[stream(tool_call_chunk)])
+
+    response = model.invoke("Read the file")
+
+    assert response.content == [{"type": "text", "text": "Reading the file."}]
+    assert response.tool_calls[0]["id"] == "read-1"
+    model.assert_consumed()
+
+
+def test_stream_of_message_preserves_tool_call() -> None:
+    model = ScriptedChatModel(script=[read_file("/documents/a.txt", id="read-1")])
+
+    chunks = list(model.stream("Read the file"))
+
+    assert chunks[0].tool_calls[0]["id"] == "read-1"
+    model.assert_consumed()
+
+
+@pytest.mark.asyncio
+async def test_astream_of_message_preserves_tool_call() -> None:
+    model = ScriptedChatModel(script=[read_file("/documents/a.txt", id="read-1")])
+
+    chunks = [chunk async for chunk in model.astream("Read the file")]
+
+    assert chunks[0].tool_calls[0]["id"] == "read-1"
+    model.assert_consumed()
+
+
+def test_invoke_records_supplied_stop() -> None:
+    model = ScriptedChatModel(script=[text("answer")])
+
+    model.invoke("question", stop=["STOP"])
+
+    assert model.recorded_inputs[0].settings == {"stop": ["STOP"]}
+
+
+@pytest.mark.asyncio
+async def test_ainvoke_records_supplied_stop() -> None:
+    model = ScriptedChatModel(script=[text("answer")])
+
+    await model.ainvoke("question", stop=["STOP"])
+
+    assert model.recorded_inputs[0].settings == {"stop": ["STOP"]}
+
+
+def test_stream_records_supplied_stop() -> None:
+    model = ScriptedChatModel(script=[stream("answer")])
+
+    list(model.stream("question", stop=["STOP"]))
+
+    assert model.recorded_inputs[0].settings == {"stop": ["STOP"]}
+
+
+@pytest.mark.asyncio
+async def test_astream_records_supplied_stop() -> None:
+    model = ScriptedChatModel(script=[stream("answer")])
+
+    _ = [chunk async for chunk in model.astream("question", stop=["STOP"])]
+
+    assert model.recorded_inputs[0].settings == {"stop": ["STOP"]}
 
 
 def test_stream_can_fail_after_partial_output() -> None:

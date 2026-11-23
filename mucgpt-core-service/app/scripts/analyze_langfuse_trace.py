@@ -125,7 +125,9 @@ def _observation_lines(
         details.append(f"finish_reason={reason}")
         if reason in _FILTER_FINISH_REASONS:
             details.append("CONTENT_FILTERED")
-    if status_message := getattr(observation, "status_message", None):
+    if show_content and (
+        status_message := getattr(observation, "status_message", None)
+    ):
         details.append(f"status={_compact(status_message, max_content_chars)}")
     yield f"- {' '.join(details)}{duration}"
 

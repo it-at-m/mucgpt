@@ -613,7 +613,26 @@ class ConversationLifecyclePostgresTests(unittest.IsolatedAsyncioTestCase):
                             ),
                         ):
                             task = asyncio.create_task(run())
-                            await asyncio.wait_for(started.wait(), 10)
+                            try:
+                                await asyncio.wait_for(started.wait(), 10)
+                            except TimeoutError:
+                                if task.done():
+                                    # Surface exceptions from run() instead of masking
+                                    # them with the timeout waiting for the graph node.
+                                    task.result()
+                                    self.fail(
+                                        "run() finished before the answer node started; "
+                                        f"response chunks: {chunks!r}"
+                                    )
+
+                                stack = [
+                                    f"{frame.f_code.co_name}:{frame.f_lineno}"
+                                    for frame in task.get_stack()
+                                ]
+                                self.fail(
+                                    "answer node did not start; run() is still pending. "
+                                    f"Task stack: {stack}; response chunks: {chunks!r}"
+                                )
                             if outcome == "cancel":
                                 task.cancel()
                                 result = await asyncio.wait_for(

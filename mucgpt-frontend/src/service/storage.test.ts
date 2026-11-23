@@ -14,10 +14,10 @@ function makeDb() {
     const db = {
         put: vi.fn(async (store: string, value: DBObject<unknown, unknown>) => {
             if (!value.id) throw new Error("DataError: id required");
-            records.set(value.id, value);
+            records.set(value.id, structuredClone(value));
         }),
-        get: vi.fn(async (_store: string, id: string) => records.get(id)),
-        getAll: vi.fn(async () => Array.from(records.values())),
+        get: vi.fn(async (_store: string, id: string) => structuredClone(records.get(id))),
+        getAll: vi.fn(async () => Array.from(records.values(), value => structuredClone(value))),
         transaction: vi.fn(() => ({
             objectStore: () => ({
                 delete: vi.fn(async (id: string) => {

@@ -5,8 +5,8 @@
       "source": "fastapi/fastapi",
       "sourceType": "github",
       "skillPath": "fastapi/.agents/skills/fastapi/SKILL.md",
-      "computedHash": "27e7911866460c5c8e69761f492f077b24130a748b980e604b88660a022bd893",
-      "commit": "a1b3be01aadc61c67edc09eed4f6cc1fcc3d3b8f"
+      "computedHash": "141f0146e357365d518029ccc74e5b0a256f9a352573c65856780995d1bea52c",
+      "commit": "05e6df7e906c3decba377c37548019973f40bf15"
     },
     "find-skills": {
       "source": "vercel-labs/skills",
@@ -65,8 +65,8 @@
       "source": "vercel-labs/agent-skills",
       "sourceType": "github",
       "skillPath": "skills/web-design-guidelines/SKILL.md",
-      "computedHash": "4f68ae07187fb0d1fb78c88b503d089da4cf5a9d9625d1f2e425b1590bf96d92",
-      "commit": "1a2c79d4e6c4a2283dc2c614b6538cbe1ed5ca62"
+      "computedHash": "5994e4cfd86144903d2ba750f862b9e36af15e3297aac983679e347b99f6cb71",
+      "commit": "5a37a6329fbad3666c3207392a6a7c0110e92efb"
     }
   }
 }

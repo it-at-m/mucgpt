@@ -528,12 +528,12 @@ class ConversationLifecyclePostgresTests(unittest.IsolatedAsyncioTestCase):
                     wrapper.state_schema = cast("Any", MessagesState)
                     wrapper._prepare_run = cast(
                         "Any",
-                        lambda data, config: (
+                        lambda data, _config, system_prompt: (
                             data["messages"],
                             None,
                             # astream reads request_context.canvas before the
                             # graph runs; the wrapper needs a real context.
-                            RequestContext(),
+                            RequestContext(system_prompt=system_prompt),
                         ),
                     )
                     executor = MUCGPTAgentExecutor(

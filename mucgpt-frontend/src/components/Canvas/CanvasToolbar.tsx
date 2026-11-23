@@ -78,10 +78,10 @@ export const CanvasToolbar = ({ editor, controller, onOpenVersions, disabled }: 
                 inTable: ctx.editor.isActive("table"),
                 // heading state must ride the selector: caret moves between
                 // headings and paragraphs change none of the values above and
-                // useEditorState's deep-equal would skip the rerender
-                heading1: ctx.editor.isActive("heading", { level: 1 }),
-                heading2: ctx.editor.isActive("heading", { level: 2 }),
-                heading3: ctx.editor.isActive("heading", { level: 3 })
+                // useEditorState's deep-equal would skip the rerender.
+                // headingLevel drives all three heading buttons; levels >= 3
+                // belong to the H3 button (see CanvasEditor.module.css).
+                headingLevel: ctx.editor.isActive("heading") ? (ctx.editor.getAttributes("heading").level ?? null) : null
             }
     });
 
@@ -122,6 +122,8 @@ export const CanvasToolbar = ({ editor, controller, onOpenVersions, disabled }: 
 
     const canUndo = !disabled && (state?.canUndo ?? false);
     const canRedo = !disabled && (state?.canRedo ?? false);
+    const headingLevel = state?.headingLevel ?? null;
+    const deepHeading = (headingLevel ?? 0) >= 3;
 
     return (
         <div className={styles.toolbar} role="toolbar" aria-label={t("canvas.toolbar.label")}>
@@ -188,7 +190,7 @@ export const CanvasToolbar = ({ editor, controller, onOpenVersions, disabled }: 
             <div className={styles.divider} />
 
             {(["1", "2", "3"] as const).map(level => {
-                const active = level === "1" ? state?.heading1 : level === "2" ? state?.heading2 : state?.heading3;
+                const active = level === "1" ? headingLevel === 1 : level === "2" ? headingLevel === 2 : deepHeading;
                 return (
                     <Button
                         key={level}
@@ -196,7 +198,9 @@ export const CanvasToolbar = ({ editor, controller, onOpenVersions, disabled }: 
                         size="small"
                         disabled={disabled}
                         className={mergeClasses(headingStyles.headingButton, active && styles.active)}
-                        onClick={run(chain => chain.toggleHeading({ level: Number(level) as 1 | 2 | 3 }))}
+                        onClick={run(chain =>
+                            level === "3" && deepHeading ? chain.setParagraph() : chain.toggleHeading({ level: Number(level) as 1 | 2 | 3 })
+                        )}
                         aria-label={t(`canvas.toolbar.heading_${level}`)}
                         aria-pressed={active}
                     >

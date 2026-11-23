@@ -172,6 +172,23 @@ The `mcpdoc-server` image installs `mcpdoc` through the local `mcpdoc-server/pyp
 
 - **docker-compose.yml** - Local development/demo stack
 - **docker-compose.dev.yml** - Development overrides (routes to local running services)
+- **docker-compose.tls.yml** - TLS override: encrypts every network hop from the browser to every pod (see [docs/TLS_ENCRYPTION.md](../docs/TLS_ENCRYPTION.md))
+
+### TLS mode
+
+The default stack communicates in plaintext internally (local development only). To run
+the stack with hop-by-hop TLS encryption — browser → gateway → every backend pod, no
+plaintext network hop anywhere:
+
+```powershell
+bash tls/generate-dev-certs.sh   # generates dev CA + leaf certs into tls/certs/ (gitignored)
+# trust tls/certs/ca.crt in your browser/OS, then:
+podman compose -f docker-compose.yml -f docker-compose.tls.yml up -d --build
+```
+
+Access: `https://localhost:9443` (frontend via gateway), `https://keycloak:8443` (SSO).
+Full configuration reference, production notes and per-hop verification:
+[docs/TLS_ENCRYPTION.md](../docs/TLS_ENCRYPTION.md).
 
 ## Common Commands
 

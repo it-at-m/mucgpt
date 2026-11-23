@@ -53,6 +53,26 @@ npm run build        # tsc && vite build
 - Tests are split by **directory** (`tests/unit/`, `tests/integration/`); "integration" here means FastAPI `TestClient` router tests, not external services.
 - Only the `integration` marker is actually used in tests. Core registers `unit`/`integration`; assistant registers only `integration` (`--strict-markers`), so `-m unit` errors there — use `-m "not integration"`.
 
+### Core PostgreSQL lifecycle tests
+
+- The core PostgreSQL lifecycle suites use the shared harness in
+  `mucgpt-core-service/tests/postgres.py`. Reuse its isolated database context
+  and migration helpers; do not add ad-hoc containers, database names, or
+  migration setup in individual tests.
+- The process-scoped Testcontainers lifecycle is managed by
+  `mucgpt-core-service/tests/conftest.py`. It includes explicit cleanup for
+  normal teardown, `atexit`, Ctrl+C, and termination signals. On Windows with
+  Podman, Ryuk is disabled because it cannot mount a Windows named pipe.
+- Windows requires a running Podman machine. The harness discovers its
+  Docker-compatible named pipe automatically; `MUCGPT_TEST_CONTAINER_RUNTIME=podman`
+  can force that runtime.
+- Prefer `MUCGPT_LIFECYCLE_POSTGRES_*` settings when CI or another process
+  provides PostgreSQL. When these settings are present, tests must not start a
+  Testcontainers instance.
+- If an interrupted run leaves containers behind, inspect labels and remove
+  only containers created by Testcontainers. Never clean up Compose containers
+  as part of test troubleshooting.
+
 ## Configuration model
 
 Each Python service is configured by a **`config.yaml`** (see each service's `config.yaml.example`, and `stack/*.config.yaml.example`). **YAML keys are lowercase** (`models:`, `redis:`, `host:`, `password:`); legacy UPPERCASE YAML keys are ignored — existing config files must migrate (mostly fails loudly at startup: missing required db fields, empty models list). Exception: a top-level `SSO:` section and `ROLE`/`ADMIN_ROLE` under `sso` **fail startup validation** (silently ignoring them would disable the SSO role check). Settings are pydantic-settings with nesting via `__` and a per-service prefix; env var names stay UPPERCASE and match case-insensitively:

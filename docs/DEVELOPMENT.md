@@ -76,6 +76,39 @@ container. Their behavior differs:
 - `MUCGPT_TEST_CONTAINER_RUNTIME=docker|podman` forces one runtime.
 - No container runtime reachable: the affected tests skip gracefully; nothing fails.
 
+#### Windows and Podman
+
+On Windows, start a Podman machine before running the core lifecycle tests:
+
+```powershell
+podman machine start
+podman machine list
+```
+
+The test harness discovers the running machine's Docker-compatible named pipe
+automatically. You can force the Podman path when troubleshooting:
+
+```powershell
+$env:MUCGPT_TEST_CONTAINER_RUNTIME = "podman"
+uv run pytest tests/integration/test_document_catalog_postgres.py
+```
+
+Windows uses a selector event loop because `psycopg`'s asynchronous driver does
+not work with the default Proactor event loop. Ryuk is disabled for Podman named
+pipes; the pytest process owns the container and explicitly stops it during
+normal teardown, `atexit`, Ctrl+C, and termination handling. If a run is killed
+before cleanup can execute, inspect only Testcontainers-labeled containers
+before removing them—do not remove unrelated Compose containers.
+
+For CI or an externally managed PostgreSQL instance, set
+`MUCGPT_LIFECYCLE_POSTGRES_HOST`, `MUCGPT_LIFECYCLE_POSTGRES_PORT`,
+`MUCGPT_LIFECYCLE_POSTGRES_USER`, and `MUCGPT_LIFECYCLE_POSTGRES_PASSWORD`.
+When the host is set, no Testcontainers container is started.
+
+Core PostgreSQL lifecycle tests share the isolated database context in
+`mucgpt-core-service/tests/postgres.py`; new lifecycle tests should reuse it
+instead of creating their own containers, databases, or migration setup.
+
 Coverage gates are enforced on full-suite runs (`--cov-fail-under` in each
 service's `pyproject.toml` addopts and `thresholds` in the frontend's
 `vitest.config.ts`; partial runs like `pytest tests/unit` skip the gate). If you

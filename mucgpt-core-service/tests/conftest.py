@@ -1,5 +1,7 @@
 import asyncio
+import atexit
 import os
+import signal
 import sys
 from pathlib import Path
 from unittest.mock import AsyncMock, Mock
@@ -28,6 +30,27 @@ def _collection_includes_postgres_tests(config: pytest.Config) -> bool:
 
 
 _POSTGRES_CONTAINER = None
+_CONTAINER_SIGNAL_HANDLERS: dict[signal.Signals, object] = {}
+
+
+def _stop_postgres_container() -> None:
+    """Stop the process-scoped testcontainer during every normal teardown path."""
+    global _POSTGRES_CONTAINER
+    if _POSTGRES_CONTAINER is not None:
+        try:
+            _POSTGRES_CONTAINER.stop()
+        finally:
+            _POSTGRES_CONTAINER = None
+
+
+def _handle_container_shutdown(signum: int, frame) -> None:
+    """Clean up before pytest is interrupted by Ctrl+C or termination."""
+    _stop_postgres_container()
+    previous = _CONTAINER_SIGNAL_HANDLERS.get(signal.Signals(signum))
+    if callable(previous):
+        previous(signum, frame)
+    else:
+        raise KeyboardInterrupt
 
 
 def _suppress_coverage_gate_for_partial_runs(config: pytest.Config) -> None:
@@ -109,6 +132,10 @@ def pytest_configure(config: pytest.Config) -> None:
         )
         return
     _POSTGRES_CONTAINER = container
+    atexit.register(_stop_postgres_container)
+    for signum in (signal.SIGINT, signal.SIGTERM):
+        _CONTAINER_SIGNAL_HANDLERS[signum] = signal.getsignal(signum)
+        signal.signal(signum, _handle_container_shutdown)
     os.environ["MUCGPT_LIFECYCLE_POSTGRES_HOST"] = str(
         container.get_container_host_ip()
     )
@@ -120,10 +147,7 @@ def pytest_configure(config: pytest.Config) -> None:
 
 
 def pytest_unconfigure(config: pytest.Config) -> None:
-    global _POSTGRES_CONTAINER
-    if _POSTGRES_CONTAINER is not None:
-        _POSTGRES_CONTAINER.stop()
-        _POSTGRES_CONTAINER = None
+    _stop_postgres_container()
 
 
 @pytest.fixture(autouse=True)

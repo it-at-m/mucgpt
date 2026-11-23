@@ -48,7 +48,12 @@ def _suppress_coverage_gate_for_partial_runs(config: pytest.Config) -> None:
     args = [str(arg) for arg in config.args]
     testpaths = [str(path) for path in config.getini("testpaths")]
     has_test_selection = bool(config.option.keyword or config.option.markexpr)
-    if not has_test_selection and (not args or (testpaths and args == testpaths)):
+    full_suite_paths = {Path.cwd().resolve()}
+    full_suite_paths.update(Path(path).resolve() for path in testpaths)
+    selects_full_suite = bool(args) and all(
+        Path(path).resolve() in full_suite_paths for path in args
+    )
+    if not has_test_selection and (not args or selects_full_suite):
         return  # full run — keep the gate
     config.option.cov_fail_under = 0
     known_args = getattr(config, "known_args_namespace", None)

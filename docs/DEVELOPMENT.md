@@ -133,6 +133,9 @@ classic Podman builder. A direct build can be run with
 The frontend image generates the notices of its bundled (production) npm
 dependencies in the builder stage and ships them under
 `/usr/share/licenses/mucgpt-frontend/THIRD_PARTY_LICENSES/` (not web-served).
+Vendored frontend components under `public/vendor/*/` are inventoried by
+convention: each directory carries a license file and a `SOURCE.txt` with
+`Version` / `Source` / `License` metadata lines.
 
 ## MCP credential handling security note
 

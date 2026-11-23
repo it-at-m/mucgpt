@@ -40,6 +40,7 @@ class Package:
     url: str = ""
     shipped: bool = True  # False = dev-only, not distributed
     license_files: list[str] = field(default_factory=list)  # absolute paths
+    ecosystem: str = ""  # overrides the target's default purl ecosystem
 
 
 def _run(cmd: list[str]) -> str:
@@ -228,6 +229,52 @@ def _prod_closure_from_lock(target: str) -> set[str]:
     return names
 
 
+def _parse_source_file(path: Path) -> dict[str, str]:
+    """Parse ``Key: value`` metadata lines from a vendored SOURCE.txt file."""
+    try:
+        text = path.read_text(encoding="utf-8", errors="replace")
+    except OSError:
+        return {}
+    metadata: dict[str, str] = {}
+    for line in text.splitlines():
+        match = re.match(r"^([A-Za-z][A-Za-z ]+):\s*(\S.*)$", line)
+        if match:
+            metadata.setdefault(match.group(1).strip(), match.group(2).strip())
+    return metadata
+
+
+def _vendored_packages(frontend_dir: Path) -> list[Package]:
+    """Inventory of vendored components under ``public/vendor/*/``.
+
+    By convention each vendored component directory carries a license file and
+    an optional ``SOURCE.txt`` with ``Version/Source/License`` metadata lines
+    (parenthetical remarks are stripped; versions are reduced to their first
+    token). Vendored components always ship inside the frontend bundle.
+    """
+    vendor_dir = frontend_dir / "public" / "vendor"
+    if not vendor_dir.is_dir():
+        return []
+    packages = []
+    for component_dir in sorted(p for p in vendor_dir.iterdir() if p.is_dir()):
+        license_files = find_license_files(component_dir)
+        if not license_files:
+            continue
+        metadata = _parse_source_file(component_dir / "SOURCE.txt")
+        license_str = metadata.get("License", "").split("(")[0].strip()
+        packages.append(
+            Package(
+                name=component_dir.name,
+                version=metadata.get("Version", "Unknown").split()[0],
+                license=license_str,
+                url=metadata.get("Source", ""),
+                shipped=True,
+                license_files=license_files,
+                ecosystem="generic",
+            )
+        )
+    return packages
+
+
 def frontend_packages(target: str) -> list[Package]:
     """Inventory of the frontend target, from node_modules package.json files."""
     project_dir = _frontend_dir(target)
@@ -263,6 +310,7 @@ def frontend_packages(target: str) -> list[Package]:
                 license_files=find_license_files(pkg_dir),
             )
         )
+    packages.extend(_vendored_packages(project_dir))
     packages.sort(key=lambda p: (not p.shipped, p.name.lower()))
     return packages
 

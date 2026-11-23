@@ -204,7 +204,9 @@ def write_cyclonedx(
             "type": "library",
             "name": entry["name"],
             "version": entry["version"],
-            "purl": _purl(ecosystem, entry["name"], entry["version"]),
+            "purl": _purl(
+                entry.get("ecosystem") or ecosystem, entry["name"], entry["version"]
+            ),
         }
         license_entry = _cyclonedx_license(entry["license"])
         if license_entry is not None:
@@ -242,6 +244,8 @@ def _purl(ecosystem: str, name: str, version: str) -> str:
     if ecosystem == "npm":
         qualifier = name.replace("@", "%40")
         return f"pkg:npm/{qualifier}@{version}"
+    if ecosystem == "generic":
+        return f"pkg:generic/{sanitize_package_name(name).replace('_', '-')}@{version}"
     return f"pkg:pypi/{sanitize_package_name(name).replace('_', '-')}@{version}"
 
 

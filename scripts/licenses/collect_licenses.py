@@ -56,6 +56,7 @@ def collect_target(target: str, output_root: Path) -> bool:
                 "category": notices.CATEGORY_LABEL.get(category, category),
                 "author": pkg.author,
                 "url": pkg.url,
+                "ecosystem": pkg.ecosystem,
                 "license_files": notices.copy_license_texts(
                     pkg.name, pkg.version, pkg.license_files, licenses_dir
                 )

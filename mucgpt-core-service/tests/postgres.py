@@ -96,6 +96,17 @@ async def _drop_database(server: PostgresServerConfig, database: str) -> None:
         )
 
 
+async def _wait_for_task(task: asyncio.Task[object]) -> None:
+    """Wait for a shielded task even if cancellation is requested again."""
+    while not task.done():
+        try:
+            await asyncio.shield(task)
+        except asyncio.CancelledError:
+            continue
+        except BaseException:
+            return
+
+
 async def migrate_database(server: PostgresServerConfig, database: str) -> None:
     """Apply the production Alembic migrations to an isolated database."""
     migration_env = {
@@ -108,11 +119,19 @@ async def migrate_database(server: PostgresServerConfig, database: str) -> None:
     try:
         with patch.dict(os.environ, migration_env):
             get_migration_settings.cache_clear()
-            await asyncio.to_thread(
-                command.upgrade,
-                Config(str(Path(__file__).parents[1] / "alembic.ini")),
-                "head",
+            migration = asyncio.create_task(
+                asyncio.to_thread(
+                    command.upgrade,
+                    Config(str(Path(__file__).parents[1] / "alembic.ini")),
+                    "head",
+                )
             )
+            try:
+                await asyncio.shield(migration)
+            except asyncio.CancelledError:
+                await _wait_for_task(migration)
+                migration.exception()
+                raise
     finally:
         get_migration_settings.cache_clear()
 
@@ -128,7 +147,16 @@ async def isolated_postgres_database(
     """
     server = PostgresServerConfig.from_environment()
     database = prefix + uuid4().hex
-    await _create_database(server, database)
+    creation = asyncio.create_task(_create_database(server, database))
+    try:
+        await asyncio.shield(creation)
+    except asyncio.CancelledError:
+        await _wait_for_task(creation)
+        if not creation.cancelled() and creation.exception() is None:
+            cleanup = asyncio.create_task(_drop_database(server, database))
+            await _wait_for_task(cleanup)
+            cleanup.result()
+        raise
     try:
         if migrate:
             await migrate_database(server, database)
@@ -152,7 +180,8 @@ async def isolated_postgres_database(
         except asyncio.CancelledError:
             # The shield keeps the drop task alive; wait for it before
             # propagating cancellation to the test.
-            await asyncio.shield(cleanup)
+            await _wait_for_task(cleanup)
+            cleanup.result()
             raise
         finally:
             get_migration_settings.cache_clear()

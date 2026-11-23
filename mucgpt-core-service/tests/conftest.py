@@ -7,6 +7,7 @@ from pathlib import Path
 from unittest.mock import AsyncMock, Mock
 
 import pytest
+from docker.errors import NotFound
 from tests import container_runtime
 
 from config.langfuse_provider import LangfuseProvider
@@ -39,14 +40,10 @@ def _stop_postgres_container() -> None:
     if _POSTGRES_CONTAINER is not None:
         try:
             _POSTGRES_CONTAINER.stop()
-        except Exception as error:  # noqa: BLE001 — cleanup must be idempotent
+        except NotFound:
             # The container may already have been removed by Podman after a
-            # failed/interrupted run. Never mask the test result during cleanup.
-            from docker.errors import NotFound
-
-            if not isinstance(error, NotFound):
-                raise
-        finally:
+            _POSTGRES_CONTAINER = None
+        else:
             _POSTGRES_CONTAINER = None
 
 

@@ -1,9 +1,9 @@
-from typing import Any
+from typing import Any, cast
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 from deepagents.middleware._tool_exclusion import _ToolExclusionMiddleware
-from langchain.agents.middleware import ModelRequest, ToolCallRequest
+from langchain.agents.middleware import AgentState, ModelRequest, ToolCallRequest
 from langchain_core.language_models.fake_chat_models import FakeListChatModel
 from langchain_core.messages import ToolMessage
 from langchain_core.tools import StructuredTool, tool
@@ -46,7 +46,7 @@ def _model_request(tools: list[Any]) -> ModelRequest:
         model=FakeListChatModel(responses=["ok"]),
         messages=[],
         tools=tools,
-        state={},
+        state=cast("AgentState[Any]", {}),
         runtime=Runtime(context=None),
     )
 

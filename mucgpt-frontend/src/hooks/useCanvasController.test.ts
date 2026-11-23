@@ -6,7 +6,7 @@ import { createRoot, type Root } from "react-dom/client";
 import { Editor } from "@tiptap/core";
 
 import { canvasExtensions } from "../components/Canvas/canvasExtensions";
-import { caretMarkdownOffset, markdownStorage, tableSelectionMarkdown, useCanvasController, type CanvasControllerInstance } from "./useCanvasController";
+import { caretMarkdownOffset, markdownStorage, tableSelectionMarkdownAt, useCanvasController, type CanvasControllerInstance } from "./useCanvasController";
 import { CANVAS_STREAM_CONTENT_LIMIT, parseCanvasStreamEvent } from "../utils/canvasStream";
 import { DEFAULT_APP_CONFIG } from "../constants";
 import type { CanvasRevisions } from "../service/canvasStorage";
@@ -106,25 +106,20 @@ const posOf = (editor: Editor, needle: string) => {
     return found;
 };
 
-const select = (editor: Editor, from: number, to: number) => {
-    editor.chain().setTextSelection({ from, to }).run();
-    return editor;
-};
-
-describe("tableSelectionMarkdown", () => {
+describe("tableSelectionMarkdownAt", () => {
     const TABLE = "| Verfahren | Zuständigkeit | Frist |\n| --- | --- | --- |\n| Auskunft | Amt A | 2 Wochen |\n| Genehmigung | Amt B | 6 Wochen |";
 
     it("quotes a body-cell selection with row, column header and text", () => {
         const editor = editorFor(TABLE);
         const start = posOf(editor, "2 Wochen");
-        const markdown = tableSelectionMarkdown(select(editor, start, start + "2 Wochen".length).state);
+        const markdown = tableSelectionMarkdownAt(editor.state.doc, start, start + "2 Wochen".length);
         expect(markdown).toBe('[table, row 2, col "Frist", referenced text: "2 Wochen"]');
     });
 
     it("quotes a header-cell selection without a column header name", () => {
         const editor = editorFor(TABLE);
         const start = posOf(editor, "Zuständigkeit");
-        const markdown = tableSelectionMarkdown(select(editor, start, start + "Zuständigkeit".length).state);
+        const markdown = tableSelectionMarkdownAt(editor.state.doc, start, start + "Zuständigkeit".length);
         expect(markdown).toBe('[table, row 1, col 2, referenced text: "Zuständigkeit"]');
     });
 
@@ -132,19 +127,19 @@ describe("tableSelectionMarkdown", () => {
         const editor = editorFor(TABLE);
         const from = posOf(editor, "Auskunft");
         const to = posOf(editor, "Amt A") + "Amt".length;
-        const markdown = tableSelectionMarkdown(select(editor, from, to).state);
+        const markdown = tableSelectionMarkdownAt(editor.state.doc, from, to);
         expect(markdown).toMatch(/^\[table, row 2, cols 1-2, referenced text: ".+"\]$/);
     });
 
     it("returns null outside a table", () => {
-        const editor = select(editorFor("Hello world"), 3, 8);
-        expect(tableSelectionMarkdown(editor.state)).toBeNull();
+        const editor = editorFor("Hello world");
+        expect(tableSelectionMarkdownAt(editor.state.doc, 3, 8)).toBeNull();
         expect(markdownStorage(editor).serializer.serialize(editor.state.doc.cut(3, 8))).toBe("llo w");
     });
 
     it("keeps the generic serialization for a selection covering the table from outside", () => {
         const editor = editorFor(`Intro\n\n${TABLE}`);
-        const markdown = tableSelectionMarkdown(select(editor, 1, editor.state.doc.content.size).state);
+        const markdown = tableSelectionMarkdownAt(editor.state.doc, 1, editor.state.doc.content.size);
         expect(markdown).toBeNull();
     });
 });
@@ -152,12 +147,12 @@ describe("tableSelectionMarkdown", () => {
 const offsetAt = (markdown: string, pos: number) => {
     const editor = editorFor(markdown);
     editor.chain().setTextSelection(pos).run();
-    return caretMarkdownOffset(editor);
+    return caretMarkdownOffset(editor, pos);
 };
 
 describe("caretMarkdownOffset", () => {
     it("is null without an editor", () => {
-        expect(caretMarkdownOffset(null)).toBeNull();
+        expect(caretMarkdownOffset(null, 1)).toBeNull();
     });
 
     it("is 0 at the start of the document", () => {
@@ -171,13 +166,13 @@ describe("caretMarkdownOffset", () => {
     it("matches the full markdown length at the end of the document", () => {
         const editor = editorFor("First\n\nSecond");
         editor.chain().setTextSelection(editor.state.doc.content.size).run();
-        expect(caretMarkdownOffset(editor)).toBe(markdownStorage(editor).serializer.serialize(editor.state.doc).length);
+        expect(caretMarkdownOffset(editor, editor.state.selection.from)).toBe(markdownStorage(editor).serializer.serialize(editor.state.doc).length);
     });
 
-    it("uses the selection start when a passage is selected", () => {
+    it("offsets the given position, e.g. a selection start", () => {
         const editor = editorFor("Hello world");
         editor.chain().setTextSelection({ from: 3, to: 8 }).run();
-        expect(caretMarkdownOffset(editor)).toBe(2);
+        expect(caretMarkdownOffset(editor, editor.state.selection.from)).toBe(2);
     });
 });
 
@@ -574,5 +569,356 @@ describe("cursor anchor sampling", () => {
         const state = harness.current.toCanvasState();
         expect(state?.truncated).toBeUndefined();
         expect(state?.content).toBe(small);
+    });
+});
+
+/** Selection serialization: operators belong to the selection only when the
+ * selection covers their boundary side. */
+describe("selection markdown", () => {
+    const selectRange = (harness: ReturnType<typeof renderController>, markdown: string, from: string, to: string) => {
+        act(() => {
+            harness.current.setMarkdown(markdown);
+            harness.current.setIsOpen(true);
+            const editor = harness.current.editor!;
+            const fromPos = posOf(editor, from);
+            const toPos = posOf(editor, to) + to.length;
+            editor.chain().setTextSelection({ from: fromPos, to: toPos }).run();
+        });
+        return harness.current.getSelectionMarkdown();
+    };
+
+    it("reports a plain word inside a bullet without the list prefix", () => {
+        const harness = renderController();
+        harness.render(undefined);
+        expect(selectRange(harness, "- this is my text", "my", "my")).toBe("my");
+    });
+
+    it("delivers a trailing space in a mid-line selection", () => {
+        const harness = renderController();
+        harness.render(undefined);
+        act(() => {
+            harness.current.setMarkdown("Katzen und Hunde");
+            harness.current.setIsOpen(true);
+            const editor = harness.current.editor!;
+            const from = posOf(editor, "und");
+            editor
+                .chain()
+                .setTextSelection({ from, to: from + "und ".length })
+                .run();
+        });
+        expect(harness.current.getSelectionMarkdown()).toBe("und ");
+    });
+
+    it("keeps the list prefix only when the selection starts at the item's beginning", () => {
+        const harness = renderController();
+        harness.render(undefined);
+        expect(selectRange(harness, "- this is my text", "this", "text")).toBe("- this is my text");
+    });
+
+    it("reports a mid-heading word without the marker", () => {
+        const harness = renderController();
+        harness.render(undefined);
+        expect(selectRange(harness, "# My heading", "head", "head")).toBe("head");
+    });
+
+    it("keeps the heading marker when the selection starts at the heading's beginning", () => {
+        const harness = renderController();
+        harness.render(undefined);
+        expect(selectRange(harness, "# My heading", "My", "heading")).toBe("# My heading");
+    });
+
+    it("does not add inline operators for a partial bold run", () => {
+        const harness = renderController();
+        harness.render(undefined);
+        expect(selectRange(harness, "**bold one** and more", "old", "old")).toBe("old");
+    });
+
+    it("adds inline operators when the selection covers the full mark", () => {
+        const harness = renderController();
+        harness.render(undefined);
+        expect(selectRange(harness, "**bold one** and more", "bold", "one")).toBe("**bold one**");
+    });
+
+    it("covers operators the selection spans across", () => {
+        const harness = renderController();
+        harness.render(undefined);
+        expect(selectRange(harness, "plain **bold face** tail", "plain", "bold")).toBe("plain **bold");
+    });
+
+    it("renders a multi-block selection exactly as it appears in the markdown", () => {
+        const harness = renderController();
+        harness.render(undefined);
+        expect(selectRange(harness, "- alpha\n- beta tail", "lph", "be")).toBe("lpha\n- be");
+    });
+
+    it("reports text inside a code block verbatim", () => {
+        const harness = renderController();
+        harness.render(undefined);
+        expect(selectRange(harness, "```\ncode line\n```", "code", "line")).toBe("code line");
+    });
+
+    it("sends the selection with the selection-start cursor on the canvas state", () => {
+        const harness = renderController();
+        harness.render(undefined);
+        act(() => {
+            harness.current.setMarkdown("Hello world");
+            harness.current.setIsOpen(true);
+            harness.current.editor!.chain().setTextSelection({ from: 3, to: 9 }).run();
+        });
+        const state = harness.current.toCanvasState();
+        expect(state?.selection).toBe("llo wo");
+        expect(state?.cursor).toBe(2);
+    });
+
+    it("aligns the cursor with the line start when the selection begins a whole block", () => {
+        const harness = renderController();
+        harness.render(undefined);
+        act(() => {
+            harness.current.setMarkdown("- this is my text");
+            harness.current.setIsOpen(true);
+            const editor = harness.current.editor!;
+            const from = posOf(editor, "this");
+            const to = posOf(editor, "text") + 4;
+            editor.chain().setTextSelection({ from, to }).run();
+        });
+        const state = harness.current.toCanvasState();
+        expect(state?.selection).toBe("- this is my text");
+        expect(state?.cursor).toBe(0);
+    });
+
+    it("keeps the collapsed caret at the line-prefix end when nothing is selected", () => {
+        const harness = renderController();
+        harness.render(undefined);
+        act(() => {
+            harness.current.setMarkdown("- item text");
+            harness.current.setIsOpen(true);
+            harness.current.editor!.chain().setTextSelection(posOf(harness.current.editor!, "item")).run();
+        });
+        const state = harness.current.toCanvasState();
+        expect(state?.selection).toBeNull();
+        expect(state?.cursor).toBe(2);
+    });
+
+    it("serializes a select-all selection as the full document", () => {
+        const harness = renderController();
+        harness.render(undefined);
+        act(() => {
+            harness.current.setMarkdown("- this is my text");
+            harness.current.setIsOpen(true);
+            harness.current.editor!.commands.selectAll();
+        });
+        const state = harness.current.toCanvasState();
+        expect(state?.selection).toBe("- this is my text");
+    });
+
+    it("serializes doc-boundary selections when the sentinel path has no textblock boundary", () => {
+        const harness = renderController();
+        harness.render(undefined);
+        act(() => {
+            harness.current.setMarkdown("- this is my text");
+            harness.current.setIsOpen(true);
+            const editor = harness.current.editor!;
+            // from = doc start (0), to = after "my" (inside the textblock)
+            const to = posOf(editor, "my") + 2;
+            editor.chain().setTextSelection({ from: 0, to }).run();
+        });
+        const state = harness.current.toCanvasState();
+        expect(state?.selection).toBe("- this is my");
+    });
+
+    it("falls back to exact serialization when a line-start escape breaks the sentinel doc", () => {
+        const harness = renderController();
+        harness.render(undefined);
+        act(() => {
+            // Markdown "\- literal tail" parses to a paragraph whose text
+            // starts with "- "; the full serialization escapes it as "\-".
+            harness.current.setMarkdown("\\- literal tail");
+            harness.current.setIsOpen(true);
+            const editor = harness.current.editor!;
+            const from = posOf(editor, "literal");
+            const to = posOf(editor, "tail") + 4;
+            editor.chain().setTextSelection({ from, to }).run();
+        });
+        const state = harness.current.toCanvasState();
+        expect(state?.selection).toBe("literal tail");
+        expect(state?.selection!.length).toBeGreaterThan(9);
+    });
+
+    it("keeps the escaped marker when the selection starts at the block start", () => {
+        const harness = renderController();
+        harness.render(undefined);
+        act(() => {
+            harness.current.setMarkdown("\\- literal tail");
+            harness.current.setIsOpen(true);
+            const editor = harness.current.editor!;
+            const to = posOf(editor, "literal") + "literal".length;
+            editor.chain().setTextSelection({ from: 0, to }).run();
+        });
+        const state = harness.current.toCanvasState();
+        expect(state?.selection).toBe("\\- literal");
+    });
+
+    it("slices a doc-end boundary without fabricating mark delimiters", () => {
+        const harness = renderController();
+        harness.render(undefined);
+        act(() => {
+            harness.current.setMarkdown("**Alpha Beta**\n\nTail");
+            harness.current.setIsOpen(true);
+            const editor = harness.current.editor!;
+            const from = posOf(editor, "Beta");
+            editor.chain().setTextSelection({ from, to: editor.state.doc.content.size }).run();
+        });
+        const state = harness.current.toCanvasState();
+        expect(state?.selection).toBe("Beta**\n\nTail");
+    });
+
+    it("aligns the doc-end fallback with the line start", () => {
+        const harness = renderController();
+        harness.render(undefined);
+        act(() => {
+            harness.current.setMarkdown("- item text");
+            harness.current.setIsOpen(true);
+            const editor = harness.current.editor!;
+            const from = posOf(editor, "item");
+            editor.chain().setTextSelection({ from, to: editor.state.doc.content.size }).run();
+        });
+        const state = harness.current.toCanvasState();
+        expect(state?.selection).toBe("- item text");
+        expect(state?.cursor).toBe(0);
+    });
+
+    it("reports the cursor in code-point offsets for astral characters", () => {
+        const harness = renderController();
+        harness.render(undefined);
+        act(() => {
+            harness.current.setMarkdown("😀 cat");
+            harness.current.setIsOpen(true);
+            const editor = harness.current.editor!;
+            editor.chain().setTextSelection(posOf(editor, "cat")).run();
+        });
+        const state = harness.current.toCanvasState();
+        expect(state?.cursor).toBe(2);
+    });
+});
+
+describe("canvas HTML whitelist integration", () => {
+    const markNames = (harness: ReturnType<typeof renderController>): string[] => {
+        const names: string[] = [];
+        harness.current.editor!.state.doc.descendants(node =>
+            node.marks.forEach(mark => {
+                if (!names.includes(mark.type.name)) names.push(mark.type.name);
+            })
+        );
+        return names;
+    };
+
+    it("keeps whitelisted <u> as a mark and renders other HTML as literal text", () => {
+        const harness = renderController();
+        harness.render(undefined);
+        act(() => {
+            harness.current.setMarkdown("Hello <u>world</u> and <b>bold</b>");
+        });
+        expect(harness.current.getMarkdown()).toContain("<u>world</u>");
+        expect(markNames(harness)).toContain("underline");
+        expect(markNames(harness)).not.toContain("bold");
+        expect(harness.current.editor!.state.doc.textContent).toContain("<b>bold</b>");
+    });
+
+    it("keeps underline through the store/restore cycle", () => {
+        const harness = renderController();
+        harness.render(undefined);
+        act(() => {
+            harness.current.setMarkdown("Before <u>marked</u> rest");
+        });
+        act(() => {
+            harness.current.snapshot("manual");
+        });
+        const revision = harness.current.listRevisions().manual[0].revision;
+        act(() => {
+            harness.current.setMarkdown("Replaced entirely");
+        });
+        act(() => {
+            harness.current.restore(revision);
+        });
+        expect(harness.current.getMarkdown()).toBe("Before <u>marked</u> rest");
+        expect(markNames(harness)).toContain("underline");
+    });
+
+    it("sanitizes stream UPDATE content the same way", () => {
+        const harness = renderController();
+        harness.render(undefined);
+        act(() => {
+            harness.current.applyStreamEvent({
+                state: "UPDATE",
+                content: "Agent <u>wrote</u> <b>this</b>",
+                metadata: { canvas_revision: 1 }
+            });
+        });
+        expect(harness.current.getMarkdown()).toContain("<u>wrote</u>");
+        expect(markNames(harness)).not.toContain("bold");
+    });
+});
+
+describe("selection markdown and caret offsets with whitelisted HTML", () => {
+    const selectRange = (harness: ReturnType<typeof renderController>, markdown: string, from: string, to: string) => {
+        act(() => {
+            harness.current.setMarkdown(markdown);
+            harness.current.setIsOpen(true);
+            const editor = harness.current.editor!;
+            const fromPos = posOf(editor, from);
+            const toPos = posOf(editor, to) + to.length;
+            editor.chain().setTextSelection({ from: fromPos, to: toPos }).run();
+        });
+        return harness.current.getSelectionMarkdown();
+    };
+
+    it("quotes an inner underlined segment without the enclosing tags", () => {
+        const harness = renderController();
+        harness.render(undefined);
+        expect(selectRange(harness, "Vor <u>unterstrichener Welt hier</u> nach", "strichener", "Welt")).toBe("strichener Welt");
+    });
+
+    it("keeps the opening tag when the selection starts at the mark's start (contract)", () => {
+        const harness = renderController();
+        harness.render(undefined);
+        expect(selectRange(harness, "Vor <u>unterstrichener Welt hier</u> nach", "unterstrichener", "Welt")).toBe("<u>unterstrichener Welt");
+    });
+
+    it("keeps the underline tags when the selection covers the whole mark", () => {
+        const harness = renderController();
+        harness.render(undefined);
+        expect(selectRange(harness, "Vor <u>unterstrichener Welt</u> nach", "unterstrichener", "Welt")).toBe("<u>unterstrichener Welt</u>");
+    });
+
+    it("keeps verbatim markdown when the selection crosses the closing tag", () => {
+        const harness = renderController();
+        harness.render(undefined);
+        expect(selectRange(harness, "Vor <u>unterstrichener Welt</u> nach", "strichener", "nach")).toBe("strichener Welt</u> nach");
+    });
+
+    it("reports exact caret offsets inside underlined text", () => {
+        const harness = renderController();
+        harness.render(undefined);
+        act(() => {
+            harness.current.setMarkdown("Vor <u>hallo Welt</u> nach");
+        });
+        const editor = harness.current.editor!;
+        const offset = caretMarkdownOffset(editor, posOf(editor, "hallo") + 2);
+        const markdown = harness.current.getMarkdown();
+        expect(offset).toBe(markdown.indexOf("llo Welt"));
+        expect(markdown.slice(offset!, offset! + 3)).toBe("llo");
+    });
+
+    it("reports exact caret offsets inside bold text", () => {
+        const harness = renderController();
+        harness.render(undefined);
+        act(() => {
+            harness.current.setMarkdown("Vor **krasser Welt** nach");
+        });
+        const editor = harness.current.editor!;
+        const offset = caretMarkdownOffset(editor, posOf(editor, "krasser") + 3);
+        const markdown = harness.current.getMarkdown();
+        expect(offset).toBe(markdown.indexOf("sser Welt"));
+        expect(markdown.slice(offset!, offset! + 3)).toBe("sse");
     });
 });

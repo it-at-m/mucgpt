@@ -149,6 +149,10 @@ _canvas_settings = get_settings()
 # CANVAS_EDITOR_MAX_CHARS, which the export endpoint grows by 4× headroom).
 CANVAS_CONTENT_MAX_CHARS = _canvas_settings.canvas_content_max_chars
 CANVAS_EDITOR_MAX_CHARS = _canvas_settings.canvas_editor_max_chars
+# HTML tag names allowed inside canvas markdown (e.g. <u> for underline).
+CANVAS_ALLOWED_HTML_TAGS: frozenset[str] = frozenset(
+    _canvas_settings.canvas_allowed_html_tags
+)
 # Full canvas reads stop here so the tool result stays inside the model context;
 # the remaining document is reached via canvas_read(around_cursor).
 CANVAS_READ_LIMIT_CHARS = (CANVAS_CONTENT_MAX_CHARS * 95) // 100
@@ -165,13 +169,16 @@ class CanvasState(BaseModel):
     selection: str | None = Field(
         None,
         max_length=CANVAS_CONTENT_MAX_CHARS,
-        description="Serialized markdown of the current selection, if any",
+        description=(
+            "Exact markdown substring covering the selection, if any; table "
+            "selections use a coordinate annotation instead."
+        ),
     )
     cursor: int | None = Field(
         None,
         description=(
-            "Caret position as character offset into the markdown document "
-            "(selection start when text is selected)"
+            "Offset of the user's focus in the markdown: caret, or selection "
+            "start while a passage is selected. Sent whenever one exists."
         ),
     )
     truncated: bool = Field(
@@ -190,6 +197,27 @@ class CanvasResponse(BaseModel):
 
     content: str = Field(..., description="Full GFM markdown document")
     updated_at: datetime = Field(..., description="Last modification timestamp")
+
+
+class CanvasContentUpsertRequest(BaseModel):
+    """Canvas content autosave payload."""
+
+    content: str = Field(
+        ...,
+        max_length=CANVAS_CONTENT_MAX_CHARS,
+        description="Full GFM markdown document",
+    )
+    truncated: bool = Field(
+        False,
+        description=(
+            "True when the client's editor document exceeds the persistence "
+            "limit and `content` is only its beginning. The stored canvas is "
+            "then left untouched to avoid silently destroying the tail. "
+            "Current clients skip over-limit documents locally and never send "
+            "this; it is a fail-safe for partial-document clients, mirroring "
+            "the per-turn CanvasState semantics."
+        ),
+    )
 
 
 class ToolApprovalResumeEntry(BaseModel):
@@ -598,6 +626,13 @@ class ComplianceCheckResponse(BaseModel):
     )
 
 
+class ChatTitleTurn(BaseModel):
+    """A completed user/assistant turn used as context for title generation."""
+
+    query: str = Field(..., description="The user's message in this turn.")
+    answer: str = Field(..., description="The assistant's answer in this turn.")
+
+
 class ChatTitleRequest(BaseModel):
     """Request model for generating a chat title based on the last turn."""
 
@@ -612,6 +647,27 @@ class ChatTitleRequest(BaseModel):
     system_message: str | None = Field(
         None,
         description="Optional system message that was used for the chat.",
+    )
+    current_title: str | None = Field(
+        None,
+        description=(
+            "The chat's current title, if any. When present, the model decides "
+            "whether to keep it or propose a new one."
+        ),
+    )
+    previous_turns: list[ChatTitleTurn] | None = Field(
+        None,
+        description=(
+            "Prior completed turns (oldest first), excluding the current query/answer. "
+            "Only the most recent turns are considered."
+        ),
+    )
+    language: str | None = Field(
+        None,
+        description=(
+            "ISO 639 language code of the user's interface language. "
+            "The generated title must be written in this language."
+        ),
     )
 
 
@@ -810,4 +866,8 @@ class ConfigResponse(BaseModel):
     canvas_editor_max_chars: int = Field(
         default=CANVAS_EDITOR_MAX_CHARS,
         description="Maximum canvas editor input length in characters.",
+    )
+    canvas_allowed_html_tags: list[str] = Field(
+        default_factory=lambda: sorted(CANVAS_ALLOWED_HTML_TAGS),
+        description="HTML tag names allowed inside canvas markdown (e.g. <u> for underline). The frontend sanitizer escapes every other raw HTML tag to literal text.",
     )

@@ -1,4 +1,5 @@
 import logging
+from typing import Any, cast
 
 import httpx
 import openai
@@ -16,6 +17,7 @@ from api.exception import (
     REQUEST_TIMEOUT,
     SERVER_ERROR,
     UNKNOWN,
+    ContentFilterError,
     ProviderErrorPayload,
     llm_error_payload,
     payload_to_message,
@@ -36,7 +38,9 @@ def _status_error(
 ) -> openai.APIStatusError:
     return ex_cls(
         message,
-        response=httpx.Response(status, request=_request()),
+        # openai vendors its own httpx; the stubs model it as a separate
+        # module even though it is the same objects at runtime.
+        response=cast("Any", httpx.Response(status, request=_request())),
         body=body,
     )
 
@@ -99,6 +103,10 @@ class TestTaxonomy:
         assert _payload(ex).code == CONTENT_FILTER
 
     @pytest.mark.unit
+    def test_streamed_content_filter(self) -> None:
+        assert _payload(ContentFilterError("filtered")).code == CONTENT_FILTER
+
+    @pytest.mark.unit
     def test_rate_limited_status_only(self) -> None:
         ex = _status_error(openai.RateLimitError, "Too many requests", 429)
         assert _payload(ex).code == RATE_LIMITED
@@ -140,12 +148,12 @@ class TestTaxonomy:
 
     @pytest.mark.unit
     def test_request_timeout(self) -> None:
-        ex = openai.APITimeoutError(request=_request())
+        ex = openai.APITimeoutError(request=cast("Any", _request()))
         assert _payload(ex).code == REQUEST_TIMEOUT
 
     @pytest.mark.unit
     def test_connection_error(self) -> None:
-        ex = openai.APIConnectionError(request=_request())
+        ex = openai.APIConnectionError(request=cast("Any", _request()))
         assert _payload(ex).code == CONNECTION_ERROR
 
     @pytest.mark.unit

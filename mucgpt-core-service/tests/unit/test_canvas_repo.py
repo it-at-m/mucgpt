@@ -17,10 +17,18 @@ def _compiled(statement, literal_binds: bool = True) -> str:
     )
 
 
+def _live_conversation_session() -> AsyncMock:
+    session = AsyncMock()
+    session.execute.return_value = Mock(
+        scalar_one_or_none=Mock(return_value="conversation")
+    )
+    return session
+
+
 @pytest.mark.unit
 @pytest.mark.asyncio
 async def test_upsert_canvas_overwrites_content_only() -> None:
-    session = AsyncMock()
+    session = _live_conversation_session()
     repository = CanvasRepository(session)
 
     await repository.upsert_canvas("conversation", "# Title", "owner")
@@ -34,7 +42,7 @@ async def test_upsert_canvas_overwrites_content_only() -> None:
 @pytest.mark.unit
 @pytest.mark.asyncio
 async def test_upsert_canvas_revisions_overwrites_rings_wholesale() -> None:
-    session = AsyncMock()
+    session = _live_conversation_session()
     repository = CanvasRepository(session)
 
     await repository.upsert_canvas_revisions(
@@ -52,7 +60,7 @@ async def test_canvas_writes_share_lock_the_live_chat_row() -> None:
     """Canvas writes must conflict with erase_conversation's FOR UPDATE and be
     skipped when the conversation is retired or owned by someone else, so a
     canvas row can never (re)appear for an erased conversation."""
-    session = AsyncMock()
+    session = _live_conversation_session()
     repository = CanvasRepository(session)
 
     await repository.upsert_canvas("conversation", "# Title", "owner")

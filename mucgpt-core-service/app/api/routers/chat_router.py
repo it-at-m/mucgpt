@@ -22,6 +22,7 @@ from api.ag_ui_input import (
     to_chat_completion_request,
 )
 from api.api_models import (
+    CanvasContentUpsertRequest,
     CanvasResponse,
     ChatCompletionMessage,
     ChatCompletionRequest,
@@ -116,14 +117,21 @@ async def get_messages_for_agent(
     if not request.persist:
         return request.messages
 
+    conversation_id = request.conversation_id
+    if conversation_id is None:
+        raise HTTPException(
+            status_code=400,
+            detail="conversation_id is required when persist is enabled.",
+        )
+
     # Verify the conversation belongs to this user (row is created on first use).
     authorized = await PersistanceHelpers.verify_user_in_conversation(
-        user_id, request.conversation_id, request.assistant_id
+        user_id, conversation_id, request.assistant_id
     )
     if not authorized:
         raise HTTPException(
             status_code=403,
-            detail=f"User {user_id} is not authorized to access conversation {request.conversation_id}",
+            detail=f"User {user_id} is not authorized to access conversation {conversation_id}",
         )
 
     # The canvas is saved implicitly with every persisted turn. A truncated
@@ -132,10 +140,10 @@ async def get_messages_for_agent(
     # so the stored copy is left untouched.
     if request.canvas is not None and not request.canvas.truncated:
         await PersistanceHelpers.upsert_canvas(
-            request.conversation_id, request.canvas.content, user_id
+            conversation_id, request.canvas.content, user_id
         )
 
-    if await PersistanceHelpers.has_checkpoint(request.conversation_id):
+    if await PersistanceHelpers.has_checkpoint(conversation_id):
         return [request.messages[-1]]
     return request.messages
 
@@ -323,6 +331,38 @@ async def get_conversation_canvas(
     if canvas is None:
         raise HTTPException(status_code=404, detail="Canvas not found")
     return CanvasResponse(content=canvas.content, updated_at=canvas.updated_at)
+
+
+@router.put(
+    "/conversations/{conversation_id}/canvas",
+    summary="Autosave conversation canvas content",
+    status_code=204,
+    responses={
+        403: {"description": "Forbidden"},
+        404: {"description": "Not found"},
+    },
+)
+async def put_conversation_canvas(
+    conversation_id: str,
+    request: CanvasContentUpsertRequest,
+    user_info: Annotated[AuthenticationResult, Depends(authenticate_user)],
+) -> Response:
+    """Persist the current canvas document (content autosave).
+
+    Called on a debounce while the user edits and once after each agent run,
+    so the stored copy always represents the current view. A truncated
+    document is not persisted: it carries only the beginning and overwriting
+    the stored copy would silently destroy the tail.
+    """
+    await _authorize_conversation_access(conversation_id, user_info.user_id)
+
+    if request.truncated:
+        return Response(status_code=204)
+
+    await PersistanceHelpers.upsert_canvas(
+        conversation_id, request.content, user_info.user_id
+    )
+    return Response(status_code=204)
 
 
 @router.get(
@@ -517,7 +557,7 @@ async def ag_ui_chat_endpoint(
     except BaseException:
         await _unlock_conversation_run(run_lock)
         raise
-    encoder = EventEncoder(accept=request.headers.get("accept"))
+    encoder = EventEncoder(accept=request.headers.get("accept", ""))
 
     async def event_generator() -> AsyncGenerator[str]:
         """Encode AG-UI events and close their source on completion or cancellation."""

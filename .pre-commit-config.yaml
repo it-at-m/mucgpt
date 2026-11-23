@@ -43,6 +43,18 @@ repos:
         language_version: 1.23.6
   - repo: local
     hooks:
+      - id: ty-core-service
+        name: Type check core service
+        entry: uv --directory mucgpt-core-service run ty check
+        language: system
+        pass_filenames: false
+        files: ^mucgpt-core-service/(.*\.py|pyproject\.toml|uv\.lock)$
+      - id: ty-assistant-service
+        name: Type check assistant service
+        entry: uv --directory mucgpt-assistant-service run ty check
+        language: system
+        pass_filenames: false
+        files: ^mucgpt-assistant-service/(.*\.py|pyproject\.toml|uv\.lock)$
       - id: prettier
         name: Run frontend fix
         entry: npm --prefix mucgpt-frontend run fix

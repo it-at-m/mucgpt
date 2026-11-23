@@ -10,11 +10,13 @@ import { CanvasSelectionPersistence } from "./canvasSelectionPersistence";
 import { canvasTextLimit, type CanvasTextLimitOptions } from "./canvasTextLimit";
 
 /**
- * Canvas schema. The schema is the gatekeeper: only nodes that
- * round-trip through GFM may be produced. Underline is therefore disabled —
- * GFM cannot express it and raw HTML is not allowed in the canvas, so HTML
- * markup would only show up as literal text (the Markdown parser runs with
- * html: false). Hard-break parsing is on.
+ * Canvas schema. The schema is the gatekeeper: only nodes that round-trip
+ * through GFM (plus the whitelisted raw-Html tags) may be produced. Underline
+ * is expressed as raw HTML (<u>), a GFM limitation — see canvasHtmlWhitelist.ts:
+ * the Markdown parser runs with html: true, but the markdown is pre-sanitized so
+ * only attribute-free tags from the deployment's canvas_allowed_html_tags become
+ * live markup; every other tag is escaped to literal text. Hard-break parsing
+ * is on.
  *
  * The size limits come from the backend config; call sites pass the values
  * from useCanvasLimits() (omitting them keeps the built-in defaults, e.g. for
@@ -22,7 +24,7 @@ import { canvasTextLimit, type CanvasTextLimitOptions } from "./canvasTextLimit"
  */
 export const canvasExtensions = (limits?: Partial<CanvasTextLimitOptions>): Extensions => [
     StarterKit.configure({
-        underline: false
+        underline: {}
     }),
     Table.configure({
         resizable: false
@@ -33,7 +35,7 @@ export const canvasExtensions = (limits?: Partial<CanvasTextLimitOptions>): Exte
     CanvasSelectionPersistence,
     canvasTextLimit.configure(limits),
     Markdown.configure({
-        html: false,
+        html: true,
         tightLists: true,
         bulletListMarker: "-",
         linkify: false,

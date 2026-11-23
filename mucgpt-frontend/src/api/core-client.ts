@@ -139,13 +139,29 @@ export async function checkAssistantComplianceApi(input: ComplianceCheckRequest)
     return handleApiRequest(() => fetch(API_BASE + "v1/compliance/check", postConfig(input)), "Failed to run compliance check");
 }
 
-export async function createChatName(conversationId: string, query: string, answer: string, system_message: string) {
+export interface ChatTitleGenerationRequest {
+    conversationId: string;
+    query: string;
+    answer: string;
+    systemMessage: string;
+    /** ISO 639 code of the user's interface language; the title must be written in it. */
+    language: string;
+    /** The chat's current title, when regenerating an existing title. */
+    currentTitle?: string;
+    /** The completed turn before the current one, when regenerating. */
+    previousTurn?: { query: string; answer: string };
+}
+
+export async function createChatName(request: ChatTitleGenerationRequest) {
     const url = API_BASE + "v1/generations/chat-title";
     const body = {
-        conversation_id: conversationId,
-        query,
-        answer,
-        system_message
+        conversation_id: request.conversationId,
+        query: request.query,
+        answer: request.answer,
+        system_message: request.systemMessage,
+        language: request.language,
+        current_title: request.currentTitle ?? null,
+        previous_turns: request.previousTurn ? [request.previousTurn] : null
     };
 
     const parsedResponse = await handleApiRequest<ChatTitleResponse>(() => fetch(url, postConfig(body)), "Failed to create chat name");
@@ -206,14 +222,43 @@ export async function getCanvasRevisionsApi(conversationId: string): Promise<Can
 
 /**
  * Replaces the client-owned canvas revision rings on the server (wholesale
- * overwrite, max 512 KB).
+ * overwrite, max 512 KB). With keepalive, the request survives a page unload;
+ * browsers cap keepalive bodies at 64 kB, so callers must check the exact
+ * serialized body size first.
  */
-export async function putCanvasRevisionsApi(conversationId: string, revisions: CanvasRevisions): Promise<void> {
-    const response = await fetch(canvasUrl(conversationId, "/revisions"), putConfig({ ...revisions }));
+export async function putCanvasRevisionsApi(conversationId: string, revisions: CanvasRevisions, keepalive = false): Promise<void> {
+    const response = await fetch(canvasUrl(conversationId, "/revisions"), { ...putConfig({ ...revisions }), keepalive });
     handleRedirect(response);
     if (!response.ok && response.status !== 404) {
         throw new Error(`Failed to save canvas revisions: ${response.status}`);
     }
+}
+
+/**
+ * Autosaves the current canvas document for a conversation (the stored copy
+ * then always represents the live view, even before the next chat turn would
+ * carry it implicitly). With keepalive, the request survives a page unload
+ * (reload/close); browsers cap keepalive bodies at 64 kB, so callers must not
+ * send larger documents that way. Returns false when the conversation does not
+ * exist server-side yet (404): the content then rides along with the next chat
+ * turn instead.
+ */
+export async function putCanvasContentApi(conversationId: string, content: string, keepalive = false): Promise<boolean> {
+    const response = await fetch(canvasUrl(conversationId), { ...putConfig({ content }), keepalive });
+    handleRedirect(response);
+    if (response.status === 404) {
+        // Conversation not persisted server-side yet: the content rides along
+        // with the next chat turn instead.
+        return false;
+    }
+    if (response.status === 204) {
+        // Success answers without a body: skip the JSON-parsing path.
+        return true;
+    }
+    // Anything else is an error (422/500/…): let handleApiRequest produce
+    // the standard ApiError from the JSON error detail.
+    await handleApiRequest(() => Promise.resolve(response), "Failed to autosave canvas");
+    return true;
 }
 
 export type ExportTarget = "pdf" | "docx" | "xlsx";

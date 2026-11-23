@@ -5,6 +5,7 @@ from typing import Any
 from anyio import CancelScope
 from langchain_core.messages import AIMessage, HumanMessage, ToolMessage
 from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
+from psycopg import AsyncConnection
 from psycopg.rows import dict_row
 from psycopg_pool import AsyncConnectionPool
 from pydantic import ValidationError
@@ -102,7 +103,7 @@ def _conversation_usage(message: AIMessage) -> ConversationUsage | None:
 class PersistanceHelpers:
     """Manage ownership metadata and fenced checkpoints for persisted conversations."""
 
-    _pool: AsyncConnectionPool | None = None
+    _pool: AsyncConnectionPool[AsyncConnection[dict[str, Any]]] | None = None
     _checkpointer: AsyncPostgresSaver | None = None
     _engine: AsyncEngine | None = None
     _session_factory: async_sessionmaker[AsyncSession] | None = None
@@ -116,10 +117,11 @@ class PersistanceHelpers:
         """
         if PersistanceHelpers._pool is not None:
             return
-        pool = AsyncConnectionPool(
+        pool = AsyncConnectionPool[AsyncConnection[dict[str, Any]]](
             conninfo="",
             max_size=20,
             open=False,
+            check=AsyncConnectionPool[AsyncConnection[dict[str, Any]]].check_connection,
             kwargs=_create_connection_args(settings),
         )
         engine, session_factory = create_engine_and_session_factory(settings)

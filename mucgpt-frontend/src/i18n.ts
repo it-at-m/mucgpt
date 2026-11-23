@@ -224,6 +224,7 @@ i18n
                             redo: "Wiederherstellen",
                             bold: "Fett",
                             italic: "Kursiv",
+                            underline: "Unterstrichen",
                             heading_1: "Überschrift 1",
                             heading_2: "Überschrift 2",
                             heading_3: "Überschrift 3",
@@ -262,6 +263,8 @@ i18n
                             source_manual: "Manuell gespeichert",
                             source_agent: "Nach Agent-Bearbeitung",
                             source_restore: "Wiederhergestellt",
+                            source_autosave: "Automatische Sicherung",
+                            source_cleared: "Geleert",
                             source_local: "Nur lokal (überschrieben)"
                         }
                     },
@@ -483,46 +486,12 @@ i18n
                             errorhint: "MUCGPT kann Fehler machen. Überprüfe wichtige Informationen.",
                             high_risk_hint: "Die Nutzung für <tutorial>Hochrisiko-Zwecke</tutorial> nach der KI-Verordnung ist nicht erlaubt.",
                             toolsselectorbutton_tooltip: "Werkzeuge auswählen",
-                            tutorial_help: "Tutorial öffnen",
                             tool_header: "Zusätzliche Werkzeuge wählen:",
-                            tutorial_help_aria: "Tutorial für {{tool}} öffnen",
                             send_question: "Frage senden",
-                            add_tool: "Werkzeuge hinzufügen",
-                            no_tools_active: "Keine Werkzeuge aktiv",
-                            more_tools: "+{{count}} weitere",
-                            available_tools: "Verfügbare Werkzeuge",
-                            remove_tool_aria: "{{tool}} entfernen",
-                            assistant_tool_locked: "Für diesen Assistenten fest aktiviert",
+                            tools: "Werkzeuge",
+                            active_tools: "Aktive Werkzeuge: {{tools}}",
                             assistant_tools_section: "Vom Assistenten vorgegeben",
-                            optional_tools_section: "Weitere Werkzeuge",
-                            upload_data: "Dokument hochladen",
-                            uploaded_data_label: "Hinzugefügte Dokumente",
-                            remove_data: "Dokument entfernen",
-                            uploading: "Wird hochgeladen..."
-                        },
-                        contextmanagerdialog: {
-                            title: "Meine Dokumente",
-                            subtitle: "Ausgewählte Dokumente werden im Chat als Kontext verwendet.",
-                            uploading: "Wird hochgeladen...",
-                            upload_btn: "Hochladen",
-                            select_label: "Dateien auswählen",
-                            no_saved: "Noch keine gespeicherten Dokumente.",
-                            use: "Verwenden",
-                            remove_saved: "Dokument entfernen",
-                            parsed_at: "Verarbeitet am",
-                            clear_saved: "Alle löschen",
-                            download: "Text herunterladen",
-                            selection_count: "Im Chat verwendet: {{selected}} von {{total}}",
-                            storage_error: "Dokument konnte nicht gespeichert werden (Speicherplatz voll).",
-                            upload_success_title: "Upload erfolgreich",
-                            upload_success_one: "1 Dokument wurde hochgeladen.",
-                            upload_success_other: "{{count}} Dokumente wurden hochgeladen.",
-                            upload_error_title: "Upload fehlgeschlagen",
-                            upload_error_one: "1 Dokument konnte nicht hochgeladen werden.",
-                            upload_error_other: "{{count}} Dokumente konnten nicht hochgeladen werden.",
-                            storage_error_title: "Speichern fehlgeschlagen",
-                            storage_error_one: "1 Dokument konnte nicht lokal gespeichert werden.",
-                            storage_error_other: "{{count}} Dokumente konnten nicht lokal gespeichert werden."
+                            optional_tools_section: "Weitere Werkzeuge"
                         },
                         microphonebutton: {
                             record: "Spracheingabe starten",
@@ -552,9 +521,6 @@ i18n
                             tokensused: "Token verbraucht",
                             limit: ". Ältere Eingaben werden bei der Generierung nicht berücksichtigt!",
                             removedocument: "Dokument löschen"
-                        },
-                        chattsettingsdrawer: {
-                            title: "Chat Einstellungen"
                         },
                         assistantsettingsdrawer: {
                             expand: "Ansicht erweitern",
@@ -1260,6 +1226,7 @@ i18n
                             redo: "Redo",
                             bold: "Bold",
                             italic: "Italic",
+                            underline: "Underline",
                             heading_1: "Heading 1",
                             heading_2: "Heading 2",
                             heading_3: "Heading 3",
@@ -1298,6 +1265,8 @@ i18n
                             source_manual: "Manually saved",
                             source_agent: "After agent edit",
                             source_restore: "Restored",
+                            source_autosave: "Automatic backup",
+                            source_cleared: "Cleared",
                             source_local: "Local only (replaced)"
                         }
                     },
@@ -1516,46 +1485,12 @@ i18n
                             errorhint: "MUCGPT can make errors. Verify important information.",
                             high_risk_hint: "Use for <tutorial>high-risk purposes</tutorial> under the EU AI Act is not permitted.",
                             toolsselectorbutton_tooltip: "Select tools",
-                            tutorial_help: "Open tutorial",
                             tool_header: "Choose additional tools:",
-                            tutorial_help_aria: "Open Tutorial for Werkzeug {{tool}} ",
                             send_question: "Send question",
-                            add_tool: "Add tools",
-                            no_tools_active: "No tools active",
-                            more_tools: "+{{count}} more",
-                            available_tools: "Available Tools",
-                            remove_tool_aria: "Remove {{tool}}",
-                            assistant_tool_locked: "Required by this assistant",
+                            tools: "Tools",
+                            active_tools: "Active tools: {{tools}}",
                             assistant_tools_section: "Provided by the assistant",
-                            optional_tools_section: "Additional tools",
-                            upload_data: "Upload document",
-                            uploaded_data_label: "Attached documents",
-                            remove_data: "Remove document",
-                            uploading: "Uploading..."
-                        },
-                        contextmanagerdialog: {
-                            title: "My Documents",
-                            subtitle: "Selected documents will be used as context in the chat.",
-                            uploading: "Uploading...",
-                            upload_btn: "Upload",
-                            select_label: "Choose files",
-                            no_saved: "No saved documents yet.",
-                            use: "Use",
-                            remove_saved: "Remove document",
-                            parsed_at: "Processed on",
-                            clear_saved: "Clear all",
-                            download: "Download text",
-                            selection_count: "Used in chat: {{selected}} of {{total}}",
-                            storage_error: "Document could not be saved (storage full).",
-                            upload_success_title: "Upload successful",
-                            upload_success_one: "1 document was uploaded.",
-                            upload_success_other: "{{count}} documents were uploaded.",
-                            upload_error_title: "Upload failed",
-                            upload_error_one: "1 document could not be uploaded.",
-                            upload_error_other: "{{count}} documents could not be uploaded.",
-                            storage_error_title: "Saving failed",
-                            storage_error_one: "1 document could not be saved locally.",
-                            storage_error_other: "{{count}} documents could not be saved locally."
+                            optional_tools_section: "Additional tools"
                         },
                         microphonebutton: {
                             record: "Start speech input",
@@ -1584,9 +1519,6 @@ i18n
                             tokensused: "Token used",
                             limit: ". Previous inputs are not considered during generation!",
                             removedocument: "Delete document"
-                        },
-                        chattsettingsdrawer: {
-                            title: "Chat Settings"
                         },
                         assistantsettingsdrawer: {
                             expand: "Expand view",
@@ -2325,6 +2257,7 @@ i18n
                             redo: "Wiedaherstejn",
                             bold: "Fett",
                             italic: "Kursiv",
+                            underline: "Unterstrichen",
                             heading_1: "Überschrift 1",
                             heading_2: "Überschrift 2",
                             heading_3: "Überschrift 3",
@@ -2363,6 +2296,8 @@ i18n
                             source_manual: "Manuell gspeichert",
                             source_agent: "Noch da Agent-Bearbeitung",
                             source_restore: "Wiedahergstellt",
+                            source_autosave: "Automatisch gsichert",
+                            source_cleared: "Gleert",
                             source_local: "Nur lokal (überschrieben)"
                         }
                     },
@@ -2519,37 +2454,12 @@ i18n
                             errorhint: "MUCGPT kann a Schmarrn macha. Schau oba wichtige Informationen stimma.",
                             high_risk_hint: "Für <tutorial>Hochrisiko-Zweck</tutorial> nach da KI-Verordnung derf ma MUCGPT ned hernehma.",
                             toolsselectorbutton_tooltip: "Werkzeig aussuachn",
-                            tutorial_help: "Tutorial aufmachn",
                             tool_header: "Zusätzliche Werkzeig auswähln:",
-                            tutorial_help_aria: "Tutorial zum Werkzeig {{tool}} aufmachn",
                             send_question: "Froog senden",
-                            add_tool: "Werkzeig dazua doa",
-                            no_tools_active: "Koane Werkzeig aktiv",
-                            more_tools: "+{{count}} mehr",
-                            available_tools: "Verfügbare Werkzeig",
-                            remove_tool_aria: "{{tool}} wegmachn",
-                            assistant_tool_locked: "Für den Assistentn fest aktiv",
+                            tools: "Werkzeig",
+                            active_tools: "Aktive Werkzeig: {{tools}}",
                             assistant_tools_section: "Vom Assistentn vorgem",
-                            optional_tools_section: "Weiterne Werkzeig",
-                            upload_data: "Dokument hochladn",
-                            uploaded_data_label: "Dazua gladne Dokumente",
-                            remove_data: "Dokument wegdoa",
-                            uploading: "Wird grod hochglodn..."
-                        },
-                        contextmanagerdialog: {
-                            title: "Meine Dokumente",
-                            subtitle: "Ausgwähte Dokumente wean im Ratsch ois Kontext hergnomma.",
-                            uploading: "Wird obagloodn...",
-                            upload_btn: "Obalodn",
-                            select_label: "Dateien aussuachn",
-                            no_saved: "No koane gspeicherten Dokumente.",
-                            use: "Verwenden",
-                            remove_saved: "Dokument entfernen",
-                            parsed_at: "Vaorbeitet am",
-                            clear_saved: "Ois löschen",
-                            download: "Text obalodn",
-                            selection_count: "Im Ratsch verwendet: {{selected}} vo {{total}}",
-                            storage_error: "Dokument hod ned gspeichert wern kenna (Speicher voi)."
+                            optional_tools_section: "Weiterne Werkzeig"
                         },
                         microphonebutton: {
                             record: "Sprocheingob startn",
@@ -2578,9 +2488,6 @@ i18n
                             tokensused: "Token vabrocht",
                             limit: ". Oide Eingabn wean bei da Generierung ned mit einbezogn!",
                             removedocument: "Dokument löschn"
-                        },
-                        chattsettingsdrawer: {
-                            title: "Ratsch Einstellunga"
                         },
                         assistantsettingsdrawer: {
                             expand: "Ansicht erweitern",
@@ -3259,6 +3166,7 @@ i18n
                             redo: "Rétablir",
                             bold: "Gras",
                             italic: "Italique",
+                            underline: "Souligné",
                             heading_1: "Titre 1",
                             heading_2: "Titre 2",
                             heading_3: "Titre 3",
@@ -3297,6 +3205,8 @@ i18n
                             source_manual: "Enregistré manuellement",
                             source_agent: "Après modification par l'agent",
                             source_restore: "Restauré",
+                            source_autosave: "Sauvegarde automatique",
+                            source_cleared: "Vidé",
                             source_local: "Local uniquement (remplacé)"
                         }
                     },
@@ -3518,37 +3428,12 @@ i18n
                             high_risk_hint:
                                 "L'utilisation à des <tutorial>finalités à haut risque</tutorial> au sens du règlement sur l'IA n'est pas autorisée.",
                             toolsselectorbutton_tooltip: "Sélectionner des outils",
-                            tutorial_help: "Ouvrir le tutoriel",
                             tool_header: "Choisir des outils supplémentaires:",
-                            tutorial_help_aria: "Ouvrir le tutoriel pour l'outil {{tool}}",
                             send_question: "Envoyer la question",
-                            add_tool: "Ajouter des outils",
-                            no_tools_active: "Aucun outil actif",
-                            more_tools: "+{{count}} de plus",
-                            available_tools: "Outils disponibles",
-                            remove_tool_aria: "Supprimer {{tool}}",
-                            assistant_tool_locked: "Activé par cet assistant",
+                            tools: "Outils",
+                            active_tools: "Outils actifs : {{tools}}",
                             assistant_tools_section: "Fourni par l'assistant",
-                            optional_tools_section: "Outils supplémentaires",
-                            upload_data: "Télécharger un document",
-                            uploaded_data_label: "Documents ajoutés",
-                            remove_data: "Supprimer le document",
-                            uploading: "Téléchargement..."
-                        },
-                        contextmanagerdialog: {
-                            title: "Mes documents",
-                            subtitle: "Les documents sélectionnés seront utilisés comme contexte dans le chat.",
-                            uploading: "Téléversement...",
-                            upload_btn: "Téléverser",
-                            select_label: "Choisir des fichiers",
-                            no_saved: "Aucun document enregistré pour l'instant.",
-                            use: "Utiliser",
-                            remove_saved: "Supprimer le document",
-                            parsed_at: "Traité le",
-                            clear_saved: "Tout effacer",
-                            download: "Télécharger le texte",
-                            selection_count: "{{selected}} sur {{total}} sélectionné(s)",
-                            storage_error: "Le document n'a pas pu être enregistré (stockage plein)."
+                            optional_tools_section: "Outils supplémentaires"
                         },
                         microphonebutton: {
                             record: "Démarrer la saisie vocale",
@@ -3577,9 +3462,6 @@ i18n
                             tokensused: "Tokens utilisés",
                             limit: ". Les entrées plus anciennes ne seront pas prises en compte lors de la génération !",
                             removedocument: "Supprimer le document"
-                        },
-                        chattsettingsdrawer: {
-                            title: "Paramètres de discussion"
                         },
                         assistantsettingsdrawer: {
                             expand: "Développer la vue",
@@ -4254,6 +4136,7 @@ i18n
                             redo: "Повторити",
                             bold: "Напівжирний",
                             italic: "Курсив",
+                            underline: "Підкреслений",
                             heading_1: "Заголовок 1",
                             heading_2: "Заголовок 2",
                             heading_3: "Заголовок 3",
@@ -4292,6 +4175,8 @@ i18n
                             source_manual: "Збережено вручну",
                             source_agent: "Після редагування агентом",
                             source_restore: "Відновлено",
+                            source_autosave: "Автоматичне резервне копіювання",
+                            source_cleared: "Очищено",
                             source_local: "Лише локально (перезаписано)"
                         }
                     },
@@ -4510,37 +4395,12 @@ i18n
                             errorhint: "MUCGPT може помилятися. Перевірте важливу інформацію.",
                             high_risk_hint: "Використання для <tutorial>цілей з високим ризиком</tutorial> відповідно до Регламенту ЄС про ШІ заборонено.",
                             toolsselectorbutton_tooltip: "Вибрати інструменти",
-                            tutorial_help: "Відкрити навчальний посібник",
                             tool_header: "Вибрати додаткові інструменти:",
-                            tutorial_help_aria: "Відкрити навчальний посібник для інструменту {{tool}}",
                             send_question: "Надіслати питання",
-                            add_tool: "Додати інструменти",
-                            no_tools_active: "Немає активних інструментів",
-                            more_tools: "+{{count}} ще",
-                            available_tools: "Доступні інструменти",
-                            remove_tool_aria: "Видалити {{tool}}",
-                            assistant_tool_locked: "Обов'язково для цього асистента",
+                            tools: "Інструменти",
+                            active_tools: "Активні інструменти: {{tools}}",
                             assistant_tools_section: "Надані асистентом",
-                            optional_tools_section: "Додаткові інструменти",
-                            upload_data: "Завантажити документ",
-                            uploaded_data_label: "Додані документи",
-                            remove_data: "Видалити документ",
-                            uploading: "Завантаження..."
-                        },
-                        contextmanagerdialog: {
-                            title: "Мої документи",
-                            subtitle: "Вибрані документи будуть використані як контекст у чаті.",
-                            uploading: "Завантаження...",
-                            upload_btn: "Завантажити",
-                            select_label: "Вибрати файли",
-                            no_saved: "Ще немає збережених документів.",
-                            use: "Використати",
-                            remove_saved: "Видалити документ",
-                            parsed_at: "Оброблено",
-                            clear_saved: "Очистити все",
-                            download: "Завантажити текст",
-                            selection_count: "{{selected}} з {{total}} вибрано",
-                            storage_error: "Документ не вдалося зберегти (сховище переповнене)."
+                            optional_tools_section: "Додаткові інструменти"
                         },
                         microphonebutton: {
                             record: "Почати мовний ввід",
@@ -4569,9 +4429,6 @@ i18n
                             tokensused: "Використано токени",
                             limit: ". Старіші введення не будуть враховані при генерації!",
                             removedocument: "Видалити документ"
-                        },
-                        chattsettingsdrawer: {
-                            title: "Налаштування чату"
                         },
                         assistantsettingsdrawer: {
                             expand: "Розгорнути вигляд",

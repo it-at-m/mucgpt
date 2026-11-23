@@ -67,7 +67,8 @@ export const CanvasContextMenu = ({ editor, containerRef, getSelectionMarkdown, 
                     <MenuList>
                         <MenuItem
                             onClick={() => {
-                                const markdown = getSelectionMarkdown() ?? "";
+                                const markdown = getSelectionMarkdown();
+                                if (!markdown) return;
                                 // The passage was taken into the chat: drop the highlight so the
                                 // agent is no longer anchored to it (and the menu follows suit).
                                 editor.chain().setTextSelection(editor.state.selection.to).run();
@@ -77,7 +78,14 @@ export const CanvasContextMenu = ({ editor, containerRef, getSelectionMarkdown, 
                         >
                             {t("canvas.context_menu.insert_into_chat")}
                         </MenuItem>
-                        <MenuItem onClick={() => onAgentRevise?.(getSelectionMarkdown() ?? "")} disabled={!onAgentRevise}>
+                        <MenuItem
+                            onClick={() => {
+                                const markdown = getSelectionMarkdown();
+                                if (!markdown) return;
+                                onAgentRevise?.(markdown);
+                            }}
+                            disabled={!onAgentRevise}
+                        >
                             {t("canvas.context_menu.agent_revise")}
                         </MenuItem>
                     </MenuList>

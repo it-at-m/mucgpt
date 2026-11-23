@@ -146,6 +146,49 @@ class TestSettings:
             assert settings.sso.role is None
             assert settings.sso.admin_role is None
 
+    def test_canvas_allowed_html_tags_defaults_to_underline(self):
+        with patch.dict(os.environ, {}, clear=True):
+            settings = Settings()
+            assert settings.canvas_allowed_html_tags == ["u"]
+
+    def test_canvas_allowed_html_tags_normalizes_case_from_env(self):
+        with patch.dict(
+            os.environ,
+            {"MUCGPT_CORE_CANVAS_ALLOWED_HTML_TAGS": '["U"]'},
+            clear=True,
+        ):
+            settings = Settings()
+            assert settings.canvas_allowed_html_tags == ["u"]
+
+    def test_canvas_allowed_html_tags_rejects_bad_names(self):
+        for bad in ('["u onclick"]', '["<b>"]', '["U B"]'):
+            with patch.dict(
+                os.environ,
+                {"MUCGPT_CORE_CANVAS_ALLOWED_HTML_TAGS": bad},
+                clear=True,
+            ):
+                with pytest.raises(ValidationError):
+                    Settings()
+
+    def test_canvas_allowed_html_tags_rejects_unsupported_tags(self):
+        """Config may only restrict the supported registry, never extend it."""
+        with patch.dict(
+            os.environ,
+            {"MUCGPT_CORE_CANVAS_ALLOWED_HTML_TAGS": '["u", "mark"]'},
+            clear=True,
+        ):
+            with pytest.raises(ValidationError, match="not supported by this release"):
+                Settings()
+
+    def test_canvas_allowed_html_tags_allows_subset_of_supported(self):
+        with patch.dict(
+            os.environ,
+            {"MUCGPT_CORE_CANVAS_ALLOWED_HTML_TAGS": "[]"},
+            clear=True,
+        ):
+            settings = Settings()
+            assert settings.canvas_allowed_html_tags == []
+
     def test_nested_env_variables(self):
         """Test that nested environment variables work correctly."""
         with patch.dict(
@@ -964,24 +1007,19 @@ class TestSettings:
             get_mcp_settings.cache_clear()
             get_settings.cache_clear()
             mcp_settings = get_mcp_settings()
-            assert len(mcp_settings.sources.keys()) == 1
-            assert mcp_settings.sources["test"].url == "https://example.com/mcp"
-            assert (
-                mcp_settings.sources["test"].transport is MCPTransport.STREAMABLE_HTTP
-            )
-            assert mcp_settings.sources["test"].forward_token
-            assert (
-                mcp_settings.sources["test"].forward_auth_override.get_secret_value()
-                == "Basic dXNlcjpwYXNz"
-            )
-            assert (
-                mcp_settings.sources["test"].headers["x-api-key"].get_secret_value()
-                == "sk-1234"
-            )
-            assert (
-                mcp_settings.sources["test"].headers["X-Test"].get_secret_value()
-                == "true"
-            )
+            assert mcp_settings.sources is not None
+            sources = mcp_settings.sources
+            assert len(sources.keys()) == 1
+            source = sources["test"]
+            assert source.url == "https://example.com/mcp"
+            assert source.transport is MCPTransport.STREAMABLE_HTTP
+            assert source.forward_token
+            override = source.forward_auth_override
+            assert override is not None
+            assert override.get_secret_value() == "Basic dXNlcjpwYXNz"
+            assert source.headers is not None
+            assert source.headers["x-api-key"].get_secret_value() == "sk-1234"
+            assert source.headers["X-Test"].get_secret_value() == "true"
             assert mcp_settings.cache_ttl == 123
 
     def test_mcp_settings_forward_auth_override_requires_forward_token(self):
@@ -1384,7 +1422,9 @@ class TestRedisSettings:
             redis = get_redis_settings()
             assert redis.host == "env-redis-host"
             assert redis.port == 1234
+            assert redis.username is not None
             assert redis.username.get_secret_value() == "env-user"
+            assert redis.password is not None
             assert redis.password.get_secret_value() == "env-pass"
 
     def test_redis_settings_defaults(self):

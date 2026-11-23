@@ -5,8 +5,9 @@ import { Decoration, DecorationSet } from "@tiptap/pm/view";
 /**
  * Keeps the last selection (muted highlight) and caret position (brand-colored
  * caret) visible while the editor is unfocused, so they survive typing in the
- * chat input and tell the user where the agent anchors edits (the caret offset
- * is what toCanvasState reports as `cursor`).
+ * chat input and tell the user where the agent anchors edits (toCanvasState
+ * reports the caret as `cursor`, or the selection start while a passage is
+ * selected).
  */
 
 export const CANVAS_PERSISTENCE_RESET = "canvasPersistenceReset";
@@ -27,14 +28,27 @@ const caretWidget = () => {
 };
 
 /**
- * The anchor the user currently sees (marker = what toCanvasState sends as
- * `cursor`): the persistent caret position, or null once it was cleared (agent
+ * The anchor the user currently sees (used as `cursor` when no passage is
+ * selected): the persistent caret position, or null once it was cleared (agent
  * rewrite, canvas reset) until the user places a caret again.
  */
 export const persistentCaret = (editor: Editor | null): number | null => {
     if (!editor) return null;
     const stored = persistenceKey.getState(editor.state) as PersistenceState | undefined;
     return stored?.caret ?? null;
+};
+
+/**
+ * The selection the user currently sees (muted highlight while unfocused),
+ * mapped through every document change; null when collapsed, cleared, or
+ * mapped down to a point. The visual source of truth for what toCanvasState
+ * sends.
+ */
+export const persistentSelection = (editor: Editor | null): { from: number; to: number } | null => {
+    if (!editor) return null;
+    const stored = persistenceKey.getState(editor.state) as PersistenceState | undefined;
+    const selection = stored?.selection ?? null;
+    return selection && selection.from !== selection.to ? selection : null;
 };
 
 export const CanvasSelectionPersistence = Extension.create({

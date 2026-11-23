@@ -33,6 +33,6 @@ async def test_category_check_resolves_prompt_by_category_name() -> None:
         )
 
     to_thread.assert_awaited_once_with(read_prompt_file_with_metadata, "education")
-    assert (
-        invoke_internal.await_args.kwargs["langfuse_prompt"] is prompt.langfuse_prompt
-    )
+    invoke_args = invoke_internal.await_args
+    assert invoke_args is not None
+    assert invoke_args.kwargs["langfuse_prompt"] is prompt.langfuse_prompt

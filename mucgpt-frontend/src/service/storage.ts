@@ -14,6 +14,8 @@ export interface DBObject<M, C> {
     favorite?: boolean;
     /** This cache entry is backed by a server-side conversation. */
     backendPersisted?: boolean;
+    /** The user renamed this chat manually; automatic title generation must not touch it. */
+    manuallyRenamed?: boolean;
     documentIds?: string[];
     documentNames?: Record<string, string>;
     messages: DBMessage<M>[];
@@ -201,12 +203,15 @@ export class StorageService<M, C> {
         }
     }
 
-    async renameChat(id: string, newName: string) {
+    async renameChat(id: string, newName: string, markManuallyRenamed = false) {
         try {
             const db = await this.connectToDB();
             const stored = await this.get(id);
             if (stored) {
                 stored.name = newName;
+                if (markManuallyRenamed) {
+                    stored.manuallyRenamed = true;
+                }
                 await db.put(this.config.objectStore_name, stored);
                 return stored;
             } else throw new Error("No object with id " + id + " found");

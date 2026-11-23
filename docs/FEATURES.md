@@ -17,7 +17,7 @@ Work side by side with the agent: open a rich-text canvas panel next to any chat
 - Toggle the canvas at any time, mid-conversation; on small screens it opens as an overlay so the chat stays usable.
 - The agent can start or edit the canvas while it is closed: the view opens automatically as soon as the agent writes.
 - Large documents are supported up to a size limit: content beyond the warning threshold is greyed out and is not read by the agent; content up to the hard cap is still saved with the conversation, and oversized pastes are clipped to the limit. The export shows progress feedback and confirms completion.
-- Write and format text yourself (headings, lists, tables, undo/redo). The agent can write and edit the canvas directly — the editor locks while the agent works and changes appear live as they are generated.
+- Write and format text yourself (headings, lists, tables, underline, undo/redo). The agent can write and edit the canvas directly — the editor locks while the agent works and changes appear live as they are generated, using GFM plus the deployment's whitelisted raw HTML tags (e.g. `<u>` for underline).
 - Select a passage to quote it into the chat or to ask the agent to revise exactly that text.
 - Save versions manually and review an automatic history of agent edits. Restoring an older version is non-destructive and can be undone like any edit.
 - The canvas is saved with the conversation, so your document survives reloads and device switches.
@@ -80,6 +80,8 @@ Available models (deployments select exactly one — the line-up grows over time
 | Distil-Whisper Large v3 German | German | None (runs on CPU/WASM) |
 | NVIDIA Canary 180M Flash | English, German, French, Spanish | None (runs on CPU/WASM) |
 | NVIDIA Parakeet TDT 0.6B v3 | 25 languages, automatic detection (incl. Ukrainian) | None (runs on CPU/WASM) |
+| NVIDIA Parakeet Ultra | 25 languages, automatic detection (incl. Ukrainian), punctuation & capitalization | None (runs on CPU/WASM) |
+| NVIDIA Parakeet Redux (ternary) | 25 languages, automatic detection (incl. Ukrainian) | None (runs on CPU/WASM) |
 
 The feature must be enabled per deployment; if the microphone button is missing, your administrator has not activated it yet.
 

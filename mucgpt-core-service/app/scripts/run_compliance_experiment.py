@@ -5,7 +5,7 @@ import os
 from collections.abc import Callable, Sequence
 from datetime import datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 from truststore import inject_into_ssl
 
@@ -30,7 +30,7 @@ from api.api_models import (
     ComplianceStatus,
 )
 from config.langfuse_provider import LangfuseProvider
-from config.model_provider import ModelProvider
+from config.model_provider import ModelRegistry
 from config.settings import ModelsConfig, Settings
 from core.auth_models import AuthenticationResult
 from core.compliance import evaluate_compliance
@@ -151,11 +151,17 @@ def _average_score(name: str) -> Callable[..., Evaluation]:
             for evaluation in item_result.evaluations
             if evaluation.name == name and evaluation.value is not None
         ]
-        average = sum(values) / len(values) if values else None
+        if not values:
+            return Evaluation(
+                name=f"mean_{name}",
+                value=0.0,
+                comment=f"Mean {name}: no values",
+            )
+        average = sum(values) / len(values)
         return Evaluation(
             name=f"mean_{name}",
             value=average,
-            comment=(f"Mean {name}: {average:.2%}" if average is not None else None),
+            comment=f"Mean {name}: {average:.2%}",
         )
 
     return evaluate
@@ -227,7 +233,7 @@ def _initialize_evaluation_context(
     settings: Settings,
     models: list[ModelsConfig],
 ) -> Langfuse:
-    ModelProvider.init_model(models, streaming=False, temperature=0.0)
+    ModelRegistry.init_models(models)
 
     if not (
         os.environ.get("LANGFUSE_PUBLIC_KEY") and os.environ.get("LANGFUSE_SECRET_KEY")
@@ -268,13 +274,14 @@ async def _run_experiments(args: argparse.Namespace) -> None:
             all_category_statuses_match,
         ]
         run_evaluators = [
-            _average_score(evaluator.__name__) for evaluator in evaluators
+            _average_score(getattr(evaluator, "__name__", str(evaluator)))
+            for evaluator in evaluators
         ]
 
         for model_name in args.models:
 
             async def task(*, item: Any, **_: Any) -> dict[str, Any]:
-                dataset_input, _ = validate_dataset_item(item)
+                dataset_input, expected_output = validate_dataset_item(item)
                 response = await evaluate_compliance(
                     system_prompt=dataset_input.system_prompt,
                     model_name=model_name,
@@ -288,8 +295,10 @@ async def _run_experiments(args: argparse.Namespace) -> None:
                 run_name=run_name or model_name,
                 description="EU AI Act compliance prompt classification benchmark",
                 task=task,
-                evaluators=evaluators,
-                run_evaluators=run_evaluators,
+                # The langfuse evaluator callable types are stricter than the
+                # plain functions used here; the runtime accepts them.
+                evaluators=cast("list[Any]", evaluators),
+                run_evaluators=cast("list[Any]", run_evaluators),
                 max_concurrency=args.max_concurrency,
                 metadata={
                     "evaluation_type": "assistant-compliance",

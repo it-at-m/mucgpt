@@ -516,7 +516,7 @@ class MUCGPTAgentExecutor:
                                     ChatCompletionChunkChoice(
                                         delta=ChatCompletionDelta(
                                             content=chunk_content
-                                        ),  # type: ignore
+                                        ),
                                         index=0,
                                         finish_reason=None,
                                     )
@@ -599,9 +599,9 @@ class MUCGPTAgentExecutor:
                 created=created,
                 choices=[
                     ChatCompletionChunkChoice(
-                        delta=ChatCompletionDelta(),  # type: ignore
+                        delta=ChatCompletionDelta(),
                         index=0,
-                        finish_reason="stop",  # type: ignore
+                        finish_reason="stop",
                     )
                 ],
                 usage=usage,
@@ -709,7 +709,7 @@ class MUCGPTAgentExecutor:
                         ChatCompletionChoice(
                             message=ChatCompletionMessage(
                                 role="assistant",
-                                content=ai_message.content,  # type: ignore
+                                content=ai_message.content,
                             ),
                             index=0,
                             finish_reason="stop",

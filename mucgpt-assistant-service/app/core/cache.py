@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, cast
 
 import cloudpickle
 from redis.asyncio import Redis
@@ -15,7 +15,7 @@ class RedisCache:
         if RedisCache._redis_client is None:
             password = RedisCache._redis_settings.password
             client = Redis(
-                host=RedisCache._redis_settings.host,
+                host=RedisCache._redis_settings.host or "localhost",
                 port=RedisCache._redis_settings.port,
                 username=RedisCache._redis_settings.username,
                 password=password.get_secret_value() if password else None,
@@ -54,8 +54,8 @@ class RedisCache:
         :return: The decoded object or None if key doesn't exist.
         """
         redis: Redis = await RedisCache.get_redis()
-        dump: bytes = await redis.get(name=key)
+        dump = await redis.get(name=key)
         if dump is None:
             return None
-        obj = cloudpickle.loads(dump)
+        obj = cloudpickle.loads(cast("bytes", dump))
         return obj

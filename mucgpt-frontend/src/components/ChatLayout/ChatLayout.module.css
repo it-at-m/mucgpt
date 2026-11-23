@@ -1,5 +1,5 @@
 .container {
-    --chatReadableWidth: 820px;
+    --chatReadableWidth: var(--readableContentWidth);
     --chatContentWidth: min(100%, var(--chatReadableWidth));
     display: flex;
     flex-direction: column;

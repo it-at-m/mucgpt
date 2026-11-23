@@ -14,3 +14,35 @@
 .markdown a:active {
     color: var(--colorBrandForegroundLinkPressed);
 }
+
+/*
+ * Headings: explicit Fluent token pairs (font-size + matched line-height).
+ * Bare headings would otherwise take browser-default font sizes while
+ * inheriting the absolute body line-height (lineHeightBase300, 20px), so any
+ * wrapped heading overlaps its first line.
+ */
+.markdown h1 {
+    font-size: var(--fontSizeHero800);
+    line-height: var(--lineHeightHero800);
+}
+
+.markdown h2 {
+    font-size: var(--fontSizeBase600);
+    line-height: var(--lineHeightBase600);
+}
+
+.markdown h3 {
+    font-size: var(--fontSizeBase500);
+    line-height: var(--lineHeightBase500);
+}
+
+.markdown h4 {
+    font-size: var(--fontSizeBase400);
+    line-height: var(--lineHeightBase400);
+}
+
+.markdown h5,
+.markdown h6 {
+    font-size: var(--fontSizeBase300);
+    line-height: var(--lineHeightBase300);
+}

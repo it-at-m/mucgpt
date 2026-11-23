@@ -120,6 +120,8 @@ async def update_admin_tags(
     )
     await db.commit()
     refreshed_assistant = await assistant_repo.get_with_owners(assistant_id)
+    if refreshed_assistant is None:
+        raise AssistantNotFoundException(assistant_id)
     return (
         await _build_assistant_response_list([refreshed_assistant], assistant_repo)
     )[0]
@@ -166,6 +168,8 @@ async def update_admin_owners(
     )
     await db.commit()
     refreshed_assistant = await assistant_repo.get_with_owners(assistant_id)
+    if refreshed_assistant is None:
+        raise AssistantNotFoundException(assistant_id)
     return (
         await _build_assistant_response_list([refreshed_assistant], assistant_repo)
     )[0]
@@ -261,6 +265,8 @@ async def update_assistant_state(
         ) from None
 
     refreshed_assistant = await assistant_repo.get_with_owners(assistant_id)
+    if refreshed_assistant is None:
+        raise AssistantNotFoundException(assistant_id)
     return (
         await _build_assistant_response_list([refreshed_assistant], assistant_repo)
     )[0]

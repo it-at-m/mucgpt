@@ -9,6 +9,7 @@ from zoneinfo import ZoneInfo
 
 from langchain.agents.middleware import (
     AgentMiddleware,
+    AgentState,
     ModelRequest,
     ModelResponse,
     ToolCallRequest,
@@ -30,6 +31,7 @@ from langgraph.types import Command
 from agent.state_models.default_state import DefaultAgentState
 from agent.tools.policies import get_policy_for_state
 from api.api_models import CanvasState, ConversationUsage
+from api.exception import ContentFilterError
 from config.harness_profiles import DEEP_AGENT_BUILTIN_TOOLS
 from config.langfuse_provider import LangfuseProvider
 from config.model_provider import ModelRegistry
@@ -524,11 +526,11 @@ class ContextMiddleware(AgentMiddleware):
     Additional state types can be registered in ``agent.tools.policies``.
     """
 
-    state_schema: type = DefaultAgentState
+    state_schema: type[AgentState[Any]] = DefaultAgentState
 
     def __init__(
         self,
-        state_schema: type = DefaultAgentState,
+        state_schema: type[AgentState[Any]] = DefaultAgentState,
         data_sources: list[Any] | None = None,
         document_selection: list["SelectedDocument"] | None = None,
     ):
@@ -557,8 +559,8 @@ class ContextMiddleware(AgentMiddleware):
 
     def wrap_model_call(
         self,
-        request: ModelRequest,
-        handler: Callable[[ModelRequest], ModelResponse],
+        request: ModelRequest[Any],
+        handler: Callable[[ModelRequest[Any]], ModelResponse],
     ) -> ModelResponse:
         # infer policy from state type and apply to request
         policy = get_policy_for_state(self.state_schema)
@@ -606,8 +608,8 @@ class ContextMiddleware(AgentMiddleware):
 
     async def awrap_model_call(
         self,
-        request: ModelRequest,
-        handler: Callable[[ModelRequest], Awaitable[ModelResponse]],
+        request: ModelRequest[Any],
+        handler: Callable[[ModelRequest[Any]], Awaitable[ModelResponse]],
     ) -> ModelResponse:
         # infer policy from state type and apply to request
         policy = get_policy_for_state(self.state_schema)
@@ -856,6 +858,16 @@ class TokenUsageMiddleware(AgentMiddleware):
             "mucgpt_usage": snapshot.model_dump(exclude_none=True),
         }
 
+    @staticmethod
+    def _raise_if_filtered(model_response: ModelResponse) -> None:
+        if not model_response.result:
+            return
+        finish_reason = model_response.result[-1].response_metadata.get("finish_reason")
+        if finish_reason in {"content_filter", "content_policy_violation"}:
+            raise ContentFilterError(
+                "The model response was blocked by a content filter"
+            )
+
     def wrap_model_call(
         self,
         request: ModelRequest,
@@ -863,6 +875,7 @@ class TokenUsageMiddleware(AgentMiddleware):
     ) -> ModelResponse:
         model_response: ModelResponse = handler(request)
         self._record_usage(request, model_response)
+        self._raise_if_filtered(model_response)
         return model_response
 
     async def awrap_model_call(
@@ -872,4 +885,5 @@ class TokenUsageMiddleware(AgentMiddleware):
     ) -> ModelResponse:
         model_response = await handler(request)
         self._record_usage(request, model_response)
+        self._raise_if_filtered(model_response)
         return model_response

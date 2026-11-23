@@ -883,7 +883,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "alembic", specifier = ">=1.14.0" },
+    { name = "alembic", specifier = "==1.20.1" },
     { name = "asgi-correlation-id", specifier = "==5.0.1" },
     { name = "asyncpg", specifier = "==0.32.0" },
     { name = "cloudpickle", specifier = "==3.1.2" },

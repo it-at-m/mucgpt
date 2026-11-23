@@ -1669,7 +1669,7 @@ dev = [
 requires-dist = [
     { name = "ag-ui-langgraph", extras = ["fastapi"], specifier = "==0.0.47" },
     { name = "ag-ui-protocol", specifier = "==1.0.0" },
-    { name = "alembic", specifier = ">=1.14.0" },
+    { name = "alembic", specifier = "==1.20.1" },
     { name = "asgi-correlation-id", specifier = "==4.3.4" },
     { name = "asyncpg", specifier = "==0.32.0" },
     { name = "beautifulsoup4", specifier = "==4.15.0" },

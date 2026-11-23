@@ -47,8 +47,7 @@ def _suppress_coverage_gate_for_partial_runs(config: pytest.Config) -> None:
     if config.option.cov_fail_under is None:
         return
     if any(
-        str(arg).startswith("--cov-fail-under")
-        for arg in config.invocation_params.args
+        str(arg).startswith("--cov-fail-under") for arg in config.invocation_params.args
     ):
         return  # explicitly requested on the command line — respect it
     args = [str(arg) for arg in config.args]
@@ -73,7 +72,7 @@ def pytest_unconfigure(config: pytest.Config) -> None:
         _POSTGRES_ENGINE_URL = None
 
 
-@pytest_asyncio.fixture(params=_ENGINE_PARAMS, ids=["sqlite", "postgres"])
+@pytest_asyncio.fixture(params=_ENGINE_PARAMS, ids=_ENGINE_PARAMS)
 async def async_engine(request: pytest.FixtureRequest):
     """Create an in-memory SQLite or (parameterized) PostgreSQL test database."""
     if request.param == "postgres":

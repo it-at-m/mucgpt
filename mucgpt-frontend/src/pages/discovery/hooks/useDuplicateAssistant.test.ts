@@ -120,7 +120,9 @@ describe("useDuplicateAssistant", () => {
                 result.current.requestDuplicateAssistant({ id: "a-1", title: "Server Assistent", rawData: assistantResponse("a-1") });
             });
         });
-        await result.current.confirmDuplicateAssistant();
+        await act(async () => {
+            await result.current.confirmDuplicateAssistant();
+        });
         await waitFor(() => expect(result.current.isDuplicating).toBe(false));
 
         expect(getCommunityAssistantApi).toHaveBeenCalledWith("a-1");
@@ -145,7 +147,9 @@ describe("useDuplicateAssistant", () => {
                 result.current.requestDuplicateAssistant({ id: "a-2", title: "Gelöschter Assistent", rawData: snapshot, isDeletedSnapshot: true });
             });
         });
-        await result.current.confirmDuplicateAssistant();
+        await act(async () => {
+            await result.current.confirmDuplicateAssistant();
+        });
         await waitFor(() => expect(result.current.isDuplicating).toBe(false));
 
         expect(createCommunityAssistantApi).toHaveBeenCalledWith(
@@ -173,7 +177,9 @@ describe("useDuplicateAssistant", () => {
                 result.current.requestDuplicateAssistant({ id: "a-3", title: "Zwischengespeichert" });
             });
         });
-        await result.current.confirmDuplicateAssistant();
+        await act(async () => {
+            await result.current.confirmDuplicateAssistant();
+        });
         await waitFor(() => expect(result.current.isDuplicating).toBe(false));
 
         expect(communityStorageDouble.getAssistantConfig).toHaveBeenCalledWith("a-3");
@@ -189,7 +195,9 @@ describe("useDuplicateAssistant", () => {
                 result.current.requestDuplicateAssistant({ id: "a-4", title: "X" });
             });
         });
-        await result.current.confirmDuplicateAssistant();
+        await act(async () => {
+            await result.current.confirmDuplicateAssistant();
+        });
         await waitFor(() => expect(result.current.isDuplicating).toBe(false));
 
         expect(showError).toHaveBeenCalledWith(
@@ -209,7 +217,9 @@ describe("useDuplicateAssistant", () => {
                 result.current.requestDuplicateAssistant({ id: "a-5", title: "X" });
             });
         });
-        await result.current.confirmDuplicateAssistant();
+        await act(async () => {
+            await result.current.confirmDuplicateAssistant();
+        });
         await waitFor(() => expect(result.current.isDuplicating).toBe(false));
 
         expect(showError).toHaveBeenCalledWith(
@@ -228,7 +238,9 @@ describe("useDuplicateAssistant", () => {
                 result.current.requestDuplicateAssistant({ id: "a-6", title: "X" });
             });
         });
-        await result.current.confirmDuplicateAssistant();
+        await act(async () => {
+            await result.current.confirmDuplicateAssistant();
+        });
         await waitFor(() => expect(result.current.isDuplicating).toBe(false));
 
         expect(showError).toHaveBeenCalledWith(
@@ -239,7 +251,9 @@ describe("useDuplicateAssistant", () => {
 
     it("does nothing when confirm is called without a queued assistant", async () => {
         const { result } = setup();
-        await result.current.confirmDuplicateAssistant();
+        await act(async () => {
+            await result.current.confirmDuplicateAssistant();
+        });
         expect(getCommunityAssistantApi).not.toHaveBeenCalled();
         expect(result.current.isDuplicating).toBe(false);
     });

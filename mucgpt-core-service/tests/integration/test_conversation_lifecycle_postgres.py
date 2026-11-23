@@ -7,6 +7,7 @@ Each test creates and drops its own database; never use production credentials.
 import asyncio
 import json
 import os
+import traceback
 import unittest
 from pathlib import Path
 from types import SimpleNamespace
@@ -30,7 +31,7 @@ from psycopg_pool import AsyncConnectionPool
 from pydantic import SecretStr
 from tests.unit.helpers import request_with_body
 
-from agent.agent_executor import MUCGPTAgentExecutor
+from agent.agent_executor import MUCGPTAgentExecutor, llm_error_payload
 from agent.deep_agent import (
     CHECKPOINT_DURABILITY,
     MUCGPTAgent,
@@ -541,8 +542,13 @@ class ConversationLifecyclePostgresTests(unittest.IsolatedAsyncioTestCase):
                     request = self.request()
                     request.stream = stream
                     chunks = []
+                    stream_errors: list[Exception] = []
                     disconnect = asyncio.Queue()
                     disconnected = asyncio.Event()
+
+                    def capture_stream_error(ex: Exception, logger: Any) -> Any:
+                        stream_errors.append(ex)
+                        return llm_error_payload(ex=ex, logger=logger)
 
                     async def run():
                         if outcome == "disconnect":
@@ -611,18 +617,30 @@ class ConversationLifecyclePostgresTests(unittest.IsolatedAsyncioTestCase):
                                 "api.routers.chat_router.init_agent",
                                 AsyncMock(return_value=executor),
                             ),
+                            patch(
+                                "agent.agent_executor.llm_error_payload",
+                                side_effect=capture_stream_error,
+                            ),
                         ):
                             task = asyncio.create_task(run())
                             try:
                                 await asyncio.wait_for(started.wait(), 10)
                             except TimeoutError:
+                                stream_error_details = (
+                                    "\n".join(
+                                        "".join(traceback.format_exception(error))
+                                        for error in stream_errors
+                                    )
+                                    or "No executor-captured stream exception."
+                                )
                                 if task.done():
                                     # Surface exceptions from run() instead of masking
                                     # them with the timeout waiting for the graph node.
                                     task.result()
                                     self.fail(
                                         "run() finished before the answer node started; "
-                                        f"response chunks: {chunks!r}"
+                                        f"response chunks: {chunks!r}\n"
+                                        f"stream exception details:\n{stream_error_details}"
                                     )
 
                                 stack = [
@@ -631,7 +649,8 @@ class ConversationLifecyclePostgresTests(unittest.IsolatedAsyncioTestCase):
                                 ]
                                 self.fail(
                                     "answer node did not start; run() is still pending. "
-                                    f"Task stack: {stack}; response chunks: {chunks!r}"
+                                    f"Task stack: {stack}; response chunks: {chunks!r}\n"
+                                    f"stream exception details:\n{stream_error_details}"
                                 )
                             if outcome == "cancel":
                                 task.cancel()

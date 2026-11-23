@@ -1,5 +1,7 @@
 import json
+from collections.abc import AsyncIterator
 from contextlib import nullcontext
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
@@ -120,7 +122,7 @@ class DummyRunnerLLM(DummyLLM):
 class DummyGraph:
     """Graph stand-in yielding LangGraph-style (stream_mode, data) tuples."""
 
-    def __init__(self, llm):
+    def __init__(self, llm: DummyRunnerLLM) -> None:
         self._llm = llm
         self.config = None
         self.ainvoke = AsyncMock(
@@ -128,7 +130,9 @@ class DummyGraph:
             return_value={"messages": [AIMessage(content="Simplified text.")]},
         )
 
-    async def astream(self, _input, *_args, **kwargs):
+    async def astream(
+        self, _input: object, *_args: object, **kwargs: Any
+    ) -> AsyncIterator[tuple[str, object]]:
         self.config = kwargs.get("config")
         if self._llm.fail:
             raise RuntimeError("Simulated failure")
@@ -148,7 +152,7 @@ class DummyGraph:
 
 
 class DummyAgent:
-    def __init__(self, llm):
+    def __init__(self, llm: DummyRunnerLLM) -> None:
         self.model = llm
         self.graph = DummyGraph(llm)
 

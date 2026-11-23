@@ -33,7 +33,7 @@ class TestResolveLang:
             ("", "deutsch"),
         ],
     )
-    def test_language_aliases(self, input_lang, expected):
+    def test_language_aliases(self, input_lang: str, expected: str) -> None:
         assert _resolve_lang(input_lang) == expected
 
 
@@ -52,21 +52,20 @@ class TestInferMcpSource:
             ("prefix_docs__search", None),  # separator prefixes must match exactly
         ],
     )
-    def test_source_prefixes(self, tool_name, expected):
+    def test_source_prefixes(self, tool_name: str, expected: str | None) -> None:
         assert _infer_mcp_source(tool_name, {"docs"}) == expected
 
-    def test_mcp_name_pattern_fallback(self):
+    def test_mcp_name_pattern_fallback(self) -> None:
         # The name pattern is greedy: it consumes trailing separators too.
         assert (
-            _infer_mcp_source("mcp-mydocs_search", {"unrelated"})
-            == "mcp-mydocs_search"
+            _infer_mcp_source("mcp-mydocs_search", {"unrelated"}) == "mcp-mydocs_search"
         )
 
-    def test_no_match_returns_none(self):
+    def test_no_match_returns_none(self) -> None:
         assert _infer_mcp_source("totally-local", {"docs"}) is None
 
 
-def _mcp_tool(name: str, description: str, metadata=None) -> MagicMock:
+def _mcp_tool(name: str, description: str, metadata: object | None = None) -> MagicMock:
     tool = MagicMock()
     tool.name = name
     tool.description = description
@@ -75,9 +74,11 @@ def _mcp_tool(name: str, description: str, metadata=None) -> MagicMock:
 
 
 @pytest.mark.asyncio
-async def test_list_tool_metadata_includes_local_and_mcp_tools():
+async def test_list_tool_metadata_includes_local_and_mcp_tools() -> None:
     mcp_tool = _mcp_tool(
-        "docs__search", "Search docs", metadata={"mcp_group": "docs", "mcp_source": None}
+        "docs__search",
+        "Search docs",
+        metadata={"mcp_group": "docs", "mcp_source": None},
     )
     with (
         patch.object(
@@ -110,7 +111,7 @@ async def test_list_tool_metadata_includes_local_and_mcp_tools():
 
 
 @pytest.mark.asyncio
-async def test_list_tool_metadata_local_tool_display_uses_language():
+async def test_list_tool_metadata_local_tool_display_uses_language() -> None:
     with (
         patch.object(tool_metadata.McpLoader, "load_mcp_tools", new=AsyncMock([])),
     ):
@@ -126,7 +127,7 @@ async def test_list_tool_metadata_local_tool_display_uses_language():
 
 
 @pytest.mark.asyncio
-async def test_list_tool_metadata_force_reload_is_forwarded():
+async def test_list_tool_metadata_force_reload_is_forwarded() -> None:
     loader = AsyncMock(return_value=[])
     with patch.object(tool_metadata.McpLoader, "load_mcp_tools", new=loader):
         await list_tool_metadata(

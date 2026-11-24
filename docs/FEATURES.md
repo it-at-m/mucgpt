@@ -9,7 +9,8 @@ MUCGPT is an assistant-first product. Assistants are reusable, workflow-specific
 ![Chat](/docs/chatscreen.png)
 The chat provides a clear space to work with the underlying language model on almost any topic.
 - Configure a system instruction to guide responses and adjust temperature to balance factual vs. creative output.
-- Multi-turn conversations are supported. History stays local in the browser (IndexedDB). You can continue past conversations and mark favorites for quick access.
+- Multi-turn conversations are supported. Your chat history is saved to your account, so you can continue past conversations on any device. Favorites are kept in your browser for quick access.
+- Chats that so far only existed in your browser are uploaded to your account automatically the next time you open MUCGPT. Chats whose answers all failed stay in the browser.
 
 ## Canvas
 

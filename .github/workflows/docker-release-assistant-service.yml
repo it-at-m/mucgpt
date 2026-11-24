@@ -138,6 +138,9 @@ jobs:
           password: ${{ secrets.OPENCODE_REGISTRY_TOKEN }}
       - name: Push image to openCode container registry
         env:
+          # openCode's registry front kills long HTTP/2 uploads with
+          # PROTOCOL_ERROR (issue #1514); force HTTP/1.1 for the copy.
+          GODEBUG: http2client=0
           GHCR_IMAGE: ghcr.io/${{ steps.vars.outputs.repo_lowercase }}/mucgpt-assistant
           BUILT_DIGEST: ${{ steps.build.outputs.digest }}
           OPENCODE_IMAGE: registry.opencode.de/landeshauptstadt-muenchen/mucgpt/mucgpt-assistant

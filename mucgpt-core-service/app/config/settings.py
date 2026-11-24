@@ -552,7 +552,6 @@ class DocumentConfig(BaseModel):
     preview_max_chars: PositiveInt = 1000
     ingestion_timeout: PositiveSeconds = 300.0
     deletion_timeout: PositiveSeconds = 90.0
-    parser_timeout: PositiveSeconds = 180.0
     cleanup_timeout: PositiveSeconds = 60.0
 
 

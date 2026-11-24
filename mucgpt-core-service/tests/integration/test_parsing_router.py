@@ -1,5 +1,6 @@
 from unittest.mock import AsyncMock, MagicMock, patch
 
+import anyio
 import httpx
 import pytest
 from fastapi.testclient import TestClient
@@ -131,6 +132,30 @@ class TestParsingRouter:
         with (
             patch("api.routers.parsing_router.settings") as mock_settings,
             patch("api.routers.parsing_router._parser", mock_parser),
+        ):
+            mock_settings.parser_backend = ParserBackendType.XBERG
+            response = test_client.post(
+                "/v1/parse",
+                files={"file": ("slow.pdf", b"pdf bytes", "application/pdf")},
+                headers=headers,
+            )
+
+        assert response.status_code == 504
+        assert "timed out" in response.json()["detail"].lower()
+
+    def test_parse_wall_clock_deadline_returns_504(self, test_client: TestClient):
+        """A parser that never finishes (e.g. a trickling response) hits the deadline."""
+
+        async def hang(_file):
+            await anyio.sleep_forever()
+
+        mock_parser = AsyncMock()
+        mock_parser.parse = AsyncMock(side_effect=hang)
+
+        with (
+            patch("api.routers.parsing_router.settings") as mock_settings,
+            patch("api.routers.parsing_router._parser", mock_parser),
+            patch("api.routers.parsing_router.PARSE_TIMEOUT_SECONDS", 0.01),
         ):
             mock_settings.parser_backend = ParserBackendType.XBERG
             response = test_client.post(

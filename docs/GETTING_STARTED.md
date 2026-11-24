@@ -187,8 +187,8 @@ one deadline per operation:
   the catalog row and remove a possible stored body). It comes on top of
   `ingestion_timeout`, so a timed-out upload can take up to
   `ingestion_timeout + cleanup_timeout` before the client gets its error.
-- `parser_timeout` is a hard wall-clock limit for the Xberg call, while
-  `xberg_timeout` is the HTTP inactivity timeout per request phase.
+- `xberg_timeout` is the HTTP inactivity timeout of each Xberg request phase;
+  the total parsing time of an upload is bounded by `ingestion_timeout`.
 
 Keep `ingestion_timeout + cleanup_timeout` below the timeouts of any proxy or
 ingress in front of the core service, otherwise the proxy closes the connection

@@ -144,7 +144,6 @@ class TestSettings:
         defaults = DocumentConfig()
         assert defaults.ingestion_timeout == 300.0
         assert defaults.deletion_timeout == 90.0
-        assert defaults.parser_timeout == 180.0
         assert defaults.cleanup_timeout == 60.0
         assert DocumentConfig(cleanup_timeout=0.25).cleanup_timeout == 0.25
 
@@ -153,7 +152,6 @@ class TestSettings:
         [
             "ingestion_timeout",
             "deletion_timeout",
-            "parser_timeout",
             "cleanup_timeout",
         ],
     )

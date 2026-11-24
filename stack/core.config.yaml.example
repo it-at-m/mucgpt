@@ -82,11 +82,10 @@ documents:
   # Deadlines in seconds for a whole upload/deletion. cleanup_timeout bounds the
   # cleanup after a failed upload and comes on top of ingestion_timeout.
   # See docs/GETTING_STARTED.md#document-operation-deadlines for sizing guidance.
-  # xberg_timeout remains the HTTP inactivity timeout; parser_timeout is the hard
-  # wall-clock limit for parsing.
+  # xberg_timeout remains the HTTP inactivity timeout; parsing is bounded by
+  # ingestion_timeout.
   ingestion_timeout: 300.0
   deletion_timeout: 90.0
-  parser_timeout: 180.0
   cleanup_timeout: 60.0
 
 # Compliance cache settings

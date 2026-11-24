@@ -145,7 +145,10 @@ class DeepAgentModelConfig(BaseModel):
     @field_validator("builtin_tool_run_limits", mode="before")
     @staticmethod
     def merge_builtin_tool_run_limits(value):
-        # Partial overrides retain defaults; explicit null disables one limit.
+        # Partial overrides retain defaults; explicit null disables one limit,
+        # and null for the whole section disables all of them.
+        if value is None:
+            return {}
         if isinstance(value, dict):
             return {**DEFAULT_BUILTIN_TOOL_RUN_LIMITS, **value}
         return value

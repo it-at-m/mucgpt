@@ -77,6 +77,9 @@ def _set_extra_middleware_for_model(
 def register_model_harness_profile(model_config: ModelsConfig) -> None:
     """Register enabled Deep Agents built-ins for one configured model."""
     extra_middleware = _set_extra_middleware_for_model(model_config)
+    # in future this could be extended to introduce different default system prompts for different models,
+    # or to append model-specific system prompt suffixes to the default system prompt, or to introduce model-specific middleware, etc.
+    # as per documentation, this is sets the default harness profile for the given model type and name, which can NOT be overridden by a middleware override.
     enabled_tools = model_config.deep_agent.enabled_builtin_tools
     register_harness_profile(
         f"{model_config.type.lower()}:{model_config.id}",

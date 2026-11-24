@@ -23,7 +23,7 @@ from agent.middleware import (
     ToolStatusMiddleware,
 )
 from agent.state_models.default_state import DefaultAgentState
-from agent.tool_limits import tool_run_limit_middleware
+from agent.tool_limits import ToolRunLimitMiddleware, tool_run_limit_middleware
 from agent.tools.approval import data_classification, requires_approval
 from agent.tools.mcp import McpBearerAuthProvider
 from config.settings import DataClassification
@@ -45,6 +45,14 @@ logger = getLogger(name="mucgpt-core-react-agent")
 CHECKPOINT_DURABILITY: Durability = "exit"
 
 _APPROVAL_DECISIONS: InterruptOnConfig = {"allowed_decisions": ["approve", "reject"]}
+
+
+def _approval_config(limiter: ToolRunLimitMiddleware | None) -> InterruptOnConfig:
+    if limiter is None:
+        return _APPROVAL_DECISIONS
+    # Approval runs before the limiter counts the call: don't ask for a call it
+    # blocks. Rejected calls still count as attempts, like blocked ones.
+    return {**_APPROVAL_DECISIONS, "when": limiter.within_budget}
 
 
 @dataclass(frozen=True)
@@ -80,6 +88,7 @@ class _ConfiguredLangChainDeepAgentGraph:
         self.approval_tools = {
             tool.name: tool for tool in tools if requires_approval(tool)
         }
+        self.run_limits = run_limits = tool_run_limit_middleware(self.tools)
         self.agent = create_deep_agent(
             model=cast(Any, self.model),
             tools=self.tools,
@@ -92,7 +101,7 @@ class _ConfiguredLangChainDeepAgentGraph:
                 ToolStatusMiddleware(),
                 ToolErrorMiddleware(),
                 TokenUsageMiddleware(),
-                *tool_run_limit_middleware(self.tools),
+                *run_limits.values(),
             ],  # type: ignore
             system_prompt=default_prompt.content,
             debug=self.debug,
@@ -104,7 +113,10 @@ class _ConfiguredLangChainDeepAgentGraph:
             checkpointer=checkpointer,
             backend=backend,
             permissions=permissions,
-            interrupt_on={name: _APPROVAL_DECISIONS for name in self.approval_tools}
+            interrupt_on={
+                name: _approval_config(run_limits.get(name))
+                for name in self.approval_tools
+            }
             or None,
         )
 
@@ -265,6 +277,11 @@ class _ConfiguredLangChainDeepAgentGraph:
             tool_call
             for tool_call in (last_ai_message.tool_calls if last_ai_message else [])
             if tool_call["name"] in self.approval_tools
+            # Over-budget calls were not interrupted (see _approval_config).
+            and (
+                (limiter := self.run_limits.get(tool_call["name"])) is None
+                or limiter.allows(state.values, tool_call)
+            )
         ]
         requested_names = [request["name"] for request in action_requests]
         # A mismatch would map an answer to the wrong call, so refuse instead.

@@ -94,6 +94,24 @@ class TestApprovalConfig:
         assert requires_approval(built)
         assert data_classification(built) == "internal"
 
+    def test_local_tool_keeps_factory_run_limit_without_its_own(self):
+        @tool
+        def lookup(query: str) -> str:
+            """Look something up."""
+            return query
+
+        lookup.metadata = {"run_limit": 3}
+        spec = LocalTool(
+            id="lookup",
+            factory=lambda _logger: lookup,
+            metadata={"english": {"name": "Lookup", "description": "Looks up"}},
+            needs_model=False,
+        )
+
+        built = spec.build(model=cast(BaseChatModel, None), logger=logging.getLogger())
+
+        assert (built.metadata or {})["run_limit"] == 3
+
 
 def pending(*ids: str) -> list[PendingToolApproval]:
     return [

@@ -39,8 +39,9 @@ class LocalTool:
         tool.metadata = {
             **(tool.metadata or {}),
             **approval_metadata(self.require_approval, self.data_classification),
-            "run_limit": self.run_limit,
         }
+        if self.run_limit is not None:
+            tool.metadata["run_limit"] = self.run_limit
         return tool
 
     def display(self, lang: str) -> dict[str, str]:

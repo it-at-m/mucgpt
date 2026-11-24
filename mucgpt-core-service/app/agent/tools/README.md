@@ -143,12 +143,16 @@ Limits are resolved into `BaseTool.metadata["run_limit"]` when tools are
 wrapped, including on cache hits. Local tools may set `LocalTool.run_limit`.
 `agent/tool_limits.py` builds LangChain limiters from that metadata. Excess
 calls return an error to the model, allowing it to finish or use other tools.
-The budget survives approval pauses and resets for a new user turn.
+The budget survives approval pauses and resets for a new user turn. Tools that
+share a name (e.g. from two MCP sources) share the strictest limit. Calls over
+the budget are blocked without asking for approval; rejected calls still count
+as attempts. Limits apply to the main agent only: tools called inside a
+subagent (`task`, with `enable_subagents`) are not counted.
 
 Built-ins use `models[].deep_agent.builtin_tool_run_limits` instead. Enabled
 `read_file` and `grep` default to 20 calls each; other built-ins are unlimited.
 Partial overrides retain these defaults, and `null` disables an individual
-limit. Harness profiles contain only built-in/model behavior, not MCP policy.
+limit (`builtin_tool_run_limits: null` disables all of them). Harness profiles contain only built-in/model behavior, not MCP policy.
 
 ## Approval pauses
 

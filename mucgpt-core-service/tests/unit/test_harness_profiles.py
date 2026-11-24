@@ -143,3 +143,8 @@ def test_builtin_limits_reject_non_positive_values(limit):
 
     with pytest.raises(ValidationError):
         DeepAgentModelConfig(builtin_tool_run_limits={"grep": limit})
+
+
+def test_builtin_limits_null_section_disables_all_limits():
+    config = DeepAgentModelConfig.model_validate({"builtin_tool_run_limits": None})
+    assert config.builtin_tool_run_limits == {}

@@ -84,13 +84,13 @@ documents:
   max_upload_bytes: 104857600
   max_text_bytes: 5242880
   preview_max_chars: 1000
-  # Total operation and phase deadlines in seconds. xberg_timeout remains the
-  # HTTP inactivity timeout; parser_timeout is the hard wall-clock limit.
+  # Deadlines in seconds for a whole upload/deletion. cleanup_timeout bounds the
+  # cleanup after a failed upload and comes on top of ingestion_timeout.
+  # xberg_timeout remains the HTTP inactivity timeout; parser_timeout is the hard
+  # wall-clock limit for parsing.
   ingestion_timeout: 300.0
   deletion_timeout: 90.0
   parser_timeout: 180.0
-  storage_timeout: 60.0
-  catalog_timeout: 15.0
   cleanup_timeout: 60.0
 
 # Compliance cache settings

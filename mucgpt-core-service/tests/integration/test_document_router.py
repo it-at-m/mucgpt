@@ -242,9 +242,7 @@ def test_parser_failures_compensate_and_hide_internals(upload_api, error, expect
 
 def test_document_operation_timeout_returns_a_sanitized_gateway_timeout(upload_api):
     client, service, parser, engine, store, owner, _ = upload_api
-    service.settings = DocumentConfig(
-        parser_timeout=0.01, ingestion_timeout=1, cleanup_timeout=0.1
-    )
+    service.settings = DocumentConfig(ingestion_timeout=0.05, cleanup_timeout=1)
 
     async def parse(_):
         await anyio.sleep_forever()

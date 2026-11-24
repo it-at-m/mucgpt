@@ -341,15 +341,13 @@ async def test_parser_errors_and_cancellation_compensate(ingestion, error_type):
 @pytest.mark.asyncio
 async def test_parser_deadline_compensates_and_releases_the_work_lock(ingestion):
     service, sessions, _, parser = ingestion
-    service.settings = DocumentConfig(
-        parser_timeout=0.01, ingestion_timeout=1, cleanup_timeout=0.1
-    )
+    service.settings = DocumentConfig(ingestion_timeout=0.05, cleanup_timeout=1)
 
     async def parse(_):
         await anyio.sleep_forever()
 
     parser.parse.side_effect = parse
-    with pytest.raises(services.DocumentOperationTimeoutError, match="parsing"):
+    with pytest.raises(services.DocumentOperationTimeoutError, match="ingestion"):
         await service.ingest_document(user(), upload())
     assert sessions.rows() == []
     assert sessions.locked_ids == set()
@@ -360,9 +358,7 @@ async def test_storage_deadline_compensates_and_releases_the_work_lock(
     ingestion, monkeypatch
 ):
     service, sessions, _, _ = ingestion
-    service.settings = DocumentConfig(
-        storage_timeout=0.01, ingestion_timeout=1, cleanup_timeout=0.1
-    )
+    service.settings = DocumentConfig(ingestion_timeout=0.05, cleanup_timeout=1)
 
     async def write(*_):
         await anyio.sleep_forever()
@@ -372,7 +368,24 @@ async def test_storage_deadline_compensates_and_releases_the_work_lock(
         "create_document_backend",
         lambda _: MagicMock(awrite=AsyncMock(side_effect=write)),
     )
-    with pytest.raises(services.DocumentOperationTimeoutError, match="storage"):
+    with pytest.raises(services.DocumentOperationTimeoutError, match="ingestion"):
+        await service.ingest_document(user(), upload())
+    assert sessions.rows() == []
+    assert sessions.locked_ids == set()
+
+
+@pytest.mark.asyncio
+async def test_publication_deadline_inside_shield_compensates(ingestion, monkeypatch):
+    # The shield keeps the operation deadline: a hung commit must not hang forever
+    # nor fall through and report an unpublished document as ready.
+    service, sessions, _, _ = ingestion
+    service.settings = DocumentConfig(ingestion_timeout=0.05, cleanup_timeout=1)
+
+    async def hang(*_args, **_kwargs):
+        await anyio.sleep_forever()
+
+    monkeypatch.setattr(DocumentRepository, "mark_ready", hang)
+    with pytest.raises(services.DocumentOperationTimeoutError, match="ingestion"):
         await service.ingest_document(user(), upload())
     assert sessions.rows() == []
     assert sessions.locked_ids == set()

@@ -1,14 +1,12 @@
-from collections.abc import AsyncGenerator, Sequence
-from contextlib import asynccontextmanager
+from collections.abc import AsyncGenerator, Iterator, Sequence
+from contextlib import asynccontextmanager, contextmanager
 from dataclasses import dataclass
 from datetime import datetime
-from math import ceil
 from time import monotonic
 from uuid import UUID, uuid4
 
-from anyio import CancelScope, fail_after, to_thread
+from anyio import CancelScope, current_effective_deadline, fail_after, to_thread
 from fastapi import UploadFile
-from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from config.settings import DocumentConfig, get_settings
@@ -62,33 +60,27 @@ class DocumentOperationTimeoutError(RuntimeError):
 
 
 @asynccontextmanager
-async def document_deadline(timeout: float, phase: str) -> AsyncGenerator[None]:
-    """Translate a cancellation deadline into a public document-operation error."""
+async def document_deadline(timeout: float, operation: str) -> AsyncGenerator[None]:
+    """Bound a whole document operation and report expiry as a public error."""
     try:
         with fail_after(timeout):
             yield
-    except TimeoutError:
-        logger.warning("Document %s timed out after %.2fs", phase, timeout)
-        raise DocumentOperationTimeoutError(f"Document {phase} timed out.") from None
+    except TimeoutError as exc:
+        logger.warning("Document %s timed out after %.2fs", operation, timeout)
+        raise DocumentOperationTimeoutError(f"Document {operation} timed out.") from exc
 
 
-@asynccontextmanager
-async def catalog_transaction(
-    session_factory: async_sessionmaker[AsyncSession], timeout: float, phase: str
-) -> AsyncGenerator[AsyncSession]:
-    """Bound PostgreSQL statements and commit, while keeping test factories portable."""
-    async with document_deadline(timeout, phase):
-        async with session_factory.begin() as session:
-            if (
-                isinstance(session, AsyncSession)
-                and session.bind is not None
-                and session.bind.dialect.name == "postgresql"
-            ):
-                await session.execute(
-                    text("SELECT set_config('statement_timeout', :timeout, true)"),
-                    {"timeout": f"{ceil(timeout * 1000)}ms"},
-                )
-            yield session
+@contextmanager
+def shielded_within_deadline() -> Iterator[None]:
+    """Ignore outer cancellation (e.g. a client disconnect) but keep the deadline.
+
+    A shield alone would also hide the operation deadline and could hang forever.
+    """
+    with CancelScope(shield=True, deadline=current_effective_deadline()) as scope:
+        yield
+    # The scope swallows its own expiry; never let the caller continue as if done.
+    if scope.cancelled_caught:
+        raise TimeoutError
 
 
 def create_initial_excerpt(text: str, settings: DocumentConfig) -> str:
@@ -211,15 +203,12 @@ class DocumentLibraryService:
             ):
                 # Check ownership before attempting a lock, so foreign IDs remain
                 # unavailable even when their workers are active.
-                async with document_deadline(
-                    get_settings().documents.catalog_timeout, "catalog lookup"
-                ):
-                    async with self.session_factory() as session:
-                        document = await DocumentRepository(session).get_document(
-                            user_info.user_id, document_id
-                        )
-                        if document is None:
-                            raise DocumentUnavailableError("Document is unavailable.")
+                async with self.session_factory() as session:
+                    document = await DocumentRepository(session).get_document(
+                        user_info.user_id, document_id
+                    )
+                    if document is None:
+                        raise DocumentUnavailableError("Document is unavailable.")
 
                 async with document_work_lock(
                     self.session_factory, document_id
@@ -228,11 +217,7 @@ class DocumentLibraryService:
                         raise DocumentProcessingError(
                             "Document is busy. Retry deletion."
                         )
-                    async with catalog_transaction(
-                        self.session_factory,
-                        get_settings().documents.catalog_timeout,
-                        "catalog update",
-                    ) as session:
+                    async with self.session_factory.begin() as session:
                         repository = DocumentRepository(session)
                         # Recheck after acquisition: another worker may have finished.
                         document = await repository.get_document(
@@ -255,15 +240,8 @@ class DocumentLibraryService:
 
                     # No database transaction spans the store operation. Missing bodies are
                     # already cleaned up, so retries use the same idempotent exact-key delete.
-                    async with document_deadline(
-                        get_settings().documents.storage_timeout, "body cleanup"
-                    ):
-                        await delete_document_body(user_info.user_id, document_id)
-                    async with catalog_transaction(
-                        self.session_factory,
-                        get_settings().documents.catalog_timeout,
-                        "catalog cleanup",
-                    ) as session:
+                    await delete_document_body(user_info.user_id, document_id)
+                    async with self.session_factory.begin() as session:
                         await DocumentRepository(session).remove_after_cleanup(
                             user_info.user_id, document_id
                         )
@@ -313,16 +291,14 @@ class DocumentIngestionService:
         parser = get_parser()
         if parser is None:
             raise DocumentProcessingDisabledError("Document processing is not enabled")
-        # Acquire before publishing processing metadata; keep ownership through
-        # finalization or compensation, including failed/cancelled uploads.
         started_at = monotonic()
-        ingestion_deadline = started_at + self.settings.ingestion_timeout
+        reserved_id = str(uuid4())
+        # One deadline covers the whole upload; compensation gets cleanup_timeout
+        # on top so a timed-out upload can still free its slot.
         async with document_deadline(self.settings.ingestion_timeout, "ingestion"):
             original_size = await self._validate_upload_size(file)
-
-        reserved_id = str(uuid4())
-        remaining_ingestion_timeout = ingestion_deadline - monotonic()
-        async with document_deadline(max(remaining_ingestion_timeout, 0), "ingestion"):
+            # Acquire before publishing processing metadata; keep ownership through
+            # finalization or compensation, including failed/cancelled uploads.
             async with document_work_lock(
                 self.session_factory, reserved_id
             ) as acquired:
@@ -334,16 +310,10 @@ class DocumentIngestionService:
                 write_attempted = False
                 try:
                     # Shield reservation publication so cancellation cannot lose a committed
-                    # row's ID before compensation can identify it.
-                    with CancelScope(shield=True):
-                        async with catalog_transaction(
-                            self.session_factory,
-                            min(
-                                self.settings.catalog_timeout,
-                                max(ingestion_deadline - monotonic(), 0),
-                            ),
-                            "catalog reservation",
-                        ) as session:
+                    # row's ID before compensation can identify it. The ID is set before
+                    # commit, so a deadline hit during commit is still compensated.
+                    with shielded_within_deadline():
+                        async with self.session_factory.begin() as session:
                             document = await DocumentRepository(
                                 session
                             ).reserve_document(
@@ -361,22 +331,16 @@ class DocumentIngestionService:
                             "Document reservation was not published"
                         )
 
-                    async with document_deadline(
-                        self.settings.parser_timeout, "parsing"
-                    ):
-                        text = await parser.parse(file)
+                    text = await parser.parse(file)
                     self._validate_text(text)
                     preview = await to_thread.run_sync(
                         create_initial_excerpt, text, self.settings
                     )
                     backend = create_document_backend(user_info.user_id)
                     write_attempted = True
-                    async with document_deadline(
-                        self.settings.storage_timeout, "storage"
-                    ):
-                        result = await backend.awrite(
-                            get_document_storage_key(document_id), text
-                        )
+                    result = await backend.awrite(
+                        get_document_storage_key(document_id), text
+                    )
                     if result.error:
                         raise DocumentStorageError("Document body could not be stored")
 
@@ -392,15 +356,8 @@ class DocumentIngestionService:
                         path=get_document_path(document_id),
                         created_at=created_at,
                     )
-                    with CancelScope(shield=True):
-                        async with catalog_transaction(
-                            self.session_factory,
-                            min(
-                                self.settings.catalog_timeout,
-                                max(ingestion_deadline - monotonic(), 0),
-                            ),
-                            "catalog publication",
-                        ) as session:
+                    with shielded_within_deadline():
+                        async with self.session_factory.begin() as session:
                             if not await DocumentRepository(session).mark_ready(
                                 user_info.user_id,
                                 document_id,
@@ -419,9 +376,7 @@ class DocumentIngestionService:
                     if document_id is not None:
                         with CancelScope(shield=True):
                             try:
-                                async with document_deadline(
-                                    self.settings.cleanup_timeout, "ingestion cleanup"
-                                ):
+                                with fail_after(self.settings.cleanup_timeout):
                                     await self._compensate(
                                         user_info.user_id, document_id, write_attempted
                                     )
@@ -482,15 +437,11 @@ class DocumentIngestionService:
     ) -> None:
         # First hide even an ambiguously committed ready row. Never free capacity
         # before an uncertain/partial write has been deleted successfully.
-        async with catalog_transaction(
-            self.session_factory, self.settings.catalog_timeout, "catalog compensation"
-        ) as session:
+        async with self.session_factory.begin() as session:
             await DocumentRepository(session).mark_deleting(user_id, document_id)
         if write_attempted:
             await delete_document_body(user_id, document_id)
-        async with catalog_transaction(
-            self.session_factory, self.settings.catalog_timeout, "catalog compensation"
-        ) as session:
+        async with self.session_factory.begin() as session:
             await DocumentRepository(session).remove_after_cleanup(user_id, document_id)
 
 

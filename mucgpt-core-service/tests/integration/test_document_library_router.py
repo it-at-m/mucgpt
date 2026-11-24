@@ -267,7 +267,7 @@ def test_foreign_and_missing_deletions_are_uniform_and_never_touch_store(
     assert rows(engine)[0].user_id != owner.user_id
 
 
-def test_delete_catalog_lookup_honors_catalog_timeout(library_api, monkeypatch):
+def test_delete_honors_deletion_timeout(library_api, monkeypatch):
     _, _, service, engine, store, owner, _ = library_api
     document_id = add_document(engine, owner.user_id)
     original_get_document = DocumentRepository.get_document
@@ -281,11 +281,11 @@ def test_delete_catalog_lookup_honors_catalog_timeout(library_api, monkeypatch):
         services,
         "get_settings",
         lambda: SimpleNamespace(
-            documents=services.DocumentConfig(catalog_timeout=0.001)
+            documents=services.DocumentConfig(deletion_timeout=0.001)
         ),
     )
 
-    with pytest.raises(services.DocumentOperationTimeoutError, match="catalog lookup"):
+    with pytest.raises(services.DocumentOperationTimeoutError, match="deletion"):
         run(service.delete_document, owner, document_id)
 
     assert service.session_factory.locked_ids == set()

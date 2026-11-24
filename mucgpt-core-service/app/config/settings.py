@@ -552,8 +552,6 @@ class DocumentConfig(BaseModel):
     ingestion_timeout: PositiveSeconds = 300.0
     deletion_timeout: PositiveSeconds = 90.0
     parser_timeout: PositiveSeconds = 180.0
-    storage_timeout: PositiveSeconds = 60.0
-    catalog_timeout: PositiveSeconds = 15.0
     cleanup_timeout: PositiveSeconds = 60.0
 
 

@@ -145,10 +145,8 @@ class TestSettings:
         assert defaults.ingestion_timeout == 300.0
         assert defaults.deletion_timeout == 90.0
         assert defaults.parser_timeout == 180.0
-        assert defaults.storage_timeout == 60.0
-        assert defaults.catalog_timeout == 15.0
         assert defaults.cleanup_timeout == 60.0
-        assert DocumentConfig(catalog_timeout=0.25).catalog_timeout == 0.25
+        assert DocumentConfig(cleanup_timeout=0.25).cleanup_timeout == 0.25
 
     @pytest.mark.parametrize(
         "field_name",
@@ -156,8 +154,6 @@ class TestSettings:
             "ingestion_timeout",
             "deletion_timeout",
             "parser_timeout",
-            "storage_timeout",
-            "catalog_timeout",
             "cleanup_timeout",
         ],
     )

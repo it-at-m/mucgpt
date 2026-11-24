@@ -54,6 +54,7 @@
         "@types/react-syntax-highlighter": "15.5.13",
         "@vite-pwa/assets-generator": "2.0.0",
         "@vitejs/plugin-react": "6.2.1",
+        "@vitest/coverage-v8": "^5.1.0",
         "brace-expansion": "5.0.12",
         "eslint": "9.39.5",
         "eslint-plugin-react": "7.37.5",
@@ -120,5 +121,5 @@
         "watch": "tsc && vite build --watch"
     },
     "type": "module",
-    "version": "1.14.0"
+    "version": "1.14.1"
 }

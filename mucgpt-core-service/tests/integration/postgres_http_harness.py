@@ -157,7 +157,7 @@ def final_text(events: Sequence[dict[str, Any]]) -> str:
     return "".join(
         str(event.get("delta", ""))
         for event in events
-        if event.get("type") == "TEXT_MESSAGE_CONTENT"
+        if event.get("type") == "TEXT_MESSAGE_CHUNK"
     )
 
 

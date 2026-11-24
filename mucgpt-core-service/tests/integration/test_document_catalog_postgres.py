@@ -173,3 +173,24 @@ class DocumentCatalogPostgresTests(unittest.IsolatedAsyncioTestCase):
                 self.assertFalse(other_acquired)
         async with document_work_lock(other_factory, document_id) as acquired:
             self.assertTrue(acquired)
+
+    async def test_work_lock_is_released_after_holder_cancellation(self):
+        factory = DocumentCatalogManager.get_session_factory()
+        other_factory = async_sessionmaker(factory.kw["bind"], expire_on_commit=False)
+        document_id = str(uuid4())
+        acquired = asyncio.Event()
+
+        async def hold_lock() -> None:
+            async with document_work_lock(factory, document_id) as lock_acquired:
+                self.assertTrue(lock_acquired)
+                acquired.set()
+                await asyncio.Event().wait()
+
+        holder = asyncio.create_task(hold_lock())
+        await asyncio.wait_for(acquired.wait(), timeout=5)
+        holder.cancel()
+        with self.assertRaises(asyncio.CancelledError):
+            await holder
+
+        async with document_work_lock(other_factory, document_id) as lock_acquired:
+            self.assertTrue(lock_acquired)

@@ -43,6 +43,9 @@ class CatalogSessions:
         self.ambiguous_commit = False
         self.locked_ids: set[str] = set()
 
+    def __call__(self):
+        return _CatalogSession(self)
+
     @asynccontextmanager
     async def begin(self):
         self.phases += 1
@@ -65,6 +68,57 @@ class CatalogSessions:
     def rows(self):
         with Session(self.engine) as session:
             return list(session.scalars(select(Document)).all())
+
+
+class _CatalogSession:
+    def __init__(self, sessions):
+        self.sessions = sessions
+        self.session = Session(sessions.engine)
+        self.transaction = None
+
+    async def __aenter__(self):
+        self.sessions.active += 1
+        return self
+
+    async def __aexit__(self, *_):
+        if self.transaction is not None and self.transaction.is_active:
+            self.transaction.rollback()
+        self.session.close()
+        self.sessions.active -= 1
+
+    async def execute(self, statement, *args, **kwargs):
+        return self.session.execute(statement, *args, **kwargs)
+
+    def begin(self):
+        return _CatalogTransaction(self)
+
+
+class _CatalogTransaction:
+    def __init__(self, session):
+        self.session = session
+        self.transaction = None
+        self.phase = None
+
+    async def start(self):
+        self.session.sessions.phases += 1
+        self.phase = self.session.sessions.phases
+        self.transaction = self.session.session.begin()
+        self.session.transaction = self.transaction
+
+    async def commit(self):
+        if (
+            self.phase == self.session.sessions.fail_commit
+            and not self.session.sessions.ambiguous_commit
+        ):
+            raise RuntimeError("commit failed")
+        assert self.transaction is not None
+        self.transaction.commit()
+        if self.phase == self.session.sessions.fail_commit:
+            raise RuntimeError("commit acknowledgement lost")
+
+    async def rollback(self):
+        if self.transaction is not None and self.transaction.is_active:
+            self.transaction.rollback()
 
 
 def user(user_id="demo-user-5"):
@@ -509,10 +563,31 @@ async def test_storage_and_finalization_failures_compensate(
     if "commit" in failure:
         sessions.fail_commit = 1 if failure.startswith("reservation") else 2
         sessions.ambiguous_commit = "ambiguous" in failure
-    with pytest.raises((RuntimeError, asyncio.CancelledError)):
+    expected_error = (
+        services.DocumentCatalogCommitUncertainError
+        if "commit" in failure
+        else (RuntimeError, asyncio.CancelledError)
+    )
+    with pytest.raises(expected_error):
         await service.ingest_document(user(), upload())
-    assert sessions.rows() == []
-    assert store.search(get_document_namespace(user().user_id)) == []
+    if "commit" in failure:
+        catalog_rows = sessions.rows()
+        if not sessions.ambiguous_commit:
+            if failure.startswith("reservation"):
+                assert catalog_rows == []
+            else:
+                assert catalog_rows[0].status == "processing"
+            return
+        row = catalog_rows[0]
+        if failure.startswith("reservation"):
+            assert row.status == "processing"
+            assert store.search(get_document_namespace(user().user_id)) == []
+        else:
+            assert row.status == "ready"
+            assert store.search(get_document_namespace(user().user_id))
+    else:
+        assert sessions.rows() == []
+        assert store.search(get_document_namespace(user().user_id)) == []
     if failure.startswith("reservation"):
         parser.parse.assert_not_awaited()
 

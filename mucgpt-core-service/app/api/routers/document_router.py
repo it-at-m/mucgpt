@@ -8,6 +8,7 @@ from api.api_models import DocumentLibraryEntry, DocumentMetadata
 from core.auth import authenticate_user
 from core.auth_models import AuthenticationResult
 from core.document_service import (
+    DocumentCatalogCommitUncertainError,
     DocumentIngestionService,
     DocumentLibraryService,
     DocumentOperationTimeoutError,
@@ -77,6 +78,11 @@ async def delete_document(
         raise HTTPException(status_code=404, detail=str(exc)) from exc
     except DocumentProcessingError as exc:
         raise HTTPException(status_code=409, detail=str(exc)) from exc
+    except DocumentCatalogCommitUncertainError as exc:
+        raise HTTPException(
+            status_code=503,
+            detail="Document deletion outcome is uncertain. Check the library before retrying.",
+        ) from exc
     except DocumentOperationTimeoutError as exc:
         raise HTTPException(
             status_code=503, detail="Document deletion timed out. Retry deletion."
@@ -105,8 +111,10 @@ async def delete_document(
         415: {"description": "Parser does not support the document format"},
         422: {"description": "Missing file, invalid extraction, or no usable text"},
         500: {"description": "Document storage or ingestion failed"},
+        503: {
+            "description": "Document processing is disabled or the catalog outcome is uncertain"
+        },
         502: {"description": "Parser service returned an error"},
-        503: {"description": "Document processing is not enabled"},
         504: {"description": "Parser service timed out"},
     },
 )
@@ -139,6 +147,11 @@ async def upload_document(
     except DocumentOperationTimeoutError as exc:
         raise HTTPException(
             status_code=504, detail="Document processing timed out."
+        ) from exc
+    except DocumentCatalogCommitUncertainError as exc:
+        raise HTTPException(
+            status_code=503,
+            detail="Document processing outcome is uncertain. Check the library before retrying.",
         ) from exc
     except httpx.TimeoutException as exc:
         raise HTTPException(

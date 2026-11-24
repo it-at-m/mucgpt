@@ -40,22 +40,71 @@ def library_api(monkeypatch):
     )
     Base.metadata.create_all(engine, tables=[cast("Table", Document.__table__)])
 
+    commit_count = 0
+
+    class Transaction:
+        def __init__(self, session):
+            self.session = session
+            self.transaction = None
+
+        async def start(self):
+            self.transaction = self.session.sync_session.begin()
+
+        async def commit(self):
+            nonlocal commit_count
+            commit_count += 1
+            if commit_count == session_factory.fail_commit_at:
+                raise RuntimeError("secret commit failure")
+            assert self.transaction is not None
+            self.transaction.commit()
+
+        async def rollback(self):
+            if self.transaction is not None and self.transaction.is_active:
+                self.transaction.rollback()
+
+    class SessionDouble:
+        def __init__(self):
+            self.sync_session = Session(engine)
+            self.transaction = None
+
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, *_):
+            if (
+                self.transaction is not None
+                and self.transaction.transaction is not None
+                and self.transaction.transaction.is_active
+            ):
+                self.transaction.transaction.rollback()
+            self.sync_session.close()
+
+        async def execute(self, statement, *args, **kwargs):
+            return self.sync_session.execute(statement, *args, **kwargs)
+
+        def begin(self):
+            self.transaction = Transaction(self)
+            return self.transaction
+
     @asynccontextmanager
     async def session_scope():
-        with Session(engine) as session:
-            yield MagicMock(execute=AsyncMock(side_effect=session.execute))
+        async with SessionDouble() as session:
+            yield session
 
     @asynccontextmanager
     async def transaction():
-        with Session(engine) as session:
+        async with session_scope() as session:
+            work = session.begin()
+            await work.start()
             try:
-                yield MagicMock(execute=AsyncMock(side_effect=session.execute))
-                session.commit()
+                yield session
+                await work.commit()
             except BaseException:
-                session.rollback()
+                await work.rollback()
                 raise
 
     session_factory = MagicMock(side_effect=session_scope, begin=transaction)
+    session_factory.fail_commit_at = None
     session_factory.locked_ids = set()
 
     @asynccontextmanager
@@ -340,26 +389,20 @@ def test_failed_cleanup_retains_slot_and_unavailable_state_until_retry(
                 AsyncMock(side_effect=RuntimeError("secret catalog failure")),
             )
         else:
-            original_begin = service.session_factory.begin
-            transaction_count = 0
-
-            @asynccontextmanager
-            async def failing_commit():
-                nonlocal transaction_count
-                transaction_count += 1
-                async with original_begin() as session:
-                    yield session
-                    if transaction_count == 2:
-                        raise RuntimeError("secret commit failure")
-
-            patch.setattr(service.session_factory, "begin", failing_commit)
+            service.session_factory.fail_commit_at = 2
 
         response = client.delete(f"/api/v1/documents/{document_id}")
 
-    assert response.status_code == 500
-    assert response.json() == {
-        "detail": "Document could not be deleted. Retry deletion."
-    }
+    if failure == "catalog_commit":
+        assert response.status_code == 503
+        assert response.json() == {
+            "detail": "Document deletion outcome is uncertain. Check the library before retrying."
+        }
+    else:
+        assert response.status_code == 500
+        assert response.json() == {
+            "detail": "Document could not be deleted. Retry deletion."
+        }
     assert service.session_factory.locked_ids == set()
     assert len(rows(engine)) == 10
     assert (

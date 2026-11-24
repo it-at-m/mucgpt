@@ -63,6 +63,10 @@ class DocumentOperationTimeoutError(RuntimeError):
     """A bounded document operation did not complete in time."""
 
 
+class DocumentCatalogCommitUncertainError(DocumentStorageError):
+    """The catalog commit may have reached PostgreSQL but was not acknowledged."""
+
+
 @asynccontextmanager
 async def document_deadline(timeout: float, phase: str) -> AsyncGenerator[None]:
     """Translate a cancellation deadline into a public document-operation error."""
@@ -84,19 +88,49 @@ async def document_deadline(timeout: float, phase: str) -> AsyncGenerator[None]:
 async def catalog_transaction(
     session_factory: async_sessionmaker[AsyncSession], timeout: float, phase: str
 ) -> AsyncGenerator[AsyncSession]:
-    """Bound PostgreSQL statements and commit, while keeping test factories portable."""
+    """Run a bounded catalog transaction with an explicit uncertain-commit boundary.
+
+    A failure before ``commit`` is rolled back. Once commit begins, a timeout,
+    cancellation, or connection error cannot prove whether PostgreSQL applied the
+    transaction, so callers must preserve the catalog row for reconciliation.
+    """
     async with document_deadline(timeout, phase):
-        async with session_factory.begin() as session:
-            if (
-                isinstance(session, AsyncSession)
-                and session.bind is not None
-                and session.bind.dialect.name == "postgresql"
-            ):
-                await session.execute(
-                    text("SELECT set_config('statement_timeout', :timeout, true)"),
-                    {"timeout": f"{ceil(timeout * 1000)}ms"},
+        committed = False
+        try:
+            async with session_factory() as session:
+                transaction = session.begin()
+                await transaction.start()
+                if (
+                    isinstance(session, AsyncSession)
+                    and session.bind is not None
+                    and session.bind.dialect.name == "postgresql"
+                ):
+                    await session.execute(
+                        text("SELECT set_config('statement_timeout', :timeout, true)"),
+                        {"timeout": f"{ceil(timeout * 1000)}ms"},
+                    )
+                try:
+                    yield session
+                except BaseException:
+                    await transaction.rollback()
+                    raise
+                try:
+                    await transaction.commit()
+                    committed = True
+                except BaseException as exc:
+                    raise DocumentCatalogCommitUncertainError(
+                        f"Document {phase} commit outcome is uncertain."
+                    ) from exc
+        except BaseException:
+            if committed:
+                # The outcome is already known. A bounded session close can still
+                # time out or disconnect, but callers must not compensate a commit
+                # that PostgreSQL acknowledged.
+                logger.exception(
+                    "Document %s session finalization failed after commit", phase
                 )
-            yield session
+                return
+            raise
 
 
 def create_initial_excerpt(text: str, settings: DocumentConfig) -> str:
@@ -429,9 +463,16 @@ class DocumentIngestionService:
                         monotonic() - started_at,
                     )
                     return metadata
-                except BaseException:
+                except BaseException as exc:
                     if write_task is not None and not write_task.done():
                         late_write_task = write_task
+                    if isinstance(exc, DocumentCatalogCommitUncertainError):
+                        logger.error(
+                            "Document catalog commit outcome is uncertain for %s; "
+                            "skipping destructive compensation",
+                            document_id or reserved_id,
+                        )
+                        raise
                     if document_id is not None:
                         with CancelScope(shield=True):
                             try:

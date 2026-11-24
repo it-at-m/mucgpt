@@ -444,6 +444,9 @@ i18n
                             persisted_actions_unavailable:
                                 "Regenerieren und Wiederholen sind in gespeicherten Chats nicht verfügbar. Sie können eine neue Frage stellen.",
                             copy: "Antwort kopieren",
+                            read_aloud: "Antwort vorlesen (Englisch)",
+                            read_aloud_stop: "Vorlesen stoppen",
+                            read_aloud_loading: "Sprachmodell wird geladen",
                             unformat: "Unformatierte Antwort"
                         },
                         mermaid: {
@@ -1443,6 +1446,9 @@ i18n
                             regenerate: "Regenerate response",
                             persisted_actions_unavailable: "Regeneration and retry are unavailable in saved chats. You can ask a new question.",
                             copy: "Copy response",
+                            read_aloud: "Read response aloud (English)",
+                            read_aloud_stop: "Stop reading",
+                            read_aloud_loading: "Loading speech model",
                             unformat: "Unformatted response"
                         },
                         mindmap: {
@@ -2412,7 +2418,10 @@ i18n
                         },
                         answer: {
                             regenerate: "No amoi probiern",
-                            persisted_actions_unavailable: "Regeneriern und no amoi probiern geht in gspeicherten Chats ned. Du kannst a neue Frag stelln."
+                            persisted_actions_unavailable: "Regeneriern und no amoi probiern geht in gspeicherten Chats ned. Du kannst a neue Frag stelln.",
+                            read_aloud: "Antwort vorlesn (Englisch)",
+                            read_aloud_stop: "Vorlesn stoppen",
+                            read_aloud_loading: "Sprachmodell werd gladn"
                         },
                         mindmap: {
                             download: "Obalada",
@@ -3385,6 +3394,9 @@ i18n
                             persisted_actions_unavailable:
                                 "La régénération et les nouvelles tentatives ne sont pas disponibles dans les discussions enregistrées. Vous pouvez poser une nouvelle question.",
                             copy: "Copier la réponse",
+                            read_aloud: "Lire la réponse à voix haute (anglais)",
+                            read_aloud_stop: "Arrêter la lecture",
+                            read_aloud_loading: "Chargement du modèle vocal",
                             unformat: "Réponse non formatée"
                         },
                         mermaid: {
@@ -4353,6 +4365,9 @@ i18n
                             regenerate: "Регенерувати відповідь",
                             persisted_actions_unavailable: "Регенерація та повторні спроби недоступні в збережених чатах. Ви можете поставити нове запитання.",
                             copy: "Копіювати відповідь",
+                            read_aloud: "Читати відповідь вголос (англійською)",
+                            read_aloud_stop: "Зупинити читання",
+                            read_aloud_loading: "Завантаження мовної моделі",
                             unformat: "Неформатована відповідь"
                         },
                         mermaid: {

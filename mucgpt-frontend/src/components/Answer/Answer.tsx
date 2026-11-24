@@ -10,6 +10,7 @@ import { FollowUpActionList } from "../FollowUpAction";
 import { MarkdownRenderer } from "../MarkdownRenderer/MarkdownRenderer";
 import { AnswerActivity } from "../AnswerActivity/AnswerActivity";
 import { copyRichText, serializeForClipboard } from "../../utils/clipboard";
+import { ReadAloudButton } from "../ReadAloudButton/ReadAloudButton";
 
 interface Props {
     answer: ChatResponse;
@@ -102,6 +103,8 @@ export const Answer = ({
                             }}
                         ></Button>
                     </Tooltip>
+
+                    <ReadAloudButton text={answer.answer} />
 
                     <Tooltip content={t("components.answer.unformat")} relationship="description" positioning="above">
                         <Button

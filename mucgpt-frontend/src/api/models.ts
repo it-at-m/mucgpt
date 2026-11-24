@@ -122,6 +122,10 @@ export interface ApplicationConfig {
     transcription_enabled: boolean;
     /** The single transcription model used by every user; null (not configured) or unknown ids disable the feature. */
     transcription_model: string | null;
+    /** Read-aloud (TTS) deployment flag; absent (older core) disables the feature. PoC: frontend-only, mock-provided. */
+    tts_enabled?: boolean;
+    /** The single read-aloud model id; unknown ids disable the feature. */
+    tts_model?: string | null;
     ai_act_compliance_check_enabled: boolean;
     /** Maximum persisted canvas content length (characters). */
     canvas_content_max_chars: number;

@@ -28,6 +28,7 @@
         "mermaid": "12.3.0",
         "ndjson-readablestream": "1.4.0",
         "onnxruntime-web": "1.31.1",
+        "phonon-tts": "^0.7.1",
         "prismjs": "1.30.0",
         "react": "19.3.1",
         "react-dom": "19.3.1",

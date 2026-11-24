@@ -42,6 +42,8 @@ export const DEFAULT_APP_CONFIG: ApplicationConfig = {
     document_processing_enabled: false,
     transcription_enabled: false,
     transcription_model: null,
+    tts_enabled: false,
+    tts_model: null,
     ai_act_compliance_check_enabled: true,
     canvas_content_max_chars: 256 * 1024,
     canvas_editor_max_chars: 512 * 1024,

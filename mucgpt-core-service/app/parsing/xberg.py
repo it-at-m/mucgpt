@@ -1,3 +1,5 @@
+import json
+
 import httpx
 from anyio import fail_after, to_thread
 from fastapi import UploadFile
@@ -19,11 +21,12 @@ class XbergBackend(ParserBackend):
         logger.info(f"XbergBackend configured with URL {settings.xberg_url}")
 
     async def parse(self, file: UploadFile) -> str:
-        parser_timeout = get_settings().documents.parser_timeout
+        documents = get_settings().documents
+        parser_timeout = documents.parser_timeout
         with fail_after(parser_timeout):
-            return await self._parse(file)
+            return await self._parse(file, documents.parser_response_max_bytes)
 
-    async def _parse(self, file: UploadFile) -> str:
+    async def _parse(self, file: UploadFile, max_response_bytes: int) -> str:
         file_bytes = await file.read()
 
         # Use a list-of-tuples for multipart fields so repeated "files" is supported.
@@ -39,21 +42,19 @@ class XbergBackend(ParserBackend):
         ]
 
         async with httpx.AsyncClient() as client:
-            response = await client.post(
-                self._extract_url, files=files, timeout=self._timeout
-            )
+            async with client.stream(
+                "POST", self._extract_url, files=files, timeout=self._timeout
+            ) as response:
+                response.raise_for_status()
+                response_body = bytearray()
+                async for chunk in response.aiter_bytes():
+                    response_body.extend(chunk)
+                    if len(response_body) > max_response_bytes:
+                        raise ValueError("Xberg response exceeds the byte limit")
 
-        if response.is_error:
-            logger.error(
-                "Xberg returned status %s for %s. Response body: %s",
-                response.status_code,
-                self._extract_url,
-                response.text,
-            )
-
-        response.raise_for_status()
-
-        payload = await to_thread.run_sync(response.json, abandon_on_cancel=True)
+        payload = await to_thread.run_sync(
+            json.loads, response_body, abandon_on_cancel=True
+        )
         return await to_thread.run_sync(_extract_text, payload, abandon_on_cancel=True)
 
 

@@ -83,6 +83,7 @@ db:
 documents:
   max_upload_bytes: 104857600
   max_text_bytes: 5242880
+  parser_response_max_bytes: 10485760
   preview_max_chars: 1000
   # Total operation and phase deadlines in seconds. xberg_timeout remains the
   # HTTP inactivity timeout; parser_timeout is the hard wall-clock limit.

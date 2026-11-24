@@ -568,7 +568,7 @@ async def test_catalog_cleanup_failure_keeps_a_recoverable_row(
 
 
 @pytest.mark.asyncio
-async def test_xberg_total_deadline_bounds_a_trickle_or_hung_request(monkeypatch):
+async def test_xberg_total_deadline_bounds_a_hung_request(monkeypatch):
     settings = services.get_settings().model_copy(
         update={
             "xberg_url": "http://xberg.test",
@@ -577,6 +577,13 @@ async def test_xberg_total_deadline_bounds_a_trickle_or_hung_request(monkeypatch
     )
     monkeypatch.setattr(xberg, "get_settings", lambda: settings)
 
+    class HangingStream:
+        async def __aenter__(self):
+            await anyio.sleep_forever()
+
+        async def __aexit__(self, *_):
+            return None
+
     class HangingClient:
         async def __aenter__(self):
             return self
@@ -584,9 +591,56 @@ async def test_xberg_total_deadline_bounds_a_trickle_or_hung_request(monkeypatch
         async def __aexit__(self, *_):
             return None
 
-        async def post(self, *_args, **_kwargs):
-            await anyio.sleep_forever()
+        def stream(self, *_args, **_kwargs):
+            return HangingStream()
 
     monkeypatch.setattr(xberg.httpx, "AsyncClient", HangingClient)
     with pytest.raises(TimeoutError):
         await xberg.XbergBackend().parse(upload())
+
+
+@pytest.mark.asyncio
+async def test_xberg_total_deadline_bounds_a_trickling_response(monkeypatch):
+    settings = services.get_settings().model_copy(
+        update={
+            "xberg_url": "http://xberg.test",
+            "xberg_timeout": 1,
+            "documents": DocumentConfig(parser_timeout=0.01),
+        }
+    )
+    monkeypatch.setattr(xberg, "get_settings", lambda: settings)
+    received_timeouts = []
+
+    class TricklingResponse:
+        status_code = 200
+
+        def raise_for_status(self):
+            return None
+
+        async def aiter_bytes(self):
+            while True:
+                await anyio.sleep(0.001)
+                yield b" "
+
+    class TricklingStream:
+        async def __aenter__(self):
+            return TricklingResponse()
+
+        async def __aexit__(self, *_):
+            return None
+
+    class TricklingClient:
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, *_):
+            return None
+
+        def stream(self, *_args, timeout, **_kwargs):
+            received_timeouts.append(timeout)
+            return TricklingStream()
+
+    monkeypatch.setattr(xberg.httpx, "AsyncClient", TricklingClient)
+    with pytest.raises(TimeoutError):
+        await xberg.XbergBackend().parse(upload())
+    assert received_timeouts == [1]

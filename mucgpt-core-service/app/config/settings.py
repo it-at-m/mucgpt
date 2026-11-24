@@ -548,6 +548,7 @@ class DocumentConfig(BaseModel):
 
     max_upload_bytes: PositiveInt = 100 * 1024 * 1024
     max_text_bytes: PositiveInt = 5 * 1024 * 1024
+    parser_response_max_bytes: PositiveInt = 10 * 1024 * 1024
     preview_max_chars: PositiveInt = 1000
     ingestion_timeout: PositiveSeconds = 300.0
     deletion_timeout: PositiveSeconds = 90.0

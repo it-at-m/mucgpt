@@ -92,9 +92,6 @@ documents:
   storage_timeout: 60.0
   catalog_timeout: 15.0
   cleanup_timeout: 60.0
-  lock_connect_timeout: 10.0
-  lock_query_timeout: 10.0
-  lock_close_timeout: 10.0
 
 # Compliance cache settings
 # If enabled, compliance check results are cached in Redis and can be verified by the assistant service.

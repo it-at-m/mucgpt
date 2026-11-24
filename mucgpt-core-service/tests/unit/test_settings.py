@@ -148,9 +148,6 @@ class TestSettings:
         assert defaults.storage_timeout == 60.0
         assert defaults.catalog_timeout == 15.0
         assert defaults.cleanup_timeout == 60.0
-        assert defaults.lock_connect_timeout == 10.0
-        assert defaults.lock_query_timeout == 10.0
-        assert defaults.lock_close_timeout == 10.0
         assert DocumentConfig(catalog_timeout=0.25).catalog_timeout == 0.25
 
     @pytest.mark.parametrize(
@@ -162,9 +159,6 @@ class TestSettings:
             "storage_timeout",
             "catalog_timeout",
             "cleanup_timeout",
-            "lock_connect_timeout",
-            "lock_query_timeout",
-            "lock_close_timeout",
         ],
     )
     @pytest.mark.parametrize("invalid_value", [float("nan"), float("inf"), 0.0])

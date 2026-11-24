@@ -555,9 +555,6 @@ class DocumentConfig(BaseModel):
     storage_timeout: PositiveSeconds = 60.0
     catalog_timeout: PositiveSeconds = 15.0
     cleanup_timeout: PositiveSeconds = 60.0
-    lock_connect_timeout: PositiveSeconds = 10.0
-    lock_query_timeout: PositiveSeconds = 10.0
-    lock_close_timeout: PositiveSeconds = 10.0
 
 
 class PromptConfig(BaseModel):

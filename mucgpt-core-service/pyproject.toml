@@ -90,7 +90,7 @@ root = ["./app", "."]
 include = ["app", "migrations", "tests"]
 
 [tool.pytest.ini_options]
-addopts = "--strict-markers --strict-config --verbose --tb=short -ra --cov=app --cov-report=term --cov-report=xml --cov-fail-under=89"
+addopts = "--strict-markers --strict-config --verbose --tb=short -ra --cov=app --cov-report=term --cov-report=xml --cov-fail-under=89.1"
 pythonpath = ["app/"]
 testpaths = [
     "tests"]

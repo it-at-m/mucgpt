@@ -126,12 +126,29 @@ DeepAgentBuiltinTool = Literal[
 ]
 
 
+DEFAULT_BUILTIN_TOOL_RUN_LIMITS: dict[DeepAgentBuiltinTool, int | None] = {
+    "read_file": 20,
+    "grep": 20,
+}
+
+
 class DeepAgentModelConfig(BaseModel):
     """Model-specific Deep Agents harness configuration."""
 
     enabled_builtin_tools: set[DeepAgentBuiltinTool] = Field(default_factory=set)
+    builtin_tool_run_limits: dict[DeepAgentBuiltinTool, PositiveInt | None] = Field(
+        default_factory=DEFAULT_BUILTIN_TOOL_RUN_LIMITS.copy
+    )
     enable_subagents: bool = False
     enable_summarization: bool | None = False
+
+    @field_validator("builtin_tool_run_limits", mode="before")
+    @staticmethod
+    def merge_builtin_tool_run_limits(value):
+        # Partial overrides retain defaults; explicit null disables one limit.
+        if isinstance(value, dict):
+            return {**DEFAULT_BUILTIN_TOOL_RUN_LIMITS, **value}
+        return value
 
 
 class ProviderConfig(BaseModel):
@@ -450,6 +467,7 @@ class MCPToolOverride(BaseModel):
     group: str | None = None
     require_approval: bool | None = None
     data_classification: DataClassification | None = None
+    run_limit: PositiveInt | None = None
 
     @field_validator("group")
     @staticmethod
@@ -474,6 +492,7 @@ class MCPSourceConfig(BaseModel):
     require_approval: bool = False
     data_classification: DataClassification = DEFAULT_DATA_CLASSIFICATION
     overrides: list[MCPToolOverride] | None = None
+    run_limit: PositiveInt | None = None
 
     @field_validator("forward_auth_override", mode="before")
     @staticmethod

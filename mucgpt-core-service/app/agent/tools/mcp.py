@@ -352,6 +352,13 @@ class McpLoader:
                 tool_override=tool_override,
             ),
             **McpLoader._resolve_approval(source_config, tool_override),
+            # Missing overrides inherit; explicit null removes the source limit.
+            "run_limit": (
+                tool_override.run_limit
+                if tool_override is not None
+                and "run_limit" in tool_override.model_fields_set
+                else source_config.run_limit
+            ),
         }
 
         if custom_desc:

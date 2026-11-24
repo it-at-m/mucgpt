@@ -454,6 +454,49 @@ MUCGPT_CORE_MCP__CACHE_TTL=43200
     - `transport`: Transport protocol (`"sse"` or `"streamable_http"`), see <https://modelcontextprotocol.io/specification/2025-06-18/basic/transports>
 - `cache_ttl`: Time-to-live of cached MCP tools in seconds (default: 12h).
 
+#### Tool call budgets
+
+Set `run_limit` on an MCP source to cap each of its tools per user turn,
+including approval resumes. The default is `null` (unlimited). Source defaults
+also cover newly discovered or renamed tools; no tool-name heuristic is used.
+An optional `overrides` entry can replace the budget for an exact discovered
+tool name:
+
+```yaml
+mcp:
+  sources:
+    knowledge:
+      url: "https://mcp.example.org/mcp"
+      transport: "streamable_http"
+      run_limit: 4
+      overrides:
+        - name: "read_document"
+          run_limit: 8
+        - name: "server_info"
+          run_limit: null
+```
+
+An omitted override inherits the source limit; explicit `null` disables it.
+Limits must be positive integers. The source budget is applied separately to
+each tool, not shared across the server. Excess calls return a tool error so
+the agent can finish with its available information. Configuration is applied
+on MCP cache hits as well as fresh discovery.
+
+For Deep Agents built-ins, configure limits alongside enabled tools under each
+model's `deep_agent` settings:
+
+```yaml
+deep_agent:
+  enabled_builtin_tools: ["read_file", "grep"]
+  builtin_tool_run_limits:
+    read_file: 30
+    grep: null
+```
+
+Enabled `read_file` and `grep` each default to 20 calls per turn. Partial
+overrides retain unspecified defaults; explicit `null` disables one limit.
+Other built-ins are unlimited unless configured here.
+
 ## 🐋 Run with Docker
 
 The Docker Compose setup is for isolated local development and demos only. Do not expose it as a production or test deployment and do not reuse its demo credentials or other local defaults. Production and test systems must use a separate, non-public and appropriately secured deployment procedure.

@@ -23,6 +23,7 @@ from agent.middleware import (
     ToolStatusMiddleware,
 )
 from agent.state_models.default_state import DefaultAgentState
+from agent.tool_limits import tool_run_limit_middleware
 from agent.tools.approval import data_classification, requires_approval
 from agent.tools.mcp import McpBearerAuthProvider
 from config.settings import DataClassification
@@ -91,6 +92,7 @@ class _ConfiguredLangChainDeepAgentGraph:
                 ToolStatusMiddleware(),
                 ToolErrorMiddleware(),
                 TokenUsageMiddleware(),
+                *tool_run_limit_middleware(self.tools),
             ],  # type: ignore
             system_prompt=default_prompt.content,
             debug=self.debug,

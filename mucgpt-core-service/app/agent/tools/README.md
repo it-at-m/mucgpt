@@ -117,6 +117,41 @@ Local tools set both on their `LocalTool` spec. The values end up in each
 tool's `BaseTool.metadata` (`agent/tools/approval.py`); everything reads them
 from there.
 
+## Tool call limits
+
+MCP sources can set `run_limit` as the default **per-tool** call budget for a
+turn. It applies to newly discovered or renamed tools too. An override with
+`run_limit` replaces that default; an omitted field inherits it, while explicit
+`null` makes that tool unlimited. Limits must be positive integers; MCP tools
+are unlimited by default. This is not a shared budget across the source.
+
+```yaml
+mcp:
+  sources:
+    knowledge:
+      url: "https://mcp.example.org/mcp"
+      transport: "streamable_http"
+      run_limit: 4
+      overrides:
+        - name: "read_document"
+          run_limit: 8
+        - name: "server_info"
+          run_limit: null
+```
+
+Limits are resolved into `BaseTool.metadata["run_limit"]` when tools are
+wrapped, including on cache hits. Local tools may set `LocalTool.run_limit`.
+`agent/tool_limits.py` builds LangChain limiters from that metadata. Excess
+calls return an error to the model, allowing it to finish or use other tools.
+The budget survives approval pauses and resets for a new user turn.
+
+Built-ins use `models[].deep_agent.builtin_tool_run_limits` instead. Enabled
+`read_file` and `grep` default to 20 calls each; other built-ins are unlimited.
+Partial overrides retain these defaults, and `null` disables an individual
+limit. Harness profiles contain only built-in/model behavior, not MCP policy.
+
+## Approval pauses
+
 How a paused run works (`deep_agent.py`, `agent_executor.py`,
 `chat_router.py`):
 

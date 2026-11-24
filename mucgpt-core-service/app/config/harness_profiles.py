@@ -1,5 +1,5 @@
 import logging
-from typing import cast
+from typing import Any
 
 from deepagents import (
     GeneralPurposeSubagentProfile,
@@ -8,9 +8,10 @@ from deepagents import (
 )
 from deepagents.backends import StateBackend
 from deepagents.middleware import SummarizationMiddleware
-from langchain.agents.middleware import TodoListMiddleware, ToolCallLimitMiddleware
+from langchain.agents.middleware import TodoListMiddleware
 from langchain.agents.middleware.types import AgentMiddleware
 
+from agent.tool_limits import ToolRunLimitMiddleware
 from config.model_provider import ModelRegistry
 from config.settings import ModelsConfig
 
@@ -46,72 +47,44 @@ class ProfileSummarizationMiddleware(SummarizationMiddleware):
 
 def _set_extra_middleware_for_model(
     model_config: ModelsConfig,
-) -> tuple[AgentMiddleware, ...]:
+) -> tuple[AgentMiddleware[Any, Any, Any], ...]:
     """Determine extra middleware to apply for a given model configuration."""
     enabled_tools = model_config.deep_agent.enabled_builtin_tools
 
     # Archiving uses the scratch backend directly, not model-exposed write tools.
-    summarization_middleware = (
-        ProfileSummarizationMiddleware(
-            model=ModelRegistry.get_model(),
-            backend=StateBackend(),
-            trigger=("fraction", 0.8),
-            keep=("messages", 10),
+    middleware: list[AgentMiddleware[Any, Any, Any]] = []
+    if model_config.deep_agent.enable_summarization:
+        middleware.append(
+            ProfileSummarizationMiddleware(
+                model=ModelRegistry.get_model(),
+                backend=StateBackend(),
+                trigger=("fraction", 0.8),
+                keep=("messages", 10),
+            )
         )
-        if model_config.deep_agent.enable_summarization
-        else None
+    if "write_todos" in enabled_tools:
+        middleware.append(TodoListMiddleware())
+    middleware.extend(
+        ToolRunLimitMiddleware(tool_name=name, run_limit=limit)
+        for name, limit in sorted(
+            model_config.deep_agent.builtin_tool_run_limits.items()
+        )
+        if name in enabled_tools and limit is not None
     )
-
-    todo_middleware = TodoListMiddleware() if "write_todos" in enabled_tools else None
-
-    call_limit_middleware = []
-    retrieval_keywords = ("retrieve", "retrieval", "fetch", "get")
-    for name in enabled_tools:
-        normalized_name = name.lower()
-        if any(keyword in normalized_name for keyword in retrieval_keywords):
-            # Limit context retrieval tools to 2 calls per run
-            call_limit_middleware.append(
-                ToolCallLimitMiddleware(tool_name=name, run_limit=2)
-            )
-
-    extra_middleware = cast(
-        tuple[AgentMiddleware, ...],
-        tuple(
-            middleware
-            for middleware in (
-                summarization_middleware,
-                todo_middleware,
-                *call_limit_middleware,
-            )
-            if middleware is not None
-        ),
-    )
-    return extra_middleware
+    return tuple(middleware)
 
 
 def register_model_harness_profile(model_config: ModelsConfig) -> None:
     """Register enabled Deep Agents built-ins for one configured model."""
     extra_middleware = _set_extra_middleware_for_model(model_config)
-    # in future this could be extended to introduce different default system prompts for different models,
-    # or to append model-specific system prompt suffixes to the default system prompt, or to introduce model-specific middleware, etc.
-    # as per documentation, this is sets the default harness profile for the given model type and name, which can NOT be overridden by a middleware override.
     enabled_tools = model_config.deep_agent.enabled_builtin_tools
     register_harness_profile(
         f"{model_config.type.lower()}:{model_config.id}",
         HarnessProfile(
             excluded_tools=DEEP_AGENT_BUILTIN_TOOLS - enabled_tools,
             extra_middleware=extra_middleware,
-            # Remove only Deep Agents' built-in summarization middleware implementation.
-            # The profiles subclass remains, retaining its model, trigger, and keep settings.
-            excluded_middleware=(
-                frozenset({SummarizationMiddleware})
-                if any(
-                    isinstance(middleware, ProfileSummarizationMiddleware)
-                    for middleware in extra_middleware
-                )
-                or not model_config.deep_agent.enable_summarization
-                else frozenset()
-            ),
+            # Either use our configured subclass or disable summarization entirely.
+            excluded_middleware=frozenset({SummarizationMiddleware}),
             general_purpose_subagent=GeneralPurposeSubagentProfile(
                 enabled="task" in enabled_tools
                 and model_config.deep_agent.enable_subagents  # task tool is required for subagents

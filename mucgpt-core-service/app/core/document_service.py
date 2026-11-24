@@ -1,9 +1,11 @@
+import asyncio
 from collections.abc import AsyncGenerator, Sequence
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
 from datetime import datetime
 from math import ceil
 from time import monotonic
+from typing import Any
 from uuid import UUID, uuid4
 
 from anyio import CancelScope, fail_after, to_thread
@@ -338,6 +340,8 @@ class DocumentIngestionService:
                     )
                 document_id = None
                 write_attempted = False
+                write_task: asyncio.Task[Any] | None = None
+                late_write_task: asyncio.Task[Any] | None = None
                 try:
                     # Shield reservation publication so cancellation cannot lose a committed
                     # row's ID before compensation can identify it.
@@ -377,12 +381,16 @@ class DocumentIngestionService:
                     )
                     backend = create_document_backend(user_info.user_id)
                     write_attempted = True
+                    write_task = asyncio.create_task(
+                        backend.awrite(get_document_storage_key(document_id), text)
+                    )
                     async with document_deadline(
                         self.settings.storage_timeout, "storage"
                     ):
-                        result = await backend.awrite(
-                            get_document_storage_key(document_id), text
-                        )
+                        # AsyncPostgresStore queues writes internally. Shield the child
+                        # task so a caller deadline cannot lose track of a queued write
+                        # which may still reach storage after cancellation.
+                        result = await asyncio.shield(write_task)
                     if result.error:
                         raise DocumentStorageError("Document body could not be stored")
 
@@ -422,20 +430,36 @@ class DocumentIngestionService:
                     )
                     return metadata
                 except BaseException:
+                    if write_task is not None and not write_task.done():
+                        late_write_task = write_task
                     if document_id is not None:
                         with CancelScope(shield=True):
                             try:
                                 async with document_deadline(
                                     self.settings.cleanup_timeout, "ingestion cleanup"
                                 ):
-                                    await self._compensate(
-                                        user_info.user_id, document_id, write_attempted
-                                    )
+                                    if late_write_task is None:
+                                        await self._compensate(
+                                            user_info.user_id,
+                                            document_id,
+                                            write_attempted,
+                                        )
+                                    else:
+                                        await self._compensate(
+                                            user_info.user_id,
+                                            document_id,
+                                            write_attempted,
+                                            write_pending=True,
+                                        )
                             except Exception:
                                 logger.exception(
                                     "Document ingestion cleanup failed for %s",
                                     document_id,
                                 )
+                    if late_write_task is not None and document_id is not None:
+                        self._schedule_late_write_cleanup(
+                            user_info.user_id, document_id, late_write_task
+                        )
                     raise
 
     async def _validate_upload_size(self, file: UploadFile) -> int:
@@ -484,7 +508,12 @@ class DocumentIngestionService:
             raise DocumentSizeExceededError("Extracted text exceeds the byte limit")
 
     async def _compensate(
-        self, user_id: str, document_id: str, write_attempted: bool
+        self,
+        user_id: str,
+        document_id: str,
+        write_attempted: bool,
+        *,
+        write_pending: bool = False,
     ) -> None:
         # First hide even an ambiguously committed ready row. Never free capacity
         # before an uncertain/partial write has been deleted successfully.
@@ -492,12 +521,48 @@ class DocumentIngestionService:
             self.session_factory, self.settings.catalog_timeout, "catalog compensation"
         ) as session:
             await DocumentRepository(session).mark_deleting(user_id, document_id)
+        if write_pending:
+            # The queued store write may still land after this point. Retain the
+            # deleting row (and its quota slot) until its completion callback deletes
+            # the exact key and can safely free the row.
+            return
         if write_attempted:
             await delete_document_body(user_id, document_id)
         async with catalog_transaction(
             self.session_factory, self.settings.catalog_timeout, "catalog compensation"
         ) as session:
             await DocumentRepository(session).remove_after_cleanup(user_id, document_id)
+
+    def _schedule_late_write_cleanup(
+        self, user_id: str, document_id: str, write_task: asyncio.Task[Any]
+    ) -> None:
+        """Delete a queued write only after it can no longer recreate its body."""
+
+        async def cleanup() -> None:
+            try:
+                await asyncio.shield(write_task)
+            except BaseException:
+                # A failed write needs the same catalog cleanup as a successful late
+                # write: its exact key might have been written before the failure.
+                logger.debug(
+                    "Late document write settled with an error for %s", document_id
+                )
+            try:
+                with CancelScope(shield=True):
+                    async with document_deadline(
+                        self.settings.cleanup_timeout, "late write cleanup"
+                    ):
+                        await self._compensate(user_id, document_id, True)
+            except BaseException:
+                # Keep the deleting row for an operator/retry instead of freeing its
+                # slot while a body may remain.
+                logger.exception(
+                    "Late document write cleanup failed for %s", document_id
+                )
+
+        asyncio.create_task(
+            cleanup(), name=f"document-late-write-cleanup-{document_id}"
+        )
 
 
 class DocumentService:

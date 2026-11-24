@@ -387,8 +387,50 @@ async def test_storage_deadline_compensates_and_releases_the_work_lock(
     )
     with pytest.raises(services.DocumentOperationTimeoutError, match="storage"):
         await service.ingest_document(user(), upload())
-    assert sessions.rows() == []
+    # A queued store operation may still finish after the deadline, so its slot
+    # stays deleting until background cleanup can delete the final body safely.
+    assert sessions.rows()[0].status == "deleting"
     assert sessions.locked_ids == set()
+
+
+@pytest.mark.asyncio
+async def test_late_store_write_is_deleted_only_after_it_settles(
+    ingestion, monkeypatch
+):
+    service, sessions, store, _ = ingestion
+    service.settings = DocumentConfig(
+        storage_timeout=0.01, ingestion_timeout=1, cleanup_timeout=1
+    )
+    real_backend = create_document_backend(user().user_id)
+    allow_write = asyncio.Event()
+    write_started = asyncio.Event()
+
+    async def delayed_write(path, text):
+        write_started.set()
+        await allow_write.wait()
+        return await real_backend.awrite(path, text)
+
+    monkeypatch.setattr(
+        services,
+        "create_document_backend",
+        lambda _: MagicMock(awrite=AsyncMock(side_effect=delayed_write)),
+    )
+
+    with pytest.raises(services.DocumentOperationTimeoutError, match="storage"):
+        await service.ingest_document(user(), upload())
+
+    await write_started.wait()
+    row = sessions.rows()[0]
+    assert row.status == "deleting"
+    assert store.get(get_document_namespace(user().user_id), row.storage_key) is None
+
+    allow_write.set()
+    for _ in range(20):
+        await anyio.sleep(0)
+        if not sessions.rows():
+            break
+    assert sessions.rows() == []
+    assert store.search(get_document_namespace(user().user_id)) == []
 
 
 @pytest.mark.asyncio

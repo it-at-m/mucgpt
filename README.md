@@ -69,16 +69,26 @@ All release images are published to GitHub Container Registry (links above) and 
 [postgres-shield]: https://img.shields.io/badge/postgres-blue?&style=for-the-badge&logo=postgresql&logoColor=white
 [langgraph-shield]: https://img.shields.io/badge/LangGraph-blue?&style=for-the-badge&logo=langgraph&logoColor=white
 [pages-shield]: https://img.shields.io/badge/Demo-blue?logo=github&logoColor=white&style=for-the-badge
+<!-- Note: shields tag filters are plain globs — no character classes or exclusions.
+     `mucgpt-core-*` therefore also matches `mucgpt-core-migrations-*` tags (harmless while
+     the core tag is created after the migrations tag in each release train), and
+     `mucgpt-assistant-0*` exists to avoid matching `mucgpt-assistant-migrations-*`; update
+     it when the assistant service moves past 0.x. -->
 [frontend-version-shield]: https://img.shields.io/github/v/tag/it-at-m/mucgpt?filter=mucgpt-frontend-*&label=frontend&style=for-the-badge&color=blue
 [core-service-version-shield]: https://img.shields.io/github/v/tag/it-at-m/mucgpt?filter=mucgpt-core-*&label=core-service&style=for-the-badge&color=blue
 [core-migrations-version-shield]: https://img.shields.io/github/v/tag/it-at-m/mucgpt?filter=mucgpt-core-migrations-*&label=core-migrations&style=for-the-badge&color=blue
 [assistant-service-version-shield]: https://img.shields.io/github/v/tag/it-at-m/mucgpt?filter=mucgpt-assistant-0*&label=assistant-service&style=for-the-badge&color=blue
 [migrations-service-version-shield]: https://img.shields.io/github/v/tag/it-at-m/mucgpt?filter=mucgpt-assistant-migrations-*&label=migrations&style=for-the-badge&color=blue
-[frontend-opencode-version-shield]: https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fgitlab.opencode.de%2Fapi%2Fv4%2Fprojects%2F7202%2Fregistry%2Frepositories%2F8265%2Ftags%3Fper_page%3D100%26name_regex%3D%255E%255B0-9%255D%252B%255C.%255B0-9%255D%252B%255C.%255B0-9%255D%252B%2524&query=%24%5B9%5D.name&label=openCode%20frontend&style=for-the-badge&color=blue
-[core-opencode-version-shield]: https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fgitlab.opencode.de%2Fapi%2Fv4%2Fprojects%2F7202%2Fregistry%2Frepositories%2F8284%2Ftags%3Fper_page%3D100%26name_regex%3D%255E%255B0-9%255D%252B%255C.%255B0-9%255D%252B%255C.%255B0-9%255D%252B%2524&query=%24%5B9%5D.name&label=openCode%20core&style=for-the-badge&color=blue
-[core-migrations-opencode-version-shield]: https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fgitlab.opencode.de%2Fapi%2Fv4%2Fprojects%2F7202%2Fregistry%2Frepositories%2F8690%2Ftags%3Fper_page%3D100%26name_regex%3D%255E%255B0-9%255D%252B%255C.%255B0-9%255D%252B%255C.%255B0-9%255D%252B%2524&query=%24%5B0%5D.name&label=openCode%20core%20migrations&style=for-the-badge&color=blue
-[assistant-opencode-version-shield]: https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fgitlab.opencode.de%2Fapi%2Fv4%2Fprojects%2F7202%2Fregistry%2Frepositories%2F8286%2Ftags%3Fper_page%3D100%26name_regex%3D%255E%255B0-9%255D%252B%255C.%255B0-9%255D%252B%255C.%255B0-9%255D%252B%2524&query=%24%5B2%5D.name&label=openCode%20assistant&style=for-the-badge&color=blue
-[migrations-opencode-version-shield]: https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fgitlab.opencode.de%2Fapi%2Fv4%2Fprojects%2F7202%2Fregistry%2Frepositories%2F8285%2Ftags%3Fper_page%3D100%26name_regex%3D%255E%255B0-9%255D%252B%255C.%255B0-9%255D%252B%255C.%255B0-9%255D%252B%2524&query=%24%5B1%5D.name&label=openCode%20migrations&style=for-the-badge&color=blue
+<!-- The openCode badges read the newest matching git tag from the GitLab mirror
+     (server-side prefix search, newest tag first). The `core`/`assistant` prefixes also
+     match their `-migrations` sibling tags; the value stays correct as long as no
+     migrations tag is created after the newest sibling tag. GitLab search cannot exclude
+     the siblings and shields cannot post-process the JSON response. -->
+[frontend-opencode-version-shield]: https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fgitlab.opencode.de%2Fapi%2Fv4%2Fprojects%2F7202%2Frepository%2Ftags%3Fsearch%3D%255Emucgpt-frontend-%26order_by%3Dupdated%26sort%3Ddesc%26per_page%3D1&query=%24%5B0%5D.name&label=openCode%20frontend&style=for-the-badge&color=blue
+[core-opencode-version-shield]: https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fgitlab.opencode.de%2Fapi%2Fv4%2Fprojects%2F7202%2Frepository%2Ftags%3Fsearch%3D%255Emucgpt-core-%26order_by%3Dupdated%26sort%3Ddesc%26per_page%3D1&query=%24%5B0%5D.name&label=openCode%20core&style=for-the-badge&color=blue
+[core-migrations-opencode-version-shield]: https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fgitlab.opencode.de%2Fapi%2Fv4%2Fprojects%2F7202%2Frepository%2Ftags%3Fsearch%3D%255Emucgpt-core-migrations-%26order_by%3Dupdated%26sort%3Ddesc%26per_page%3D1&query=%24%5B0%5D.name&label=openCode%20core%20migrations&style=for-the-badge&color=blue
+[assistant-opencode-version-shield]: https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fgitlab.opencode.de%2Fapi%2Fv4%2Fprojects%2F7202%2Frepository%2Ftags%3Fsearch%3D%255Emucgpt-assistant-%26order_by%3Dupdated%26sort%3Ddesc%26per_page%3D1&query=%24%5B0%5D.name&label=openCode%20assistant&style=for-the-badge&color=blue
+[migrations-opencode-version-shield]: https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fgitlab.opencode.de%2Fapi%2Fv4%2Fprojects%2F7202%2Frepository%2Ftags%3Fsearch%3D%255Emucgpt-assistant-migrations-%26order_by%3Dupdated%26sort%3Ddesc%26per_page%3D1&query=%24%5B0%5D.name&label=openCode%20migrations&style=for-the-badge&color=blue
 [assistant-service-tests-shield]: https://github.com/it-at-m/mucgpt/actions/workflows/test-assistant-service.yaml/badge.svg
 [core-service-tests-shield]: https://github.com/it-at-m/mucgpt/actions/workflows/test-core-service.yaml/badge.svg
 [assistant-service-tests]: https://github.com/it-at-m/mucgpt/actions/workflows/test-assistant-service.yaml

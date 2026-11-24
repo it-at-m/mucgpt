@@ -9,26 +9,25 @@ import json
 import os
 import traceback
 import unittest
-from pathlib import Path
 from types import SimpleNamespace
 from typing import Any, cast
 from unittest.mock import AsyncMock, Mock, patch
 from uuid import uuid4
 
-import psycopg
-from alembic import command
-from alembic.config import Config
 from fastapi import FastAPI, HTTPException
 from langchain_core.messages import AIMessage, HumanMessage
 from langchain_core.runnables import RunnableConfig
 from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
 from langgraph.graph import END, START, MessagesState, StateGraph
-from migrations.settings import get_migration_settings
 from psycopg import AsyncConnection, sql
 from psycopg.conninfo import make_conninfo
 from psycopg.rows import dict_row
 from psycopg_pool import AsyncConnectionPool
-from pydantic import SecretStr
+from tests.postgres import (
+    IsolatedPostgresDatabase,
+    isolated_postgres_database,
+    migrate_database,
+)
 from tests.unit.helpers import request_with_body
 
 from agent.agent_executor import MUCGPTAgentExecutor, llm_error_payload
@@ -51,7 +50,6 @@ from api.routers.chat_router import (
     rename_conversation,
     router,
 )
-from config.settings import DBConfig, Settings
 from core.auth import authenticate_user
 from core.auth_models import AuthenticationResult
 from core.persistance_helpers import PersistanceHelpers
@@ -63,30 +61,19 @@ from database.fenced_checkpointer import ConversationDeletedError, FencedPostgre
 )
 class ConversationLifecyclePostgresTests(unittest.IsolatedAsyncioTestCase):
     async def asyncSetUp(self):
-        self.database = "lifecycle_test_" + uuid4().hex
-        # PostgreSQL conninfo keywords: all values as strings.
-        self.connection_args = {
-            "host": os.environ["MUCGPT_LIFECYCLE_POSTGRES_HOST"],
-            "port": os.getenv("MUCGPT_LIFECYCLE_POSTGRES_PORT", "5432"),
-            "user": os.getenv("MUCGPT_LIFECYCLE_POSTGRES_USER", "admin"),
-            "password": os.getenv("MUCGPT_LIFECYCLE_POSTGRES_PASSWORD", "admin"),
+        legacy_schema = self._testMethodName in {
+            "test_legacy_mapped_history_survives_migration",
+            "test_legacy_orphans_are_quarantined_during_migration",
         }
-        async with await psycopg.AsyncConnection.connect(
-            make_conninfo(**self.connection_args, dbname="postgres"), autocommit=True
-        ) as connection:
-            await connection.execute(
-                sql.SQL("CREATE DATABASE {}").format(sql.Identifier(self.database))
-            )
-        self.addAsyncCleanup(self.drop_database)
-        self.settings = Settings(
-            db=DBConfig(
-                host=str(self.connection_args["host"]),
-                port=int(self.connection_args["port"]),
-                name=self.database,
-                user=str(self.connection_args["user"]),
-                password=SecretStr(str(self.connection_args["password"])),
-            )
+        self.database_context = isolated_postgres_database(
+            prefix="lifecycle_test_", migrate=not legacy_schema
         )
+        database: IsolatedPostgresDatabase = await self.database_context.__aenter__()
+        self.addAsyncCleanup(self.database_context.__aexit__, None, None, None)
+        self.database = database.name
+        self.connection_args = database.connection_args
+        self.settings = database.settings
+        self.server = database.server
         self.conversation_id = uuid4().hex
         self.owner = AuthenticationResult(
             user_id="owner-a", token="test", department="test"
@@ -94,25 +81,11 @@ class ConversationLifecyclePostgresTests(unittest.IsolatedAsyncioTestCase):
         self.other = AuthenticationResult(
             user_id="owner-b", token="test", department="test"
         )
-        if self._testMethodName in {
-            "test_legacy_mapped_history_survives_migration",
-            "test_legacy_orphans_are_quarantined_during_migration",
-        }:
+        if legacy_schema:
             await self.create_legacy_schema()
         else:
-            await self.migrate_database()
             await PersistanceHelpers.init(self.settings)
             self.addAsyncCleanup(PersistanceHelpers.close)
-
-    async def drop_database(self):
-        async with await psycopg.AsyncConnection.connect(
-            make_conninfo(**self.connection_args, dbname="postgres"), autocommit=True
-        ) as connection:
-            await connection.execute(
-                sql.SQL("DROP DATABASE {} WITH (FORCE)").format(
-                    sql.Identifier(self.database)
-                )
-            )
 
     def pool(self) -> AsyncConnectionPool[AsyncConnection[dict[str, Any]]]:
         """The PersistanceHelpers pool, guaranteed to be initialized here."""
@@ -122,18 +95,7 @@ class ConversationLifecyclePostgresTests(unittest.IsolatedAsyncioTestCase):
 
     async def migrate_database(self) -> None:
         """Apply the same schema migration that production runs before core starts."""
-        migration_env = {
-            "MUCGPT_CORE_DB__HOST": self.connection_args["host"],
-            "MUCGPT_CORE_DB__PORT": str(self.connection_args["port"]),
-            "MUCGPT_CORE_DB__NAME": self.database,
-            "MUCGPT_CORE_DB__USER": self.connection_args["user"],
-            "MUCGPT_CORE_DB__PASSWORD": self.connection_args["password"],
-        }
-        with patch.dict(os.environ, migration_env):
-            get_migration_settings.cache_clear()
-            config = Config(str(Path(__file__).parents[2] / "alembic.ini"))
-            await asyncio.to_thread(command.upgrade, config, "head")
-        get_migration_settings.cache_clear()
+        await migrate_database(self.server, self.database)
 
     def request(self):
         return ChatCompletionRequest(

@@ -1,9 +1,9 @@
 """Valkey-backed tests for the RedisCache object storage.
 
-These run against a real Valkey testcontainer (same image family as the
-stack's valkey service), so cloudpickle payloads and TTL behavior are
-exercised end-to-end instead of against mocks. Tests skip when no container
-runtime is reachable or when MUCGPT_TEST_VALKEY=off.
+These run against a real disposable Valkey container (same image family as the
+stack's valkey service), so cloudpickle payloads and TTL behavior are exercised
+end-to-end instead of against mocks. Tests skip when no container runtime is
+reachable or when MUCGPT_TEST_VALKEY=off.
 """
 
 import asyncio
@@ -18,8 +18,6 @@ from tests import container_runtime
 
 from config.settings import RedisConfig
 from core.cache import RedisCache
-
-_VALKEY_IMAGE = "valkey/valkey:8.1"
 
 # Captured at import time, before the session-wide held_run_locks fixture
 # replaces RedisCache.get_redis with a fake.
@@ -43,12 +41,9 @@ def valkey_container():
     }:
         pytest.skip("Valkey testcontainer disabled via MUCGPT_TEST_VALKEY")
     try:
-        from testcontainers.community.valkey import ValkeyContainer
+        container = container_runtime.start_valkey_container()
     except ModuleNotFoundError:
         pytest.skip("testcontainers[redis] extra not installed")
-    container = container_runtime.start_container(
-        lambda: ValkeyContainer(_VALKEY_IMAGE)
-    )
     if container is None:
         pytest.skip("no container runtime reachable for Valkey tests")
     _container = container

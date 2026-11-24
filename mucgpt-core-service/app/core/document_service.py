@@ -1,5 +1,5 @@
 import asyncio
-from collections.abc import AsyncGenerator, Iterator, Sequence
+from collections.abc import AsyncGenerator, Generator, Sequence
 from contextlib import asynccontextmanager, contextmanager
 from dataclasses import dataclass
 from datetime import datetime
@@ -80,7 +80,7 @@ async def document_deadline(timeout: float, operation: str) -> AsyncGenerator[No
 
 
 @contextmanager
-def shielded_within_deadline() -> Iterator[None]:
+def shielded_within_deadline() -> Generator[None]:
     """Ignore outer cancellation (e.g. a client disconnect) but keep the deadline.
 
     A shield alone would also hide the operation deadline and could hang forever.

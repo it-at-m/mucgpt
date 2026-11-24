@@ -21,6 +21,7 @@ import httpx
 import psycopg
 from fastapi import FastAPI, UploadFile
 from langchain_core.language_models import BaseChatModel
+from psycopg.conninfo import make_conninfo
 from pytest import MonkeyPatch
 from tests.fakes.scripted_chat_model import ScriptedChatModel, ScriptStep
 from tests.postgres import IsolatedPostgresDatabase, isolated_postgres_database
@@ -253,33 +254,48 @@ async def postgres_http_harness(
         finally:
             # Match production shutdown order: catalog sessions may be in
             # document cleanup paths, then the document store, then chat state.
-            await DocumentCatalogManager.close()
-            await FileStoreManager.close()
-            await PersistanceHelpers.close()
-            await _assert_no_idle_transaction(database)
-            assert DocumentCatalogManager._engine is None
-            assert FileStoreManager._pool is None
-            assert FileStoreManager._file_store is None
-            assert PersistanceHelpers._pool is None
-            assert PersistanceHelpers._checkpointer is None
-            assert PersistanceHelpers._engine is None
-            if harness is not None and not failed:
-                harness.assert_model_consumed()
-            app.dependency_overrides.clear()
+            cleanup_errors: list[BaseException] = []
+            for close in (
+                DocumentCatalogManager.close,
+                FileStoreManager.close,
+                PersistanceHelpers.close,
+            ):
+                try:
+                    await close()
+                except BaseException as error:
+                    cleanup_errors.append(error)
+            try:
+                await _assert_no_idle_transaction(database)
+                assert DocumentCatalogManager._engine is None
+                assert DocumentCatalogManager._session_factory is None
+                assert FileStoreManager._pool is None
+                assert FileStoreManager._file_store is None
+                assert PersistanceHelpers._pool is None
+                assert PersistanceHelpers._checkpointer is None
+                assert PersistanceHelpers._engine is None
+                assert PersistanceHelpers._session_factory is None
+                if harness is not None and not failed:
+                    harness.assert_model_consumed()
+            except BaseException as error:
+                cleanup_errors.append(error)
+            finally:
+                app.dependency_overrides.clear()
+            if cleanup_errors:
+                raise BaseExceptionGroup(
+                    "PostgreSQL HTTP harness cleanup failed", cleanup_errors
+                )
 
 
 async def _assert_no_idle_transaction(database: IsolatedPostgresDatabase) -> None:
     """Fail before force-dropping a DB if application cleanup leaked a transaction."""
-    conninfo = " ".join(
-        f"{key}={value}"
-        for key, value in {**database.connection_args, "dbname": database.name}.items()
-    )
+    conninfo = make_conninfo(**database.connection_args, dbname=database.name)
     async with await psycopg.AsyncConnection.connect(
         conninfo, autocommit=True
     ) as connection:
         result = await connection.execute(
             "SELECT count(*) FROM pg_stat_activity "
-            "WHERE datname = current_database() AND state = 'idle in transaction'"
+            "WHERE datname = current_database() "
+            "AND state IN ('idle in transaction', 'idle in transaction (aborted)')"
         )
         row = await result.fetchone()
         assert row is not None

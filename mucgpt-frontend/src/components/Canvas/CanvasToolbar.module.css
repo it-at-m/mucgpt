@@ -17,13 +17,3 @@
 .spacer {
     flex: 1;
 }
-
-/* Matching the selected state of the surrounding buttons: a distinct pressed surface,
-   paired with aria-pressed so state never relies on color alone. */
-.active {
-    background-color: var(--colorNeutralBackground3);
-}
-
-.active:hover {
-    background-color: var(--colorNeutralBackground3Hover);
-}

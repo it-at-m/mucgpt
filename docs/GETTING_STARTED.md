@@ -104,11 +104,24 @@ responsibilities.
 The optional `prompts` section maps prompt names used by the core service to prompts stored in [langfuse](https://langfuse.com/docs/prompt-management/overview). Each prompt is configured under its Langfuse folder (`prompts.folders`) with the label to use; folder and prompt names must match Langfuse exactly. See `mucgpt-core-service/config.yaml.example` for the complete YAML structure.
 
 - `defaults/default_instructions`: general system instructions for regular chat.
+- `defaults/document_instructions`: instructs the agent on how to work with attached documents on the read-only `/documents/` mount.
 - `generation_prompts/chat_title`: generates concise chat titles.
 - `generation_prompts/assistant_name`: generates assistant names from prompt seeds.
 - `generation_prompts/assistant_description`: generates assistant descriptions from prompt seeds.
 - `generation_prompts/assistant_systemprompt`: generates assistant system prompts from prompt seeds.
 - `compliance_prompts/*`: screens assistant prompts for high-risk use cases (eu-ai-act) in migration/asylum/border control, public services, employment, and education.
+
+#### Local fallback prompts
+
+Every prompt above also ships as a committed Markdown fallback in
+`mucgpt-core-service/app/agent/prompt_pool/` (with `defaults/`,
+`generation_prompts/`, and `compliance_prompts/` subfolders). All fallbacks
+are written in English. Without a Langfuse configuration these files are
+authoritative. With Langfuse configured, the local content is passed to
+Langfuse as a fallback: Langfuse prompts win when they are available, and the
+committed files keep the service working when they are not. Deployments can
+override any prompt through the `prompts` mapping above; the committed files
+then serve as the base to start from.
 
 ### Document Parsing Configuration (YAML)
 
@@ -185,6 +198,16 @@ Notes for operators:
 - The model choice is deployment-wide: users do not pick a model. The available models, their language support, and their hardware requirements are managed in the frontend registry (`mucgpt-frontend/src/config/transcriptionModels.ts`).
 - WebGPU is required for some larger models; a WebGPU-only model stays greyed out on hardware without WebGPU and explains this in its model panel.
 
+### Canvas HTML whitelist (YAML)
+
+The canvas supports GFM markdown plus a small allowlist of raw HTML tags that GFM cannot express (default: `<u>` for underline — users get a toolbar button, agents may write `<u>text</u>`):
+
+```yaml
+canvas_allowed_html_tags: ["u"] # default; [] disables raw HTML entirely
+```
+
+The list is exposed to the frontend via `/config`, embeds the allowed tags into the `canvas_write`/`canvas_edit` tool descriptions, and the frontend sanitizer escapes every other raw HTML tag to literal text. Tags may not carry attributes. Entries must be lowercase plain tag names — and must be part of the release's supported set (`SUPPORTED_CANVAS_HTML_TAGS` in `mucgpt-core-service/app/config/settings.py`, mirroring `CANVAS_SUPPORTED_HTML_TAGS` in `mucgpt-frontend/src/components/Canvas/canvasHtmlWhitelist.ts`): the config may only **restrict**, never extend — a tag the editor schema does not understand cannot be rendered, serialized, or exported, so referencing one fails core startup. Extending the whitelist requires a core+frontend release.
+
 ### Models Configuration (Environment Variable)
 
 Alternatively, models can be configured via environment variables. Providers are set as a JSON object (`MUCGPT_CORE_PROVIDERS`), models as a JSON array (`MUCGPT_CORE_MODELS`) whose entries reference a provider instead of carrying inline endpoint/credentials:
@@ -230,6 +253,7 @@ MUCGPT stores data in two layers:
 - PostgreSQL (persistent):
   - Assistants and their versions
   - Assistant subscriptions
+  - Conversations (core service): ownership and metadata in `chats`, transcripts as LangGraph checkpoints, canvas documents and the document catalog
 - Redis/Valkey (temporary cache):
   - MCP tool metadata cache (core service, key prefix: `mcp_tools_raw:`)
   - LDAP/Active Directory data cache (assistant service, key: `mucgpt:directory-tree:v1`)
@@ -249,7 +273,7 @@ In addition to backend storage, the frontend uses browser storage for UX state a
 
 - IndexedDB:
   - `MUCGPT-ASSISTANTS` (assistant data)
-  - `MUCGPT-CHAT` (chat data)
+  - `MUCGPT-CHAT` (chat cache, plus favorites and browser-only chats until they are migrated)
   - `MUCGPT-COMMUNITY-ASSISTANTS` (community assistant data)
 - localStorage:
   - UI/user preferences (for example language, theme, selected tools, selected model)
@@ -469,4 +493,4 @@ The core service does not create or upgrade database schema at startup. For ever
 
 ## 🔧 Troubleshooting
 
-- **Chat requests fail with `Prompt configuration missing`:** prompts are fetched from Langfuse when configured; otherwise the core service uses the local fallback files in `mucgpt-core-service/app/agent/prompt_pool/` (see [Prompt Configuration](#prompt-configuration)). Create the missing `.md` files there and rebuild the core-service image.
+- **Chat requests fail with `Prompt configuration missing`:** prompts are fetched from Langfuse when configured; otherwise the core service uses the committed fallback files in `mucgpt-core-service/app/agent/prompt_pool/` (see [Prompt Configuration](#prompt-configuration)). A missing prompt means the file was removed or renamed: restore it or configure a Langfuse prompt for that name, then rebuild the core-service image.

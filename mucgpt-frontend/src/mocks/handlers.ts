@@ -19,6 +19,7 @@ import type { AssistantAuditEvent, DocumentLibraryEntry } from "../api/models";
 import { CANVAS_TOOL_IDS } from "../utils/canvasStream";
 import { loadMockAssistants, loadMockSubscriptions, saveMockAssistants, saveMockSubscriptions } from "./data/assistant-store";
 import { MOCK_DELETED_SUBSCRIBED_SNAPSHOT, MOCK_SUBSCRIPTION_SEED } from "./data/browser-scenario-seed";
+import { chatMigrationHandlers } from "../service/chatMigration/mockHandlers";
 
 const DIRECTORY_TREE = [
     {
@@ -144,6 +145,7 @@ const CONFIG_RESPONSE: ApplicationConfig = {
     ai_act_compliance_check_enabled: true,
     canvas_content_max_chars: 256 * 1024,
     canvas_editor_max_chars: 512 * 1024,
+    canvas_allowed_html_tags: ["u"],
     footer_link_url: "https://intranet.example.org",
     footer_label: "Example Organization",
     faq_url: "https://intranet.example.org/help",
@@ -1325,7 +1327,15 @@ export const handlers = [
 
     http.post("/api/backend/v1/generations/chat-title", async ({ request }) => {
         await delay(250);
-        const body = (await request.json()) as { conversation_id?: string; query?: string; answer?: string; system_message?: string };
+        const body = (await request.json()) as {
+            conversation_id?: string;
+            query?: string;
+            answer?: string;
+            system_message?: string;
+            language?: string;
+            current_title?: string | null;
+            previous_turns?: { query: string; answer: string }[] | null;
+        };
         if (!body.conversation_id?.trim()) {
             return HttpResponse.json({ detail: "conversation_id is required" }, { status: 422 });
         }
@@ -1342,6 +1352,9 @@ export const handlers = [
     }),
 
     http.get("/api/backend/v1/conversations", () => HttpResponse.json([])),
+
+    // TODO: remove after the browser chat migration
+    ...chatMigrationHandlers,
 
     http.get("/api/backend/v1/conversations/:conversationId/messages", () => new HttpResponse(null, { status: 404 })),
 

@@ -128,14 +128,50 @@ def test_canvas_write_rejects_empty_content(monkeypatch: Any) -> None:
     assert writer.chunks == []
 
 
-def test_canvas_write_rejects_raw_html(monkeypatch: Any) -> None:
+def test_canvas_write_rejects_non_whitelisted_html(monkeypatch: Any) -> None:
     writer = RecordingWriter()
     monkeypatch.setattr(canvas, "_get_writer", lambda: writer)
     tool = canvas.make_canvas_write_tool(_logger())
 
     result = tool.invoke(
         {
-            "content": "Hello <u>underlined</u> world",
+            "content": "Hello <b>bold</b> world",
+            "canvas_state": _canvas(),
+            "runtime": _runtime(),
+        }
+    )
+
+    assert result.startswith("Error:")
+    assert "GitHub-Flavored Markdown" in result
+    assert writer.chunks == []
+
+
+def test_canvas_write_allows_whitelisted_underline_tag(monkeypatch: Any) -> None:
+    writer = RecordingWriter()
+    monkeypatch.setattr(canvas, "_get_writer", lambda: writer)
+    tool = canvas.make_canvas_write_tool(_logger())
+
+    content = "Hello <u>underlined</u> world"
+    runtime = _runtime()
+    result = tool.invoke(
+        {"content": content, "canvas_state": _canvas(), "runtime": runtime}
+    )
+
+    assert result.startswith(CONFIRMATION)
+    assert runtime.context.canvas_working is not None
+    assert runtime.context.canvas_working.content == content
+
+
+def test_canvas_write_rejects_attributes_on_whitelisted_tag(
+    monkeypatch: Any,
+) -> None:
+    writer = RecordingWriter()
+    monkeypatch.setattr(canvas, "_get_writer", lambda: writer)
+    tool = canvas.make_canvas_write_tool(_logger())
+
+    result = tool.invoke(
+        {
+            "content": 'Hello <u onclick="steal()">x</u>',
             "canvas_state": _canvas(),
             "runtime": _runtime(),
         }
@@ -206,7 +242,31 @@ def test_canvas_write_allows_html_inside_code(monkeypatch: Any) -> None:
     assert result.startswith(CONFIRMATION)
 
 
-def test_canvas_edit_rejects_raw_html_in_new_text(monkeypatch: Any) -> None:
+def test_canvas_edit_accepts_whitelisted_html_in_old_and_new_text(
+    monkeypatch: Any,
+) -> None:
+    writer = RecordingWriter()
+    monkeypatch.setattr(canvas, "_get_writer", lambda: writer)
+    tool = canvas.make_canvas_edit_tool(_logger())
+
+    runtime = _runtime(revision=1)
+    result = tool.invoke(
+        {
+            "old_text": "<u>world</u>",
+            "new_text": "<u>there</u>",
+            "canvas_state": _canvas("Hello <u>world</u>"),
+            "runtime": runtime,
+        }
+    )
+
+    assert result.startswith(CONFIRMATION)
+    assert runtime.context.canvas_working is not None
+    assert runtime.context.canvas_working.content == "Hello <u>there</u>"
+
+
+def test_canvas_edit_rejects_non_whitelisted_html_in_new_text(
+    monkeypatch: Any,
+) -> None:
     writer = RecordingWriter()
     monkeypatch.setattr(canvas, "_get_writer", lambda: writer)
     tool = canvas.make_canvas_edit_tool(_logger())
@@ -214,7 +274,26 @@ def test_canvas_edit_rejects_raw_html_in_new_text(monkeypatch: Any) -> None:
     result = tool.invoke(
         {
             "old_text": "world",
-            "new_text": "<u>there</u>",
+            "new_text": "<b>there</b>",
+            "canvas_state": _canvas("Hello world"),
+            "runtime": _runtime(),
+        }
+    )
+
+    assert result.startswith("Error:")
+    assert "GitHub-Flavored Markdown" in result
+    assert writer.chunks == []
+
+
+def test_canvas_edit_rejects_attributes_in_new_text(monkeypatch: Any) -> None:
+    writer = RecordingWriter()
+    monkeypatch.setattr(canvas, "_get_writer", lambda: writer)
+    tool = canvas.make_canvas_edit_tool(_logger())
+
+    result = tool.invoke(
+        {
+            "old_text": "world",
+            "new_text": '<u style="color:red">there</u>',
             "canvas_state": _canvas("Hello world"),
             "runtime": _runtime(),
         }

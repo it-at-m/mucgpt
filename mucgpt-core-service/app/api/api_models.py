@@ -149,6 +149,10 @@ _canvas_settings = get_settings()
 # CANVAS_EDITOR_MAX_CHARS, which the export endpoint grows by 4× headroom).
 CANVAS_CONTENT_MAX_CHARS = _canvas_settings.canvas_content_max_chars
 CANVAS_EDITOR_MAX_CHARS = _canvas_settings.canvas_editor_max_chars
+# HTML tag names allowed inside canvas markdown (e.g. <u> for underline).
+CANVAS_ALLOWED_HTML_TAGS: frozenset[str] = frozenset(
+    _canvas_settings.canvas_allowed_html_tags
+)
 # Full canvas reads stop here so the tool result stays inside the model context;
 # the remaining document is reached via canvas_read(around_cursor).
 CANVAS_READ_LIMIT_CHARS = (CANVAS_CONTENT_MAX_CHARS * 95) // 100
@@ -622,6 +626,13 @@ class ComplianceCheckResponse(BaseModel):
     )
 
 
+class ChatTitleTurn(BaseModel):
+    """A completed user/assistant turn used as context for title generation."""
+
+    query: str = Field(..., description="The user's message in this turn.")
+    answer: str = Field(..., description="The assistant's answer in this turn.")
+
+
 class ChatTitleRequest(BaseModel):
     """Request model for generating a chat title based on the last turn."""
 
@@ -636,6 +647,27 @@ class ChatTitleRequest(BaseModel):
     system_message: str | None = Field(
         None,
         description="Optional system message that was used for the chat.",
+    )
+    current_title: str | None = Field(
+        None,
+        description=(
+            "The chat's current title, if any. When present, the model decides "
+            "whether to keep it or propose a new one."
+        ),
+    )
+    previous_turns: list[ChatTitleTurn] | None = Field(
+        None,
+        description=(
+            "Prior completed turns (oldest first), excluding the current query/answer. "
+            "Only the most recent turns are considered."
+        ),
+    )
+    language: str | None = Field(
+        None,
+        description=(
+            "ISO 639 language code of the user's interface language. "
+            "The generated title must be written in this language."
+        ),
     )
 
 
@@ -834,4 +866,8 @@ class ConfigResponse(BaseModel):
     canvas_editor_max_chars: int = Field(
         default=CANVAS_EDITOR_MAX_CHARS,
         description="Maximum canvas editor input length in characters.",
+    )
+    canvas_allowed_html_tags: list[str] = Field(
+        default_factory=lambda: sorted(CANVAS_ALLOWED_HTML_TAGS),
+        description="HTML tag names allowed inside canvas markdown (e.g. <u> for underline). The frontend sanitizer escapes every other raw HTML tag to literal text.",
     )

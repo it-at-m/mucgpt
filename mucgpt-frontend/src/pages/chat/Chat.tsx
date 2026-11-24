@@ -132,6 +132,7 @@ const Chat = () => {
     const canvasRef = useRef(canvas);
     canvasRef.current = canvas;
     const activeChatName = useMemo(() => allChats.find(chat => chat.id === active_chat)?.name, [active_chat, allChats]);
+    const headerChatName = activeChatName || t("components.history.unnamed_chat");
 
     // Picked once per mount so the greeting doesn't change while the empty state is visible.
     const welcomeMessageKeyRef = useRef(pickWelcomeMessageKey());
@@ -930,7 +931,7 @@ const Chat = () => {
                     answers={answerList}
                     input={inputComponent}
                     showStarterPrompts={!lastQuestionRef.current}
-                    header={activeChatName ?? ""}
+                    header={headerChatName}
                     welcomeMessage={welcomeMessage}
                     header_as_markdown={false}
                     messages_description={t("common.messages")}
@@ -955,6 +956,7 @@ const Chat = () => {
             welcomeMessage,
             clearChat,
             activeChatName,
+            headerChatName,
             isLoading,
             showAgUiEventLog,
             isEventDrawerOpen,

@@ -3,6 +3,7 @@ import { ApiError } from "../api/fetch-utils";
 import type { Assistant, ChatResponse } from "../api/models";
 import { ASSISTANT_STORE, CHAT_STORE, CREATIVITY_LOW } from "../constants";
 import { AssistantStorageService } from "./assistantstorage";
+import { migrateLocalChatsToBackend } from "./chatMigration/chatMigration";
 import { StorageService, type DBMessage, type DBObject } from "./storage";
 
 interface ChatOptions {
@@ -24,6 +25,9 @@ export function syncConversationHistory(): Promise<void> {
 
 /** Reconcile live server metadata while retaining local-only chats and browser preferences. */
 async function syncHistory(): Promise<void> {
+    // TODO: remove after the browser chat migration. Has to run before listing,
+    // the listing marks server chats as persisted and the migration would skip them
+    await migrateLocalChatsToBackend().catch(error => console.error("Chat migration failed", error));
     const conversations = await listConversationsApi();
     const chatStorage = new StorageService<ChatResponse, ChatOptions>(CHAT_STORE);
     const assistantStorage = new StorageService<ChatResponse, Assistant>(ASSISTANT_STORE);

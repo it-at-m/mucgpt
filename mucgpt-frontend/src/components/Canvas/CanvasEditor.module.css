@@ -24,24 +24,40 @@
     overflow-wrap: break-word;
 }
 
+/*
+ * Document heading ladder. Sizes stay one Fluent step below the chat
+ * MarkdownRenderer (Hero800/Base600/Base500): the canvas is a compact
+ * split-view editing surface with a 16px body, where a 32px H1 would be
+ * disproportionate. h4-h6 are agent-authored (the toolbar only offers
+ * H1-H3) and deliberately share the h3 style; each heading pairs its
+ * font-size with the matching line-height token.
+ */
 .editor :global(.ProseMirror) h1,
 .editor :global(.ProseMirror) h2,
-.editor :global(.ProseMirror) h3 {
+.editor :global(.ProseMirror) h3,
+.editor :global(.ProseMirror) h4,
+.editor :global(.ProseMirror) h5,
+.editor :global(.ProseMirror) h6 {
     font-weight: var(--fontWeightSemibold);
-    line-height: var(--lineHeightBase500);
     margin: var(--spacingVerticalL) 0 var(--spacingVerticalS);
 }
 
 .editor :global(.ProseMirror) h1 {
-    font-size: var(--fontSizeBase500);
+    font-size: var(--fontSizeBase600);
+    line-height: var(--lineHeightBase600);
 }
 
 .editor :global(.ProseMirror) h2 {
-    font-size: var(--fontSizeBase400);
+    font-size: var(--fontSizeBase500);
+    line-height: var(--lineHeightBase500);
 }
 
-.editor :global(.ProseMirror) h3 {
+.editor :global(.ProseMirror) h3,
+.editor :global(.ProseMirror) h4,
+.editor :global(.ProseMirror) h5,
+.editor :global(.ProseMirror) h6 {
     font-size: var(--fontSizeBase400);
+    line-height: var(--lineHeightBase400);
 }
 
 .editor :global(.ProseMirror) p {

@@ -9,7 +9,8 @@ MUCGPT is an assistant-first product. Assistants are reusable, workflow-specific
 ![Chat](/docs/chatscreen.png)
 The chat provides a clear space to work with the underlying language model on almost any topic.
 - Configure a system instruction to guide responses and adjust temperature to balance factual vs. creative output.
-- Multi-turn conversations are supported. History stays local in the browser (IndexedDB). You can continue past conversations and mark favorites for quick access.
+- Multi-turn conversations are supported. Your chat history is saved to your account, so you can continue past conversations on any device. Favorites are kept in your browser for quick access.
+- Chats that so far only existed in your browser are uploaded to your account automatically the next time you open MUCGPT. Chats whose answers all failed stay in the browser.
 
 ## Canvas
 
@@ -17,7 +18,7 @@ Work side by side with the agent: open a rich-text canvas panel next to any chat
 - Toggle the canvas at any time, mid-conversation; on small screens it opens as an overlay so the chat stays usable.
 - The agent can start or edit the canvas while it is closed: the view opens automatically as soon as the agent writes.
 - Large documents are supported up to a size limit: content beyond the warning threshold is greyed out and is not read by the agent; content up to the hard cap is still saved with the conversation, and oversized pastes are clipped to the limit. The export shows progress feedback and confirms completion.
-- Write and format text yourself (headings, lists, tables, undo/redo). The agent can write and edit the canvas directly — the editor locks while the agent works and changes appear live as they are generated.
+- Write and format text yourself (headings, lists, tables, underline, undo/redo). The agent can write and edit the canvas directly — the editor locks while the agent works and changes appear live as they are generated, using GFM plus the deployment's whitelisted raw HTML tags (e.g. `<u>` for underline).
 - Select a passage to quote it into the chat or to ask the agent to revise exactly that text.
 - Save versions manually and review an automatic history of agent edits. Restoring an older version is non-destructive and can be undone like any edit.
 - The canvas is saved with the conversation, so your document survives reloads and device switches.

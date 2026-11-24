@@ -216,7 +216,10 @@ class TestChatRouter:
             "/v1/chat/v2/completions",
             json={
                 "model": "gpt-4o-mini",
-                "messages": [{"role": "user", "content": "Wie teuer ist die Kita?"}],
+                "messages": [
+                    {"role": "system", "content": "role v2"},
+                    {"role": "user", "content": "Wie teuer ist die Kita?"},
+                ],
                 "conversation_id": DUMMY_CONVERSATION_ID,
                 "resume": [
                     {
@@ -234,6 +237,8 @@ class TestChatRouter:
         call_kwargs = mock_agent_executor.run_agui_with_streaming.call_args.kwargs
         assert call_kwargs["resume_decisions"] == [{"type": "approve"}]
         assert call_kwargs["messages"] == []
+        # the prompt still reaches the resumed run
+        assert call_kwargs["system_prompt"] == "role v2"
 
     @patch("api.routers.chat_router.init_agent", new_callable=AsyncMock)
     def test_native_resume_forwards_generic_interrupt_payloads(
@@ -263,6 +268,8 @@ class TestChatRouter:
         call_kwargs = mock_agent_executor.run_agui_with_streaming.call_args.kwargs
         assert call_kwargs["resume"] == {"question-1": "yes"}
         assert call_kwargs["resume_decisions"] is None
+        # no messages at all: keep whatever is stored
+        assert call_kwargs["system_prompt"] is None
 
     @patch("api.routers.chat_router.init_agent", new_callable=AsyncMock)
     def test_native_resume_cannot_bypass_tool_approval_validation(

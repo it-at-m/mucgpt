@@ -13,7 +13,7 @@ maintainers = [
 ]
 requires-python = "==3.13.18"
 dependencies = [
-    "alembic>=1.14.0",
+    "alembic==1.20.1",
     "asgi-correlation-id==5.0.1",
     "asyncpg==0.32.0",
     "fastapi[standard]==0.162.2",
@@ -40,6 +40,7 @@ dev = [
     "pytest-env",
     "ruff==0.17.4",
     "ty==0.0.99",
+    "testcontainers[postgres]>=4.15.0",
 ]
 
 [tool.uv]
@@ -67,7 +68,7 @@ python_files = "test_*.py"
 python_classes = "Test*"
 python_functions = "test_*"
 pythonpath = ["app"]
-addopts = "--strict-markers --strict-config --verbose --tb=short -ra --cov=app --cov-report=term-missing"
+addopts = "--strict-markers --strict-config --verbose --tb=short -ra --cov=app --cov-report=term-missing --cov-report=xml --cov-fail-under=84"
 markers = [
     "integration: marks tests as integration tests (deselect with '-m \"not integration\"')"
 ]

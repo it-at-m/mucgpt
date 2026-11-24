@@ -58,6 +58,10 @@ The server strips unknown members of the namespace with a warning.
 `SystemMessage`, followed by alternating `UserMessage`/`AssistantMessage`
 turns, each with a stable unique `id` (required by the schema).
 
+Send the current system prompt with every request, also for persisted
+conversations. It is applied per request and never stored in the checkpoint,
+so a changed assistant or custom prompt takes effect on the next turn.
+
 ## Multimodal input and the vision gate
 
 `UserMessage.content` may carry multimodal content parts. The server resolves

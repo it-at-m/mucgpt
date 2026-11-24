@@ -15,8 +15,20 @@ const FIXTURES: Array<{ name: string; markdown: string }> = [
         markdown: "Einfacher Text mit **fett**, *kursiv*, `Code` und einem [Link](https://muenchen.de)."
     },
     {
+        name: "underline via whitelisted HTML",
+        markdown: "Wichtige Stelle: <u>unterstrichen</u> im Text."
+    },
+    {
+        name: "underline mixed with other marks",
+        markdown: "**Fett** und <u>unterstrichen und *kursiv*</u> gemischt."
+    },
+    {
         name: "headings",
         markdown: "# Überschrift 1\n\n## Überschrift 2\n\n### Überschrift 3\n\nText danach."
+    },
+    {
+        name: "deep agent headings (no toolbar shortcut)",
+        markdown: "#### Stufe 4\n\n##### Stufe 5\n\n###### Stufe 6\n\nFließtext."
     },
     {
         name: "nested lists",

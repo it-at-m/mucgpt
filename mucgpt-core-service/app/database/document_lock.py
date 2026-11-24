@@ -7,9 +7,18 @@ from psycopg.errors import ConnectionTimeout, QueryCanceled
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 # Bounds connecting and the non-blocking lock query of the dedicated lock session.
-# keep it a constant to avoid overengineering; 
+# keep it a constant to avoid overengineering;
 # no other db connection timeout is configurable
 LOCK_TIMEOUT_SECONDS = 10
+
+
+class DocumentLockTimeoutError(TimeoutError):
+    """Timeout carrying the lock operation and its budget."""
+
+    def __init__(self, phase: str, timeout: float) -> None:
+        self.phase = phase
+        self.timeout = timeout
+        super().__init__(f"Document {phase} timed out after {timeout:.2f}s")
 
 
 @asynccontextmanager
@@ -43,17 +52,21 @@ async def document_work_lock(
                         f"-c statement_timeout={LOCK_TIMEOUT_SECONDS * 1000}"
                     ),
                 )
-        except ConnectionTimeout as exc:
-            raise TimeoutError("Document work lock connection timed out") from exc
+        except (ConnectionTimeout, TimeoutError) as exc:
+            raise DocumentLockTimeoutError(
+                "work-lock connection", LOCK_TIMEOUT_SECONDS
+            ) from exc
     try:
         try:
             with fail_after(LOCK_TIMEOUT_SECONDS):
                 cursor = await connection.execute(
                     "SELECT pg_try_advisory_lock(hashtextextended(%s, 0))", (key,)
                 )
-        except QueryCanceled as exc:
+        except (QueryCanceled, TimeoutError) as exc:
             # Only statement_timeout cancels statements on this private session.
-            raise TimeoutError("Document work lock query timed out") from exc
+            raise DocumentLockTimeoutError(
+                "work-lock query", LOCK_TIMEOUT_SECONDS
+            ) from exc
         row = await cursor.fetchone()
         if row is None:  # a SELECT always yields a row; fail loudly if not
             raise RuntimeError("Advisory lock query returned no row")

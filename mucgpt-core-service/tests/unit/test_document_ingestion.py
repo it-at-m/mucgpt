@@ -27,6 +27,7 @@ from core.virtual_file_system_helper import (
     get_document_storage_key,
 )
 from database.database_models import Base, Document
+from database.document_lock import DocumentLockTimeoutError
 from database.document_repo import DocumentQuotaExceededError, DocumentRepository
 from parsing import xberg
 
@@ -370,8 +371,60 @@ async def test_storage_deadline_compensates_and_releases_the_work_lock(
     )
     with pytest.raises(services.DocumentOperationTimeoutError, match="ingestion"):
         await service.ingest_document(user(), upload())
-    assert sessions.rows() == []
+    # A queued store operation may still finish after the deadline, so its slot
+    # stays deleting until background cleanup can delete the final body safely.
+    assert sessions.rows()[0].status == "deleting"
     assert sessions.locked_ids == set()
+
+
+@pytest.mark.asyncio
+async def test_late_store_write_is_deleted_only_after_it_settles(
+    ingestion, monkeypatch
+):
+    service, sessions, store, _ = ingestion
+    service.settings = DocumentConfig(ingestion_timeout=0.05, cleanup_timeout=1)
+    real_backend = create_document_backend(user().user_id)
+    allow_write = asyncio.Event()
+    write_started = asyncio.Event()
+
+    async def delayed_write(path, text):
+        write_started.set()
+        await allow_write.wait()
+        return await real_backend.awrite(path, text)
+
+    monkeypatch.setattr(
+        services,
+        "create_document_backend",
+        lambda _: MagicMock(awrite=AsyncMock(side_effect=delayed_write)),
+    )
+
+    with pytest.raises(services.DocumentOperationTimeoutError, match="ingestion"):
+        await service.ingest_document(user(), upload())
+
+    await write_started.wait()
+    row = sessions.rows()[0]
+    assert row.status == "deleting"
+    assert store.get(get_document_namespace(user().user_id), row.storage_key) is None
+
+    allow_write.set()
+    for _ in range(20):
+        await anyio.sleep(0)
+        if not sessions.rows():
+            break
+    assert sessions.rows() == []
+    assert store.search(get_document_namespace(user().user_id)) == []
+
+
+@pytest.mark.asyncio
+async def test_document_deadline_reports_the_nested_lock_timeout(monkeypatch):
+    warning = MagicMock()
+    monkeypatch.setattr(services.logger, "warning", warning)
+    with pytest.raises(services.DocumentOperationTimeoutError, match="work-lock query"):
+        async with services.document_deadline(300, "ingestion"):
+            raise DocumentLockTimeoutError("work-lock query", 10)
+    warning.assert_called_once_with(
+        "Document %s timed out after %.2fs", "work-lock query", 10
+    )
 
 
 @pytest.mark.asyncio
@@ -489,9 +542,9 @@ async def test_upload_lock_is_held_through_compensation_then_released(
             assert not acquired  # Another worker cannot claim this processing row.
         raise error_type("interrupted")
 
-    async def cleanup(owner, document_id, write_attempted):
+    async def cleanup(owner, document_id, write_attempted, **kwargs):
         assert document_id in sessions.locked_ids
-        await compensate(owner, document_id, write_attempted)
+        await compensate(owner, document_id, write_attempted, **kwargs)
 
     parser.parse.side_effect = parse
     monkeypatch.setattr(service, "_compensate", cleanup)
@@ -581,7 +634,7 @@ async def test_catalog_cleanup_failure_keeps_a_recoverable_row(
 
 
 @pytest.mark.asyncio
-async def test_xberg_total_deadline_bounds_a_trickle_or_hung_request(monkeypatch):
+async def test_xberg_total_deadline_bounds_a_hung_request(monkeypatch):
     settings = services.get_settings().model_copy(
         update={
             "xberg_url": "http://xberg.test",
@@ -590,6 +643,13 @@ async def test_xberg_total_deadline_bounds_a_trickle_or_hung_request(monkeypatch
     )
     monkeypatch.setattr(xberg, "get_settings", lambda: settings)
 
+    class HangingStream:
+        async def __aenter__(self):
+            await anyio.sleep_forever()
+
+        async def __aexit__(self, *_):
+            return None
+
     class HangingClient:
         async def __aenter__(self):
             return self
@@ -597,9 +657,56 @@ async def test_xberg_total_deadline_bounds_a_trickle_or_hung_request(monkeypatch
         async def __aexit__(self, *_):
             return None
 
-        async def post(self, *_args, **_kwargs):
-            await anyio.sleep_forever()
+        def stream(self, *_args, **_kwargs):
+            return HangingStream()
 
     monkeypatch.setattr(xberg.httpx, "AsyncClient", HangingClient)
     with pytest.raises(TimeoutError):
         await xberg.XbergBackend().parse(upload())
+
+
+@pytest.mark.asyncio
+async def test_xberg_total_deadline_bounds_a_trickling_response(monkeypatch):
+    settings = services.get_settings().model_copy(
+        update={
+            "xberg_url": "http://xberg.test",
+            "xberg_timeout": 1,
+            "documents": DocumentConfig(parser_timeout=0.01),
+        }
+    )
+    monkeypatch.setattr(xberg, "get_settings", lambda: settings)
+    received_timeouts = []
+
+    class TricklingResponse:
+        status_code = 200
+
+        def raise_for_status(self):
+            return None
+
+        async def aiter_bytes(self):
+            while True:
+                await anyio.sleep(0.001)
+                yield b" "
+
+    class TricklingStream:
+        async def __aenter__(self):
+            return TricklingResponse()
+
+        async def __aexit__(self, *_):
+            return None
+
+    class TricklingClient:
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, *_):
+            return None
+
+        def stream(self, *_args, timeout, **_kwargs):
+            received_timeouts.append(timeout)
+            return TricklingStream()
+
+    monkeypatch.setattr(xberg.httpx, "AsyncClient", TricklingClient)
+    with pytest.raises(TimeoutError):
+        await xberg.XbergBackend().parse(upload())
+    assert received_timeouts == [1]

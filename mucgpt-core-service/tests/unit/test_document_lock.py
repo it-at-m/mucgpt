@@ -6,7 +6,11 @@ import pytest
 from psycopg.errors import QueryCanceled
 from sqlalchemy import URL
 
-from database.document_lock import document_work_lock
+from database.document_lock import (
+    LOCK_TIMEOUT_SECONDS,
+    DocumentLockTimeoutError,
+    document_work_lock,
+)
 
 
 @pytest.mark.asyncio
@@ -89,7 +93,23 @@ async def test_statement_timeout_becomes_a_timeout_and_closes_connection(monkeyp
         AsyncMock(return_value=connection),
     )
     factory = MagicMock(kw={"bind": MagicMock(url=URL.create("postgresql+asyncpg"))})
-    with pytest.raises(TimeoutError, match="lock query timed out"):
+    with pytest.raises(DocumentLockTimeoutError, match="work-lock query"):
         async with document_work_lock(factory, str(uuid4())):
             pytest.fail("A timed-out acquisition must not run document work")
     connection.close.assert_awaited_once()
+
+
+@pytest.mark.asyncio
+async def test_connect_timeout_includes_the_lock_phase_and_budget(monkeypatch):
+    monkeypatch.setattr(
+        "database.document_lock.psycopg.AsyncConnection.connect",
+        AsyncMock(side_effect=TimeoutError()),
+    )
+    factory = MagicMock(kw={"bind": MagicMock(url=URL.create("postgresql+asyncpg"))})
+
+    with pytest.raises(DocumentLockTimeoutError) as error:
+        async with document_work_lock(factory, str(uuid4())):
+            pytest.fail("Timed-out lock acquisition must not run document work")
+
+    assert error.value.phase == "work-lock connection"
+    assert error.value.timeout == LOCK_TIMEOUT_SECONDS

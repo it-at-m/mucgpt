@@ -172,6 +172,29 @@ models:
 If these tools are omitted, documents can still be uploaded and their excerpts
 can appear in the prompt, but the model cannot access the virtual filesystem.
 
+### Document operation deadlines
+
+The `documents` settings bound document-library ingestion and deletion with
+one deadline per operation:
+
+- `ingestion_timeout` covers a whole upload: size check, work lock, catalog
+  reservation, parsing, storing the text, and publishing it as ready. Size it
+  from the observed p99 upload time with headroom; parsing (for example OCR of
+  large scans) usually dominates.
+- `deletion_timeout` covers a whole deletion: ownership check, work lock,
+  catalog updates, and removing the stored text.
+- `cleanup_timeout` bounds the cleanup after a failed or timed-out upload (hide
+  the catalog row and remove a possible stored body). It comes on top of
+  `ingestion_timeout`, so a timed-out upload can take up to
+  `ingestion_timeout + cleanup_timeout` before the client gets its error.
+- `parser_timeout` is a hard wall-clock limit for the Xberg call, while
+  `xberg_timeout` is the HTTP inactivity timeout per request phase.
+
+Keep `ingestion_timeout + cleanup_timeout` below the timeouts of any proxy or
+ingress in front of the core service, otherwise the proxy closes the connection
+first while the upload continues in the background. Connecting to and querying
+the dedicated advisory-lock session is bounded by a fixed 10 seconds.
+
 ### Transcription Configuration (YAML)
 
 MUCGPT offers browser-based speech-to-text (beta): users can dictate into the chat input, and the audio is transcribed entirely inside their browser. The backend only gates the feature — no audio ever leaves the user's browser; the resulting transcript is placed in the chat input and can be submitted through the normal chat request. It is disabled by default (`transcription_enabled: false`).

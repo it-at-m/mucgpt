@@ -67,9 +67,15 @@ async def document_deadline(timeout: float, phase: str) -> AsyncGenerator[None]:
     try:
         with fail_after(timeout):
             yield
-    except TimeoutError:
-        logger.warning("Document %s timed out after %.2fs", phase, timeout)
-        raise DocumentOperationTimeoutError(f"Document {phase} timed out.") from None
+    except TimeoutError as exc:
+        timed_out_phase = getattr(exc, "phase", phase)
+        timed_out_timeout = getattr(exc, "timeout", timeout)
+        logger.warning(
+            "Document %s timed out after %.2fs", timed_out_phase, timed_out_timeout
+        )
+        raise DocumentOperationTimeoutError(
+            f"Document {timed_out_phase} timed out."
+        ) from None
 
 
 @asynccontextmanager

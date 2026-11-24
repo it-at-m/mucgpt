@@ -27,6 +27,7 @@ from core.virtual_file_system_helper import (
     get_document_storage_key,
 )
 from database.database_models import Base, Document
+from database.document_lock import DocumentLockTimeoutError
 from database.document_repo import DocumentQuotaExceededError, DocumentRepository
 from parsing import xberg
 
@@ -353,6 +354,18 @@ async def test_parser_deadline_compensates_and_releases_the_work_lock(ingestion)
         await service.ingest_document(user(), upload())
     assert sessions.rows() == []
     assert sessions.locked_ids == set()
+
+
+@pytest.mark.asyncio
+async def test_document_deadline_reports_the_nested_lock_timeout(monkeypatch):
+    warning = MagicMock()
+    monkeypatch.setattr(services.logger, "warning", warning)
+    with pytest.raises(services.DocumentOperationTimeoutError, match="work-lock query"):
+        async with services.document_deadline(300, "ingestion"):
+            raise DocumentLockTimeoutError("work-lock query", 10)
+    warning.assert_called_once_with(
+        "Document %s timed out after %.2fs", "work-lock query", 10
+    )
 
 
 @pytest.mark.asyncio

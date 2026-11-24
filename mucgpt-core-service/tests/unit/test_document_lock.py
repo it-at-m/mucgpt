@@ -6,7 +6,7 @@ import pytest
 from sqlalchemy import URL
 
 from config.settings import DocumentConfig
-from database.document_lock import document_work_lock
+from database.document_lock import DocumentLockTimeoutError, document_work_lock
 
 
 @pytest.mark.asyncio
@@ -76,3 +76,20 @@ async def test_acquisition_error_closes_connection(monkeypatch):
         async with document_work_lock(factory, str(uuid4())):
             pytest.fail("An unsuccessful acquisition must not run document work")
     connection.close.assert_awaited_once()
+
+
+@pytest.mark.asyncio
+async def test_connect_timeout_includes_the_lock_phase_and_budget(monkeypatch):
+    monkeypatch.setattr(
+        "database.document_lock.psycopg.AsyncConnection.connect",
+        AsyncMock(side_effect=TimeoutError()),
+    )
+    factory = MagicMock(kw={"bind": MagicMock(url=URL.create("postgresql+asyncpg"))})
+    settings = DocumentConfig(lock_connect_timeout=2.5)
+
+    with pytest.raises(DocumentLockTimeoutError) as error:
+        async with document_work_lock(factory, str(uuid4()), settings):
+            pytest.fail("Timed-out lock acquisition must not run document work")
+
+    assert error.value.phase == "work-lock connection"
+    assert error.value.timeout == 2.5

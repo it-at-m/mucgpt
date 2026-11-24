@@ -14,6 +14,15 @@ from core.logtools import getLogger
 logger = getLogger()
 
 
+class DocumentLockTimeoutError(TimeoutError):
+    """Timeout carrying the lock operation and its configured budget."""
+
+    def __init__(self, phase: str, timeout: float) -> None:
+        self.phase = phase
+        self.timeout = timeout
+        super().__init__(f"Document {phase} timed out after {timeout:.2f}s")
+
+
 def _statement_timeout_error(error: QueryCanceled) -> bool:
     return error.diag.message_primary == "canceling statement due to statement timeout"
 
@@ -52,7 +61,13 @@ async def document_work_lock(
                     ),
                 )
         except ConnectionTimeout as exc:
-            raise TimeoutError("Document work lock connection timed out") from exc
+            raise DocumentLockTimeoutError(
+                "work-lock connection", settings.lock_connect_timeout
+            ) from exc
+        except TimeoutError as exc:
+            raise DocumentLockTimeoutError(
+                "work-lock connection", settings.lock_connect_timeout
+            ) from exc
     try:
         try:
             with fail_after(settings.lock_query_timeout):
@@ -62,7 +77,13 @@ async def document_work_lock(
         except QueryCanceled as exc:
             if not _statement_timeout_error(exc):
                 raise
-            raise TimeoutError("Document work lock query timed out") from exc
+            raise DocumentLockTimeoutError(
+                "work-lock query", settings.lock_query_timeout
+            ) from exc
+        except TimeoutError as exc:
+            raise DocumentLockTimeoutError(
+                "work-lock query", settings.lock_query_timeout
+            ) from exc
         row = await cursor.fetchone()
         if row is None:  # a SELECT always yields a row; fail loudly if not
             raise RuntimeError("Advisory lock query returned no row")

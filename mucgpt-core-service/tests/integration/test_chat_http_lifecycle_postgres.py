@@ -110,8 +110,9 @@ async def test_persisted_chat_http_lifecycle_survives_restart_and_deletion(
 
         conversations = await harness.client.get("/v1/conversations")
         assert conversations.status_code == 200
+        conversation_metadata = conversations.json()
         assert [
-            conversation["conversation_id"] for conversation in conversations.json()
+            conversation["conversation_id"] for conversation in conversation_metadata
         ] == [conversation_id]
 
         messages = await harness.client.get(
@@ -139,6 +140,26 @@ async def test_persisted_chat_http_lifecycle_survives_restart_and_deletion(
 
         await PersistanceHelpers.close()
         await PersistanceHelpers.init(harness.database.settings)
+
+        conversations_after_restart = await harness.client.get("/v1/conversations")
+        assert conversations_after_restart.status_code == 200
+        assert conversations_after_restart.json() == conversation_metadata
+
+        stored_messages = await PersistanceHelpers.get_conversation_messages(
+            conversation_id
+        )
+        assert [message.role for message in stored_messages] == [
+            "user",
+            "assistant",
+            "user",
+            "assistant",
+        ]
+        assert [message.content for message in stored_messages] == [
+            "First question",
+            "First deterministic answer",
+            "Second question",
+            "Second deterministic answer",
+        ]
 
         third_events = await harness.chat_events(
             _persisted_body(

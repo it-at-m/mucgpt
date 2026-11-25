@@ -373,4 +373,24 @@ describe("useCanvasController pre-chat canvas draft", () => {
         view.rerender(<Owner conversationId={undefined} />);
         expect(editorStub.markdownText).toBe("# first turn content");
     });
+
+    it("re-arms the draft with the content captured at adoption, not with a later chat switch's editor content", () => {
+        const view = render(<Owner conversationId={undefined} />);
+
+        editorStub.markdownText = "# pre-chat";
+        editorStub.emit("update");
+        act(() => capturedController!.beginAdoption());
+
+        // The user switches to another persisted chat while the first turn
+        // runs; the switch effect loads that chat's (empty) canvas, and its
+        // content must not overwrite the pre-chat draft on abort.
+        loadStateMock.mockResolvedValue(null);
+        view.rerender(<Owner conversationId="other-1" />);
+        editorStub.markdownText = "# other chat";
+        editorStub.emit("update");
+
+        act(() => capturedController!.snapshotPreChatDraft());
+
+        expect(localStorage.getItem("canvas-draft")).toBe("# pre-chat");
+    });
 });

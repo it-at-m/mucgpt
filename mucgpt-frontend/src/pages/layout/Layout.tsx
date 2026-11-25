@@ -36,6 +36,7 @@ import { ApiError } from "../../api/fetch-utils";
 import { useGlobalToastContext } from "../../components/GlobalToastHandler/GlobalToastContext";
 import GlobalToastHandler from "../../components/GlobalToastHandler/GlobalToastHandler";
 import { TranscriptionProvider } from "../../components/Transcription/TranscriptionContext";
+import { TtsProvider } from "../../components/TTS/TTSContext";
 import { ToolsProvider } from "../../components/ToolsProvider";
 import Unauthorized from "../Unauthorized";
 import { ConfigContext } from "../../context/ConfigContext";
@@ -365,20 +366,22 @@ export const Layout = () => {
                             <Unauthorized redirectUrl={unauthorizedRedirectUrl} />
                         ) : (
                             <TranscriptionProvider transcriptionEnabled={config.transcription_enabled} transcriptionModelId={config.transcription_model}>
-                                <ToolsProvider>
-                                    <UnifiedHistoryProvider>
-                                        <AppShell
-                                            config={config}
-                                            isLight={isLight}
-                                            languagePreference={languagePreference}
-                                            onLanguageSelectionChanged={onLanguageSelectionChanged}
-                                            themePreference={themePreference}
-                                            onThemePreferenceChange={setThemePreference}
-                                            onAcceptTermsOfUse={onAcceptTermsOfUse}
-                                            termsOfUseRead={termsOfUseRead}
-                                        />
-                                    </UnifiedHistoryProvider>
-                                </ToolsProvider>
+                                <TtsProvider ttsEnabled={config.tts_enabled ?? false} ttsModelId={config.tts_model ?? null}>
+                                    <ToolsProvider>
+                                        <UnifiedHistoryProvider>
+                                            <AppShell
+                                                config={config}
+                                                isLight={isLight}
+                                                languagePreference={languagePreference}
+                                                onLanguageSelectionChanged={onLanguageSelectionChanged}
+                                                themePreference={themePreference}
+                                                onThemePreferenceChange={setThemePreference}
+                                                onAcceptTermsOfUse={onAcceptTermsOfUse}
+                                                termsOfUseRead={termsOfUseRead}
+                                            />
+                                        </UnifiedHistoryProvider>
+                                    </ToolsProvider>
+                                </TtsProvider>
                             </TranscriptionProvider>
                         )}
                         <GlobalToastHandler />

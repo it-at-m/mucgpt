@@ -142,6 +142,11 @@ const CONFIG_RESPONSE: ApplicationConfig = {
     document_processing_enabled: true,
     transcription_enabled: true,
     transcription_model: "Olicorne/parakeet-tdt-0.6b-v3-ultra-onnx",
+    // Read-aloud (TTS) PoC: the frontend-only flag lives in the mock config;
+    // a real core service does not send these fields yet (older cores leave
+    // the feature disabled — see ApplicationConfig).
+    tts_enabled: true,
+    tts_model: "gradium/phonon-31m-en",
     ai_act_compliance_check_enabled: true,
     canvas_content_max_chars: 256 * 1024,
     canvas_editor_max_chars: 512 * 1024,

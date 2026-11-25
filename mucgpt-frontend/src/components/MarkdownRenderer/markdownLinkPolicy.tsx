@@ -125,7 +125,11 @@ const stripLinks = (markdown: string): string =>
         .replace(/^\s*\[([^^][^\]\n]*)\]:[ \t]*(?:<[^\s>]*>|(?:[a-z][a-z0-9+.-]*:(?:\/\/)?\S+|\/\S*))[^\n]*$/gim, "")
         // no link syntax must survive (unforeseen grammar variants): the bracket
         // adjacency is what makes `](url)` render as a link
-        .replace(/\]\(/g, "] ");
+        .replace(/\]\(/g, "] ")
+        // the output is display text: escape remaining `<` so element-like
+        // fragments (e.g. unterminated `<script`) cannot ever appear
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;");
 
 /**
  * Neutralize markdown link/image syntax in a plain-text context (e.g. before

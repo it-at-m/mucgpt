@@ -44,6 +44,7 @@ describe("conversation history", () => {
         const order: string[] = [];
         vi.mocked(migrateLocalChatsToBackend).mockImplementation(async () => {
             order.push("migrate");
+            return { migratedIds: new Set() };
         });
         vi.mocked(listConversationsApi).mockImplementation(async () => {
             order.push("list");

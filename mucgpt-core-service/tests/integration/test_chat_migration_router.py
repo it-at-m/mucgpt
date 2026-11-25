@@ -84,11 +84,14 @@ def test_empty_content_is_rejected(
     import_chat.assert_not_awaited()
 
 
-def test_busy_chat_returns_409(test_client: TestClient, held_run_locks, import_chat):
+def test_busy_chat_returns_423_with_retry_after(
+    test_client: TestClient, held_run_locks, import_chat
+):
     # a chat turn is running on this conversation right now
     held_run_locks.add(f"{CONVERSATION_RUN_LOCK_PREFIX}:chat-1")
 
     response = test_client.post(URL, json=BODY)
 
-    assert response.status_code == 409, response.text
+    assert response.status_code == 423, response.text
+    assert response.headers["retry-after"] == "5"
     import_chat.assert_not_awaited()

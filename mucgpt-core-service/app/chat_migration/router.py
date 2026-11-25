@@ -21,7 +21,10 @@ router = APIRouter(prefix="/v1")
     "/conversations/import",
     summary="Import a browser-only conversation",
     response_model=ConversationImportResult,
-    responses={409: {"description": "Conversation id not available or busy"}},
+    responses={
+        409: {"description": "Conversation id not available"},
+        423: {"description": "Conversation is busy; retry after the supplied delay"},
+    },
 )
 async def import_conversation(
     request: ConversationImportRequest,
@@ -29,8 +32,16 @@ async def import_conversation(
     response: Response,
 ) -> ConversationImportResult:
     """Store a chat from the browser once; repeating it returns skipped."""
-    # raises 409 itself if a chat turn is running right now
-    lock = await _lock_conversation_run(request.conversation_id)
+    try:
+        lock = await _lock_conversation_run(request.conversation_id)
+    except HTTPException as exc:
+        if exc.status_code != 409:
+            raise
+        raise HTTPException(
+            status_code=423,
+            detail="Another request is still running for this conversation",
+            headers={"Retry-After": "5"},
+        ) from exc
     try:
         status = await import_chat(request, user_info.user_id)
     except ImportConflictError as exc:

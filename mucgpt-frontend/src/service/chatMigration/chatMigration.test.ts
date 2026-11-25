@@ -156,6 +156,30 @@ describe("chat migration", () => {
         expect(put).not.toHaveBeenCalled();
     });
 
+    it("retries a busy import before marking the chat persisted", async () => {
+        vi.useFakeTimers();
+        localChats([chat()]);
+        vi.mocked(handleApiRequest).mockRejectedValueOnce(new ApiError("busy", 423, undefined, 1)).mockResolvedValueOnce({ status: "imported" });
+
+        const migration = migrateLocalChatsToBackend();
+        await vi.advanceTimersByTimeAsync(1_000);
+        await migration;
+
+        expect(handleApiRequest).toHaveBeenCalledTimes(2);
+        expect(put).toHaveBeenCalledWith({ ...chat(), backendPersisted: true });
+        vi.useRealTimers();
+    });
+
+    it("keeps an unavailable conversation local without retrying", async () => {
+        localChats([chat()]);
+        vi.mocked(handleApiRequest).mockRejectedValueOnce(new ApiError("unavailable", 409));
+
+        await migrateLocalChatsToBackend();
+
+        expect(handleApiRequest).toHaveBeenCalledOnce();
+        expect(put).not.toHaveBeenCalled();
+    });
+
     it("falls back to a default title and cuts long ones", async () => {
         localChats([chat({ name: "  " }), chat({ id: OTHER_ID, name: "x".repeat(300) })]);
 

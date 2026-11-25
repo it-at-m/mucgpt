@@ -147,6 +147,15 @@ describe("handleApiRequest", () => {
         await expect(promise).rejects.toMatchObject({ name: "ApiError", status: 404, message: "Nope" });
     });
 
+    it("carries a valid Retry-After response header", async () => {
+        const promise = handleApiRequest(
+            async () => new Response(JSON.stringify({ detail: "Busy" }), { status: 423, headers: { "Retry-After": "5" } }),
+            "Failed"
+        );
+
+        await expect(promise).rejects.toMatchObject({ status: 423, retryAfter: 5 });
+    });
+
     it("unwraps detail objects with message and redirect_url", async () => {
         const detail = { message: "Gone", redirect_url: "/somewhere" };
         const promise = handleApiRequest(async () => new Response(JSON.stringify({ detail }), { status: 410 }), "Failed to load");

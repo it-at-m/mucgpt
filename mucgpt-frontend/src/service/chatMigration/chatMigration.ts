@@ -13,6 +13,9 @@ const MAX_TITLE_CHARS = 200;
 const FALLBACK_TITLE = "New Chat";
 // the server won't take these, retrying doesn't help, chat stays local
 const KEEP_LOCAL_STATUSES = [403, 409, 413, 422];
+const RETRYABLE_STATUSES = [423, 429];
+const MIGRATION_RETRY_ATTEMPTS = 3;
+const DEFAULT_RETRY_DELAY_MS = 2_000;
 
 export interface ImportTurn {
     user: string;
@@ -39,6 +42,23 @@ export function importConversationApi(payload: ImportConversationPayload): Promi
         () => fetch(API_BASE + "v1/conversations/import", { ...postConfig(payload), cache: "no-store" }),
         "Failed to import conversation"
     );
+}
+
+function delay(milliseconds: number): Promise<void> {
+    return new Promise(resolve => setTimeout(resolve, milliseconds));
+}
+
+async function importWithRetry(payload: ImportConversationPayload): Promise<{ status: "imported" | "skipped" }> {
+    for (let attempt = 0; ; attempt++) {
+        try {
+            return await importConversationApi(payload);
+        } catch (error) {
+            if (!(error instanceof ApiError) || !RETRYABLE_STATUSES.includes(error.status) || attempt >= MIGRATION_RETRY_ATTEMPTS) {
+                throw error;
+            }
+            await delay((error.retryAfter ?? (DEFAULT_RETRY_DELAY_MS / 1_000)) * 1_000);
+        }
+    }
 }
 
 /** Only finished turns, failed or interrupted answers would pollute the model context later. */
@@ -99,7 +119,7 @@ async function migrate(): Promise<ChatMigrationResult> {
             const conversationId = isUuid(key.conversationId) ? key.conversationId : uuid();
             const newId = key.assistantId ? AssistantStorageService.GENERATE_BOT_CHAT_ID(key.assistantId, conversationId) : conversationId;
             try {
-                const { status } = await importConversationApi({
+                const { status } = await importWithRetry({
                     conversation_id: conversationId,
                     title: (chat.name?.trim() || FALLBACK_TITLE).slice(0, MAX_TITLE_CHARS),
                     assistant_id: key.assistantId,

@@ -1,8 +1,11 @@
 // Pre-chat canvas draft: a single sessionStorage slot protects canvas content
 // typed before any conversation exists (no server autosave is possible yet).
 // It is cleared when the content is adopted into a fresh conversation or
-// deliberately cleared. sessionStorage survives reloads but is tab-local and
-// vanishes with the tab.
+// deliberately cleared, and never leaks into another conversation: switching
+// to a persisted conversation drops it. The slot is shared across the chat and
+// assistant pages of the tab: the content follows the user until it is adopted
+// (also into an assistant conversation) or dropped. sessionStorage survives
+// reloads but is tab-local and vanishes with the tab.
 const CANVAS_DRAFT_KEY = "canvas-draft";
 
 // sessionStorage can throw (private mode, quota, disabled storage); a lost draft is acceptable then.

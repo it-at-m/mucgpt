@@ -155,20 +155,22 @@ export const CanvasPanel = ({ controller, conversationId, serverConversationId, 
     // synchronously on unsubscribe (canvas close, switch, unmount).
     useEffect(() => {
         const onEdit = (markdown: string) => {
+            if (readOnly) return;
             // Without a conversation there is no server autosave yet: the
             // debounced edit stream feeds the pre-chat sessionStorage draft
             // instead. A trimmed-empty document is an intentional clear and
-            // drops the draft; over-limit content is not stored (fail closed,
-            // same rule as the server persist below).
+            // drops the draft; over-limit content neither overwrites the
+            // draft nor clears it — it keeps the last valid draft, like the
+            // server persist below, which skips such writes.
             if (!conversationId) {
-                if (markdown.trim() && markdown.length <= limits.contentLimitChars) saveCanvasDraft(markdown);
-                else clearCanvasDraft();
+                if (!markdown.trim()) clearCanvasDraft();
+                else if (markdown.length <= limits.contentLimitChars) saveCanvasDraft(markdown);
                 return;
             }
             persistContent(markdown);
         };
         return controllerRef.current.subscribe(onEdit);
-    }, [conversationId, persistContent, limits.contentLimitChars]);
+    }, [conversationId, persistContent, limits.contentLimitChars, readOnly]);
 
     // Run end: persist the final state so agent edits don't lag the stored
     // copy; forced, because the server may hold turn-start content the panel
@@ -191,6 +193,11 @@ export const CanvasPanel = ({ controller, conversationId, serverConversationId, 
             const markdown = controllerRef.current.getMarkdown();
             if (!conversationId) {
                 if (markdown.trim() && markdown.length <= limits.contentLimitChars) saveCanvasDraft(markdown);
+                // A trimmed-empty document is an intentional clear, but only
+                // from a live editor: a mid-recreation or destroyed editor
+                // serializes to "" untrustworthily (same caveat as the
+                // server persist) and must not wipe the draft.
+                else if (!markdown.trim() && controllerRef.current.editor && !controllerRef.current.editor.isDestroyed) clearCanvasDraft();
                 return;
             }
             if (!serverId) return;

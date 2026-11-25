@@ -29,7 +29,9 @@ export interface CanvasController {
      * assigns a new conversation's id. */
     beginAdoption(): void;
     /** Stores nonempty current content as the pre-chat canvas draft
-     * (sessionStorage); used when a fresh conversation's first turn fails. */
+     * (sessionStorage); used when a fresh conversation's first turn fails.
+     * Without a content-limit guard: this is the recovery channel for content
+     * the server persist refuses, so it must keep oversized documents too. */
     snapshotPreChatDraft(): void;
     /** True while the agent is writing */
     isLocked: boolean;
@@ -430,6 +432,8 @@ export function useCanvasController(conversationId: string | undefined, serverCo
         if (previous === undefined && conversationId !== undefined && adoptingRef.current) {
             adoptingRef.current = false;
             clearCanvasDraft();
+            // A canvas explicitly closed before the send stays closed: the
+            // pending open request is not honored across the adoption.
             return;
         }
         // A genuine switch to a persisted conversation discards the pre-chat
@@ -513,6 +517,10 @@ export function useCanvasController(conversationId: string | undefined, serverCo
             if (editor && !hasCanvasContent() && draft?.trim()) {
                 editor.commands.setContent(sanitize(draft));
                 editor.view.dispatch(editor.state.tr.setMeta(CANVAS_PERSISTENCE_RESET, true));
+                // The seed is the switch's doing, not a user edit: keep its
+                // notification (which would only rewrite the identical
+                // draft) out of the edit stream.
+                clearPendingNotify();
                 setIsOpen(true);
             }
         }

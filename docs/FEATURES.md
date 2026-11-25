@@ -22,6 +22,7 @@ Work side by side with the agent: open a rich-text canvas panel next to any chat
 - Select a passage to quote it into the chat or to ask the agent to revise exactly that text.
 - Save versions manually and review an automatic history of agent edits. Restoring an older version is non-destructive and can be undone like any edit.
 - The canvas is saved with the conversation, so your document survives reloads and device switches.
+- Text typed before your first message is kept as a tab-local draft: it survives a reload in the same browser tab and is restored (with the canvas opened) on a new chat, but it is not synced across devices, and it is dropped once your first message saves it with that chat, when you empty the canvas, or when you open an existing chat.
 - Export the document as Markdown, PDF, Word, or Excel (one sheet per table).
 
 ## Create Assistants

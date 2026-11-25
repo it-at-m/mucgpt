@@ -285,6 +285,35 @@ describe("useCanvasController pre-chat canvas draft", () => {
         expect(sessionStorage.getItem("canvas-draft")).toBeNull();
     });
 
+    it("keeps the previous draft when an over-limit edit arrives while unpersisted", async () => {
+        render(<Owner conversationId={undefined} />);
+
+        editorStub.markdownText = "# valid";
+        editorStub.emit("update");
+        await advanceDebounce();
+
+        editorStub.markdownText = "x".repeat(256001);
+        editorStub.emit("update");
+        await advanceDebounce();
+
+        expect(sessionStorage.getItem("canvas-draft")).toBe("# valid");
+    });
+
+    it("drops the draft on pagehide when the unpersisted canvas was emptied inside the debounce window", async () => {
+        sessionStorage.setItem("canvas-draft", "# older");
+        render(<Owner conversationId={undefined} />);
+        await advanceDebounce();
+        expect(editorStub.markdownText).toBe("# older");
+
+        editorStub.markdownText = "";
+        editorStub.emit("update");
+        act(() => {
+            window.dispatchEvent(new Event("pagehide"));
+        });
+
+        expect(sessionStorage.getItem("canvas-draft")).toBeNull();
+    });
+
     it("keeps adopted content on a fresh conversation's id assignment and drops the draft", async () => {
         sessionStorage.setItem("canvas-draft", "# older");
         const view = render(<Owner conversationId={undefined} />);

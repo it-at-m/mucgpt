@@ -5,6 +5,7 @@ import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
 import styles from "./ChatLayout.module.css";
+import { safeMarkdownComponents } from "../MarkdownRenderer/markdownLinkPolicy";
 import { ChatDisclaimer } from "../ChatDisclaimer";
 
 interface Props {
@@ -175,7 +176,9 @@ export const ChatLayout = ({
                                 (header_as_markdown ? (
                                     <div className={styles.chatEmptyStateSubtitleMarkdown}>
                                         <div className={styles.answerText}>
-                                            <Markdown remarkPlugins={[remarkGfm]}>{welcomeMessage}</Markdown>
+                                            <Markdown remarkPlugins={[remarkGfm]} components={safeMarkdownComponents}>
+                                                {welcomeMessage}
+                                            </Markdown>
                                         </div>
                                     </div>
                                 ) : (

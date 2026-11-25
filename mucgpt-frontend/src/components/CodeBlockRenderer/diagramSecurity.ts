@@ -36,6 +36,13 @@ export function isSafeDiagramInput(raw: string, label: string): boolean {
 export function sanitizeDrawioViewerHost(host: HTMLElement): boolean {
     host.querySelectorAll([...FORBIDDEN_TAGS].join(",")).forEach(node => node.remove());
 
+    // Anchors in draw.io HTML labels must not navigate (issue #228: markdown
+    // injection); the link text stays visible.
+    host.querySelectorAll("a").forEach(anchor => {
+        anchor.removeAttribute("href");
+        anchor.removeAttribute("xlink:href");
+    });
+
     host.querySelectorAll("*").forEach(element => {
         for (const attr of Array.from(element.attributes)) {
             const name = attr.name;

@@ -6,6 +6,7 @@ import rehypeExternalLinks from "rehype-external-links";
 import CodeBlockRenderer from "../CodeBlockRenderer/CodeBlockRenderer";
 import TableRenderer from "../TableRenderer/TableRenderer";
 import { DrawioRenderContext } from "../CodeBlockRenderer/drawioRenderContext";
+import { safeMarkdownComponents } from "./markdownLinkPolicy";
 import styles from "./MarkdownRenderer.module.css";
 
 interface MarkdownRendererProps {
@@ -24,6 +25,8 @@ export const MarkdownRenderer = ({ children, className, allowDrawio = false, isS
     const rehypeKatexOptions = {
         output: "mathml"
     };
+    // Defense in depth: the `a` component override below already renders links
+    // as plain text; this plugin only matters if that override is ever removed.
     const rehypeExternalLinksOptions = {
         target: "_blank",
         rel: ["nofollow", "noopener", "noreferrer"]
@@ -38,6 +41,7 @@ export const MarkdownRenderer = ({ children, className, allowDrawio = false, isS
                     [rehypeExternalLinks, rehypeExternalLinksOptions]
                 ]}
                 components={{
+                    ...safeMarkdownComponents,
                     code: CodeBlockRenderer,
                     table: TableRenderer
                 }}

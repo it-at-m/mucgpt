@@ -4,6 +4,7 @@ import { ArrowDownload24Regular } from "@fluentui/react-icons";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import styles from "./SimplifiedTextFragment.module.css";
+import { withSafeMarkdownLinks } from "../../MarkdownRenderer/markdownLinkPolicy";
 import { BaseFragment } from "../BaseFragment/BaseFragment";
 import { BaseFragmentProps } from "../types";
 
@@ -116,9 +117,9 @@ export const SimplifiedTextFragment = ({ content }: BaseFragmentProps) => {
                                         <div className={styles.sectionBody}>
                                             <ReactMarkdown
                                                 remarkPlugins={[remarkGfm]}
-                                                components={{
+                                                components={withSafeMarkdownLinks({
                                                     div: props => <div className={styles.processingMarkdown} {...props} />
-                                                }}
+                                                })}
                                             >
                                                 {section.body}
                                             </ReactMarkdown>

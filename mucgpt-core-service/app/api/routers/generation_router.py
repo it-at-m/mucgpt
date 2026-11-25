@@ -1,4 +1,5 @@
 import asyncio
+import re
 from typing import Any, Literal
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -86,6 +87,25 @@ def _normalize_chat_title(value: str) -> str:
         title = title[:max_length].rstrip()
 
     return title
+
+
+def _strip_markdown_links(value: str) -> str:
+    """Neutralize markdown link/image syntax in generated draft fields.
+
+    Drafts can be shared and their description and system prompt are rendered
+    as markdown in other users' browsers. Rendered links and images can
+    exfiltrate data on display (issue #228), so links and images are reduced
+    to their label text before the draft is returned.
+    """
+
+    value = re.sub(r"!\[([^\]]*)\]\([^)]*\)", r"\1", value)  # images
+    value = re.sub(r"\[([^\]]*)\]\([^)]*\)", r"\1", value)  # inline links
+    value = re.sub(r"\[([^\]]+)\]\[[^\]]*\]", r"\1", value)  # reference links
+    value = re.sub(r"<((?:https?|mailto|xmpp):[^>\s]+)>", r"\1", value)  # autolinks
+    value = re.sub(
+        r"^\s*\[[^\]]+\]:\s*\S+.*$", "", value, flags=re.MULTILINE
+    )  # definitions
+    return value
 
 
 @router.post(
@@ -184,8 +204,8 @@ async def generate_assistant_draft(
 
                 result = AssistantDraftResult(
                     title=title,
-                    description=description,
-                    system_prompt=generated_system_prompt,
+                    description=_strip_markdown_links(description),
+                    system_prompt=_strip_markdown_links(generated_system_prompt),
                 )
                 observation.update(output=result.model_dump())
                 return result

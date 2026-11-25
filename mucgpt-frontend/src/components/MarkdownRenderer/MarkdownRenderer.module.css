@@ -1,3 +1,12 @@
+/*
+ * Markdown link/image policy (issue #228): links and images render as plain
+ * text (see markdownLinkPolicy.tsx); the URL is appended as muted text.
+ */
+.linkUrl {
+    color: var(--colorNeutralForeground2);
+    word-break: break-all;
+}
+
 .markdown a {
     color: var(--colorBrandForegroundLink);
     text-decoration: underline;

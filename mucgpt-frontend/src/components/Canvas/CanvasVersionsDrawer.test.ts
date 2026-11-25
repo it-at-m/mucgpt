@@ -82,13 +82,14 @@ describe("CanvasVersionsDrawer", () => {
         expect(previewOf(articles[0])).toContain("Valid entry");
     });
 
-    it("hardens anchors surviving sanitization with rel and a safe target", () => {
+    it("strips the href of anchors surviving sanitization so they cannot navigate", () => {
         const sanitized = DOMPurify.sanitize('<a href="https://example.com">link</a>', { USE_PROFILES: { html: true } });
-        expect(sanitized).toContain('rel="noopener noreferrer"');
-        expect(sanitized).toContain('target="_blank"');
+        expect(sanitized).toContain("<a");
+        expect(sanitized).toContain("link");
+        expect(sanitized).not.toContain("href");
     });
 
-    it("hardens the link of a rendered revision preview, not just sanitized strings", () => {
+    it("strips the href of a rendered revision preview link, not just sanitized strings", () => {
         const articles = renderDrawer({
             auto: [
                 {
@@ -111,11 +112,11 @@ describe("CanvasVersionsDrawer", () => {
         expect(articles).toHaveLength(1);
         const anchor = articles[0].querySelector("a");
         expect(anchor).not.toBeNull();
-        expect(anchor!.getAttribute("rel")).toBe("noopener noreferrer");
-        expect(anchor!.getAttribute("target")).toBe("_blank");
+        expect(anchor!.getAttribute("href")).toBeNull();
+        expect(anchor!.textContent).toBe("link");
     });
 
-    it("leaves SVG-namespace anchors untouched by the HTML-only hardening hook", () => {
+    it("leaves SVG-namespace anchors untouched by the HTML-only href-stripping hook", () => {
         const sanitized = DOMPurify.sanitize('<svg xmlns="http://www.w3.org/2000/svg"><a href="https://example.com"><text>x</text></a></svg>', {
             USE_PROFILES: { svg: true }
         });

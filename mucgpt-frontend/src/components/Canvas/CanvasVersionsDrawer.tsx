@@ -9,14 +9,15 @@ import type { CanvasControllerInstance } from "../../hooks/useCanvasController";
 import { canvasExtensions } from "./canvasExtensions";
 import styles from "./CanvasVersionsDrawer.module.css";
 
-// Revision previews are rendered via dangerouslySetInnerHTML, so any link that
-// survives sanitization must not navigate the app or leak window references.
-// Namespace-scoped so other DOMPurify consumers (e.g. SVG sanitization) stay untouched.
+// Revision previews are rendered via dangerouslySetInnerHTML, so links must
+// not navigate anywhere (issue #228: markdown injection): their href is
+// stripped, the link text stays visible. Namespace-scoped so other DOMPurify
+// consumers (e.g. SVG sanitization) stay untouched.
 DOMPurify.addHook("afterSanitizeAttributes", node => {
     const element = node as Element;
     if (element.namespaceURI === "http://www.w3.org/1999/xhtml" && element.tagName === "A") {
-        element.setAttribute("rel", "noopener noreferrer");
-        element.setAttribute("target", "_blank");
+        element.removeAttribute("href");
+        element.removeAttribute("xlink:href");
     }
 });
 

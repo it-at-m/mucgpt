@@ -24,7 +24,12 @@ import { canvasTextLimit, type CanvasTextLimitOptions } from "./canvasTextLimit"
  */
 export const canvasExtensions = (limits?: Partial<CanvasTextLimitOptions>): Extensions => [
     StarterKit.configure({
-        underline: {}
+        underline: {},
+        // Links stay visible as link marks but clicking must not navigate
+        // (issue #228: markdown injection / link exfiltration).
+        link: {
+            openOnClick: false
+        }
     }),
     Table.configure({
         resizable: false

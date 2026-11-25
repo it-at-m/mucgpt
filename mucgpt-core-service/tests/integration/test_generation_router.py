@@ -123,6 +123,38 @@ def test_generate_assistant_draft_direct_and_parallel(
 
 
 @pytest.mark.integration
+@patch("core.llm_helpers.ModelRegistry.get_model")
+def test_generate_assistant_draft_strips_markdown_links(
+    mock_get_model, test_client: TestClient, langfuse_root
+) -> None:
+    responses = {
+        "assistant-draft-system-prompt": (
+            "Du hilfst bei Protokollen. Siehe [Anleitung](https://evil.example.com/?d=x) "
+            "und ![Bild](https://evil.example.com/pixel.png).\n\n[ref]: https://evil.example.com"
+        ),
+        "assistant-draft-description": "Beschreibung mit <https://evil.example.com> Autolink",
+        "assistant-draft-title": "Titel",
+    }
+    mock_get_model.return_value = _FakeConfiguredModel(response_by_run_name=responses)
+
+    resp = test_client.post(
+        "/v1/generations/assistant-draft",
+        json={"prompt_seed": "Hilft bei Meeting-Protokollen"},
+    )
+
+    assert resp.status_code == 200, resp.text
+    body = resp.json()
+    # Link/image markdown must not survive into the draft: rendering it in
+    # another user's browser would fetch the attacker URL (issue #228).
+    assert "](http" not in body["system_prompt"]
+    assert "![" not in body["system_prompt"]
+    assert "Anleitung" in body["system_prompt"]
+    assert "<https://" not in body["description"]
+    assert "Beschreibung mit https://evil.example.com Autolink" in body["description"]
+    assert body["title"] == "Titel"
+
+
+@pytest.mark.integration
 @patch(
     "api.routers.generation_router.PersistanceHelpers.set_chat_title_for_conversation",
     new_callable=AsyncMock,

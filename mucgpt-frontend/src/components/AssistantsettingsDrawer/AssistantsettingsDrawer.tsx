@@ -17,6 +17,7 @@ import { useTranslation } from "react-i18next";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import CodeBlockRenderer from "../CodeBlockRenderer/CodeBlockRenderer";
+import { safeMarkdownComponents } from "../MarkdownRenderer/markdownLinkPolicy";
 import { Assistant } from "../../api";
 import { useNavigate } from "react-router-dom";
 import { Collapse } from "@fluentui/react-motion-components-preview";
@@ -114,6 +115,8 @@ export const AssistantsettingsDrawer = ({ assistant, onDeleteAssistant, isOwned,
     const rehypeKatexOptions = {
         output: "mathml"
     };
+    // Defense in depth: safeMarkdownComponents already renders links as plain
+    // text; this plugin only matters if that override is ever removed.
     const rehypeExternalLinksOptions = {
         target: "_blank",
         rel: ["nofollow", "noopener", "noreferrer"]
@@ -138,6 +141,7 @@ export const AssistantsettingsDrawer = ({ assistant, onDeleteAssistant, isOwned,
                             [rehypeExternalLinks, rehypeExternalLinksOptions]
                         ]}
                         components={{
+                            ...safeMarkdownComponents,
                             code: CodeBlockRenderer
                         }}
                     >

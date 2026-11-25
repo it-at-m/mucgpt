@@ -43,8 +43,16 @@ describe("hasCompressedDiagram", () => {
         expect(hasCompressedDiagram('<mxfile><diagram id="d">\nzU8x78</diagram></mxfile>')).toBe(true);
     });
 
-    it("accepts literal XML diagrams", () => {
-        expect(hasCompressedDiagram('<mxfile><diagram id="d"><mxGraphModel/></diagram></mxfile>')).toBe(false);
+    it("refuses CDATA-wrapped compressed bodies", () => {
+        expect(hasCompressedDiagram('<mxfile><diagram id="d"><![CDATA[zVRLi9swEP8gn3H]]></diagram></mxfile>')).toBe(true);
+    });
+
+    it("accepts literal XML diagrams, also with reserved characters in attributes", () => {
+        expect(hasCompressedDiagram('<mxfile><diagram id="d" name="A > B"><mxGraphModel/></diagram></mxfile>')).toBe(false);
         expect(hasCompressedDiagram("<mxGraphModel><root/></mxGraphModel>")).toBe(false);
+    });
+
+    it("refuses unparseable XML", () => {
+        expect(hasCompressedDiagram("<diagram><cutoff")).toBe(true);
     });
 });

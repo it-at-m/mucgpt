@@ -186,6 +186,36 @@ def test_generate_assistant_draft_strips_nested_labels_and_keeps_instructions(
 
 
 @pytest.mark.integration
+@patch("core.llm_helpers.ModelRegistry.get_model")
+def test_generate_assistant_draft_keeps_code_and_strips_links_outside(
+    mock_get_model, test_client: TestClient, langfuse_root
+) -> None:
+    responses = {
+        "assistant-draft-system-prompt": (
+            "Validate with `^[A-Z](foo)$` und mit ```\n[pattern](https://beispiel.example.com)\n```.\n"
+            "Siehe [Anleitung](https://evil.example.com/?d=x)."
+        ),
+        "assistant-draft-description": "Beschreibung",
+        "assistant-draft-title": "Titel",
+    }
+    mock_get_model.return_value = _FakeConfiguredModel(response_by_run_name=responses)
+
+    resp = test_client.post(
+        "/v1/generations/assistant-draft",
+        json={"prompt_seed": "Hilft bei Meeting-Protokollen"},
+    )
+
+    assert resp.status_code == 200, resp.text
+    body = resp.json()
+    # Code spans and fenced blocks are literal text, not rendered links.
+    assert "`^[A-Z](foo)$`" in body["system_prompt"]
+    assert "[pattern](https://beispiel.example.com)" in body["system_prompt"]
+    # Links outside code are still reduced to their label.
+    assert "evil.example.com" not in body["system_prompt"]
+    assert "Anleitung" in body["system_prompt"]
+
+
+@pytest.mark.integration
 @patch(
     "api.routers.generation_router.PersistanceHelpers.set_chat_title_for_conversation",
     new_callable=AsyncMock,

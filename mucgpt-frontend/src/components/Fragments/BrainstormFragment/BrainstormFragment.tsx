@@ -8,6 +8,7 @@ import { ArrowDownload24Regular, ContentView24Regular, ScaleFill24Regular, Arrow
 import { IPureNode } from "markmap-common";
 import { AppThemeContext } from "../../../ui/theme/AppThemeContext";
 import { stripMarkdownLinks } from "../../MarkdownRenderer/markdownLinkPolicy";
+import { neutralizeImageAndLinkTokens } from "./markmapNeutralizer";
 import { BaseFragment } from "../BaseFragment/BaseFragment";
 import { BaseFragmentProps } from "../types";
 import { EdelweissSpinner } from "../../EdelweissSpinner";
@@ -45,6 +46,9 @@ export const BrainstormFragment = ({ content, markdown, showLineNumbers = true }
         // Mindmap nodes must not contain raw HTML: markmap renders label HTML,
         // so anchors and images in the source would become live elements.
         transformer.md.set({ html: false });
+        // Link/image markdown turns into live elements regardless of html: false;
+        // rewrite those tokens to plain text (see markmapNeutralizer.ts).
+        neutralizeImageAndLinkTokens(transformer.md);
         return transformer;
     }, []);
     const svgEl = useRef<SVGSVGElement>(null);

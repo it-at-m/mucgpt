@@ -49,12 +49,19 @@ export function stripDrawioCellLinks(xml: string): string {
 }
 
 /**
- * Draw.io supports compressed `<diagram>` bodies (base64, inflated by the
- * viewer before parsing); those bypass the model-level link strip above, so
- * only literal XML diagrams may be rendered.
+ * Draw.io supports compressed `<diagram>` bodies (base64 or CDATA, inflated by
+ * the viewer before parsing); those bypass the model-level link strip above,
+ * so only literal XML diagrams may be rendered. Attribute values (e.g.
+ * name="A &gt; B") must not decide: the check runs on the parsed element body.
  */
 export function hasCompressedDiagram(xml: string): boolean {
-    return /<diagram\b[^>]*>\s*[^<\s]/i.test(xml.trim());
+    const doc = new DOMParser().parseFromString(xml, "text/xml");
+    if (doc.querySelector("parsererror")) return true; // unparseable: refuse
+    for (const diagram of Array.from(doc.getElementsByTagName("diagram"))) {
+        const hasElementChildren = Array.from(diagram.childNodes).some(node => node.nodeType === 1 /* element */);
+        if (!hasElementChildren && (diagram.textContent ?? "").trim()) return true;
+    }
+    return false;
 }
 
 /**

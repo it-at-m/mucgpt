@@ -89,6 +89,11 @@ def _normalize_chat_title(value: str) -> str:
     return title
 
 
+_FENCED_OR_INLINE_CODE = re.compile(
+    r"(?P<code>```[\s\S]*?(?:```|$)|~~~[\s\S]*?(?:~~~|$)|`[^`\n]*`)"
+)
+
+
 def _strip_markdown_links(value: str) -> str:
     """Neutralize markdown link/image syntax in generated draft fields.
 
@@ -96,9 +101,16 @@ def _strip_markdown_links(value: str) -> str:
     as markdown in other users' browsers. Rendered links and images can
     exfiltrate data on display (issue #228), so links and images are reduced
     to their label text before the draft is returned. Labels allow balanced
-    brackets one level deep.
+    brackets one level deep. Fenced and inline code stays untouched.
     """
 
+    parts = _FENCED_OR_INLINE_CODE.split(value)
+    for index in range(0, len(parts), 2):
+        parts[index] = _strip_markdown_links_outside_code(parts[index])
+    return "".join(parts)
+
+
+def _strip_markdown_links_outside_code(value: str) -> str:
     value = re.sub(
         r"!\[((?:[^\[\]]|\[[^\[\]]*\])*)\]\((?:<[^>]*>|(?:[^()\s]|\([^()]*\))+)\)",
         r"\1",

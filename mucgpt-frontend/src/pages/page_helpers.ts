@@ -231,7 +231,8 @@ export interface CanvasWiring {
     adoptNewConversation?: () => void;
     /** A fresh conversation's first request failed and it is discarded:
      * re-arms the pre-chat canvas draft so the content survives the following
-     * conversation reset. Absent for tests. */
+     * conversation reset. Absent for non-persisted requests (previews) and
+     * tests. */
     savePreChatDraft?: () => void;
 }
 

@@ -277,6 +277,7 @@ In addition to backend storage, the frontend uses browser storage for UX state a
   - `MUCGPT-COMMUNITY-ASSISTANTS` (community assistant data)
 - localStorage:
   - UI/user preferences (for example language, theme, selected tools, selected model)
+  - Pre-chat canvas content until it is saved with a conversation (`canvas-draft`)
   - Parsed document history/content cache (`MUCGPT_PARSED_DOCUMENTS_V1`)
 - Cache API (browser):
   - NeMo transcription model files (Canary/Parakeet encoder/decoder/vocab, cache name `mucgpt-nemo-models-v1`)
@@ -284,7 +285,6 @@ In addition to backend storage, the frontend uses browser storage for UX state a
   - Transcription model verification markers (cache name `mucgpt-transcription-meta-v1`)
 - sessionStorage:
   - Route-local draft text in the question input
-  - Pre-chat canvas content until it is saved with a conversation (`canvas-draft`)
 - Cookies:
   - `XSRF-TOKEN` is read by the frontend and sent as `X-XSRF-TOKEN` request header
 

@@ -157,7 +157,7 @@ export const CanvasPanel = ({ controller, conversationId, serverConversationId, 
         const onEdit = (markdown: string) => {
             if (readOnly) return;
             // Without a conversation there is no server autosave yet: the
-            // debounced edit stream feeds the pre-chat sessionStorage draft
+            // debounced edit stream feeds the pre-chat localStorage draft
             // instead. A trimmed-empty document is an intentional clear and
             // drops the draft; over-limit content neither overwrites the
             // draft nor clears it — it keeps the last valid draft, like the
@@ -184,7 +184,7 @@ export const CanvasPanel = ({ controller, conversationId, serverConversationId, 
 
     // Reload/close: flush content and revision rings with keepalive fetches
     // that survive the unload. Oversized payloads fail closed and keep the
-    // debounce/unmount behavior. Without a conversation the sessionStorage
+    // debounce/unmount behavior. Without a conversation the localStorage
     // draft takes the place of the server save: synchronous and debounce-free,
     // so the last edit window survives the unload.
     useEffect(() => {

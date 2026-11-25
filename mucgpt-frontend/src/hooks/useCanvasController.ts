@@ -29,7 +29,7 @@ export interface CanvasController {
      * assigns a new conversation's id. */
     beginAdoption(): void;
     /** Stores nonempty current content as the pre-chat canvas draft
-     * (sessionStorage); used when a fresh conversation's first turn fails.
+     * (localStorage); used when a fresh conversation's first turn fails.
      * Without a content-limit guard: this is the recovery channel for content
      * the server persist refuses, so it must keep oversized documents too. */
     snapshotPreChatDraft(): void;
@@ -436,12 +436,12 @@ export function useCanvasController(conversationId: string | undefined, serverCo
             // pending open request is not honored across the adoption.
             return;
         }
-        // A genuine switch to a persisted conversation discards the pre-chat
-        // draft: it must never leak into another chat. The defined→undefined
-        // reset (deliberate new chat, aborted first turn) does not clear: the
-        // abort path re-arms the draft just before that reset, so its content
-        // survives as an unpersisted draft.
-        if (conversationId !== undefined) clearCanvasDraft();
+        // Switching away — including to persisted chats — keeps the draft
+        // stored: only new chats display it, and the next new chat restores
+        // it. The defined→undefined reset (deliberate new chat, aborted first
+        // turn) does not clear either: an aborted first turn re-arms the
+        // draft just before the reset, and a deliberate new chat lets the
+        // surviving draft resurface.
 
         lastStreamRevisionRef.current = -1;
         nextRevisionRef.current = 1;
@@ -508,9 +508,10 @@ export function useCanvasController(conversationId: string | undefined, serverCo
             })();
         } else {
             // No conversation: the canvas is an unpersisted pre-chat draft.
-            // Seed it from the sessionStorage draft when the editor is empty
-            // (initial mount, and the reset after an aborted fresh
-            // conversation's first turn re-seeds the re-armed draft). A live
+            // Seed it from the stored draft when the editor is empty — on the
+            // initial mount, and on any reset to a conversation-less chat:
+            // an aborted first turn re-arms the draft just before, and a
+            // deliberate new chat restores the surviving draft. A live
             // document stays; its next edit refreshes the draft.
             const editor = editorRef.current;
             const draft = !editor || editor.isDestroyed ? null : loadCanvasDraft();

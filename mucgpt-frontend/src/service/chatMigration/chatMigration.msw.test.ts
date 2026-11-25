@@ -27,7 +27,8 @@ function chat(): Chat {
 describe("chat migration HTTP retry", () => {
     const put = vi.fn();
     const close = vi.fn();
-    const transaction = vi.fn(() => ({ store: { put, delete: vi.fn() }, done: Promise.resolve() }));
+    const get = vi.fn();
+    const transaction = vi.fn(() => ({ store: { get, put, delete: vi.fn() }, done: Promise.resolve() }));
     let interceptedFetch: typeof fetch;
 
     beforeAll(() => {
@@ -44,6 +45,7 @@ describe("chat migration HTTP retry", () => {
 
     beforeEach(() => {
         vi.clearAllMocks();
+        get.mockResolvedValue(chat());
         vi.stubGlobal("document", { cookie: "" });
         vi.stubGlobal("fetch", (input: RequestInfo | URL, init?: RequestInit) => {
             const url = typeof input === "string" ? new URL(input, ORIGIN) : input;

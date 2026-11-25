@@ -35,8 +35,9 @@ function chat(overrides: Partial<Chat> = {}): Chat {
 describe("chat migration", () => {
     const put = vi.fn();
     const del = vi.fn();
+    const get = vi.fn();
     const close = vi.fn();
-    const transaction = vi.fn(() => ({ store: { put, delete: del }, done: Promise.resolve() }));
+    const transaction = vi.fn(() => ({ store: { get, put, delete: del }, done: Promise.resolve() }));
 
     /** Local chats per store: [chat store, assistant store]. */
     function localChats(chats: Chat[], assistantChats: Chat[] = []) {
@@ -55,6 +56,7 @@ describe("chat migration", () => {
     beforeEach(() => {
         vi.restoreAllMocks();
         vi.clearAllMocks();
+        get.mockResolvedValue(chat());
         vi.stubGlobal("fetch", fetchMock);
         vi.spyOn(StorageService.prototype, "connectToDB").mockResolvedValue({ transaction, close } as never);
         vi.mocked(handleApiRequest).mockImplementation(async request => {
@@ -185,6 +187,28 @@ describe("chat migration", () => {
 
         expect(handleApiRequest).toHaveBeenCalledTimes(2);
         expect(put).toHaveBeenCalledWith({ ...chat(), backendPersisted: true });
+        vi.useRealTimers();
+    });
+
+    it("preserves a turn appended while a busy import waits to retry", async () => {
+        vi.useFakeTimers();
+        const initialChat = chat();
+        const appendedTurn = { user: "q2", response: { answer: "a2" } };
+        localChats([initialChat]);
+        get.mockResolvedValue({ ...initialChat, messages: [...initialChat.messages, appendedTurn] });
+        vi.mocked(handleApiRequest)
+            .mockRejectedValueOnce(new ApiError("busy", 423, undefined, 1))
+            .mockResolvedValueOnce({ status: "skipped" });
+
+        const migration = migrateLocalChatsToBackend();
+        await vi.advanceTimersByTimeAsync(1_000);
+        await migration;
+
+        expect(put).toHaveBeenCalledWith({
+            ...initialChat,
+            messages: [...initialChat.messages, appendedTurn],
+            backendPersisted: true
+        });
         vi.useRealTimers();
     });
 

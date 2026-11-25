@@ -77,12 +77,17 @@ function parseKey(id: string, isAssistantStore: boolean): { assistantId?: string
 
 /** Mark as persisted without touching _last_edited (update() would bump it and mess up the order). */
 async function markPersisted(storage: StorageService<ChatResponse, unknown>, chat: LocalChat, newId: string) {
+    const originalId = chat.id;
+    if (!originalId) return;
     const db = await storage.connectToDB();
     try {
-        // one transaction, so a re-keyed chat never exists twice locally
+        // A previous retry may have allowed a regular persisted turn to finish.
+        // Keep that current record rather than replacing it with the old import snapshot.
         const tx = db.transaction(storage.config.objectStore_name, "readwrite");
-        const writes: Promise<unknown>[] = [tx.store.put({ ...chat, id: newId, backendPersisted: true })];
-        if (chat.id && newId !== chat.id) writes.push(tx.store.delete(chat.id));
+        const currentChat = (await tx.store.get(originalId)) ?? chat;
+        // One transaction ensures a re-keyed chat never exists twice locally.
+        const writes: Promise<unknown>[] = [tx.store.put({ ...currentChat, id: newId, backendPersisted: true })];
+        if (newId !== originalId) writes.push(tx.store.delete(originalId));
         await Promise.all([...writes, tx.done]);
     } finally {
         db.close();

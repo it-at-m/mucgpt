@@ -29,6 +29,7 @@ def test_new_chat_is_imported(test_client: TestClient, held_run_locks, import_ch
 
     assert response.status_code == 200, response.text
     assert response.json() == {"status": "imported"}
+    assert response.headers["cache-control"] == "no-store"
     request, user_id = import_chat.await_args.args
     assert request.conversation_id == "chat-1"
     # owner always comes from the token, never from the payload
@@ -43,6 +44,20 @@ def test_repeat_is_skipped(test_client: TestClient, held_run_locks, import_chat)
 
     assert response.status_code == 200, response.text
     assert response.json() == {"status": "skipped"}
+
+
+def test_conversation_list_is_not_cacheable(test_client: TestClient, monkeypatch):
+    get_conversations = AsyncMock(return_value=[])
+    monkeypatch.setattr(
+        "api.routers.chat_router.PersistanceHelpers.get_conversations_for_user",
+        get_conversations,
+    )
+
+    response = test_client.get("/v1/conversations")
+
+    assert response.status_code == 200, response.text
+    assert response.headers["cache-control"] == "no-store"
+    get_conversations.assert_awaited_once_with("test_user_123")
 
 
 def test_conflict_returns_409_and_frees_the_lock(

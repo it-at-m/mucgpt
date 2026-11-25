@@ -2,7 +2,7 @@
 
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Response
 
 # same lock as chat turns, so an import can't race a running chat
 from api.routers.chat_router import _lock_conversation_run, _unlock_conversation_run
@@ -26,6 +26,7 @@ router = APIRouter(prefix="/v1")
 async def import_conversation(
     request: ConversationImportRequest,
     user_info: Annotated[AuthenticationResult, Depends(authenticate_user)],
+    response: Response,
 ) -> ConversationImportResult:
     """Store a chat from the browser once; repeating it returns skipped."""
     # raises 409 itself if a chat turn is running right now
@@ -40,4 +41,5 @@ async def import_conversation(
         await _unlock_conversation_run(lock)
     # counts only, never chat content
     logger.info("Browser chat import: %s", status)
+    response.headers["Cache-Control"] = "no-store"
     return ConversationImportResult(status=status)

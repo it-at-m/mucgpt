@@ -27,10 +27,18 @@ export interface ImportConversationPayload {
     turns: ImportTurn[];
 }
 
+/** Local IDs confirmed by the server during this migration pass. */
+export interface ChatMigrationResult {
+    migratedIds: Set<string>;
+}
+
 type LocalChat = DBObject<ChatResponse, unknown>;
 
 export function importConversationApi(payload: ImportConversationPayload): Promise<{ status: "imported" | "skipped" }> {
-    return handleApiRequest(() => fetch(API_BASE + "v1/conversations/import", postConfig(payload)), "Failed to import conversation");
+    return handleApiRequest(
+        () => fetch(API_BASE + "v1/conversations/import", { ...postConfig(payload), cache: "no-store" }),
+        "Failed to import conversation"
+    );
 }
 
 /** Only finished turns, failed or interrupted answers would pollute the model context later. */
@@ -64,18 +72,19 @@ async function markPersisted(storage: StorageService<ChatResponse, unknown>, cha
     }
 }
 
-let pending: Promise<void> | undefined;
+let pending: Promise<ChatMigrationResult> | undefined;
 
 /** Upload every local-only chat once; safe to call on every start. */
-export function migrateLocalChatsToBackend(): Promise<void> {
+export function migrateLocalChatsToBackend(): Promise<ChatMigrationResult> {
     pending ??= migrate().finally(() => {
         pending = undefined;
     });
     return pending;
 }
 
-async function migrate(): Promise<void> {
+async function migrate(): Promise<ChatMigrationResult> {
     const counts = { imported: 0, skipped: 0, keptLocal: 0 };
+    const migratedIds = new Set<string>();
     for (const config of [CHAT_STORE, ASSISTANT_STORE]) {
         const storage = new StorageService<ChatResponse, unknown>(config);
         const isAssistantStore = config === ASSISTANT_STORE;
@@ -105,10 +114,12 @@ async function migrate(): Promise<void> {
                 }
                 // network, server or auth trouble, try again on the next start
                 console.warn("Chat migration paused, retrying on next start", error);
-                return;
+                return { migratedIds };
             }
             await markPersisted(storage, chat, newId);
+            migratedIds.add(newId);
         }
     }
     if (counts.imported || counts.skipped || counts.keptLocal) console.info("Chat migration", counts);
+    return { migratedIds };
 }

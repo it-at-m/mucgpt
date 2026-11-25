@@ -27,7 +27,12 @@ export function syncConversationHistory(): Promise<void> {
 async function syncHistory(): Promise<void> {
     // TODO: remove after the browser chat migration. Has to run before listing,
     // the listing marks server chats as persisted and the migration would skip them
-    await migrateLocalChatsToBackend().catch(error => console.error("Chat migration failed", error));
+    const migratedIds = await migrateLocalChatsToBackend()
+        .then(result => result.migratedIds)
+        .catch(error => {
+            console.error("Chat migration failed", error);
+            return new Set<string>();
+        });
     const conversations = await listConversationsApi();
     const chatStorage = new StorageService<ChatResponse, ChatOptions>(CHAT_STORE);
     const assistantStorage = new StorageService<ChatResponse, Assistant>(ASSISTANT_STORE);
@@ -39,7 +44,7 @@ async function syncHistory(): Promise<void> {
     // Remove only entries known to have been synchronized before. Local-only
     // history is retained when a chat has been deleted from another device.
     for (const chat of chats ?? []) {
-        if (chat.backendPersisted && chat.id && !serverIds.has(chat.id)) {
+        if (chat.backendPersisted && chat.id && !serverIds.has(chat.id) && !migratedIds.has(chat.id)) {
             await chatStorage.delete(chat.id);
         }
     }
@@ -50,7 +55,7 @@ async function syncHistory(): Promise<void> {
                 ? chat.id === AssistantStorageService.GENERATE_BOT_CHAT_ID(conversation.assistant_id, conversation.conversation_id)
                 : chat.id?.startsWith(AssistantStorageService.CHAT_ID) && chat.id.endsWith("_" + conversation.conversation_id)
         );
-        if (!existsOnServer) {
+        if (!existsOnServer && !migratedIds.has(chat.id)) {
             await assistantStorage.delete(chat.id);
         }
     }

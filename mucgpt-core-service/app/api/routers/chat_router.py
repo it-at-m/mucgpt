@@ -187,10 +187,12 @@ async def _save_document_selection(
 )
 async def list_conversations(
     user_info: Annotated[AuthenticationResult, Depends(authenticate_user)],
+    response: Response,
 ) -> list[ConversationMetadata]:
     """Return the authenticated user's conversations as metadata (no messages),
     most recently active first."""
     rows = await PersistanceHelpers.get_conversations_for_user(user_info.user_id)
+    response.headers["Cache-Control"] = "no-store"
     return [ConversationMetadata(**row) for row in rows]
 
 

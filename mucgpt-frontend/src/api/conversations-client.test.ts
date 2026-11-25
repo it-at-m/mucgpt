@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { deleteConversationApi } from "./conversations-client";
+import { deleteConversationApi, listConversationsApi } from "./conversations-client";
 import { ApiError } from "./fetch-utils";
 
 vi.mock("./core-client", () => ({ API_BASE: "/api/backend/" }));
@@ -55,5 +55,25 @@ describe("deleteConversationApi", () => {
         expect(reload).not.toHaveBeenCalled();
         await vi.advanceTimersByTimeAsync(5000);
         expect(reload).toHaveBeenCalledOnce();
+    });
+});
+
+describe("listConversationsApi", () => {
+    const fetchMock = vi.fn<typeof fetch>();
+
+    beforeEach(() => {
+        vi.stubGlobal("fetch", fetchMock);
+        vi.stubGlobal("document", { cookie: "" });
+        fetchMock.mockResolvedValue(new Response(JSON.stringify([]), { status: 200 }));
+    });
+
+    afterEach(() => {
+        vi.unstubAllGlobals();
+    });
+
+    it("bypasses browser HTTP caches", async () => {
+        await expect(listConversationsApi()).resolves.toEqual([]);
+
+        expect(fetchMock).toHaveBeenCalledWith("/api/backend/v1/conversations", expect.objectContaining({ cache: "no-store" }));
     });
 });

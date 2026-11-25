@@ -77,6 +77,7 @@ describe("chat migration", () => {
                 turns: [{ user: "q1", assistant: "a1" }]
             }
         ]);
+        expect(fetchMock.mock.calls[0][1]).toMatchObject({ cache: "no-store" });
         expect(transaction).toHaveBeenCalledWith(CHAT_STORE.objectStore_name, "readwrite");
         expect(put).toHaveBeenCalledWith({ ...chat(), backendPersisted: true });
         expect(del).not.toHaveBeenCalled();

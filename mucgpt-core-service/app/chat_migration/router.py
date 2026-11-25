@@ -1,12 +1,19 @@
 """POST /v1/conversations/import, used once per chat by the frontend."""
 
+import asyncio
+from contextlib import suppress
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Response
 from redis.asyncio.lock import Lock
+from redis.exceptions import LockError
 
 # same lock as chat turns, so an import can't race a running chat
-from api.routers.chat_router import _lock_conversation_run, _unlock_conversation_run
+from api.routers.chat_router import (
+    _lock_conversation_run,
+    _renew_conversation_run_lock,
+    _unlock_conversation_run,
+)
 from chat_migration.models import ConversationImportRequest, ConversationImportResult
 from chat_migration.service import ImportConflictError, import_chat
 from config.settings import get_settings
@@ -45,6 +52,26 @@ async def _release_import_slot(slot: Lock) -> None:
         logger.warning("Chat migration import slot expired before the import ended")
 
 
+async def _renew_import_slot(
+    slot: Lock, lease_seconds: int, stop: asyncio.Event
+) -> None:
+    """Keep an import slot claimed when an unusually large import runs slowly."""
+    while not stop.is_set():
+        await asyncio.sleep(lease_seconds / 2)
+        if stop.is_set():
+            return
+        try:
+            if not await slot.extend(lease_seconds, replace_ttl=True):
+                logger.warning("Chat migration import slot could not be renewed")
+                return
+        except LockError:
+            logger.warning("Chat migration import slot expired before it could renew")
+            return
+        except Exception:
+            logger.exception("Chat migration import slot renewal failed")
+            return
+
+
 @router.post(
     "/conversations/import",
     summary="Import a browser-only conversation",
@@ -70,6 +97,14 @@ async def import_conversation(
             detail="Browser chat migration capacity is temporarily exhausted",
             headers={"Retry-After": str(IMPORT_RETRY_AFTER_SECONDS)},
         )
+    slot_renewal_stop = asyncio.Event()
+    slot_renewal = asyncio.create_task(
+        _renew_import_slot(
+            import_slot,
+            get_settings().chat_migration_slot_ttl_seconds,
+            slot_renewal_stop,
+        )
+    )
     try:
         try:
             lock = await _lock_conversation_run(request.conversation_id)
@@ -81,6 +116,10 @@ async def import_conversation(
                 detail="Another request is still running for this conversation",
                 headers={"Retry-After": str(IMPORT_RETRY_AFTER_SECONDS)},
             ) from exc
+        lock_renewal_stop = asyncio.Event()
+        lock_renewal = asyncio.create_task(
+            _renew_conversation_run_lock(lock, lock_renewal_stop)
+        )
         try:
             status = await import_chat(request, user_info.user_id)
         except ImportConflictError as exc:
@@ -88,8 +127,16 @@ async def import_conversation(
                 status_code=409, detail="Conversation id is not available"
             ) from exc
         finally:
+            lock_renewal_stop.set()
+            lock_renewal.cancel()
+            with suppress(asyncio.CancelledError):
+                await lock_renewal
             await _unlock_conversation_run(lock)
     finally:
+        slot_renewal_stop.set()
+        slot_renewal.cancel()
+        with suppress(asyncio.CancelledError):
+            await slot_renewal
         await _release_import_slot(import_slot)
     # counts only, never chat content
     logger.info("Browser chat import: %s", status)

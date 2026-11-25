@@ -8,6 +8,7 @@ reachable or when MUCGPT_TEST_VALKEY=off.
 
 import asyncio
 from collections.abc import Awaitable
+from contextlib import suppress
 from typing import cast
 from unittest.mock import AsyncMock
 
@@ -158,3 +159,33 @@ async def test_chat_migration_slots_limit_concurrent_imports(
     await asyncio.gather(
         *(chat_migration_router._release_import_slot(slot) for slot in acquired)
     )
+
+
+@pytest.mark.asyncio
+async def test_chat_migration_slot_renewal_keeps_capacity_claimed(
+    valkey_client, monkeypatch
+):
+    """A slow import continues to occupy its real Valkey capacity slot."""
+    monkeypatch.setattr(
+        chat_migration_router,
+        "get_settings",
+        lambda: Settings(
+            chat_migration_max_concurrent_imports=1,
+            chat_migration_slot_ttl_seconds=1,
+        ),
+    )
+    slot = await chat_migration_router._acquire_import_slot()
+    assert slot is not None
+    stop = asyncio.Event()
+    renewal = asyncio.create_task(
+        chat_migration_router._renew_import_slot(slot, 1, stop)
+    )
+    try:
+        await asyncio.sleep(1.1)
+        assert await chat_migration_router._acquire_import_slot() is None
+    finally:
+        stop.set()
+        renewal.cancel()
+        with suppress(asyncio.CancelledError):
+            await renewal
+        await chat_migration_router._release_import_slot(slot)

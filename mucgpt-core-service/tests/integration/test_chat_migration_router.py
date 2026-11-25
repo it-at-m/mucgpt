@@ -1,11 +1,13 @@
 """Router tests for the temporary browser chat import endpoint."""
 
+import asyncio
 from unittest.mock import AsyncMock
 
 import pytest
 from fastapi.testclient import TestClient
 
 from api.routers.chat_router import CONVERSATION_RUN_LOCK_PREFIX
+from chat_migration import router as chat_migration_router
 from chat_migration.service import ImportConflictError
 
 URL = "/v1/conversations/import"
@@ -107,3 +109,20 @@ def test_import_capacity_returns_429(test_client: TestClient, monkeypatch, impor
     assert response.status_code == 429, response.text
     assert response.headers["retry-after"] == "5"
     import_chat.assert_not_awaited()
+
+
+@pytest.mark.asyncio
+async def test_import_slot_renewal_extends_the_lease(monkeypatch):
+    slot = AsyncMock()
+    stop = asyncio.Event()
+
+    async def extend(*_args, **_kwargs):
+        stop.set()
+        return True
+
+    slot.extend.side_effect = extend
+    monkeypatch.setattr("chat_migration.router.asyncio.sleep", AsyncMock())
+
+    await chat_migration_router._renew_import_slot(slot, 60, stop)
+
+    slot.extend.assert_awaited_once_with(60, replace_ttl=True)

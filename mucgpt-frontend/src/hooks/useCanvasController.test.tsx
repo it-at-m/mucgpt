@@ -90,7 +90,7 @@ vi.mock("@tiptap/react", () => ({ useEditor: () => editors.active }));
 
 let capturedController: ReturnType<typeof useCanvasController> | undefined;
 
-const Owner = ({ conversationId }: { conversationId: string }) => {
+const Owner = ({ conversationId }: { conversationId: string | undefined }) => {
     const controller = useCanvasController(conversationId);
     capturedController = controller;
     return <CanvasPanel controller={controller} conversationId={conversationId} />;
@@ -110,6 +110,7 @@ beforeEach(() => {
     saveMock.mockResolvedValue(true);
     loadStateMock.mockResolvedValue(null);
     loadRevisionsMock.mockResolvedValue(null);
+    sessionStorage.clear();
 });
 
 afterEach(() => {
@@ -247,5 +248,84 @@ describe("useCanvasController notify flush", () => {
 
         expect(recreated.markdownText).toBe("");
         editors.active = editorStub;
+    });
+});
+
+describe("useCanvasController pre-chat canvas draft", () => {
+    it("stores an unpersisted edit in the sessionStorage draft after the debounce", async () => {
+        render(<Owner conversationId={undefined} />);
+
+        editorStub.markdownText = "# unpersisted";
+        editorStub.emit("update");
+        await advanceDebounce();
+
+        expect(sessionStorage.getItem("canvas-draft")).toBe("# unpersisted");
+        expect(saveMock).not.toHaveBeenCalled();
+    });
+
+    it("restores the pre-chat draft on a fresh canvas and opens it", () => {
+        sessionStorage.setItem("canvas-draft", "# draft");
+
+        render(<Owner conversationId={undefined} />);
+
+        expect(editorStub.markdownText).toBe("# draft");
+        expect(capturedController!.isOpen).toBe(true);
+    });
+
+    it("clears the draft when the unpersisted canvas is emptied", async () => {
+        sessionStorage.setItem("canvas-draft", "# older");
+        render(<Owner conversationId={undefined} />);
+        await advanceDebounce();
+        expect(editorStub.markdownText).toBe("# older");
+
+        editorStub.markdownText = "";
+        editorStub.emit("update");
+        await advanceDebounce();
+
+        expect(sessionStorage.getItem("canvas-draft")).toBeNull();
+    });
+
+    it("keeps adopted content on a fresh conversation's id assignment and drops the draft", async () => {
+        sessionStorage.setItem("canvas-draft", "# older");
+        const view = render(<Owner conversationId={undefined} />);
+
+        editorStub.markdownText = "# adopted";
+        editorStub.emit("update");
+        await advanceDebounce();
+
+        act(() => capturedController!.beginAdoption());
+        view.rerender(<Owner conversationId="conv-new" />);
+
+        expect(editorStub.markdownText).toBe("# adopted");
+        expect(sessionStorage.getItem("canvas-draft")).toBeNull();
+        expect(loadStateMock).not.toHaveBeenCalled();
+    });
+
+    it("switches away with canvas content: the target conversation's server canvas replaces it and the draft is dropped", async () => {
+        const view = render(<Owner conversationId={undefined} />);
+
+        editorStub.markdownText = "# stale";
+        editorStub.emit("update");
+        await advanceDebounce();
+        loadStateMock.mockResolvedValue("# stored");
+
+        view.rerender(<Owner conversationId="existing-1" />);
+
+        await waitFor(() => expect(editorStub.markdownText).toBe("# stored"));
+        expect(sessionStorage.getItem("canvas-draft")).toBeNull();
+        expect(loadStateMock).toHaveBeenCalledWith("existing-1");
+    });
+
+    it("re-seeds the draft after an aborted conversation: snapshotPreChatDraft re-arms it before the reset", () => {
+        sessionStorage.setItem("canvas-draft", "# older");
+        const view = render(<Owner conversationId="conv-1" />);
+        editorStub.markdownText = "# first turn content";
+        editorStub.emit("update");
+
+        act(() => capturedController!.snapshotPreChatDraft());
+        expect(sessionStorage.getItem("canvas-draft")).toBe("# first turn content");
+
+        view.rerender(<Owner conversationId={undefined} />);
+        expect(editorStub.markdownText).toBe("# first turn content");
     });
 });

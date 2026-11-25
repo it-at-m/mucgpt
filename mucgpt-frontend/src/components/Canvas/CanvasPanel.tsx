@@ -4,6 +4,7 @@ import { MessageBar } from "@fluentui/react-components";
 
 import { putCanvasRevisionsApi } from "../../api/core-client";
 import type { CanvasControllerInstance } from "../../hooks/useCanvasController";
+import { clearCanvasDraft, saveCanvasDraft } from "./canvasDraft";
 import { saveCanvasContent } from "../../service/canvasStorage";
 import { useCanvasLimits } from "./canvasLimits";
 import { CANVAS_PASTE_CLIPPED_EVENT } from "./canvasTextLimit";
@@ -153,8 +154,21 @@ export const CanvasPanel = ({ controller, conversationId, serverConversationId, 
     // The controller's subscribe channel debounces 1 s and flushes
     // synchronously on unsubscribe (canvas close, switch, unmount).
     useEffect(() => {
-        return controllerRef.current.subscribe(markdown => persistContent(markdown));
-    }, [persistContent]);
+        const onEdit = (markdown: string) => {
+            // Without a conversation there is no server autosave yet: the
+            // debounced edit stream feeds the pre-chat sessionStorage draft
+            // instead. A trimmed-empty document is an intentional clear and
+            // drops the draft; over-limit content is not stored (fail closed,
+            // same rule as the server persist below).
+            if (!conversationId) {
+                if (markdown.trim() && markdown.length <= limits.contentLimitChars) saveCanvasDraft(markdown);
+                else clearCanvasDraft();
+                return;
+            }
+            persistContent(markdown);
+        };
+        return controllerRef.current.subscribe(onEdit);
+    }, [conversationId, persistContent, limits.contentLimitChars]);
 
     // Run end: persist the final state so agent edits don't lag the stored
     // copy; forced, because the server may hold turn-start content the panel
@@ -168,11 +182,19 @@ export const CanvasPanel = ({ controller, conversationId, serverConversationId, 
 
     // Reload/close: flush content and revision rings with keepalive fetches
     // that survive the unload. Oversized payloads fail closed and keep the
-    // debounce/unmount behavior.
+    // debounce/unmount behavior. Without a conversation the sessionStorage
+    // draft takes the place of the server save: synchronous and debounce-free,
+    // so the last edit window survives the unload.
     useEffect(() => {
-        if (readOnly || !serverId || !conversationId) return;
+        if (readOnly) return;
         const onPageHide = () => {
-            persistContent(controllerRef.current.getMarkdown(), { keepalive: true, force: true });
+            const markdown = controllerRef.current.getMarkdown();
+            if (!conversationId) {
+                if (markdown.trim() && markdown.length <= limits.contentLimitChars) saveCanvasDraft(markdown);
+                return;
+            }
+            if (!serverId) return;
+            persistContent(markdown, { keepalive: true, force: true });
             const revisions = controllerRef.current.listRevisions();
             if (!revisions.auto.length && !revisions.manual.length) return;
             // Browsers cap keepalive bodies at 64 kB; rings carry document
@@ -183,7 +205,7 @@ export const CanvasPanel = ({ controller, conversationId, serverConversationId, 
         };
         window.addEventListener("pagehide", onPageHide);
         return () => window.removeEventListener("pagehide", onPageHide);
-    }, [readOnly, serverId, conversationId, persistContent]);
+    }, [readOnly, serverId, conversationId, persistContent, limits.contentLimitChars]);
 
     // Retry a failed autosave once on unmount or conversation switch: after a
     // failure the debounce timer is gone, so navigation would otherwise drop

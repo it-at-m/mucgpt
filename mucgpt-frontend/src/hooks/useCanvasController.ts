@@ -10,6 +10,7 @@ import { useCanvasLimits } from "../components/Canvas/canvasLimits";
 import { loadCanvasRevisions, loadCanvasState, parseCanvasRevisions, type CanvasRevision, type CanvasRevisions } from "../service/canvasStorage";
 import type { CanvasStreamEvent } from "../utils/canvasStream";
 import { CANVAS_PERSISTENCE_RESET, persistentCaret, persistentSelection } from "../components/Canvas/canvasSelectionPersistence";
+import { clearCanvasDraft, loadCanvasDraft, saveCanvasDraft } from "../components/Canvas/canvasDraft";
 import { canvasExtensions } from "../components/Canvas/canvasExtensions";
 import { effectiveAllowedTags, sanitizeCanvasMarkdown } from "../components/Canvas/canvasHtmlWhitelist";
 
@@ -22,6 +23,14 @@ export interface CanvasController {
     setIsOpen(open: boolean): void;
     /** Sets an open request that survives a pending fresh-chat reset. */
     requestOpen(): void;
+    /** Flags the next fresh-conversation id assignment as an adoption of the
+     * current editor content: the switch effect then keeps the content instead
+     * of running the conversation switch. Called by the page right before it
+     * assigns a new conversation's id. */
+    beginAdoption(): void;
+    /** Stores nonempty current content as the pre-chat canvas draft
+     * (sessionStorage); used when a fresh conversation's first turn fails. */
+    snapshotPreChatDraft(): void;
     /** True while the agent is writing */
     isLocked: boolean;
     unlock(): void;
@@ -296,6 +305,9 @@ export function useCanvasController(conversationId: string | undefined, serverCo
     // Tracks the conversation the switch effect last ran with; starts as a sentinel
     // (not undefined) so the initial mount load isn't mistaken for an id assignment.
     const prevConversationIdRef = useRef<string | undefined | "uninitialized">("uninitialized");
+    // Set by beginAdoption: the next undefined→id assignment is a fresh
+    // conversation adopting the current editor content, not a switch.
+    const adoptingRef = useRef(false);
     // Mirrors isOpen for the switch effect, which must not depend on the state value
     // (adding it to the deps would re-run the whole switch on every open/close toggle).
     const isOpenRef = useRef(false);
@@ -409,13 +421,23 @@ export function useCanvasController(conversationId: string | undefined, serverCo
         // switch runs; it is consumed as soon as the new chat has an id.
         const pendingOpen = pendingOpenRef.current;
         if (conversationId) pendingOpenRef.current = false;
-        // The undefined→id transition is ambiguous: either the first prompt of this
-        // new chat just got its id (same logical conversation — the canvas is open
-        // and/or holds content: keep everything) or a page reload is restoring an
-        // existing conversation (fresh controller, canvas closed and empty: run the
-        // load path below to restore the stored canvas before an empty canvas state
-        // is sent and overwrites it server-side).
-        if (previous === undefined && conversationId !== undefined && (isOpenRef.current || hasCanvasContent())) return;
+        // The id assignment announced by beginAdoption is a fresh conversation
+        // adopting the current editor content (its first request already
+        // carried it): keep everything; later autosaves persist it and the
+        // pre-chat draft becomes obsolete. Any other id assignment is a
+        // genuine conversation switch — even a fresh chat with an open, filled
+        // canvas must not leak its content into the other conversation.
+        if (previous === undefined && conversationId !== undefined && adoptingRef.current) {
+            adoptingRef.current = false;
+            clearCanvasDraft();
+            return;
+        }
+        // A genuine switch to a persisted conversation discards the pre-chat
+        // draft: it must never leak into another chat. The defined→undefined
+        // reset (deliberate new chat, aborted first turn) does not clear: the
+        // abort path re-arms the draft just before that reset, so its content
+        // survives as an unpersisted draft.
+        if (conversationId !== undefined) clearCanvasDraft();
 
         lastStreamRevisionRef.current = -1;
         nextRevisionRef.current = 1;
@@ -480,6 +502,19 @@ export function useCanvasController(conversationId: string | undefined, serverCo
                     console.error("Loading canvas failed:", error);
                 }
             })();
+        } else {
+            // No conversation: the canvas is an unpersisted pre-chat draft.
+            // Seed it from the sessionStorage draft when the editor is empty
+            // (initial mount, and the reset after an aborted fresh
+            // conversation's first turn re-seeds the re-armed draft). A live
+            // document stays; its next edit refreshes the draft.
+            const editor = editorRef.current;
+            const draft = !editor || editor.isDestroyed ? null : loadCanvasDraft();
+            if (editor && !hasCanvasContent() && draft?.trim()) {
+                editor.commands.setContent(sanitize(draft));
+                editor.view.dispatch(editor.state.tr.setMeta(CANVAS_PERSISTENCE_RESET, true));
+                setIsOpen(true);
+            }
         }
         return () => {
             cancelled = true;
@@ -499,6 +534,17 @@ export function useCanvasController(conversationId: string | undefined, serverCo
         pendingOpenRef.current = true;
         setIsOpen(true);
     }, []);
+
+    // See the interface docs: must be called synchronously before the id
+    // assignment renders, so the switch effect observes the flag.
+    const beginAdoption = useCallback(() => {
+        adoptingRef.current = true;
+    }, []);
+
+    const snapshotPreChatDraft = useCallback(() => {
+        const markdown = getMarkdown();
+        if (markdown.trim()) saveCanvasDraft(markdown);
+    }, [getMarkdown]);
 
     // Called on RUN_STARTED: the server numbers canvas_revision per run,
     // so the monotonicity guard must reset per run, not per conversation.
@@ -721,6 +767,8 @@ export function useCanvasController(conversationId: string | undefined, serverCo
             isOpen,
             setIsOpen,
             requestOpen,
+            beginAdoption,
+            snapshotPreChatDraft,
             isLocked,
             beginRun,
             unlock,
@@ -740,6 +788,8 @@ export function useCanvasController(conversationId: string | undefined, serverCo
             isOpen,
             setIsOpen,
             requestOpen,
+            beginAdoption,
+            snapshotPreChatDraft,
             isLocked,
             beginRun,
             unlock,

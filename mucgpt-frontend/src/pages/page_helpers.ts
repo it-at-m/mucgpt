@@ -224,6 +224,15 @@ export interface CanvasWiring {
     onRunStarted: () => void;
     /** RUN_FINISHED/RUN_ERROR: post-run snapshot and unlock */
     onRunFinished: () => void;
+    /** Right before a fresh conversation's id assignment: the current canvas
+     * content is adopted into it, so the controller must not treat the
+     * assignment as a conversation switch. Absent for non-persisted requests
+     * (previews) and tests. */
+    adoptNewConversation?: () => void;
+    /** A fresh conversation's first request failed and it is discarded:
+     * re-arms the pre-chat canvas draft so the content survives the following
+     * conversation reset. Absent for tests. */
+    savePreChatDraft?: () => void;
 }
 
 /** A completed turn used as extra context when regenerating a chat title. */
@@ -373,6 +382,10 @@ export const makeApiRequest = async (
         // The generated title replaces the placeholder once the turn completes.
         const placeholderId = await storageService.create([], options, newChatLocalId, i18next.t("components.history.unnamed_chat"), false);
         if (placeholderId) {
+            // The id assignment below adopts the current canvas content into
+            // the fresh conversation; announced synchronously so the
+            // controller's switch effect observes the flag.
+            canvasWiring?.adoptNewConversation?.();
             activeChatRef.current = placeholderId;
             dispatch({ type: "SET_ACTIVE_CHAT", payload: placeholderId });
             fetchHistory?.();
@@ -382,6 +395,11 @@ export const makeApiRequest = async (
     /** Fails the request, discarding an orphaned first persisted conversation. */
     const abortRequest = async (error: unknown): Promise<never> => {
         if (isNewPersistedConversation) {
+            // The discarded turn must not take canvas content typed before the
+            // conversation existed with it: re-arm the pre-chat draft from the
+            // still-current editor, so the conversation reset below restores
+            // it as an unpersisted draft.
+            canvasWiring?.savePreChatDraft?.();
             let serverConversationDeleted = false;
             try {
                 await deleteConversationApi(conversationId);

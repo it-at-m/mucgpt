@@ -404,6 +404,8 @@ describe("conversation id assignment", () => {
             harness.current.setMarkdown("# Mine");
             harness.current.setIsOpen(true);
         });
+        // The page announces the adoption before makeApiRequest assigns the id.
+        act(() => harness.current.beginAdoption());
 
         await harness.rerender("conv-1");
 
@@ -466,7 +468,10 @@ describe("conversation id assignment", () => {
 
         const harness = renderController();
         harness.render(undefined);
-        act(() => harness.current.setMarkdown("---"));
+        act(() => {
+            harness.current.setMarkdown("---");
+            harness.current.beginAdoption();
+        });
 
         await harness.rerender("conv-1");
 

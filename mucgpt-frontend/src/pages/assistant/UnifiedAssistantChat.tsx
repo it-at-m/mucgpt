@@ -286,7 +286,9 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                 if (runHadCanvasActivity && c.isOpen && c.getMarkdown().trim()) c.snapshot("agent");
                 runHadCanvasActivity = false;
                 c.unlock();
-            }
+            },
+            adoptNewConversation: () => canvasRef.current.beginAdoption(),
+            savePreChatDraft: () => canvasRef.current.snapshotPreChatDraft()
         };
     }, []);
 

@@ -38,10 +38,7 @@ export interface ChatMigrationResult {
 type LocalChat = DBObject<ChatResponse, unknown>;
 
 export function importConversationApi(payload: ImportConversationPayload): Promise<{ status: "imported" | "skipped" }> {
-    return handleApiRequest(
-        () => fetch(API_BASE + "v1/conversations/import", { ...postConfig(payload), cache: "no-store" }),
-        "Failed to import conversation"
-    );
+    return handleApiRequest(() => fetch(API_BASE + "v1/conversations/import", { ...postConfig(payload), cache: "no-store" }), "Failed to import conversation");
 }
 
 function delay(milliseconds: number): Promise<void> {
@@ -56,7 +53,7 @@ async function importWithRetry(payload: ImportConversationPayload): Promise<{ st
             if (!(error instanceof ApiError) || !RETRYABLE_STATUSES.includes(error.status) || attempt >= MIGRATION_RETRY_ATTEMPTS) {
                 throw error;
             }
-            await delay((error.retryAfter ?? (DEFAULT_RETRY_DELAY_MS / 1_000)) * 1_000);
+            await delay((error.retryAfter ?? DEFAULT_RETRY_DELAY_MS / 1_000) * 1_000);
         }
     }
 }

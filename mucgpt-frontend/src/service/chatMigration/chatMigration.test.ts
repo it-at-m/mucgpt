@@ -159,7 +159,9 @@ describe("chat migration", () => {
     it("retries a busy import before marking the chat persisted", async () => {
         vi.useFakeTimers();
         localChats([chat()]);
-        vi.mocked(handleApiRequest).mockRejectedValueOnce(new ApiError("busy", 423, undefined, 1)).mockResolvedValueOnce({ status: "imported" });
+        vi.mocked(handleApiRequest)
+            .mockRejectedValueOnce(new ApiError("busy", 423, undefined, 1))
+            .mockResolvedValueOnce({ status: "imported" });
 
         const migration = migrateLocalChatsToBackend();
         await vi.advanceTimersByTimeAsync(1_000);
@@ -173,7 +175,9 @@ describe("chat migration", () => {
     it("retries an overloaded import before marking the chat persisted", async () => {
         vi.useFakeTimers();
         localChats([chat()]);
-        vi.mocked(handleApiRequest).mockRejectedValueOnce(new ApiError("overloaded", 429, undefined, 1)).mockResolvedValueOnce({ status: "imported" });
+        vi.mocked(handleApiRequest)
+            .mockRejectedValueOnce(new ApiError("overloaded", 429, undefined, 1))
+            .mockResolvedValueOnce({ status: "imported" });
 
         const migration = migrateLocalChatsToBackend();
         await vi.advanceTimersByTimeAsync(1_000);

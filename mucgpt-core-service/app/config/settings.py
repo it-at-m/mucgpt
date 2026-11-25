@@ -650,6 +650,10 @@ class Settings(BaseSettings):
     ai_act_compliance_check_enabled: bool = True
     compliance_cache_enabled: bool = True
     compliance_cache_ttl_seconds: PositiveInt = 30 * 60
+    # Bound concurrent one-time browser chat imports across all core instances.
+    # Each lease expires so a crashed worker cannot consume a slot forever.
+    chat_migration_max_concurrent_imports: PositiveInt = 4
+    chat_migration_slot_ttl_seconds: PositiveInt = 5 * 60
 
     # Canvas
     # Maximum persisted canvas content length (characters); the agent tools and

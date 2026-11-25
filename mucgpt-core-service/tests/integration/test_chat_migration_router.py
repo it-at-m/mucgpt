@@ -95,3 +95,15 @@ def test_busy_chat_returns_423_with_retry_after(
     assert response.status_code == 423, response.text
     assert response.headers["retry-after"] == "5"
     import_chat.assert_not_awaited()
+
+
+def test_import_capacity_returns_429(test_client: TestClient, monkeypatch, import_chat):
+    monkeypatch.setattr(
+        "chat_migration.router._acquire_import_slot", AsyncMock(return_value=None)
+    )
+
+    response = test_client.post(URL, json=BODY)
+
+    assert response.status_code == 429, response.text
+    assert response.headers["retry-after"] == "5"
+    import_chat.assert_not_awaited()

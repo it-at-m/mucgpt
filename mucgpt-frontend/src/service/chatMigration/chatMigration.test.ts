@@ -170,6 +170,20 @@ describe("chat migration", () => {
         vi.useRealTimers();
     });
 
+    it("retries an overloaded import before marking the chat persisted", async () => {
+        vi.useFakeTimers();
+        localChats([chat()]);
+        vi.mocked(handleApiRequest).mockRejectedValueOnce(new ApiError("overloaded", 429, undefined, 1)).mockResolvedValueOnce({ status: "imported" });
+
+        const migration = migrateLocalChatsToBackend();
+        await vi.advanceTimersByTimeAsync(1_000);
+        await migration;
+
+        expect(handleApiRequest).toHaveBeenCalledTimes(2);
+        expect(put).toHaveBeenCalledWith({ ...chat(), backendPersisted: true });
+        vi.useRealTimers();
+    });
+
     it("keeps an unavailable conversation local without retrying", async () => {
         localChats([chat()]);
         vi.mocked(handleApiRequest).mockRejectedValueOnce(new ApiError("unavailable", 409));

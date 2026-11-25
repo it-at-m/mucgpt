@@ -90,7 +90,9 @@ def _normalize_chat_title(value: str) -> str:
 
 
 _FENCED_OR_INLINE_CODE = re.compile(
-    r"(?P<code>```[\s\S]*?(?:```|$)|~~~[\s\S]*?(?:~~~|$)|`[^`\n]*`)"
+    # Fences must open at a line start (CommonMark), inline code is any
+    # backtick run within one line; both are kept verbatim.
+    r"((?:^|\n) {0,3}(?:```[\s\S]*?(?:```|$)|~~~[\s\S]*?(?:~~~|$))|`[^`\n]*`)"
 )
 
 

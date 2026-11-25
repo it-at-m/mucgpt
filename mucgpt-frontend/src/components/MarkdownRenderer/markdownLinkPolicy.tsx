@@ -100,8 +100,6 @@ const TITLE_PATTERN = "[ \\t]*(?:\"[^\"]*\"|'[^']*'|\\([^()]*\\))?[ \\t]*";
 const INLINE_IMAGE_RE = new RegExp(`!\\[${LABEL_PATTERN}\\]\\([ \\t]*${DESTINATION_PATTERN}${TITLE_PATTERN}\\)`, "g");
 const INLINE_LINK_RE = new RegExp(`\\[${LABEL_PATTERN}\\]\\([ \\t]*${DESTINATION_PATTERN}${TITLE_PATTERN}\\)`, "g");
 
-const RAW_HTML_TAG_RE = /<\/?[a-zA-Z][^>]*>/g;
-
 // `[desc](url "title")` — an angle-wrapped destination keeps its inner value as-is.
 const destinationOf = (destination: string): string => {
     const trimmed = destination.trim();
@@ -111,10 +109,8 @@ const destinationOf = (destination: string): string => {
 
 const stripLinks = (markdown: string): string =>
     markdown
-        // autolinks before the raw-HTML strip: `<https://example.com>` is not a tag
+        // autolinks before escaping: `<https://example.com>` is not a tag
         .replace(/<((?:https?|mailto|xmpp):[^>\s]+)>/g, "$1")
-        // raw HTML must not survive in a rendered mindmap (markmap enables HTML)
-        .replace(RAW_HTML_TAG_RE, "")
         // images ![alt](url) -> alt
         .replace(INLINE_IMAGE_RE, (_match, alt: string) => alt)
         // inline links [text](url) -> text

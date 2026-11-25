@@ -364,6 +364,35 @@ describe("loading stored revisions", () => {
         expect(harness.current.isOpen).toBe(true);
         expect(harness.current.getMarkdown()).toBe("Newest");
     });
+
+    it("falls back to content with unparseable link marks as plain text", async () => {
+        loadCanvasStateMock.mockResolvedValue("");
+        loadCanvasRevisionsMock.mockResolvedValue({
+            auto: [
+                {
+                    revision: 1,
+                    doc_json: {
+                        type: "doc",
+                        content: [
+                            { type: "paragraph", content: [{ type: "text", text: "Label", marks: [{ type: "link", attrs: { href: "https://example.com" } }] }] }
+                        ]
+                    },
+                    timestamp: 1,
+                    source: "agent"
+                }
+            ],
+            manual: []
+        });
+
+        const harness = renderController();
+        harness.render(undefined);
+
+        await harness.rerender("conv-1");
+        await new Promise(resolve => setTimeout(resolve, 0));
+
+        expect(harness.current.isOpen).toBe(true);
+        expect(harness.current.getMarkdown()).toBe("Label");
+    });
 });
 
 describe("conversation id assignment", () => {

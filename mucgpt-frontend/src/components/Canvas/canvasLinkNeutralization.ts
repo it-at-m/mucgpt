@@ -22,9 +22,9 @@ export const flattenPastedLinks = (html: string): string => {
 };
 
 /**
- * Strip link marks from a ProseMirror document JSON. Older revisions may
- * still contain them; the schema no longer knows the mark, so parsing would
- * fail. The link text is kept, only the mark (and with it the URL) is lost.
+ * Strip link marks from a ProseMirror document JSON: stored revisions may
+ * contain them, and the schema has no link mark, so parsing would fail. The
+ * link text is kept, only the mark (and with it the URL) is lost.
  */
 export const withoutLinkMarks = (docJson: unknown): unknown => {
     if (Array.isArray(docJson)) return docJson.map(withoutLinkMarks);

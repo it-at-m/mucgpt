@@ -1,5 +1,6 @@
 import { isValidElement, type ReactNode } from "react";
 import type { Components } from "react-markdown";
+import { collectVerbatimRanges } from "../Canvas/canvasHtmlWhitelist";
 import styles from "./MarkdownRenderer.module.css";
 
 /**
@@ -74,20 +75,39 @@ export const withSafeMarkdownLinks = (components: Components = {}): Components =
     ...components
 });
 
-const SPLIT_WITH_FENCES = /(```[\s\S]*?(?:```|$)|~~~[\s\S]*?(?:~~~|$)|`[^`\n]*`)/g;
+const transformOutsideVerbatim = (markdown: string, transform: (part: string) => string): string => {
+    let output = "";
+    let position = 0;
+    for (const range of collectVerbatimRanges(markdown)) {
+        if (position > range.start) continue; // already covered (code span inside a fence)
+        if (position < range.start) output += transform(markdown.slice(position, range.start));
+        output += markdown.slice(range.start, range.end);
+        position = range.end;
+    }
+    output += transform(markdown.slice(position));
+    return output;
+};
 
-const transformOutsideFences = (markdown: string, transform: (part: string) => string): string =>
-    markdown
-        .split(SPLIT_WITH_FENCES)
-        .map((part, index) => (index % 2 === 1 ? part : transform(part)))
-        .join("");
+// Inline destinations: angle-wrapped (`<url with spaces>`) or one bracket-balanced
+// level, optionally followed by a quoted/parenthesized title.
+const DESTINATION_PATTERN = "((?:<[^>]*>|(?:[^()\\s]|\\([^()]*\\))+))";
+const TITLE_PATTERN = "[ \\t]*(?:\"[^\"]*\"|'[^']*'|\\([^()]*\\))?[ \\t]*";
+const INLINE_IMAGE_RE = new RegExp(`!\\[([^\\]]*)\\]\\([ \\t]*${DESTINATION_PATTERN}${TITLE_PATTERN}\\)`, "g");
+const INLINE_LINK_RE = new RegExp(`\\[([^\\]]*)\\]\\([ \\t]*${DESTINATION_PATTERN}${TITLE_PATTERN}\\)`, "g");
+
+// `[desc](url "title")` — an angle-wrapped destination keeps its inner value as-is.
+const destinationOf = (destination: string): string => {
+    const trimmed = destination.trim();
+    const wrapped = trimmed.match(/^<([^>]*)>$/);
+    return wrapped ? wrapped[1] : trimmed;
+};
 
 const stripLinks = (markdown: string): string =>
     markdown
         // images ![alt](url) -> alt
-        .replace(/!\[([^\]]*)\]\(([^)]*)\)/g, "$1")
+        .replace(INLINE_IMAGE_RE, (_match, alt: string) => alt)
         // inline links [text](url) -> text
-        .replace(/\[([^\]]*)\]\(([^)]*)\)/g, "$1")
+        .replace(INLINE_LINK_RE, (_match, text: string) => text)
         // reference links [text][ref] -> text
         .replace(/\[([^\]]+)\]\[[^\]]*\]/g, "$1")
         // autolinks <https://example.com> -> https://example.com
@@ -99,15 +119,12 @@ const stripLinks = (markdown: string): string =>
  * Neutralize markdown link/image syntax in a plain-text context (e.g. before
  * rendering a mindmap), keeping fenced and inline code untouched.
  */
-export const stripMarkdownLinks = (markdown: string): string => transformOutsideFences(markdown, stripLinks);
+export const stripMarkdownLinks = (markdown: string): string => transformOutsideVerbatim(markdown, stripLinks);
 
 // Link definitions `[ref]: url`; footnote definitions (`[^1]: …`) are excluded.
 const DEFINITION_RE = /^ {0,3}\[([^^][^\]]*)\]:[ \t]*(\S+)[^\S\n]*(?:"[^"]*"|'[^']*'|\([^)]*\))?[^\S\n]*$\n?/gm;
 
 const referenceKey = (label: string): string => label.trim().toLowerCase();
-
-// `[desc](url "title")` — the destination is everything up to the first whitespace.
-const destinationOf = (match: string): string => match.trim().split(/\s+/)[0] ?? "";
 
 /**
  * Break markdown links and images down to their visible plain-text form
@@ -118,7 +135,7 @@ const destinationOf = (match: string): string => match.trim().split(/\s+/)[0] ??
  * inline code are kept untouched.
  */
 export const markdownLinksToPlainText = (markdown: string): string =>
-    transformOutsideFences(markdown, part => {
+    transformOutsideVerbatim(markdown, part => {
         const definitions = new Map<string, string>();
         for (const match of part.matchAll(DEFINITION_RE)) {
             const key = referenceKey(match[1]);
@@ -137,9 +154,9 @@ export const markdownLinksToPlainText = (markdown: string): string =>
             return url ? describeLinkText(desc, url) : desc;
         });
         // Images ![alt](url) before links, so [![alt](src)](url) keeps its shape
-        text = text.replace(/!\[([^\]]*)\]\(([^)]*)\)/g, (_match, alt: string, url: string) => describeLinkText(alt, destinationOf(url)));
+        text = text.replace(INLINE_IMAGE_RE, (_match, alt: string, url: string) => describeLinkText(alt, destinationOf(url)));
         // Inline links [desc](url)
-        text = text.replace(/\[([^\]]*)\]\(([^)]*)\)/g, (_match, desc: string, url: string) => describeLinkText(desc, destinationOf(url)));
+        text = text.replace(INLINE_LINK_RE, (_match, desc: string, url: string) => describeLinkText(desc, destinationOf(url)));
         // Autolinks <https://example.com>
         text = text.replace(/<((?:https?|mailto|xmpp):[^>\s]+)>/g, "$1");
         // Definition lines are resolved; footnote definitions stay untouched

@@ -90,6 +90,14 @@ describe("markdownLinksToPlainText", () => {
         expect(markdownLinksToPlainText('[Doku](https://muenchen.de "Titel")')).toBe("Doku (https://muenchen.de)");
     });
 
+    it("keeps angle-wrapped destinations with spaces intact", () => {
+        expect(markdownLinksToPlainText("[Formular](<https://muenchen.de/formular pfad>)")).toBe("Formular (https://muenchen.de/formular pfad)");
+    });
+
+    it("keeps one balanced paren level in the destination", () => {
+        expect(markdownLinksToPlainText("[Artikel](https://de.wikipedia.org/wiki/Foo_(bar))")).toBe("Artikel (https://de.wikipedia.org/wiki/Foo_(bar))");
+    });
+
     it("uses the destination when the description is empty", () => {
         expect(markdownLinksToPlainText("[](https://muenchen.de)")).toBe("https://muenchen.de");
     });

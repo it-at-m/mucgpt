@@ -89,7 +89,7 @@ describe("CanvasVersionsDrawer", () => {
         expect(sanitized).not.toContain("href");
     });
 
-    it("renders a legacy revision with a link mark as plain text without an anchor", () => {
+    it("renders a revision containing a link mark as plain text without an anchor", () => {
         const articles = renderDrawer({
             auto: [
                 {
@@ -110,9 +110,9 @@ describe("CanvasVersionsDrawer", () => {
             manual: []
         });
         expect(articles).toHaveLength(1);
-        const preview = articles[0].querySelectorAll("div")[1] as HTMLElement;
-        expect(preview.querySelector("a")).toBeNull();
-        expect(preview.innerHTML).toContain("link");
+        const preview = previewOf(articles[0]);
+        expect(preview).not.toContain("<a");
+        expect(preview).toContain("link");
     });
 
     it("leaves SVG-namespace anchors untouched by the HTML-only href-stripping hook", () => {

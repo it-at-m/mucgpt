@@ -71,6 +71,33 @@ const collectFenceRanges = (text: string): Range[] => {
     return ranges;
 };
 
+/**
+ * Ranges that downstream markdown passes must keep verbatim: fenced code
+ * blocks plus inline code spans. Shared so every pre-parse pass (HTML
+ * escaping, link neutralization) sees the same code boundaries.
+ */
+export function collectVerbatimRanges(text: string): Range[] {
+    if (text.length === 0) return [];
+    const fenceRanges = collectFenceRanges(text);
+
+    const codeSpanRanges: Range[] = [];
+    let cursor = 0;
+    const freeSegments: Range[] = [];
+    for (const range of fenceRanges) {
+        if (cursor < range.start) freeSegments.push({ start: cursor, end: range.start });
+        cursor = Math.max(cursor, range.end);
+    }
+    if (cursor < text.length) freeSegments.push({ start: cursor, end: text.length });
+    for (const segment of freeSegments) {
+        const segmentText = text.slice(segment.start, segment.end);
+        for (const match of segmentText.matchAll(INLINE_CODE_SPAN_PATTERN)) {
+            const matchStart = segment.start + (match.index ?? 0);
+            codeSpanRanges.push({ start: matchStart, end: matchStart + match[0].length });
+        }
+    }
+    return [...fenceRanges, ...codeSpanRanges].sort((left, right) => left.start - right.start);
+}
+
 /** Escapes every raw HTML tag that is not an attribute-free whitelisted tag. */
 const escapeDisallowedTags = (text: string, allowedNames: ReadonlySet<string>): string =>
     text.replace(HTML_TAG_PATTERN, (match, name: string, attributes?: string) =>
@@ -84,29 +111,10 @@ const escapeDisallowedTags = (text: string, allowedNames: ReadonlySet<string>): 
 export function sanitizeCanvasMarkdown(markdown: string, allowedTags: readonly string[]): string {
     if (!markdown) return markdown;
     const allowedNames = new Set(allowedTags.map(tag => tag.toLowerCase()));
-    const fenceRanges = collectFenceRanges(markdown);
-
-    // Inline code spans live only between fences (a fence's content must not
-    // become the delimiter half of a code span).
-    const codeSpanRanges: Range[] = [];
-    let cursor = 0;
-    const freeSegments: Range[] = [];
-    for (const range of fenceRanges) {
-        if (cursor < range.start) freeSegments.push({ start: cursor, end: range.start });
-        cursor = Math.max(cursor, range.end);
-    }
-    if (cursor < markdown.length) freeSegments.push({ start: cursor, end: markdown.length });
-    for (const segment of freeSegments) {
-        const segmentText = markdown.slice(segment.start, segment.end);
-        for (const match of segmentText.matchAll(INLINE_CODE_SPAN_PATTERN)) {
-            const matchStart = segment.start + (match.index ?? 0);
-            codeSpanRanges.push({ start: matchStart, end: matchStart + match[0].length });
-        }
-    }
+    const verbatimRanges = collectVerbatimRanges(markdown);
 
     const output: string[] = [];
     let position = 0;
-    const verbatimRanges = [...fenceRanges, ...codeSpanRanges].sort((left, right) => left.start - right.start);
     for (const range of verbatimRanges) {
         if (position > range.start) continue; // already covered (code span inside a fence)
         if (position < range.start) {

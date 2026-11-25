@@ -26,10 +26,7 @@ export const canvasExtensions = (limits?: Partial<CanvasTextLimitOptions>): Exte
     StarterKit.configure({
         underline: {},
         // No link mark in the schema: no ingestion path (markdown parsing,
-        // rich-HTML paste, typed URLs) can create one, so the document can
-        // never round-trip link syntax into renders or exports (issue #228).
-        // Markdown ingestion converts links to plain "description (url)" text
-        // (see canvasLinkNeutralization.ts / markdownLinkPolicy.tsx).
+        // rich-HTML paste, typed URLs) can create one (issue #228).
         link: false
     }),
     Table.configure({

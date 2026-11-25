@@ -268,12 +268,10 @@ export function useCanvasController(conversationId: string | undefined, serverCo
     const serverId = serverConversationId ?? conversationId;
     const limits = useCanvasLimits();
     const { canvas_allowed_html_tags: allowedHtmlTags } = useConfigContext();
-    // Pre-parse transformation of every markdown that enters the editor:
-    // (1) links and images become their plain "description (url)" text so the
-    // stored document never contains link syntax that could later be rendered,
-    // exported or round-tripped as clickable links/fetched images (issue #228);
-    // (2) every tag outside the deployment allowlist becomes literal text
-    // (config may only restrict; tags unknown to this release are ignored).
+    // Pre-parse transformation of every markdown entering the editor: links and
+    // images become plain "description (url)" text (issue #228) and tags outside
+    // the deployment allowlist become literal text (config may only restrict;
+    // tags unknown to this release are ignored).
     const allowedTags = effectiveAllowedTags(allowedHtmlTags);
     // Stable identity on purpose: the conversation-switch effect and the stream
     // callbacks must not be torn down/re-run when the config loads.
@@ -471,7 +469,7 @@ export function useCanvasController(conversationId: string | undefined, serverCo
                     if (!stored.trim()) {
                         const latestRevision = [...rings.auto, ...rings.manual].sort((left, right) => right.revision - left.revision)[0];
                         if (latestRevision) {
-                            editor.commands.setContent(latestRevision.doc_json as Content);
+                            editor.commands.setContent(withoutLinkMarks(latestRevision.doc_json) as Content);
                             editor.view.dispatch(editor.state.tr.setMeta(CANVAS_PERSISTENCE_RESET, true));
                             setIsOpen(true);
                             return;
@@ -711,9 +709,7 @@ export function useCanvasController(conversationId: string | undefined, serverCo
             if (!current || !found) return;
             // Stored doc_json is untrusted (foreign rings, older schema): tiptap's
             // setContent silently replaces the document with an empty one on
-            // invalid content, which would destroy the live canvas. Link marks
-            // from revisions created before link neutralization are stripped
-            // (the mark type no longer exists in the schema).
+            // invalid content, which would destroy the live canvas.
             const docJson = withoutLinkMarks(found.doc_json);
             try {
                 current.schema.nodeFromJSON(docJson).check();

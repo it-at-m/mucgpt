@@ -25,11 +25,12 @@ import { canvasTextLimit, type CanvasTextLimitOptions } from "./canvasTextLimit"
 export const canvasExtensions = (limits?: Partial<CanvasTextLimitOptions>): Extensions => [
     StarterKit.configure({
         underline: {},
-        // Links stay visible as link marks but clicking must not navigate
-        // (issue #228: markdown injection / link exfiltration).
-        link: {
-            openOnClick: false
-        }
+        // No link mark in the schema: no ingestion path (markdown parsing,
+        // rich-HTML paste, typed URLs) can create one, so the document can
+        // never round-trip link syntax into renders or exports (issue #228).
+        // Markdown ingestion converts links to plain "description (url)" text
+        // (see canvasLinkNeutralization.ts / markdownLinkPolicy.tsx).
+        link: false
     }),
     Table.configure({
         resizable: false

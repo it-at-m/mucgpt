@@ -32,6 +32,19 @@ const flattenText = (node: ReactNode): string => {
     return "";
 };
 
+/**
+ * Visible text for a neutralized link or image: the label plus the URL in
+ * parentheses, unless one of them is empty or the label already contains the
+ * URL.
+ */
+export const describeLinkText = (label: string, url: string): string => {
+    const text = label.trim();
+    const target = url.trim();
+    if (!target) return text;
+    if (!text) return target;
+    return text.includes(target) ? text : `${text} (${target})`;
+};
+
 export const SafeMarkdownLink = ({ href, children }: SafeLinkProps) => {
     const url = (href ?? "").trim();
     if (!url) return <>{children}</>;
@@ -46,7 +59,7 @@ export const SafeMarkdownLink = ({ href, children }: SafeLinkProps) => {
 };
 
 export const SafeMarkdownImage = ({ alt, src, title }: SafeImageProps) => {
-    const text = (alt ?? "").trim() || (title ?? "").trim() || (src ?? "").trim();
+    const text = describeLinkText((alt ?? "").trim() || (title ?? "").trim(), src ?? "");
     return text ? <span className={styles.linkUrl}>{text}</span> : null;
 };
 
@@ -62,6 +75,12 @@ export const withSafeMarkdownLinks = (components: Components = {}): Components =
 });
 
 const SPLIT_WITH_FENCES = /(```[\s\S]*?(?:```|$)|~~~[\s\S]*?(?:~~~|$)|`[^`\n]*`)/g;
+
+const transformOutsideFences = (markdown: string, transform: (part: string) => string): string =>
+    markdown
+        .split(SPLIT_WITH_FENCES)
+        .map((part, index) => (index % 2 === 1 ? part : transform(part)))
+        .join("");
 
 const stripLinks = (markdown: string): string =>
     markdown
@@ -80,8 +99,50 @@ const stripLinks = (markdown: string): string =>
  * Neutralize markdown link/image syntax in a plain-text context (e.g. before
  * rendering a mindmap), keeping fenced and inline code untouched.
  */
-export const stripMarkdownLinks = (markdown: string): string =>
-    markdown
-        .split(SPLIT_WITH_FENCES)
-        .map((part, index) => (index % 2 === 1 ? part : stripLinks(part)))
-        .join("");
+export const stripMarkdownLinks = (markdown: string): string => transformOutsideFences(markdown, stripLinks);
+
+// Link definitions `[ref]: url`; footnote definitions (`[^1]: …`) are excluded.
+const DEFINITION_RE = /^ {0,3}\[([^^][^\]]*)\]:[ \t]*(\S+)[^\S\n]*(?:"[^"]*"|'[^']*'|\([^)]*\))?[^\S\n]*$\n?/gm;
+
+const referenceKey = (label: string): string => label.trim().toLowerCase();
+
+// `[desc](url "title")` — the destination is everything up to the first whitespace.
+const destinationOf = (match: string): string => match.trim().split(/\s+/)[0] ?? "";
+
+/**
+ * Break markdown links and images down to their visible plain-text form
+ * ("description (url)"), the same view the chat answer policy produces.
+ * Used where the markdown itself is persisted (canvas editor): the stored
+ * document must not contain link/image syntax that could later be rendered
+ * or exported as clickable links or fetched images (issue #228). Fenced and
+ * inline code are kept untouched.
+ */
+export const markdownLinksToPlainText = (markdown: string): string =>
+    transformOutsideFences(markdown, part => {
+        const definitions = new Map<string, string>();
+        for (const match of part.matchAll(DEFINITION_RE)) {
+            const key = referenceKey(match[1]);
+            if (!definitions.has(key)) definitions.set(key, match[2]);
+        }
+
+        let text = part;
+        // Reference-style images ![alt][ref] and collapsed references [desc][]
+        text = text.replace(/!\[([^\]]*)\]\[([^\]]*)\]/g, (_match, alt: string, ref: string) => {
+            const url = definitions.get(referenceKey(ref || alt));
+            return url ? describeLinkText(alt, url) : alt;
+        });
+        // Reference links [desc][ref], collapsed [desc][]
+        text = text.replace(/\[([^\]]+)\]\[([^\]]*)\]/g, (_match, desc: string, ref: string) => {
+            const url = definitions.get(referenceKey(ref || desc));
+            return url ? describeLinkText(desc, url) : desc;
+        });
+        // Images ![alt](url) before links, so [![alt](src)](url) keeps its shape
+        text = text.replace(/!\[([^\]]*)\]\(([^)]*)\)/g, (_match, alt: string, url: string) => describeLinkText(alt, destinationOf(url)));
+        // Inline links [desc](url)
+        text = text.replace(/\[([^\]]*)\]\(([^)]*)\)/g, (_match, desc: string, url: string) => describeLinkText(desc, destinationOf(url)));
+        // Autolinks <https://example.com>
+        text = text.replace(/<((?:https?|mailto|xmpp):[^>\s]+)>/g, "$1");
+        // Definition lines are resolved; footnote definitions stay untouched
+        text = text.replace(DEFINITION_RE, "");
+        return text;
+    });

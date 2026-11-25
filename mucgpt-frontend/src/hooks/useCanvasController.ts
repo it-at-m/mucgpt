@@ -11,7 +11,9 @@ import { loadCanvasRevisions, loadCanvasState, parseCanvasRevisions, type Canvas
 import type { CanvasStreamEvent } from "../utils/canvasStream";
 import { CANVAS_PERSISTENCE_RESET, persistentCaret, persistentSelection } from "../components/Canvas/canvasSelectionPersistence";
 import { canvasExtensions } from "../components/Canvas/canvasExtensions";
+import { flattenPastedLinks, withoutLinkMarks } from "../components/Canvas/canvasLinkNeutralization";
 import { effectiveAllowedTags, sanitizeCanvasMarkdown } from "../components/Canvas/canvasHtmlWhitelist";
+import { markdownLinksToPlainText } from "../components/MarkdownRenderer/markdownLinkPolicy";
 
 /**
  * Interface between the canvas UI and the chat page.
@@ -266,19 +268,25 @@ export function useCanvasController(conversationId: string | undefined, serverCo
     const serverId = serverConversationId ?? conversationId;
     const limits = useCanvasLimits();
     const { canvas_allowed_html_tags: allowedHtmlTags } = useConfigContext();
-    // Sanitize before the Markdown parser (html: true) sees the content: every
-    // tag outside the deployment allowlist becomes literal text. Config may
-    // only restrict; tags unknown to this frontend release are ignored.
+    // Pre-parse transformation of every markdown that enters the editor:
+    // (1) links and images become their plain "description (url)" text so the
+    // stored document never contains link syntax that could later be rendered,
+    // exported or round-tripped as clickable links/fetched images (issue #228);
+    // (2) every tag outside the deployment allowlist becomes literal text
+    // (config may only restrict; tags unknown to this release are ignored).
     const allowedTags = effectiveAllowedTags(allowedHtmlTags);
     // Stable identity on purpose: the conversation-switch effect and the stream
     // callbacks must not be torn down/re-run when the config loads.
     const allowedTagsRef = useRef(allowedTags);
     allowedTagsRef.current = allowedTags;
-    const sanitize = useCallback((md: string): string => sanitizeCanvasMarkdown(md, allowedTagsRef.current), []);
+    const sanitize = useCallback((md: string): string => sanitizeCanvasMarkdown(markdownLinksToPlainText(md), allowedTagsRef.current), []);
     const editor = useEditor(
         {
             extensions: canvasExtensions({ exportLimitChars: limits.editorLimitChars, warnChars: limits.warnChars }),
-            content: ""
+            content: "",
+            editorProps: {
+                transformPastedHTML: flattenPastedLinks
+            }
         },
         // Recreate when the backend limits arrive so the plugin uses the
         // configured values instead of the fallback defaults.
@@ -703,14 +711,17 @@ export function useCanvasController(conversationId: string | undefined, serverCo
             if (!current || !found) return;
             // Stored doc_json is untrusted (foreign rings, older schema): tiptap's
             // setContent silently replaces the document with an empty one on
-            // invalid content, which would destroy the live canvas.
+            // invalid content, which would destroy the live canvas. Link marks
+            // from revisions created before link neutralization are stripped
+            // (the mark type no longer exists in the schema).
+            const docJson = withoutLinkMarks(found.doc_json);
             try {
-                current.schema.nodeFromJSON(found.doc_json).check();
+                current.schema.nodeFromJSON(docJson).check();
             } catch (error) {
                 console.error("Canvas revision is not a valid document:", error);
                 return;
             }
-            current.commands.setContent(found.doc_json as Content);
+            current.commands.setContent(docJson as Content);
             snapshot("restore");
         },
         [snapshot]

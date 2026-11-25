@@ -7,6 +7,7 @@ import { useTranslation } from "react-i18next";
 import type { CanvasRevision } from "../../service/canvasStorage";
 import type { CanvasControllerInstance } from "../../hooks/useCanvasController";
 import { canvasExtensions } from "./canvasExtensions";
+import { withoutLinkMarks } from "./canvasLinkNeutralization";
 import styles from "./CanvasVersionsDrawer.module.css";
 
 // Revision previews are rendered via dangerouslySetInnerHTML, so links must
@@ -50,7 +51,9 @@ export const CanvasVersionsDrawer = ({ open, onClose, controller, disabled = fal
 
     const previewHtml = (docJson: unknown) => {
         try {
-            return DOMPurify.sanitize(generateHTML(docJson as Parameters<typeof generateHTML>[0], canvasExtensions()), { USE_PROFILES: { html: true } });
+            return DOMPurify.sanitize(generateHTML(withoutLinkMarks(docJson) as Parameters<typeof generateHTML>[0], canvasExtensions()), {
+                USE_PROFILES: { html: true }
+            });
         } catch (error) {
             console.error("Canvas revision preview failed:", error);
             return "";

@@ -12,7 +12,7 @@ import { canvasExtensions } from "./canvasExtensions";
 const FIXTURES: Array<{ name: string; markdown: string }> = [
     {
         name: "paragraph with inline marks",
-        markdown: "Einfacher Text mit **fett**, *kursiv*, `Code` und einem [Link](https://muenchen.de)."
+        markdown: "Einfacher Text mit **fett**, *kursiv*, `Code` und einem Link (https://muenchen.de)."
     },
     {
         name: "underline via whitelisted HTML",
@@ -61,7 +61,7 @@ const FIXTURES: Array<{ name: string; markdown: string }> = [
     {
         name: "mixed document",
         markdown:
-            "# Bescheid\n\nEinleitender Satz mit **Hervorhebung**.\n\n- [Bescheid](https://muenchen.de) prüfen\n- Frist beachten\n\n| Schritt | Status |\n| --- | --- |\n| Antrag | offen |\n\n> Hinweis: Fristen gelten ab Zustellung."
+            "# Bescheid\n\nEinleitender Satz mit **Hervorhebung**.\n\n- Bescheid (https://muenchen.de) prüfen\n- Frist beachten\n\n| Schritt | Status |\n| --- | --- |\n| Antrag | offen |\n\n> Hinweis: Fristen gelten ab Zustellung."
     }
 ];
 
@@ -79,6 +79,9 @@ describe("markdown round trip", () => {
                 editor.commands.setContent(first);
                 const second = serialize(editor);
                 expect(second).toBe(first);
+                // No fixture may (re)introduce link/image markdown — link
+                // neutralization happens before ingestion (issue #228).
+                expect(second).not.toMatch(/\]\((?:https?|mailto):/);
             } finally {
                 editor.destroy();
             }

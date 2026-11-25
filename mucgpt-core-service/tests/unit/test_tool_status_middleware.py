@@ -9,7 +9,7 @@ from langchain_core.messages import ToolMessage
 from langchain_core.tools import StructuredTool, tool
 from langgraph.runtime import Runtime
 
-from agent.middleware import TOOL_STATUS_ARG, ToolStatusMiddleware
+from agent.middleware import TOOL_STATUS_ARG, ToolErrorMiddleware, ToolStatusMiddleware
 
 
 @tool
@@ -147,3 +147,16 @@ async def test_async_paths_add_and_remove_the_argument() -> None:
     [definition] = model_handler.call_args.args[0].tools
     assert definition["parameters"]["required"] == [TOOL_STATUS_ARG, "query"]
     assert tool_handler.call_args.args[0].tool_call["args"] == {"query": "eAkte"}
+
+
+def test_error_middleware_marks_a_caught_tool_exception_as_error() -> None:
+    def failing_handler(_request: ToolCallRequest) -> ToolMessage:
+        raise RuntimeError("unavailable")
+
+    result = ToolErrorMiddleware().wrap_tool_call(
+        _tool_call_request(search, {"query": "Kita"}), failing_handler
+    )
+
+    assert isinstance(result, ToolMessage)
+    assert result.status == "error"
+    assert result.content == "Tool execution failed: unavailable"

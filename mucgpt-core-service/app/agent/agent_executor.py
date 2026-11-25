@@ -77,6 +77,8 @@ from core.stream_cleanup import close_stream
 
 logger = getLogger(name="mucgpt-core-agent")
 
+TOOL_EXECUTION_FAILURE_PREFIX = "Tool execution failed:"
+
 
 def _json_safe(value: Any) -> Any:
     """Convert LangChain/Pydantic objects into Langfuse-serializable data."""
@@ -909,6 +911,10 @@ class MUCGPTAgentExecutor:
                         continue
                     if isinstance(chunk, ToolMessage):
                         content = chunk.content
+                        failed = chunk.status == "error" or (
+                            isinstance(content, str)
+                            and content.startswith(TOOL_EXECUTION_FAILURE_PREFIX)
+                        )
                         yield ToolCallResultEvent(
                             type=EventType.TOOL_CALL_RESULT,
                             message_id=chunk.id or uuid.uuid4().hex,
@@ -919,6 +925,9 @@ class MUCGPTAgentExecutor:
                                 else json.dumps(content)
                             ),
                             role="tool",
+                            metadata=(
+                                {"mucgpt": {"toolStatus": "error"}} if failed else None
+                            ),
                         )
                         continue
                     if not isinstance(chunk, AIMessageChunk):

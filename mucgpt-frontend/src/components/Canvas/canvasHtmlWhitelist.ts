@@ -40,14 +40,16 @@ interface Range {
     end: number;
 }
 
-/** Preserves the previous dynamic-`RegExp` semantics: a closing fence is
- * `fence`-length-or-more occurrences of the same character, for backtick
- * fences without any backtick in the rest, for tilde fences with only
- * whitespace after. */
+/** A closing fence repeats the opening fence character at least `fence.length`
+ * times after up to three leading spaces: backtick fences must have no
+ * backtick in the rest, tilde fences only whitespace. */
 const isClosingFence = (line: string, fence: string): boolean => {
-    const trimmed = line.trimStart();
-    if (!trimmed.startsWith(fence)) return false;
-    const rest = trimmed.slice(fence.length);
+    const indent = line.slice(0, line.length - line.trimStart().length);
+    if (!/^ {0,3}$/.test(indent)) return false;
+    if (!line.startsWith(indent + fence)) return false;
+    let end = indent.length + fence.length;
+    while (line[end] === fence[0]) end++;
+    const rest = line.slice(end);
     return fence[0] === "~" ? /^\s*$/.test(rest) : !rest.includes("`");
 };
 

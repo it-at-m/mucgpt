@@ -4,7 +4,7 @@ import { Button, Tooltip } from "@fluentui/react-components";
 import { ArrowDownload24Regular } from "@fluentui/react-icons";
 import styles from "./DrawIO.module.css";
 import { loadDrawioViewer } from "./loadDrawioViewer";
-import { isSafeDiagramInput, sanitizeDrawioViewerHost, stripDrawioCellLinks } from "./diagramSecurity";
+import { hasCompressedDiagram, isSafeDiagramInput, sanitizeDrawioViewerHost, stripDrawioCellLinks } from "./diagramSecurity";
 import { HighlightedCodeBlock } from "./HighlightedCodeBlock";
 import { useDrawioRenderContext } from "./drawioRenderContext";
 
@@ -35,6 +35,12 @@ export function normalizeDrawioXml(raw: string): string | null {
 
     const lower = xml.toLowerCase();
     if (!(lower.includes("<mxfile") || lower.includes("<mxgraphmodel") || lower.includes("<diagram"))) {
+        return null;
+    }
+
+    // Compressed diagram bodies reach the viewer inflated (bypassing the link
+    // strip below), so they are refused.
+    if (hasCompressedDiagram(xml)) {
         return null;
     }
 

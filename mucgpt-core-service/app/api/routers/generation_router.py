@@ -95,15 +95,19 @@ def _strip_markdown_links(value: str) -> str:
     Drafts can be shared and their description and system prompt are rendered
     as markdown in other users' browsers. Rendered links and images can
     exfiltrate data on display (issue #228), so links and images are reduced
-    to their label text before the draft is returned. The non-greedy label
-    match also covers labels containing balanced brackets.
+    to their label text before the draft is returned. Labels allow balanced
+    brackets one level deep.
     """
 
     value = re.sub(
-        r"!\[(.*?)\]\((?:<[^>]*>|(?:[^()\s]|\([^()]*\))+)\)", r"\1", value
+        r"!\[((?:[^\[\]]|\[[^\[\]]*\])*)\]\((?:<[^>]*>|(?:[^()\s]|\([^()]*\))+)\)",
+        r"\1",
+        value,
     )  # images
     value = re.sub(
-        r"\[(.*?)\]\((?:<[^>]*>|(?:[^()\s]|\([^()]*\))+)\)", r"\1", value
+        r"\[((?:[^\[\]]|\[[^\[\]]*\])*)\]\((?:<[^>]*>|(?:[^()\s]|\([^()]*\))+)\)",
+        r"\1",
+        value,
     )  # inline links
     value = re.sub(r"\[([^\]]+)\]\[[^\]]*\]", r"\1", value)  # reference links
     value = re.sub(r"<((?:https?|mailto|xmpp):[^>\s]+)>", r"\1", value)  # autolinks
@@ -113,6 +117,7 @@ def _strip_markdown_links(value: str) -> str:
         value,
         flags=re.MULTILINE | re.IGNORECASE,
     )  # link definitions (URL-like destinations only, never `[Policy]: text`)
+    value = value.replace("](", "] ")  # no link adjacency must survive conversion
     return value
 
 

@@ -88,11 +88,13 @@ const transformOutsideVerbatim = (markdown: string, transform: (part: string) =>
     return output;
 };
 
-// Inline destinations: the non-greedy label `.*?` cannot contain `](`, so no
-// replacement can re-introduce link syntax; the destination is angle-wrapped
-// (`<url with spaces>`) or one bracket-balanced level, optionally followed by
-// a quoted/parenthesized title.
-const LABEL_PATTERN = "(.*?)";
+// Inline destinations: the label uses a deterministic one-level-bracket-balanced
+// pattern (linear scan, no backtracking blowup). Labels can legitimately
+// contain nested link markup (e.g. `[see [b](c) d](url)`), so the passes
+// below finish with an adjacency break instead of relying on the label
+// shape; the destination is angle-wrapped (`<url with spaces>`) or one
+// paren-balanced level, optionally followed by a quoted/parenthesized title.
+const LABEL_PATTERN = "((?:[^\\[\\]]|\\[[^\\[\\]]*\\])*)";
 const DESTINATION_PATTERN = "((?:<[^>]*>|(?:[^()\\s]|\\([^()]*\\))+))";
 const TITLE_PATTERN = "[ \\t]*(?:\"[^\"]*\"|'[^']*'|\\([^()]*\\))?[ \\t]*";
 const INLINE_IMAGE_RE = new RegExp(`!\\[${LABEL_PATTERN}\\]\\([ \\t]*${DESTINATION_PATTERN}${TITLE_PATTERN}\\)`, "g");
@@ -134,7 +136,7 @@ export const stripMarkdownLinks = (markdown: string): string => transformOutside
 // Link definitions `[ref]: url` — the destination must look like a URL (scheme,
 // leading `/`, or `<…>`-wrapped) so plain texts like `[Policy]: Never …` stay
 // untouched. Footnote definitions (`[^1]: …`) are excluded.
-const DEFINITION_RE = /^ {0,3}\[([^^][^\]]*)\]:[ \t]*(<[^\s>]*>|(?:[a-z][a-z0-9+.-]*:(?:\/\/)?\S+|\/\S*))[^\S\n]*(?:"[^"]*"|'[^']*'|\([^)]*\))?[^\S\n]*$\n?/gm;
+const DEFINITION_RE = /^ {0,3}\[([^^][^\]]*)\]:[ \t]*(<[^\s>]*>|(?:[a-z][a-z0-9+.-]*:(?:\/\/)?\S+|\/\S*))[^\S\n]*(?:"[^"]*"|'[^']*'|\([^)]*\))?[^\S\n]*$\n?/gim;
 
 const referenceKey = (label: string): string => label.trim().toLowerCase();
 
@@ -186,8 +188,10 @@ export const markdownLinksToPlainText = (markdown: string): string => {
         text = text.replace(INLINE_LINK_RE, (_match, desc: string, url: string) => describeLinkText(desc, destinationOf(url)));
         // Autolinks <https://example.com>
         text = text.replace(/<((?:https?|mailto|xmpp):[^>\s]+)>/g, "$1");
-        // Definition lines are resolved; footnote definitions stay untouched
-        text = text.replace(DEFINITION_RE, "");
+        // Definition lines are resolved; non-URL texts stay untouched. Then no
+        // `](` adjacency may survive conversion: labels can legitimately
+        // contain nested link syntax, whose leftovers must not re-form links.
+        text = text.replace(DEFINITION_RE, "").replace(/\]\(/g, "] ");
         return text;
     });
 };

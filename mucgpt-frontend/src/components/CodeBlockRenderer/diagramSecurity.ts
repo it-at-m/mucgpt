@@ -30,9 +30,31 @@ export function isSafeDiagramInput(raw: string, label: string): boolean {
  * Remove the mxGraph model-level link attributes from draw.io XML before the
  * viewer loads it: the viewer opens a clicked cell's `link` value directly
  * (getClickableLinkForCell), which anchors-in-the-output stripping cannot reach.
+ * Parsed with DOMParser so values containing ` link="…"` text stay intact; the
+ * attribute regex only guards unparseable input.
  */
 export function stripDrawioCellLinks(xml: string): string {
-    return xml.replace(/\s+(?:link|xlink:href)\s*=\s*(?:"[^"]*"|'[^']*')/gi, "");
+    const attributeStrip = (value: string): string => value.replace(/\s+(?:link|xlink:href)\s*=\s*(?:"[^"]*"|'[^']*')/g, "");
+    try {
+        const doc = new DOMParser().parseFromString(xml, "text/xml");
+        if (doc.querySelector("parsererror")) return attributeStrip(xml);
+        for (const element of Array.from(doc.querySelectorAll("*"))) {
+            element.removeAttribute("link");
+            element.removeAttribute("xlink:href");
+        }
+        return new XMLSerializer().serializeToString(doc);
+    } catch {
+        return xml.replace(/\s+(?:link|xlink:href)\s*=\s*(?:"[^"]*"|'[^']*')/g, "");
+    }
+}
+
+/**
+ * Draw.io supports compressed `<diagram>` bodies (base64, inflated by the
+ * viewer before parsing); those bypass the model-level link strip above, so
+ * only literal XML diagrams may be rendered.
+ */
+export function hasCompressedDiagram(xml: string): boolean {
+    return /<diagram\b[^>]*>\s*[^<\s]/i.test(xml.trim());
 }
 
 /**

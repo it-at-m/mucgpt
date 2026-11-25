@@ -168,12 +168,41 @@ describe("markdownLinksToPlainText", () => {
         expect(markdownLinksToPlainText(instruction)).toBe(instruction);
     });
 
+    it("converts nested link markup inside a label without re-forming links", () => {
+        const result = markdownLinksToPlainText("[see [b](https://inner.example.com) d](https://outer.example.com)");
+        expect(result).not.toMatch(/\]?]\((?:https?|mailto):/);
+        expect(result).toContain("outer.example.com");
+    });
+
+    it("converts adversarial input without catastrophic backtracking", () => {
+        const input = "[" + "[]".repeat(8000) + "]" + "(" + "x".repeat(16000) + ")";
+        const started = Date.now();
+        markdownLinksToPlainText(input);
+        // Linear behaviour finishes in milliseconds; the bound only catches
+        // quadratic blowups.
+        expect(Date.now() - started).toBeLessThan(5000);
+    });
     it("resolves references when a code span separates them from the definition", () => {
         const result = markdownLinksToPlainText("[Guide][r]\n\n`sample`\n\n[r]: https://example.com");
         expect(result).toContain("Guide (https://example.com)");
         expect(result).toContain("`sample`");
         expect(result).not.toContain("[r]");
         expect(result).not.toContain("](http");
+    });
+
+    it("converts nested link markup inside a label without re-forming links", () => {
+        const result = markdownLinksToPlainText("[see [b](https://inner.example.com) d](https://outer.example.com)");
+        expect(result).not.toMatch(/\]?]\((?:https?|mailto):/);
+        expect(result).toContain("outer.example.com");
+    });
+
+    it("converts adversarial input without catastrophic backtracking", () => {
+        const input = "[" + "[]".repeat(8000) + "]" + "(" + "x".repeat(16000) + ")";
+        const started = Date.now();
+        markdownLinksToPlainText(input);
+        // Linear behaviour finishes in milliseconds; the bound only catches
+        // quadratic blowups.
+        expect(Date.now() - started).toBeLessThan(5000);
     });
 });
 

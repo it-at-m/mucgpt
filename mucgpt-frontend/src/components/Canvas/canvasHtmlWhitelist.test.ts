@@ -28,6 +28,18 @@ describe("sanitizeCanvasMarkdown", () => {
         expect(sanitizeCanvasMarkdown("<u>a</u> und `<u>b</u>`", ["u"])).toBe("<u>a</u> und `<u>b</u>`");
     });
 
+    it("identifies longer runs of the same fence character as closing fences", () => {
+        const text = "```\n<unescaped>\n`````\n```\n<b>verbatim</b>\n```\nund <b>escaped</b>";
+        expect(sanitizeCanvasMarkdown(text, [])).toBe("```\n<unescaped>\n`````\n```\n<b>verbatim</b>\n```\nund &lt;b&gt;escaped&lt;/b&gt;");
+    });
+
+    it("does not close fences on tab- or 4-space-indented lines", () => {
+        const text = "```\n<unescaped>\n\t```\n```\n<b>after close</b>";
+        expect(sanitizeCanvasMarkdown(text, [])).toBe("```\n<unescaped>\n\t```\n```\n&lt;b&gt;after close&lt;/b&gt;");
+        const indentedClose = "```\n<unescaped>\n    ```\n```\n<u>b</u>";
+        expect(sanitizeCanvasMarkdown(indentedClose, ["u"])).toBe(indentedClose);
+    });
+
     it("preserves code fences verbatim", () => {
         const markdown = "```text\n<div>not html</div>\n```\n\n<u>real</u>";
         expect(sanitizeCanvasMarkdown(markdown, ["u"])).toBe(markdown);

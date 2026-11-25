@@ -143,14 +143,18 @@ class PersistanceHelpers:
     @staticmethod
     async def close() -> None:
         """Close initialized database resources and clear their readiness references."""
-        if PersistanceHelpers._pool is not None:
-            await PersistanceHelpers._pool.close()
+        try:
+            if PersistanceHelpers._pool is not None:
+                await PersistanceHelpers._pool.close()
+        finally:
             PersistanceHelpers._pool = None
             PersistanceHelpers._checkpointer = None
-        if PersistanceHelpers._engine is not None:
-            await PersistanceHelpers._engine.dispose()
-            PersistanceHelpers._engine = None
-            PersistanceHelpers._session_factory = None
+            try:
+                if PersistanceHelpers._engine is not None:
+                    await PersistanceHelpers._engine.dispose()
+            finally:
+                PersistanceHelpers._engine = None
+                PersistanceHelpers._session_factory = None
 
     @staticmethod
     def get_checkpointer() -> AsyncPostgresSaver:

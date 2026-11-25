@@ -173,6 +173,10 @@ The `mcpdoc-server` image installs `mcpdoc` through the local `mcpdoc-server/pyp
 - **docker-compose.yml** - Local development/demo stack
 - **docker-compose.dev.yml** - Development overrides (routes to local running services)
 
+The service images build their third-party notices from `scripts/licenses/` in
+the repository root. Image builds use the repository root as their build
+context so they also work with Podman's classic builder.
+
 ## Common Commands
 
 ### Local Compose Mode

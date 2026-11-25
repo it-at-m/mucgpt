@@ -46,3 +46,22 @@ async def test_checkpoint_pool_checks_connections_before_checkout(monkeypatch):
     pool.close.assert_awaited_once()
     engine.dispose.assert_awaited_once()
     assert persistence.PersistanceHelpers._pool is None
+
+
+@pytest.mark.asyncio
+async def test_close_clears_resources_when_pool_close_fails(monkeypatch):
+    pool = MagicMock(close=AsyncMock(side_effect=RuntimeError("pool close failed")))
+    engine = MagicMock(dispose=AsyncMock())
+    monkeypatch.setattr(persistence.PersistanceHelpers, "_pool", pool)
+    monkeypatch.setattr(persistence.PersistanceHelpers, "_checkpointer", MagicMock())
+    monkeypatch.setattr(persistence.PersistanceHelpers, "_engine", engine)
+    monkeypatch.setattr(persistence.PersistanceHelpers, "_session_factory", MagicMock())
+
+    with pytest.raises(RuntimeError, match="pool close failed"):
+        await persistence.PersistanceHelpers.close()
+
+    engine.dispose.assert_awaited_once()
+    assert persistence.PersistanceHelpers._pool is None
+    assert persistence.PersistanceHelpers._checkpointer is None
+    assert persistence.PersistanceHelpers._engine is None
+    assert persistence.PersistanceHelpers._session_factory is None

@@ -84,7 +84,7 @@ jobs:
         id: build
         uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
         with:
-          context: ./mucgpt-frontend
+          context: .
           file: ./mucgpt-frontend/Dockerfile
           push: true
           sbom: true
@@ -131,15 +131,16 @@ jobs:
             --generate-notes \
             --notes "$notes"
       - name: Log in to openCode container registry
-        continue-on-error: true
         uses: docker/login-action@8aa5831fb8d48d8f76594c7ddde61ae58019f550 # v4.8.0
         with:
           registry: registry.opencode.de
           username: ${{ secrets.OPENCODE_REGISTRY_USERNAME }}
           password: ${{ secrets.OPENCODE_REGISTRY_TOKEN }}
       - name: Push image to openCode container registry
-        continue-on-error: true
         env:
+          # openCode's registry front kills long HTTP/2 uploads with
+          # PROTOCOL_ERROR (issue #1514); force HTTP/1.1 for the copy.
+          GODEBUG: http2client=0
           GHCR_IMAGE: ghcr.io/${{ steps.vars.outputs.repo_lowercase }}/mucgpt-frontend
           BUILT_DIGEST: ${{ steps.build.outputs.digest }}
           OPENCODE_IMAGE: registry.opencode.de/landeshauptstadt-muenchen/mucgpt/mucgpt-frontend
@@ -183,6 +184,24 @@ jobs:
           for tag in "${TAGS[@]}"; do
             ARGS+=(-t "$tag")
           done
-          docker buildx imagetools create "${ARGS[@]}" "${SOURCES[@]}"
+          COPY_OK=""
+          for attempt in 1 2 3; do
+            if docker buildx imagetools create "${ARGS[@]}" "${SOURCES[@]}"; then
+              COPY_OK=1
+              break
+            fi
+            echo "Copy attempt $attempt failed; retrying in 30s..." >&2
+            sleep 30
+          done
+          if [ -z "$COPY_OK" ]; then
+            echo "Failed to copy image to the openCode container registry after 3 attempts" >&2
+            exit 1
+          fi
+          for tag in "${TAGS[@]}"; do
+            docker buildx imagetools inspect "$tag" > /dev/null || {
+              echo "Verification failed: $tag is not available on the openCode registry" >&2
+              exit 1
+            }
+          done
           echo "Copied image to openCode container registry:"
           printf '  %s\n' "${TAGS[@]}"

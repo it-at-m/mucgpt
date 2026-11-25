@@ -5,14 +5,20 @@ COPY --from=ghcr.io/astral-sh/uv:latest@sha256:96f40d3904aad8d0bd010539001d36c8e
 ENV UV_COMPILE_BYTECODE=1 UV_LINK_MODE=copy UV_CACHE_DIR=/app/.cache/uv
 WORKDIR /app
 
-COPY pyproject.toml uv.lock .python-version ./
+COPY mucgpt-assistant-service/pyproject.toml mucgpt-assistant-service/uv.lock mucgpt-assistant-service/.python-version ./
 RUN microdnf install -y gcc python3-devel && \
     uv sync --no-dev --locked --no-install-project
 
-COPY app /app/app
-COPY app/logconf.yaml /app/logconf.yaml
-COPY migrations /app/migrations
-COPY alembic.ini /app/alembic.ini
+# Third-party license notices, generated from the venv that ships in this image.
+COPY scripts/licenses/*.py pyproject.toml /tmp/licenses/
+RUN MUCGPT_LICENSE_POLICY=/tmp/licenses/pyproject.toml \
+    /app/.venv/bin/python /tmp/licenses/image_notices.py /app && \
+    rm -rf /tmp/licenses
+
+COPY mucgpt-assistant-service/app /app/app
+COPY mucgpt-assistant-service/app/logconf.yaml /app/logconf.yaml
+COPY mucgpt-assistant-service/migrations /app/migrations
+COPY mucgpt-assistant-service/alembic.ini /app/alembic.ini
 
 RUN uv sync --no-dev --locked && \
     microdnf remove -y gcc python3-devel && \

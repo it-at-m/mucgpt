@@ -168,6 +168,12 @@ describe("markdownLinksToPlainText", () => {
         expect(markdownLinksToPlainText(instruction)).toBe(instruction);
     });
 
+    it("treats relative destinations as definitions and drops their lines", () => {
+        const result = markdownLinksToPlainText("Kreis ![Screenshot]\n\n[Screenshot]: ../image.png");
+        expect(result).not.toContain("[Screenshot]: ../image.png");
+        expect(result).toContain("Kreis Screenshot");
+    });
+
     it("converts nested link markup inside a label without re-forming links", () => {
         const result = markdownLinksToPlainText("[see [b](https://inner.example.com) d](https://outer.example.com)");
         expect(result).not.toMatch(/\]?]\((?:https?|mailto):/);

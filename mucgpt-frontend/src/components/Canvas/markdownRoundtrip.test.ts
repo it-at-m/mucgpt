@@ -27,6 +27,10 @@ const FIXTURES: Array<{ name: string; markdown: string }> = [
         markdown: "# Überschrift 1\n\n## Überschrift 2\n\n### Überschrift 3\n\nText danach."
     },
     {
+        name: "deep agent headings (no toolbar shortcut)",
+        markdown: "#### Stufe 4\n\n##### Stufe 5\n\n###### Stufe 6\n\nFließtext."
+    },
+    {
         name: "nested lists",
         markdown: "- Erster Punkt\n  - Verschachtelt\n    - Doppelt verschachtelt\n- Zweiter Punkt\n\n1. Erster Schritt\n2. Zweiter Schritt"
     },

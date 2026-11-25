@@ -17,6 +17,7 @@ from api.exception import (
     REQUEST_TIMEOUT,
     SERVER_ERROR,
     UNKNOWN,
+    ContentFilterError,
     ProviderErrorPayload,
     llm_error_payload,
     payload_to_message,
@@ -100,6 +101,10 @@ class TestTaxonomy:
         )
         object.__setattr__(ex, "code", "content_filter")
         assert _payload(ex).code == CONTENT_FILTER
+
+    @pytest.mark.unit
+    def test_streamed_content_filter(self) -> None:
+        assert _payload(ContentFilterError("filtered")).code == CONTENT_FILTER
 
     @pytest.mark.unit
     def test_rate_limited_status_only(self) -> None:

@@ -55,6 +55,113 @@ uv remove pydantic
 uv run pytest
 ```
 
+### Real PostgreSQL in tests via Testcontainers
+
+The core-service opt-in lifecycle tests (`tests/integration/test_*_postgres.py`) and
+the assistant-service database tests (`tests/database/`, parameterized `postgres` runs)
+can use [Testcontainers](https://testcontainers.com) with a throwaway `postgres:17.4`
+container. Their behavior differs:
+
+- Core: when `MUCGPT_LIFECYCLE_POSTGRES_HOST` is set (as in CI), tests use that
+  server and do so even when `MUCGPT_TEST_POSTGRES=off`. Otherwise,
+  `MUCGPT_TEST_POSTGRES=off` prevents container startup and the affected tests skip.
+- Assistant: the database fixture ignores `MUCGPT_LIFECYCLE_POSTGRES_HOST`; it
+  starts a container when available, or omits PostgreSQL parameterized runs when
+  container tests are disabled or no runtime is detected. Assistant tests may not
+  use the configured lifecycle PostgreSQL server.
+- otherwise: a container starts automatically when a container runtime is reachable.
+  Docker is tried first, then the Podman API socket (rootless before rootful) —
+  Podman is the preferred local runtime; the socket service must be enabled
+  (`systemctl --user enable --now podman.socket`). On Windows, the running
+  Podman machine is managed through the `podman` CLI instead, avoiding the
+  unreliable Docker SDK named-pipe transport.
+- `MUCGPT_TEST_CONTAINER_RUNTIME=docker|podman` forces one runtime.
+- No container runtime reachable: the affected tests skip gracefully; nothing fails.
+
+#### Windows and Podman
+
+On Windows, start a Podman machine before running the core lifecycle tests:
+
+```powershell
+podman machine start
+podman machine list
+```
+
+The test harness starts and removes a disposable PostgreSQL container through
+the Podman CLI automatically; no lifecycle database environment variables are
+required. You can force the Podman path when troubleshooting:
+
+```powershell
+$env:MUCGPT_TEST_CONTAINER_RUNTIME = "podman"
+uv run pytest tests/integration/test_document_catalog_postgres.py
+```
+
+Windows uses a selector event loop because `psycopg`'s asynchronous driver does
+not work with the default Proactor event loop. Ryuk is disabled for Podman named
+pipes; the pytest process owns the container and explicitly stops it during
+normal teardown, `atexit`, Ctrl+C, and termination handling. If a run is killed
+before cleanup can execute, inspect only Testcontainers-labeled containers
+before removing them—do not remove unrelated Compose containers.
+
+For CI or an externally managed PostgreSQL instance, set
+`MUCGPT_LIFECYCLE_POSTGRES_HOST`, `MUCGPT_LIFECYCLE_POSTGRES_PORT`,
+`MUCGPT_LIFECYCLE_POSTGRES_USER`, and `MUCGPT_LIFECYCLE_POSTGRES_PASSWORD`.
+When the host is set, no Testcontainers container is started.
+
+Core PostgreSQL lifecycle tests share the isolated database context in
+`mucgpt-core-service/tests/postgres.py`; new lifecycle tests should reuse it
+instead of creating their own containers, databases, or migration setup.
+
+Coverage gates are enforced on full-suite runs (`--cov-fail-under` in each
+service's `pyproject.toml` addopts and `thresholds` in the frontend's
+`vitest.config.ts`; partial runs like `pytest tests/unit` skip the gate). If you
+add code, raise the floor instead of lowering it.
+
+```bash
+# Frontend (inside mucgpt-frontend/) — runs tests with coverage and thresholds
+npm run test
+```
+
+## Analyze a Langfuse trace
+
+The core service includes a diagnostic script for investigating a single trace.
+It prints a chronological observation timeline, including model, finish reason,
+tool calls, and an explicit `CONTENT_FILTERED` marker when the provider stops a
+generation with `content_filter` or `content_policy_violation`.
+
+Run it from `mucgpt-core-service/`:
+
+```bash
+uv run python app/scripts/analyze_langfuse_trace.py <trace-id>
+```
+
+The script uses the legacy Langfuse v3 trace API by default. For Langfuse v4,
+select the supported Observations API v2 explicitly:
+
+```bash
+uv run python app/scripts/analyze_langfuse_trace.py <trace-id> --api-version v4
+```
+
+The v4 path retrieves observations for the trace in a bounded seven-day window
+and follows cursor pagination. Set `--from-start-time` and `--to-start-time`
+with timezone-aware ISO-8601 timestamps when the trace is outside that window.
+
+Credentials are read from `LANGFUSE_PUBLIC_KEY`, `LANGFUSE_SECRET_KEY`, and
+`LANGFUSE_HOST`. When those variables are not already in the shell, the script
+loads `stack/.env` by default. Use `--env-file <path>` to select a different
+dotenv file.
+
+The default report excludes observation inputs and outputs, which can contain
+user data. Inspect bounded content only in an approved environment:
+
+```bash
+uv run python app/scripts/analyze_langfuse_trace.py <trace-id> --show-content
+```
+
+Use `--max-content-chars <n>` to change the default 500-character content
+limit. The v3 option is retained for self-hosted v3 compatibility; v4
+deployments must use `--api-version v4`.
+
 ## Linting
 
 ```bash

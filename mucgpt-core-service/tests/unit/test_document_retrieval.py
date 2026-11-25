@@ -5,9 +5,15 @@ from deepagents.backends import CompositeBackend, StateBackend
 from deepagents.backends.utils import create_file_data
 from deepagents.middleware.filesystem import FilesystemMiddleware
 from langchain.agents import create_agent
-from langchain_core.language_models.fake_chat_models import FakeMessagesListChatModel
 from langchain_core.messages import AIMessage, ToolMessage
 from langgraph.store.memory import InMemoryStore
+from tests.fakes.scripted_chat_model import (
+    ScriptedChatModel,
+    message,
+)
+from tests.fakes.scripted_chat_model import (
+    text as scripted_text,
+)
 
 from core.document_backend import DocumentBackend
 
@@ -16,11 +22,6 @@ SELECTED_KEY = "/12345678-1234-4234-8234-123456789abc.txt"
 OTHER_KEY = "/87654321-4321-4321-8321-cba987654321.txt"
 SELECTED_PATH = "/documents" + SELECTED_KEY
 OTHER_PATH = "/documents" + OTHER_KEY
-
-
-class FilesystemTestModel(FakeMessagesListChatModel):
-    def bind_tools(self, tools, **kwargs):
-        return self
 
 
 def tool_response(name, args, tool_call_id):
@@ -58,29 +59,37 @@ async def test_grep_then_read_window_and_resume_use_only_attached_body(asynchron
             )
         },
     )
-    model = FilesystemTestModel(
-        responses=[
-            tool_response(
-                "grep",
-                {
-                    "pattern": "needle.*",
-                    "path": "/documents/",
-                    "output_mode": "content",
-                },
-                "search",
+    model = ScriptedChatModel(
+        script=[
+            message(
+                tool_response(
+                    "grep",
+                    {
+                        "pattern": "needle.*",
+                        "path": "/documents/",
+                        "output_mode": "content",
+                    },
+                    "search",
+                )
             ),
-            tool_response(
-                "read_file",
-                {"file_path": SELECTED_PATH, "offset": 198, "limit": 5},
-                "window",
+            message(
+                tool_response(
+                    "read_file",
+                    {"file_path": SELECTED_PATH, "offset": 198, "limit": 5},
+                    "window",
+                )
             ),
-            tool_response(
-                "read_file",
-                {"file_path": SELECTED_PATH, "offset": 203, "limit": 7},
-                "resume",
+            message(
+                tool_response(
+                    "read_file",
+                    {"file_path": SELECTED_PATH, "offset": 203, "limit": 7},
+                    "resume",
+                )
             ),
-            tool_response("read_file", {"file_path": OTHER_PATH}, "unattached"),
-            AIMessage(content="done"),
+            message(
+                tool_response("read_file", {"file_path": OTHER_PATH}, "unattached")
+            ),
+            scripted_text("done"),
         ]
     )
     agent = create_agent(

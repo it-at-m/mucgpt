@@ -276,6 +276,7 @@ MUCGPT stores data in two layers:
 - PostgreSQL (persistent):
   - Assistants and their versions
   - Assistant subscriptions
+  - Conversations (core service): ownership and metadata in `chats`, transcripts as LangGraph checkpoints, canvas documents and the document catalog
 - Redis/Valkey (temporary cache):
   - MCP tool metadata cache (core service, key prefix: `mcp_tools_raw:`)
   - LDAP/Active Directory data cache (assistant service, key: `mucgpt:directory-tree:v1`)
@@ -295,7 +296,7 @@ In addition to backend storage, the frontend uses browser storage for UX state a
 
 - IndexedDB:
   - `MUCGPT-ASSISTANTS` (assistant data)
-  - `MUCGPT-CHAT` (chat data)
+  - `MUCGPT-CHAT` (chat cache, plus favorites and browser-only chats until they are migrated)
   - `MUCGPT-COMMUNITY-ASSISTANTS` (community assistant data)
 - localStorage:
   - UI/user preferences (for example language, theme, selected tools, selected model)

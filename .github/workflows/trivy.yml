@@ -1,6 +1,11 @@
 name: build
 on:
   pull_request:
+  schedule:
+    - cron: "0 3 * * *" # daily default-branch scan so Trivy coverage is tracked in the Security tab
+permissions:
+  contents: read
+  security-events: write # SARIF upload to the Security tab
 jobs:
   build:
     name: Security Check

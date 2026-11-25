@@ -19,6 +19,7 @@ import type { AssistantAuditEvent, DocumentLibraryEntry } from "../api/models";
 import { CANVAS_TOOL_IDS } from "../utils/canvasStream";
 import { loadMockAssistants, loadMockSubscriptions, saveMockAssistants, saveMockSubscriptions } from "./data/assistant-store";
 import { MOCK_DELETED_SUBSCRIBED_SNAPSHOT, MOCK_SUBSCRIPTION_SEED } from "./data/browser-scenario-seed";
+import { chatMigrationHandlers } from "../service/chatMigration/mockHandlers";
 
 const DIRECTORY_TREE = [
     {
@@ -1351,6 +1352,9 @@ export const handlers = [
     }),
 
     http.get("/api/backend/v1/conversations", () => HttpResponse.json([])),
+
+    // TODO: remove after the browser chat migration
+    ...chatMigrationHandlers,
 
     http.get("/api/backend/v1/conversations/:conversationId/messages", () => new HttpResponse(null, { status: 404 })),
 

@@ -88,12 +88,17 @@ const transformOutsideVerbatim = (markdown: string, transform: (part: string) =>
     return output;
 };
 
-// Inline destinations: angle-wrapped (`<url with spaces>`) or one bracket-balanced
-// level, optionally followed by a quoted/parenthesized title.
+// Inline destinations: the non-greedy label `.*?` cannot contain `](`, so no
+// replacement can re-introduce link syntax; the destination is angle-wrapped
+// (`<url with spaces>`) or one bracket-balanced level, optionally followed by
+// a quoted/parenthesized title.
+const LABEL_PATTERN = "(.*?)";
 const DESTINATION_PATTERN = "((?:<[^>]*>|(?:[^()\\s]|\\([^()]*\\))+))";
 const TITLE_PATTERN = "[ \\t]*(?:\"[^\"]*\"|'[^']*'|\\([^()]*\\))?[ \\t]*";
-const INLINE_IMAGE_RE = new RegExp(`!\\[([^\\]]*)\\]\\([ \\t]*${DESTINATION_PATTERN}${TITLE_PATTERN}\\)`, "g");
-const INLINE_LINK_RE = new RegExp(`\\[([^\\]]*)\\]\\([ \\t]*${DESTINATION_PATTERN}${TITLE_PATTERN}\\)`, "g");
+const INLINE_IMAGE_RE = new RegExp(`!\\[${LABEL_PATTERN}\\]\\([ \\t]*${DESTINATION_PATTERN}${TITLE_PATTERN}\\)`, "g");
+const INLINE_LINK_RE = new RegExp(`\\[${LABEL_PATTERN}\\]\\([ \\t]*${DESTINATION_PATTERN}${TITLE_PATTERN}\\)`, "g");
+
+const RAW_HTML_TAG_RE = /<\/?[a-zA-Z][^>]*>/g;
 
 // `[desc](url "title")` — an angle-wrapped destination keeps its inner value as-is.
 const destinationOf = (destination: string): string => {
@@ -104,16 +109,21 @@ const destinationOf = (destination: string): string => {
 
 const stripLinks = (markdown: string): string =>
     markdown
+        // autolinks before the raw-HTML strip: `<https://example.com>` is not a tag
+        .replace(/<((?:https?|mailto|xmpp):[^>\s]+)>/g, "$1")
+        // raw HTML must not survive in a rendered mindmap (markmap enables HTML)
+        .replace(RAW_HTML_TAG_RE, "")
         // images ![alt](url) -> alt
         .replace(INLINE_IMAGE_RE, (_match, alt: string) => alt)
         // inline links [text](url) -> text
         .replace(INLINE_LINK_RE, (_match, text: string) => text)
         // reference links [text][ref] -> text
         .replace(/\[([^\]]+)\]\[[^\]]*\]/g, "$1")
-        // autolinks <https://example.com> -> https://example.com
-        .replace(/<((?:https?|mailto|xmpp):[^>\s]+)>/g, "$1")
-        // link definitions [ref]: url
-        .replace(/^\s*\[[^\]]+\]:\s*\S+.*$/gm, "");
+        // link definitions [ref]: url — URL-like destinations only, never `[Policy]: text`
+        .replace(/^\s*\[([^^][^\]\n]*)\]:[ \t]*(?:<[^\s>]*>|(?:[a-z][a-z0-9+.-]*:(?:\/\/)?\S+|\/\S*))[^\n]*$/gim, "")
+        // no link syntax must survive (unforeseen grammar variants): the bracket
+        // adjacency is what makes `](url)` render as a link
+        .replace(/\]\(/g, "] ");
 
 /**
  * Neutralize markdown link/image syntax in a plain-text context (e.g. before
@@ -121,10 +131,24 @@ const stripLinks = (markdown: string): string =>
  */
 export const stripMarkdownLinks = (markdown: string): string => transformOutsideVerbatim(markdown, stripLinks);
 
-// Link definitions `[ref]: url`; footnote definitions (`[^1]: …`) are excluded.
-const DEFINITION_RE = /^ {0,3}\[([^^][^\]]*)\]:[ \t]*(\S+)[^\S\n]*(?:"[^"]*"|'[^']*'|\([^)]*\))?[^\S\n]*$\n?/gm;
+// Link definitions `[ref]: url` — the destination must look like a URL (scheme,
+// leading `/`, or `<…>`-wrapped) so plain texts like `[Policy]: Never …` stay
+// untouched. Footnote definitions (`[^1]: …`) are excluded.
+const DEFINITION_RE = /^ {0,3}\[([^^][^\]]*)\]:[ \t]*(<[^\s>]*>|(?:[a-z][a-z0-9+.-]*:(?:\/\/)?\S+|\/\S*))[^\S\n]*(?:"[^"]*"|'[^']*'|\([^)]*\))?[^\S\n]*$\n?/gm;
 
 const referenceKey = (label: string): string => label.trim().toLowerCase();
+
+const splitAtVerbatimRanges = (markdown: string): string[] => {
+    const parts: string[] = [];
+    let position = 0;
+    for (const range of collectVerbatimRanges(markdown)) {
+        if (position > range.start) continue; // already covered (code span inside a fence)
+        if (position < range.start) parts.push(markdown.slice(position, range.start));
+        position = range.end;
+    }
+    if (position < markdown.length) parts.push(markdown.slice(position));
+    return parts;
+};
 
 /**
  * Break markdown links and images down to their visible plain-text form
@@ -134,14 +158,17 @@ const referenceKey = (label: string): string => label.trim().toLowerCase();
  * or exported as clickable links or fetched images (issue #228). Fenced and
  * inline code are kept untouched.
  */
-export const markdownLinksToPlainText = (markdown: string): string =>
-    transformOutsideVerbatim(markdown, part => {
-        const definitions = new Map<string, string>();
+export const markdownLinksToPlainText = (markdown: string): string => {
+    // Definitions are collected once across all non-code ranges: a code span
+    // between a reference and its definition must not hide the definition.
+    const definitions = new Map<string, string>();
+    for (const part of splitAtVerbatimRanges(markdown)) {
         for (const match of part.matchAll(DEFINITION_RE)) {
             const key = referenceKey(match[1]);
             if (!definitions.has(key)) definitions.set(key, match[2]);
         }
-
+    }
+    return transformOutsideVerbatim(markdown, part => {
         let text = part;
         // Reference-style images ![alt][ref] and collapsed references [desc][]
         text = text.replace(/!\[([^\]]*)\]\[([^\]]*)\]/g, (_match, alt: string, ref: string) => {
@@ -163,3 +190,4 @@ export const markdownLinksToPlainText = (markdown: string): string =>
         text = text.replace(DEFINITION_RE, "");
         return text;
     });
+};

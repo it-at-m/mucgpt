@@ -40,7 +40,13 @@ export const BrainstormFragment = ({ content, markdown, showLineNumbers = true }
     // Use markdown prop if provided, otherwise use content
     const markdownContent = markdown || content;
     const { t } = useTranslation();
-    const transformer = useMemo(() => new Transformer(), []);
+    const transformer = useMemo(() => {
+        const transformer = new Transformer();
+        // Mindmap nodes must not contain raw HTML: markmap renders label HTML,
+        // so anchors and images in the source would become live elements.
+        transformer.md.set({ html: false });
+        return transformer;
+    }, []);
     const svgEl = useRef<SVGSVGElement>(null);
     const markmapInstance = useRef<Markmap | null>(null);
     const [isSourceView, setIsSourceView] = useState(false);

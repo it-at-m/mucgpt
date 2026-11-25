@@ -40,6 +40,17 @@ interface Range {
     end: number;
 }
 
+/** Preserves the previous dynamic-`RegExp` semantics: a closing fence is
+ * `fence`-length-or-more occurrences of the same character, for backtick
+ * fences without any backtick in the rest, for tilde fences with only
+ * whitespace after. */
+const isClosingFence = (line: string, fence: string): boolean => {
+    const trimmed = line.trimStart();
+    if (!trimmed.startsWith(fence)) return false;
+    const rest = trimmed.slice(fence.length);
+    return fence[0] === "~" ? /^\s*$/.test(rest) : !rest.includes("`");
+};
+
 /** Fenced code block ranges (unterminated fences run to the end). */
 const collectFenceRanges = (text: string): Range[] => {
     const ranges: Range[] = [];
@@ -54,10 +65,9 @@ const collectFenceRanges = (text: string): Range[] => {
             continue;
         }
         const fence = opening[1];
-        const closePattern = new RegExp(`^ {0,3}${fence[0]}{${fence.length},}${fence[0] === "~" ? "[\\s]*$" : "[^`]*\\s*$"}`);
         let endLine = lines.length - 1;
         for (let scan = index + 1; scan < lines.length; scan++) {
-            if (closePattern.test(lines[scan])) {
+            if (isClosingFence(lines[scan], fence)) {
                 endLine = scan;
                 break;
             }

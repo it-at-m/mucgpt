@@ -27,6 +27,15 @@ export function isSafeDiagramInput(raw: string, label: string): boolean {
 }
 
 /**
+ * Remove the mxGraph model-level link attributes from draw.io XML before the
+ * viewer loads it: the viewer opens a clicked cell's `link` value directly
+ * (getClickableLinkForCell), which anchors-in-the-output stripping cannot reach.
+ */
+export function stripDrawioCellLinks(xml: string): string {
+    return xml.replace(/\s+(?:link|xlink:href)\s*=\s*(?:"[^"]*"|'[^']*')/gi, "");
+}
+
+/**
  * Sanitize draw.io viewer DOM in place.
  *
  * Why not DOMPurify on the whole SVG? draw.io labels with style html=1 live in

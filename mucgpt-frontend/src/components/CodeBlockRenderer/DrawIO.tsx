@@ -4,7 +4,7 @@ import { Button, Tooltip } from "@fluentui/react-components";
 import { ArrowDownload24Regular } from "@fluentui/react-icons";
 import styles from "./DrawIO.module.css";
 import { loadDrawioViewer } from "./loadDrawioViewer";
-import { isSafeDiagramInput, sanitizeDrawioViewerHost } from "./diagramSecurity";
+import { isSafeDiagramInput, sanitizeDrawioViewerHost, stripDrawioCellLinks } from "./diagramSecurity";
 import { HighlightedCodeBlock } from "./HighlightedCodeBlock";
 import { useDrawioRenderContext } from "./drawioRenderContext";
 
@@ -38,7 +38,7 @@ export function normalizeDrawioXml(raw: string): string | null {
         return null;
     }
 
-    return xml;
+    return stripDrawioCellLinks(xml);
 }
 
 /** Checks the completeness of the figure via checking for <mxgraphmodel> tag closing */

@@ -2,9 +2,39 @@
 /app/backend/static
 /app/frontend/dist
 **/*.pyc
-.venv/
+**/.venv/
 /tests
 /notebooks
 /infra
 *.ipynb
 **/node_modules
+
+# Local caches and generated build output
+**/__pycache__/
+**/.pytest_cache/
+**/.ruff_cache/
+**/.coverage
+**/dist/
+**/build/
+
+# Never copy local secrets or credentials into the build context
+**/.env
+**/.env.*
+**/*.env
+**/*.pem
+**/*.key
+**/secrets/
+
+# Generated license notices (produced inside the build; never build input)
+THIRD_PARTY_LICENSES/
+
+# Inherited from the obsolete per-service ignore files (sources, caches and
+# editor data are never shipped; *.md is deliberately NOT ignored because
+# app/agent/prompt_pool/*.md is runtime data for the core service).
+**/tests/
+**/.vscode/
+**/.idea/
+**/*.secrets
+
+# Ignored per-service entries that exist in this checkout
+**/coverage/

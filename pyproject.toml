@@ -30,6 +30,64 @@ dev = [
     "ruff==0.17.4",
 ]
 
+[tool.ruff]
+target-version = "py313"
+src = ["scripts"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP"]
+ignore = ["E501", "E701"]      # line too long, multiple statements on one line
+
+# Third-party license policy. Consumed by scripts/licenses/ (check + collect)
+# and enforced by the license-check CI workflow.
+#
+# - allowed: permissive SPDX identifiers.
+# - warn: accepted identifiers reported as warnings
+#   (e.g. weak copyleft licenses such as MPL/LGPL).
+# - exceptions: per-package overrides for missing/misleading metadata or
+#   multi-license packages; each entry must carry license, version and reason.
+# Anything not resolvable to an entry above fails the license check.
+[tool.licensecheck]
+# Minimal permissive set: only licenses actually present in the dependency
+# tree. Any new license must be reviewed by a human before being added here.
+allowed = [
+    "MIT",
+    "MIT-0",
+    "MIT-CMU",
+    "ISC",
+    "Apache-2.0",
+    "BSD-2-Clause",
+    "BSD-3-Clause",
+    "0BSD",
+    "CC0-1.0",
+    "Unlicense",
+    "BlueOak-1.0.0",
+    "OFL-1.1",
+    "PSF-2.0",
+    "Python-2.0",
+    "Zlib",
+    "CNRI-Python",
+]
+warn = [
+    "LGPL-2.1-or-later",
+    "LGPL-3.0-or-later",
+    "LGPL-3.0-only",
+    "MPL-1.1",
+    "MPL-2.0",
+    "EPL-2.0",
+]
+
+[tool.licensecheck.exceptions."pyphen"]
+license = "MPL-1.1"
+version = "0.18.1"
+reason = "tri-license GPLv2+ / LGPL-2.1+ / MPL-1.1; MPL-1.1 elected"
+
+[tool.licensecheck.exceptions."khroma"]
+license = "MIT"
+version = "2.1.0"
+reason = "package.json has no license field; bundled 'license' file is MIT"
+
+
 [[tool.uv.index]]
 name = "pypy"
 url = "https://pypi.org/simple"

@@ -1,6 +1,7 @@
 import { listConversationsApi, getConversationMessagesApi, type ConversationMessage } from "../api/conversations-client";
 import { ApiError } from "../api/fetch-utils";
 import type { Assistant, ChatResponse } from "../api/models";
+import { configureImageApprovals } from "../components/MarkdownRenderer/imageApprovals";
 import { ASSISTANT_STORE, CHAT_STORE, CREATIVITY_LOW } from "../constants";
 import { AssistantStorageService } from "./assistantstorage";
 import { migrateLocalChatsToBackend } from "./chatMigration/chatMigration";
@@ -124,6 +125,9 @@ export function toChatTurns(messages: ConversationMessage[]): DBMessage<ChatResp
  * Refresh a transcript from the server and cache it, preserving matching local-only metadata.
  * A nonempty cache is used on 404, or on 403 only for browser-only chats. Other
  * failures propagate; known persisted chats never fall back on authorization denial.
+ * In every path that serves a transcript, the image-approval store is scoped
+ * to this conversation first — a served transcript without its own approvals
+ * would show placeholders the caller cannot fix.
  */
 export async function loadConversation<C>(
     storage: StorageService<ChatResponse, C>,
@@ -140,6 +144,7 @@ export async function loadConversation<C>(
         // missing checkpoint. Allow legacy browser-only history in either case;
         // known server chats must still surface authorization failures.
         if (error instanceof ApiError && cached?.messages.length && (error.status === 404 || (error.status === 403 && !cached.backendPersisted))) {
+            await configureImageApprovalsFromServer(conversationId);
             return cached;
         }
         throw error;
@@ -175,5 +180,19 @@ export async function loadConversation<C>(
     } finally {
         db.close();
     }
+    // After the save: a persistence failure must leave the store untouched so
+    // the caller's reset path cannot clobber a configured conversation.
+    configureImageApprovals(conversationId, metadata.approved_images ?? [], metadata.rejected_images ?? []);
     return chat;
+}
+
+/** Fetch the conversation's persisted approvals and scope the store to it. */
+async function configureImageApprovalsFromServer(conversationId: string): Promise<void> {
+    try {
+        const metadata = (await listConversationsApi()).find(conversation => conversation.conversation_id === conversationId);
+        configureImageApprovals(conversationId, metadata?.approved_images ?? [], metadata?.rejected_images ?? []);
+    } catch (error) {
+        console.warn("Failed to load image approvals:", error);
+        configureImageApprovals(conversationId, []);
+    }
 }

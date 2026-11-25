@@ -56,6 +56,7 @@ import { useUnifiedHistory, useUnifiedHistoryRegistration } from "../../componen
 import { downloadAssistantExport, mapAssistantToExportData } from "../../utils/assistant-export";
 import { scrollIntoNearestContainer } from "../../utils/scrollIntoNearestContainer";
 import { loadConversation } from "../../service/conversationHistory";
+import { configureImageApprovals } from "../../components/MarkdownRenderer/imageApprovals";
 import { setCopyIntoCanvasHandler } from "../../utils/canvasStream";
 import { useCanvasLimits } from "../../components/Canvas/canvasLimits";
 
@@ -318,6 +319,9 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
         cancelToolApproval();
         setLastQuestionValue("");
         setError(undefined);
+        // Image approvals are per conversation; a fresh chat must not write
+        // them to the previously opened conversation.
+        configureImageApprovals(null, []);
         // A new or reset chat must not inherit the previous chat's documents.
         setChatDocuments([]);
         activeChatRef.current = undefined;
@@ -709,6 +713,10 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
     );
 
     useEffect(() => {
+        // A pending new-chat token guarantees a chat-state reset (and URL
+        // cleanup of a combined ?chatId); loading it first would let the reset
+        // land after a configured transcript.
+        if (getNewChatToken() !== null) return;
         const requestedChatId = getRequestedChatId();
         if (!requestedChatId || requestedChatId === activeChatRef.current) {
             return;
@@ -725,7 +733,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                 clearRequestedChatId();
                 showError(t("components.assistant_chat.load_chat_failed"), t("components.assistant_chat.load_chat_failed_message"));
             });
-    }, [clearRequestedChatId, getRequestedChatId, loadAssistantChat, location.search]);
+    }, [clearRequestedChatId, getNewChatToken, getRequestedChatId, loadAssistantChat, location.search]);
 
     useEffect(() => {
         const newChatToken = getNewChatToken();

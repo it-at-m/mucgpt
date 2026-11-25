@@ -25,8 +25,9 @@ export const MarkdownRenderer = ({ children, className, allowDrawio = false, isS
     const rehypeKatexOptions = {
         output: "mathml"
     };
-    // Defense in depth: the `a` component override below already renders links
-    // as plain text; this plugin only matters if that override is ever removed.
+    // Defense in depth: the `a` component override already renders links with
+    // the policy attributes; this plugin only matters if that override is
+    // ever removed.
     const rehypeExternalLinksOptions = {
         target: "_blank",
         rel: ["nofollow", "noopener", "noreferrer"]

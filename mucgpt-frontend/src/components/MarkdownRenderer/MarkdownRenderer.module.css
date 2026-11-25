@@ -1,8 +1,29 @@
 /*
- * Markdown link/image policy (issue #228): links and images render as plain
- * text (see markdownLinkPolicy.tsx); the URL is appended as muted text.
+ * Markdown link/image policy (issue #228): links render as `desc (url)` with
+ * the URL clickable; images show a muted placeholder with an approval button
+ * until the user approves the URL (see markdownLinkPolicy.tsx).
  */
 .linkUrl {
+    color: var(--colorNeutralForeground2);
+    word-break: break-all;
+}
+
+.imagePlaceholder {
+    display: inline-flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--spacingHorizontalS);
+}
+
+.markdownImage {
+    max-width: 100%;
+    height: auto;
+    border-radius: var(--borderRadiusMedium);
+}
+
+.externalLinkUrl {
+    display: block;
+    margin-block: var(--spacingVerticalS);
     color: var(--colorNeutralForeground2);
     word-break: break-all;
 }

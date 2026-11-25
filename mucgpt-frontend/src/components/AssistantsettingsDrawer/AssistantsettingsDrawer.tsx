@@ -115,8 +115,8 @@ export const AssistantsettingsDrawer = ({ assistant, onDeleteAssistant, isOwned,
     const rehypeKatexOptions = {
         output: "mathml"
     };
-    // Defense in depth: safeMarkdownComponents already renders links as plain
-    // text; this plugin only matters if that override is ever removed.
+    // Defense in depth: safeMarkdownComponents already applies the link
+    // policy; this plugin only matters if that override is ever removed.
     const rehypeExternalLinksOptions = {
         target: "_blank",
         rel: ["nofollow", "noopener", "noreferrer"]

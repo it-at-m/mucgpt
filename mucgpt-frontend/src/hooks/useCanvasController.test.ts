@@ -365,7 +365,7 @@ describe("loading stored revisions", () => {
         expect(harness.current.getMarkdown()).toBe("Newest");
     });
 
-    it("falls back to content with unparseable link marks as plain text", async () => {
+    it("re-scenes stored link marks against the policy when loading revisions", async () => {
         loadCanvasStateMock.mockResolvedValue("");
         loadCanvasRevisionsMock.mockResolvedValue({
             auto: [
@@ -391,7 +391,7 @@ describe("loading stored revisions", () => {
         await new Promise(resolve => setTimeout(resolve, 0));
 
         expect(harness.current.isOpen).toBe(true);
-        expect(harness.current.getMarkdown()).toBe("Label");
+        expect(harness.current.getMarkdown()).toBe("[Label](https://example.com/)");
     });
 });
 

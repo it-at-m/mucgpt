@@ -451,3 +451,80 @@ class TestChatRouter:
         held_run_locks.add(f"{CONVERSATION_RUN_LOCK_PREFIX}:{DUMMY_CONVERSATION_ID}")
 
         assert self._post_message(test_client, persist=False).status_code == 200
+
+
+class TestConversationApprovedImages:
+    def _patch_persistence(self, monkeypatch: pytest.MonkeyPatch) -> AsyncMock:
+        from core.persistance_helpers import PersistanceHelpers
+
+        monkeypatch.setattr(
+            PersistanceHelpers, "conversation_exists", AsyncMock(return_value=True)
+        )
+        store = AsyncMock(return_value=True)
+        monkeypatch.setattr(PersistanceHelpers, "set_approved_images", store)
+        return store
+
+    def test_put_approved_images_replaces_the_lists(
+        self, monkeypatch: pytest.MonkeyPatch, test_client: TestClient
+    ) -> None:
+        store = self._patch_persistence(monkeypatch)
+
+        response = test_client.put(
+            f"/v1/conversations/{DUMMY_CONVERSATION_ID}/approved-images",
+            json={
+                "approved_images": ["https://example.com/a.png"],
+                "rejected_images": ["https://example.com/r.png"],
+            },
+        )
+
+        assert response.status_code == 204, response.text
+        store.assert_awaited_once_with(
+            DUMMY_CONVERSATION_ID,
+            ["https://example.com/a.png"],
+            "test_user_123",
+            ["https://example.com/r.png"],
+        )
+
+    def test_put_approved_images_defaults_rejections_to_empty(
+        self, monkeypatch: pytest.MonkeyPatch, test_client: TestClient
+    ) -> None:
+        store = self._patch_persistence(monkeypatch)
+
+        response = test_client.put(
+            f"/v1/conversations/{DUMMY_CONVERSATION_ID}/approved-images",
+            json={"approved_images": ["https://example.com/a.png"]},
+        )
+
+        assert response.status_code == 204, response.text
+        store.assert_awaited_once_with(
+            DUMMY_CONVERSATION_ID, ["https://example.com/a.png"], "test_user_123", []
+        )
+
+    def test_put_approved_images_is_scoped_to_the_owner(
+        self, monkeypatch: pytest.MonkeyPatch, test_client: TestClient
+    ) -> None:
+        from core.persistance_helpers import PersistanceHelpers
+
+        self._patch_persistence(monkeypatch)
+        monkeypatch.setattr(
+            PersistanceHelpers, "is_user_in_conversation", AsyncMock(return_value=False)
+        )
+
+        response = test_client.put(
+            f"/v1/conversations/{DUMMY_CONVERSATION_ID}/approved-images",
+            json={"approved_images": []},
+        )
+
+        assert response.status_code == 403, response.text
+
+    def test_put_approved_images_rejects_oversized_urls(
+        self, monkeypatch: pytest.MonkeyPatch, test_client: TestClient
+    ) -> None:
+        self._patch_persistence(monkeypatch)
+
+        response = test_client.put(
+            f"/v1/conversations/{DUMMY_CONVERSATION_ID}/approved-images",
+            json={"approved_images": ["https://example.com/" + "a" * 2048]},
+        )
+
+        assert response.status_code == 422, response.text

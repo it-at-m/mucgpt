@@ -4,10 +4,12 @@ import { Button, DrawerBody, DrawerHeader, DrawerHeaderTitle, OverlayDrawer } fr
 import { ArrowUndo24Regular } from "@fluentui/react-icons";
 import { useTranslation } from "react-i18next";
 
+import { useConfigContext } from "../../context/ConfigContext";
 import type { CanvasRevision } from "../../service/canvasStorage";
 import type { CanvasControllerInstance } from "../../hooks/useCanvasController";
 import { canvasExtensions } from "./canvasExtensions";
-import { withoutLinkMarks } from "./canvasLinkNeutralization";
+import { withPolicyLinkMarks } from "./canvasLinkPolicy";
+import { flattenImagesToText } from "./canvasLinkNeutralization";
 import styles from "./CanvasVersionsDrawer.module.css";
 
 // Revision previews are rendered via dangerouslySetInnerHTML, so links must
@@ -42,6 +44,7 @@ const buildGroups = (revisions: { auto: CanvasRevision[]; manual: CanvasRevision
 
 export const CanvasVersionsDrawer = ({ open, onClose, controller, disabled = false }: Props) => {
     const { t, i18n } = useTranslation();
+    const { allowed_link_domains: allowedDomains } = useConfigContext();
     const groups = buildGroups(controller.revisions, t);
 
     const formatTimestamp = (timestamp: number) =>
@@ -51,9 +54,13 @@ export const CanvasVersionsDrawer = ({ open, onClose, controller, disabled = fal
 
     const previewHtml = (docJson: unknown) => {
         try {
-            return DOMPurify.sanitize(generateHTML(withoutLinkMarks(docJson) as Parameters<typeof generateHTML>[0], canvasExtensions()), {
-                USE_PROFILES: { html: true }
-            });
+            // The preview must fetch nothing: images render as their
+            // "alt (url)" text, links keep their text without a href.
+            const rawHtml = flattenImagesToText(
+                generateHTML(withPolicyLinkMarks(docJson, allowedDomains) as Parameters<typeof generateHTML>[0], canvasExtensions()),
+                allowedDomains
+            );
+            return DOMPurify.sanitize(rawHtml, { USE_PROFILES: { html: true } });
         } catch (error) {
             console.error("Canvas revision preview failed:", error);
             return "";

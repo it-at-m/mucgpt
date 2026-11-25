@@ -129,6 +129,8 @@ export interface ApplicationConfig {
     canvas_editor_max_chars: number;
     /** HTML tag names allowed inside canvas markdown (e.g. "u"); everything else is escaped to literal text by the canvas sanitizer. */
     canvas_allowed_html_tags: string[];
+    /** Hostnames whose links render clickable without URL sanitization (exact host match). Other links lose query string, fragment and userinfo but stay clickable. */
+    allowed_link_domains: string[];
     footer_link_url?: string;
     footer_label?: string;
     faq_url?: string;

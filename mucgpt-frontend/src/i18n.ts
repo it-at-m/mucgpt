@@ -17,6 +17,13 @@ i18n
         resources: {
             DE: {
                 translation: {
+                    external_link: {
+                        title: "Externe Verbindung öffnen?",
+                        description: "Diese Verlinkung führt zu einer Website außerhalb der zugelassenen Domänen.",
+                        open: "Öffnen",
+                        cancel: "Abbrechen",
+                        allow_session: "Für diese Sitzung erlauben"
+                    },
                     document_library: documentLibraryTranslations.DE,
                     header: {
                         nutzungsbedingungen: "Nutzungsbedingungen",
@@ -158,6 +165,8 @@ i18n
                         tool_approval_reject: "Nicht senden",
                         tool_approval_approve_label: "Anfrage an {{tool}} senden",
                         tool_approval_reject_label: "Anfrage an {{tool}} nicht senden",
+                        image_show: "Bild anzeigen",
+                        image_hide: "Nicht anzeigen",
                         activity_failed_count: "{{count}} fehlgeschlagen",
                         activity_duration: "{{seconds}} s",
                         activity_evaluating: "Werte die Ergebnisse aus",
@@ -1020,6 +1029,13 @@ i18n
             },
             EN: {
                 translation: {
+                    external_link: {
+                        title: "Open external connection?",
+                        description: "This link leads to a website outside the allowed domains.",
+                        open: "Open",
+                        cancel: "Cancel",
+                        allow_session: "Allow for this session"
+                    },
                     document_library: documentLibraryTranslations.EN,
                     header: {
                         nutzungsbedingungen: "Terms of use",
@@ -1161,6 +1177,8 @@ i18n
                         tool_approval_reject: "Don't send",
                         tool_approval_approve_label: "Send request to {{tool}}",
                         tool_approval_reject_label: "Don't send request to {{tool}}",
+                        image_show: "Show image",
+                        image_hide: "Don't show",
                         activity_failed_count: "{{count}} failed",
                         activity_duration: "{{seconds}} s",
                         activity_evaluating: "Reviewing the results",
@@ -2007,6 +2025,13 @@ i18n
             },
             BA: {
                 translation: {
+                    external_link: {
+                        title: "Externe Verbindung affanga?",
+                        description: "Der Link führt auf a Seitn außerhalb von de erlaubten Domänen.",
+                        open: "Affanga",
+                        cancel: "Obbrecha",
+                        allow_session: "Für de Sitzung erlauben"
+                    },
                     document_library: documentLibraryTranslations.BA,
                     header: {
                         nutzungsbedingungen: "Gebrauchsvorschriftn",
@@ -2131,6 +2156,8 @@ i18n
                         tool_approval_reject: "Ned schicka",
                         tool_approval_approve_label: "Anfrog an {{tool}} schicka",
                         tool_approval_reject_label: "Anfrog an {{tool}} ned schicka",
+                        image_show: "Bild zoagn",
+                        image_hide: "Ned zoagn",
                         activity_failed_count: "{{count}} ned highaut",
                         activity_duration: "{{seconds}} s",
                         activity_evaluating: "I schau ma de Ergebnisse o",
@@ -2975,6 +3002,13 @@ i18n
             },
             FR: {
                 translation: {
+                    external_link: {
+                        title: "Ouvrir le lien externe ?",
+                        description: "Ce lien mène à un site en dehors des domaines autorisés.",
+                        open: "Ouvrir",
+                        cancel: "Annuler",
+                        allow_session: "Autoriser pour cette session"
+                    },
                     document_library: documentLibraryTranslations.FR,
                     header: {
                         nutzungsbedingungen: "Conditions d'utilisation",
@@ -3099,6 +3133,8 @@ i18n
                         tool_approval_reject: "Ne pas envoyer",
                         tool_approval_approve_label: "Envoyer la demande à {{tool}}",
                         tool_approval_reject_label: "Ne pas envoyer la demande à {{tool}}",
+                        image_show: "Afficher l'image",
+                        image_hide: "Ne pas afficher",
                         activity_failed_count: "{{count}} en échec",
                         activity_duration: "{{seconds}} s",
                         activity_evaluating: "J'analyse les résultats",
@@ -3946,6 +3982,13 @@ i18n
             },
             UK: {
                 translation: {
+                    external_link: {
+                        title: "Відкрити зовнішнє посилання?",
+                        description: "Це посилання веде на сайт поза дозволеними доменами.",
+                        open: "Відкрити",
+                        cancel: "Скасувати",
+                        allow_session: "Дозволити на цю сесію"
+                    },
                     document_library: documentLibraryTranslations.UK,
                     header: {
                         go_to_tutorials_aria: "Перейти до навчальних матеріалів та інструкцій",
@@ -4072,6 +4115,8 @@ i18n
                         tool_approval_reject: "Не надсилати",
                         tool_approval_approve_label: "Надіслати запит до {{tool}}",
                         tool_approval_reject_label: "Не надсилати запит до {{tool}}",
+                        image_show: "Показати зображення",
+                        image_hide: "Не показувати",
                         activity_failed_count: "{{count}} з помилкою",
                         activity_duration: "{{seconds}} с",
                         activity_evaluating: "Аналізую результати",

@@ -29,6 +29,7 @@ import { exportCanvasApi, type ExportTarget } from "../../api/core-client";
 import { useGlobalToastContext } from "../GlobalToastHandler/GlobalToastContext";
 import { EdelweissSpinner } from "../EdelweissSpinner";
 import type { CanvasController } from "../../hooks/useCanvasController";
+import { inlineApprovedImages, markdownForExport } from "./canvasImageExport";
 import styles from "./CanvasToolbar.module.css";
 
 interface Props {
@@ -103,7 +104,9 @@ export const CanvasToolbar = ({ editor, controller, onOpenVersions, disabled }: 
     };
 
     const downloadMarkdown = () => {
-        const blob = new Blob([controller.getMarkdown()], { type: "text/markdown;charset=utf-8" });
+        const blob = new Blob([markdownForExport(controller.getMarkdown())], {
+            type: "text/markdown;charset=utf-8"
+        });
         const url = URL.createObjectURL(blob);
         const anchor = document.createElement("a");
         anchor.href = url;
@@ -117,7 +120,7 @@ export const CanvasToolbar = ({ editor, controller, onOpenVersions, disabled }: 
         if (!editor) return;
         setIsExporting(target);
         try {
-            const blob = await exportCanvasApi(controller.getMarkdown(), editor.getHTML(), target);
+            const blob = await exportCanvasApi(markdownForExport(controller.getMarkdown()), await inlineApprovedImages(editor.getHTML(), target), target);
             const url = URL.createObjectURL(blob);
             const anchor = document.createElement("a");
             anchor.href = url;

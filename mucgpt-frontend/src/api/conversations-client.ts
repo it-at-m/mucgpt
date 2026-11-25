@@ -1,6 +1,6 @@
 import { API_BASE } from "./core-client";
 import type { ChatResponse } from "./models";
-import { ApiError, deleteConfig, getConfig, handleApiRequest, handleRedirect, patchConfig } from "./fetch-utils";
+import { ApiError, deleteConfig, getConfig, handleApiRequest, handleRedirect, patchConfig, putConfig } from "./fetch-utils";
 
 export interface ConversationMetadata {
     conversation_id: string;
@@ -10,6 +10,8 @@ export interface ConversationMetadata {
     updated_at: string;
     document_ids?: string[];
     document_names?: Record<string, string>;
+    approved_images?: string[];
+    rejected_images?: string[];
 }
 
 export interface ConversationMessage {
@@ -76,5 +78,17 @@ export async function deleteConversationApi(conversationId: string): Promise<voi
     handleRedirect(response);
     if (!response.ok && response.status !== 404) {
         throw new ApiError("Failed to delete conversation", response.status);
+    }
+}
+
+/** Persist the conversation's image decision lists (approved + rejected URLs). */
+export async function putApprovedImagesApi(conversationId: string, approvedImages: string[], rejectedImages: string[]): Promise<void> {
+    const response = await fetch(
+        API_BASE + "v1/conversations/" + encodeURIComponent(conversationId) + "/approved-images",
+        putConfig({ approved_images: approvedImages, rejected_images: rejectedImages })
+    );
+    handleRedirect(response);
+    if (!response.ok && response.status !== 404) {
+        throw new ApiError("Failed to save image approvals", response.status);
     }
 }

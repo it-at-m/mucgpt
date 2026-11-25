@@ -22,6 +22,7 @@ from api.ag_ui_input import (
     to_chat_completion_request,
 )
 from api.api_models import (
+    ApprovedImagesUpsertRequest,
     CanvasContentUpsertRequest,
     CanvasResponse,
     ChatCompletionMessage,
@@ -311,6 +312,32 @@ async def _authorize_conversation_access(conversation_id: str, user_id: str) -> 
         raise HTTPException(status_code=404, detail="Conversation not found")
     if not await PersistanceHelpers.is_user_in_conversation(user_id, conversation_id):
         raise HTTPException(status_code=403, detail="Conversation access denied")
+
+
+@router.put(
+    "/conversations/{conversation_id}/approved-images",
+    summary="Replace conversation approved image URLs",
+    status_code=204,
+    responses={
+        403: {"description": "Forbidden"},
+        404: {"description": "Not found"},
+    },
+)
+async def put_conversation_approved_images(
+    conversation_id: str,
+    request: ApprovedImagesUpsertRequest,
+    user_info: Annotated[AuthenticationResult, Depends(authenticate_user)],
+) -> Response:
+    """Wholesale-overwrite the image decision lists (max 100 each)."""
+    await _authorize_conversation_access(conversation_id, user_info.user_id)
+    if not await PersistanceHelpers.set_approved_images(
+        conversation_id,
+        request.approved_images,
+        user_info.user_id,
+        request.rejected_images,
+    ):
+        raise HTTPException(status_code=404, detail="Conversation not found")
+    return Response(status_code=204)
 
 
 @router.get(

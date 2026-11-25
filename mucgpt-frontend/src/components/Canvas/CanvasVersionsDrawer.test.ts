@@ -89,7 +89,7 @@ describe("CanvasVersionsDrawer", () => {
         expect(sanitized).not.toContain("href");
     });
 
-    it("renders a revision containing a link mark as plain text without an anchor", () => {
+    it("renders a revision containing a link mark without a navigable href", () => {
         const articles = renderDrawer({
             auto: [
                 {
@@ -111,8 +111,39 @@ describe("CanvasVersionsDrawer", () => {
         });
         expect(articles).toHaveLength(1);
         const preview = previewOf(articles[0]);
-        expect(preview).not.toContain("<a");
+        expect(preview).toContain("<a");
         expect(preview).toContain("link");
+        expect(preview).not.toContain("href");
+    });
+
+    it("renders images as alt (url) text instead of fetching them", () => {
+        const articles = renderDrawer({
+            auto: [
+                {
+                    revision: 1,
+                    doc_json: {
+                        type: "doc",
+                        content: [
+                            {
+                                type: "paragraph",
+                                content: [
+                                    { type: "text", text: "Schaubild " },
+                                    { type: "image", attrs: { src: "https://example.com/p?d=1", alt: "Plan" } }
+                                ]
+                            }
+                        ]
+                    },
+                    timestamp: 1,
+                    source: "agent"
+                }
+            ],
+            manual: []
+        });
+        const preview = previewOf(articles[0]);
+        expect(preview).not.toContain("<img");
+        expect(preview).not.toContain("d=1");
+        expect(preview).toContain("Plan");
+        expect(preview).toContain("https://example.com/p");
     });
 
     it("leaves SVG-namespace anchors untouched by the HTML-only href-stripping hook", () => {

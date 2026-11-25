@@ -11,9 +11,10 @@ import { loadCanvasRevisions, loadCanvasState, parseCanvasRevisions, type Canvas
 import type { CanvasStreamEvent } from "../utils/canvasStream";
 import { CANVAS_PERSISTENCE_RESET, persistentCaret, persistentSelection } from "../components/Canvas/canvasSelectionPersistence";
 import { canvasExtensions } from "../components/Canvas/canvasExtensions";
-import { flattenPastedLinks, withoutLinkMarks } from "../components/Canvas/canvasLinkNeutralization";
+import { flattenPastedLinks } from "../components/Canvas/canvasLinkNeutralization";
+import { interceptLinkClicks, prepareCanvasMarkdown, withPolicyLinkMarks } from "../components/Canvas/canvasLinkPolicy";
+import { imagePasteMarkdown } from "../components/Canvas/canvasLinkNeutralization";
 import { effectiveAllowedTags, sanitizeCanvasMarkdown } from "../components/Canvas/canvasHtmlWhitelist";
-import { markdownLinksToPlainText } from "../components/MarkdownRenderer/markdownLinkPolicy";
 
 /**
  * Interface between the canvas UI and the chat page.
@@ -267,23 +268,42 @@ export function useCanvasController(conversationId: string | undefined, serverCo
     // to the canvas endpoints with the plain backend conversation id.
     const serverId = serverConversationId ?? conversationId;
     const limits = useCanvasLimits();
-    const { canvas_allowed_html_tags: allowedHtmlTags } = useConfigContext();
-    // Pre-parse transformation of every markdown entering the editor: links and
-    // images become plain "description (url)" text (issue #228) and tags outside
-    // the deployment allowlist become literal text (config may only restrict;
-    // tags unknown to this release are ignored).
+    const { canvas_allowed_html_tags: allowedHtmlTags, allowed_link_domains: allowedDomains } = useConfigContext();
+    // Pre-parse transformation of every markdown entering the editor: links
+    // become plain "description (url)" text whose URL part carries the policy
+    // link mark (allowlist: full URL, otherwise sanitized), images become
+    // approval-gated nodes, and tags outside the deployment allowlist become
+    // literal text (config may only restrict; tags unknown to this release
+    // are ignored).
     const allowedTags = effectiveAllowedTags(allowedHtmlTags);
     // Stable identity on purpose: the conversation-switch effect and the stream
     // callbacks must not be torn down/re-run when the config loads.
     const allowedTagsRef = useRef(allowedTags);
     allowedTagsRef.current = allowedTags;
-    const sanitize = useCallback((md: string): string => sanitizeCanvasMarkdown(markdownLinksToPlainText(md), allowedTagsRef.current), []);
+    const allowedDomainsRef = useRef(allowedDomains);
+    allowedDomainsRef.current = allowedDomains;
+    const sanitize = useCallback(
+        (md: string): string => sanitizeCanvasMarkdown(prepareCanvasMarkdown(md, allowedDomainsRef.current), allowedTagsRef.current),
+        []
+    );
     const editor = useEditor(
         {
-            extensions: canvasExtensions({ exportLimitChars: limits.editorLimitChars, warnChars: limits.warnChars }),
+            extensions: canvasExtensions({ exportLimitChars: limits.editorLimitChars, warnChars: limits.warnChars }, () => allowedDomainsRef.current),
             content: "",
             editorProps: {
-                transformPastedHTML: flattenPastedLinks
+                transformPastedHTML: html => flattenPastedLinks(html, allowedDomainsRef.current),
+                handleDOMEvents: {
+                    click: (_view, event) => interceptLinkClicks(event, allowedDomainsRef.current),
+                    auxclick: (_view, event) => interceptLinkClicks(event, allowedDomainsRef.current)
+                },
+                handlePaste: (view, event) => {
+                    const text = event.clipboardData?.getData("text/plain") ?? "";
+                    const markdown = imagePasteMarkdown(text, allowedDomainsRef.current);
+                    if (markdown === null) return false;
+                    event.preventDefault();
+                    editorRef.current?.chain().focus().insertContentAt(view.state.selection, sanitize(markdown)).run();
+                    return true;
+                }
             }
         },
         // Recreate when the backend limits arrive so the plugin uses the
@@ -469,7 +489,7 @@ export function useCanvasController(conversationId: string | undefined, serverCo
                     if (!stored.trim()) {
                         const latestRevision = [...rings.auto, ...rings.manual].sort((left, right) => right.revision - left.revision)[0];
                         if (latestRevision) {
-                            editor.commands.setContent(withoutLinkMarks(latestRevision.doc_json) as Content);
+                            editor.commands.setContent(withPolicyLinkMarks(latestRevision.doc_json, allowedDomainsRef.current) as Content);
                             editor.view.dispatch(editor.state.tr.setMeta(CANVAS_PERSISTENCE_RESET, true));
                             setIsOpen(true);
                             return;
@@ -710,7 +730,7 @@ export function useCanvasController(conversationId: string | undefined, serverCo
             // Stored doc_json is untrusted (foreign rings, older schema): tiptap's
             // setContent silently replaces the document with an empty one on
             // invalid content, which would destroy the live canvas.
-            const docJson = withoutLinkMarks(found.doc_json);
+            const docJson = withPolicyLinkMarks(found.doc_json, allowedDomainsRef.current);
             try {
                 current.schema.nodeFromJSON(docJson).check();
             } catch (error) {

@@ -46,6 +46,7 @@ export const DEFAULT_APP_CONFIG: ApplicationConfig = {
     canvas_content_max_chars: 256 * 1024,
     canvas_editor_max_chars: 512 * 1024,
     canvas_allowed_html_tags: ["u"],
+    allowed_link_domains: ["www.muenchen.de"],
     faq_url: "https://ki.muenchen.de",
     incident_report_url: "https://ki.muenchen.de",
     feature_request_url: "https://ki.muenchen.de",

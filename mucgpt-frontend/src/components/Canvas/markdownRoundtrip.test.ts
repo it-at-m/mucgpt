@@ -77,11 +77,21 @@ describe("markdown round trip", () => {
             try {
                 const first = serialize(editor);
                 editor.commands.setContent(first);
+                // The link-mark pass may mark a plain-text URL on the first
+                // round; idempotency means the pass settles after one round.
                 const second = serialize(editor);
-                expect(second).toBe(first);
-                // No fixture may (re)introduce link/image markdown — link
-                // neutralization happens before ingestion (issue #228).
-                expect(second).not.toMatch(/\]\((?:https?|mailto):/);
+                editor.commands.setContent(second);
+                const third = serialize(editor);
+                expect(third).toBe(second);
+                // Every serialized link destination must be policy-compliant:
+                // no unsanitized query strings, fragments or userinfo.
+                for (const href of [...third.matchAll(/\]\(([^)\s]+)\)/g)].map(match => match[1])) {
+                    const parsed = new URL(href);
+                    expect(parsed.search).toBe("");
+                    expect(parsed.hash).toBe("");
+                    expect(parsed.username).toBe("");
+                    expect(parsed.password).toBe("");
+                }
             } finally {
                 editor.destroy();
             }

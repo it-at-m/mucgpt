@@ -146,6 +146,7 @@ const CONFIG_RESPONSE: ApplicationConfig = {
     canvas_content_max_chars: 256 * 1024,
     canvas_editor_max_chars: 512 * 1024,
     canvas_allowed_html_tags: ["u"],
+    allowed_link_domains: ["www.muenchen.de"],
     footer_link_url: "https://intranet.example.org",
     footer_label: "Example Organization",
     faq_url: "https://intranet.example.org/help",
@@ -1741,6 +1742,7 @@ export const handlers = [
         })
     ),
     http.put("/api/backend/v1/conversations/:id/canvas/revisions", async ({ request }) => HttpResponse.json(await request.json())),
+    http.put("/api/backend/v1/conversations/:id/approved-images", () => new HttpResponse(null, { status: 204 })),
     http.post("/api/backend/v1/export", async ({ request }) => {
         const body = (await request.json()) as { target?: string };
         const mimetypes: Record<string, string> = {

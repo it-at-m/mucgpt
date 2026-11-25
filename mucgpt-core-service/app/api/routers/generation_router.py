@@ -154,9 +154,11 @@ def _strip_markdown_links(value: str) -> str:
 
     Drafts can be shared and their description and system prompt are rendered
     as markdown in other users' browsers. Rendered links and images can
-    exfiltrate data on display (issue #228), so links and images are reduced
-    to their label text before the draft is returned. Labels allow balanced
-    brackets one level deep. Fenced and inline code stays untouched.
+    exfiltrate data on display (issue #228). Unlike the chat/canvas render
+    policy, drafts keep no clickable links at all: the fields are metadata
+    seen outside an active conversation's approval context, so the strictest
+    form is the safe one. Labels allow balanced brackets one level deep.
+    Fenced and inline code stays untouched.
     """
 
     stripped: list[str] = []

@@ -90,35 +90,36 @@ async def import_conversation(
     response: Response,
 ) -> ConversationImportResult:
     """Store a chat from the browser once; repeating it returns skipped."""
-    import_slot = await _acquire_import_slot()
-    if import_slot is None:
+    # conversation lock first: waiting on a busy chat must not hold a global import slot
+    try:
+        lock = await _lock_conversation_run(request.conversation_id)
+    except HTTPException as exc:
+        if exc.status_code != 409:
+            raise
         raise HTTPException(
-            status_code=429,
-            detail="Browser chat migration capacity is temporarily exhausted",
+            status_code=423,
+            detail="Another request is still running for this conversation",
             headers={"Retry-After": str(IMPORT_RETRY_AFTER_SECONDS)},
-        )
-    slot_renewal_stop = asyncio.Event()
-    slot_renewal = asyncio.create_task(
-        _renew_import_slot(
-            import_slot,
-            get_settings().chat_migration_slot_ttl_seconds,
-            slot_renewal_stop,
-        )
+        ) from exc
+    lock_renewal_stop = asyncio.Event()
+    lock_renewal = asyncio.create_task(
+        _renew_conversation_run_lock(lock, lock_renewal_stop)
     )
     try:
-        try:
-            lock = await _lock_conversation_run(request.conversation_id)
-        except HTTPException as exc:
-            if exc.status_code != 409:
-                raise
+        import_slot = await _acquire_import_slot()
+        if import_slot is None:
             raise HTTPException(
-                status_code=423,
-                detail="Another request is still running for this conversation",
+                status_code=429,
+                detail="Browser chat migration capacity is temporarily exhausted",
                 headers={"Retry-After": str(IMPORT_RETRY_AFTER_SECONDS)},
-            ) from exc
-        lock_renewal_stop = asyncio.Event()
-        lock_renewal = asyncio.create_task(
-            _renew_conversation_run_lock(lock, lock_renewal_stop)
+            )
+        slot_renewal_stop = asyncio.Event()
+        slot_renewal = asyncio.create_task(
+            _renew_import_slot(
+                import_slot,
+                get_settings().chat_migration_slot_ttl_seconds,
+                slot_renewal_stop,
+            )
         )
         try:
             status = await import_chat(request, user_info.user_id)
@@ -127,17 +128,17 @@ async def import_conversation(
                 status_code=409, detail="Conversation id is not available"
             ) from exc
         finally:
-            lock_renewal_stop.set()
-            lock_renewal.cancel()
+            slot_renewal_stop.set()
+            slot_renewal.cancel()
             with suppress(asyncio.CancelledError):
-                await lock_renewal
-            await _unlock_conversation_run(lock)
+                await slot_renewal
+            await _release_import_slot(import_slot)
     finally:
-        slot_renewal_stop.set()
-        slot_renewal.cancel()
+        lock_renewal_stop.set()
+        lock_renewal.cancel()
         with suppress(asyncio.CancelledError):
-            await slot_renewal
-        await _release_import_slot(import_slot)
+            await lock_renewal
+        await _unlock_conversation_run(lock)
     # counts only, never chat content
     logger.info("Browser chat import: %s", status)
     response.headers["Cache-Control"] = "no-store"

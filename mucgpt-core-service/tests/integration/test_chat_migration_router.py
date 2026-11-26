@@ -111,6 +111,32 @@ def test_import_capacity_returns_429(test_client: TestClient, monkeypatch, impor
     import_chat.assert_not_awaited()
 
 
+def test_import_capacity_frees_the_conversation_lock(
+    test_client: TestClient, held_run_locks, monkeypatch, import_chat
+):
+    monkeypatch.setattr(
+        "chat_migration.router._acquire_import_slot", AsyncMock(return_value=None)
+    )
+
+    response = test_client.post(URL, json=BODY)
+
+    assert response.status_code == 429, response.text
+    assert held_run_locks == set()
+
+
+def test_busy_chat_does_not_take_an_import_slot(
+    test_client: TestClient, held_run_locks, monkeypatch, import_chat
+):
+    acquire_slot = AsyncMock()
+    monkeypatch.setattr("chat_migration.router._acquire_import_slot", acquire_slot)
+    held_run_locks.add(f"{CONVERSATION_RUN_LOCK_PREFIX}:chat-1")
+
+    response = test_client.post(URL, json=BODY)
+
+    assert response.status_code == 423, response.text
+    acquire_slot.assert_not_awaited()
+
+
 @pytest.mark.asyncio
 async def test_import_slot_renewal_extends_the_lease(monkeypatch):
     slot = AsyncMock()

@@ -1,5 +1,6 @@
 """Real PostgreSQL coverage for document attachments in persisted chats."""
 
+import asyncio
 import os
 from collections.abc import Sequence
 from uuid import UUID, uuid4
@@ -389,4 +390,71 @@ async def test_persisted_chat_replaces_preserves_and_detaches_document_selection
         )
         assert detached_conversation["document_ids"] == []
         assert detached_conversation["document_names"] == {}
+        harness.assert_model_consumed()
+
+
+@pytest.mark.asyncio
+async def test_parallel_chats_can_read_the_same_selected_document(monkeypatch) -> None:
+    """Independent persisted chats may concurrently read a shared owner document."""
+    async with postgres_http_harness(monkeypatch) as harness:
+        extracted_text = "A document available to concurrent chats"
+        harness.parser.text = extracted_text
+        uploaded = await harness.upload_document("shared.txt", b"shared")
+        assert uploaded.status_code == 201
+        document_id = str(UUID(uploaded.json()["id"]))
+        document_path = get_document_path(document_id)
+        model = harness.set_model_script(
+            [
+                read_file(document_path, id="parallel-read-one"),
+                read_file(document_path, id="parallel-read-two"),
+                text("First parallel chat read the document."),
+                text("Second parallel chat read the document."),
+            ]
+        )
+
+        first_conversation_id = f"parallel-document-one-{uuid4()}"
+        second_conversation_id = f"parallel-document-two-{uuid4()}"
+        first_events, second_events = await asyncio.gather(
+            harness.chat_events(
+                _persisted_body(
+                    harness,
+                    first_conversation_id,
+                    [{"role": "user", "content": "Read the shared document."}],
+                    [document_id],
+                )
+            ),
+            harness.chat_events(
+                _persisted_body(
+                    harness,
+                    second_conversation_id,
+                    [{"role": "user", "content": "Read the shared document."}],
+                    [document_id],
+                )
+            ),
+        )
+
+        assert {
+            final_text(first_events),
+            final_text(second_events),
+        } == {
+            "First parallel chat read the document.",
+            "Second parallel chat read the document.",
+        }
+        for tool_call_id in ("parallel-read-one", "parallel-read-two"):
+            read_result = _read_result(model, tool_call_id)
+            assert read_result.status == "success"
+            assert extracted_text in read_result.content
+
+        metadata = await PersistanceHelpers.get_conversations_for_user(
+            harness.owner.user_id
+        )
+        selections = {
+            row["conversation_id"]: row["document_ids"]
+            for row in metadata
+            if row["conversation_id"] in {first_conversation_id, second_conversation_id}
+        }
+        assert selections == {
+            first_conversation_id: [document_id],
+            second_conversation_id: [document_id],
+        }
         harness.assert_model_consumed()

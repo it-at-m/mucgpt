@@ -32,9 +32,9 @@ export interface CanvasController {
     /** Stores the content captured by the last adoption as the pre-chat
      * canvas draft (localStorage), falling back to the current editor content
      * when nothing was captured; used when a fresh conversation's first turn
-     * fails. Without a content-limit guard: this is the recovery channel for
-     * content the server persist refuses, so it must keep oversized documents
-     * too. */
+     * fails. A stored draft saved after the capture is newer and is kept.
+     * Without a content-limit guard: this is the recovery channel for content
+     * the server persist refuses, so it must keep oversized documents too. */
     snapshotPreChatDraft(): void;
     /** True while the agent is writing */
     isLocked: boolean;
@@ -576,11 +576,20 @@ export function useCanvasController(conversationId: string | undefined, serverCo
     }, [getMarkdown]);
 
     const snapshotPreChatDraft = useCallback(() => {
-        // An adoption captured the request's content; without one the editor
-        // is still the pre-chat state (placeholder creation failed before the
-        // id assignment). An empty capture re-arms nothing.
-        const markdown = adoptedDraftRef.current ?? getMarkdown();
-        if (markdown.trim()) saveCanvasDraft(markdown);
+        const captured = adoptedDraftRef.current;
+        if (captured === null) {
+            // No adoption: the editor still holds the pre-chat content
+            // (placeholder creation failed before the id assignment).
+            const live = getMarkdown();
+            if (live.trim()) saveCanvasDraft(live);
+            return;
+        }
+        // The adoption cleared the slot, so a stored draft differing from the
+        // capture was written afterwards (a later session or tab) and is
+        // newer: kept. Identical or missing re-arms the capture.
+        const stored = loadCanvasDraft();
+        if (stored !== null && stored !== captured) return;
+        if (captured.trim()) saveCanvasDraft(captured);
     }, [getMarkdown]);
 
     // Called on RUN_STARTED: the server numbers canvas_revision per run,

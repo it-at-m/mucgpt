@@ -224,7 +224,12 @@ export interface CanvasWiring {
     onRunStarted: () => void;
     /** RUN_FINISHED/RUN_ERROR: post-run snapshot and unlock */
     onRunFinished: () => void;
-    /** Right before a fresh conversation's id assignment: the current canvas
+    /** Synchronously at a fresh conversation's first request: captures the
+     * current canvas content for the failed-request draft recovery, before
+     * any await could replace the editor with another chat's content.
+     * Absent for non-persisted requests (previews) and tests. */
+    capturePreChatDraft?: () => void;
+    /** Right before a fresh conversation's id assignment: the captured canvas
      * content is adopted into it, so the controller must not treat the
      * assignment as a conversation switch. Absent for non-persisted requests
      * (previews) and tests. */
@@ -378,15 +383,19 @@ export const makeApiRequest = async (
         : undefined;
 
     if (newChatLocalId) {
+        // Capture the canvas content synchronously: a chat selection during
+        // the await below must not end up in the recovery capture.
+        if (canvasWiring) canvasWiring.capturePreChatDraft?.();
         // Create the chat right away with an unnamed placeholder title so it is
         // visible in the sidebar and header while the first answer streams.
         // The generated title replaces the placeholder once the turn completes.
         const placeholderId = await storageService.create([], options, newChatLocalId, i18next.t("components.history.unnamed_chat"), false);
         if (placeholderId) {
-            // The id assignment below adopts the current canvas content into
-            // the fresh conversation; announced synchronously so the
-            // controller's switch effect observes the flag.
-            canvasWiring?.adoptNewConversation?.();
+            // The id assignment below adopts the captured canvas content. Only
+            // announced while the pre-chat state survived the await: a
+            // selection during placeholder creation belongs to another
+            // conversation and must not be adopted.
+            if (!activeChatRef.current) canvasWiring?.adoptNewConversation?.();
             activeChatRef.current = placeholderId;
             dispatch({ type: "SET_ACTIVE_CHAT", payload: placeholderId });
             fetchHistory?.();

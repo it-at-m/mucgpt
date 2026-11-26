@@ -299,6 +299,7 @@ const Chat = () => {
                 runHadCanvasActivity = false;
                 c.unlock();
             },
+            capturePreChatDraft: () => canvasRef.current.capturePreChatDraft(),
             adoptNewConversation: () => canvasRef.current.beginAdoption(),
             savePreChatDraft: () => canvasRef.current.snapshotPreChatDraft()
         };

@@ -23,11 +23,16 @@ export interface CanvasController {
     setIsOpen(open: boolean): void;
     /** Sets an open request that survives a pending fresh-chat reset. */
     requestOpen(): void;
+    /** Captures the current editor content for the failed-request draft
+     * recovery. The page calls it synchronously when a fresh conversation's
+     * first request starts, before any await in between can replace the
+     * editor with another chat's content. */
+    capturePreChatDraft(): void;
     /** Flags the next fresh-conversation id assignment as an adoption of the
-     * current editor content: the switch effect then keeps the content instead
-     * of running the conversation switch. Called by the page right before it
-     * assigns a new conversation's id; captures the content for the abort
-     * path's draft re-arm. */
+     * captured pre-chat content: the switch effect then keeps the content
+     * instead of running the conversation switch. Called by the page right
+     * before it assigns the id, and only when the user has not left the
+     * pre-chat state while the request started. */
     beginAdoption(): void;
     /** Stores the content captured by the last adoption as the pre-chat
      * canvas draft (localStorage), falling back to the current editor content
@@ -311,10 +316,10 @@ export function useCanvasController(conversationId: string | undefined, serverCo
     // (not undefined) so the initial mount load isn't mistaken for an id assignment.
     const prevConversationIdRef = useRef<string | undefined | "uninitialized">("uninitialized");
     // Set by beginAdoption: the next undefined→id assignment is a fresh
-    // conversation adopting the current editor content, not a switch.
+    // conversation adopting the captured pre-chat content, not a switch.
     const adoptingRef = useRef(false);
-    // The content beginAdoption captured, kept for the abort path's draft
-    // re-arm (null until the first adoption of this controller instance).
+    // The content captured at the fresh conversation's first request start,
+    // kept for the abort path's draft re-arm (null until the first capture).
     const adoptedDraftRef = useRef<string | null>(null);
     // Mirrors isOpen for the switch effect, which must not depend on the state value
     // (adding it to the deps would re-run the whole switch on every open/close toggle).
@@ -457,14 +462,18 @@ export function useCanvasController(conversationId: string | undefined, serverCo
         // switch runs; it is consumed as soon as the new chat has an id.
         const pendingOpen = pendingOpenRef.current;
         if (conversationId) pendingOpenRef.current = false;
-        // The id assignment announced by beginAdoption is a fresh conversation
-        // adopting the current editor content (its first request already
-        // carried it): keep everything; later autosaves persist it and the
-        // pre-chat draft becomes obsolete. Any other id assignment is a
-        // genuine conversation switch — even a fresh chat with an open, filled
-        // canvas must not leak its content into the other conversation.
-        if (previous === undefined && conversationId !== undefined && adoptingRef.current) {
-            adoptingRef.current = false;
+        // The flag announced by beginAdoption is consumed by the id
+        // assignment of the fresh conversation adopting the captured pre-chat
+        // content (its first request already carried it): keep everything;
+        // later autosaves persist it and the pre-chat draft becomes obsolete.
+        // Any other id assignment is a genuine conversation switch whose
+        // target canvas must load, and the flag is disarmed so a rendered
+        // adoption can never hijack a later chat selection — the request may
+        // have raced a switch to another chat during placeholder creation,
+        // making its assignment defined→defined.
+        const announcedAdoption = previous === undefined && conversationId !== undefined && adoptingRef.current;
+        adoptingRef.current = false;
+        if (announcedAdoption) {
             clearCanvasDraft();
             // A canvas explicitly closed before the send stays closed: the
             // pending open request is not honored across the adoption.
@@ -565,15 +574,15 @@ export function useCanvasController(conversationId: string | undefined, serverCo
         setIsOpen(true);
     }, []);
 
-    // See the interface docs: must be called synchronously before the id
-    // assignment renders, so the switch effect observes the flag.
-    const beginAdoption = useCallback(() => {
-        adoptingRef.current = true;
-        // Capture the pre-chat content now: it is guaranteed to be the draft
-        // the request carries. A later chat switch or the failed run itself
-        // may have changed the editor before the abort re-arms the draft.
+    // See the interface docs: capture happens at request start, arming at the
+    // id assignment; both are page-driven and must be kept in that order.
+    const capturePreChatDraft = useCallback(() => {
         adoptedDraftRef.current = getMarkdown();
     }, [getMarkdown]);
+
+    const beginAdoption = useCallback(() => {
+        adoptingRef.current = true;
+    }, []);
 
     const snapshotPreChatDraft = useCallback(() => {
         const captured = adoptedDraftRef.current;
@@ -814,6 +823,7 @@ export function useCanvasController(conversationId: string | undefined, serverCo
             setIsOpen,
             requestOpen,
             beginAdoption,
+            capturePreChatDraft,
             snapshotPreChatDraft,
             isLocked,
             beginRun,
@@ -835,6 +845,7 @@ export function useCanvasController(conversationId: string | undefined, serverCo
             setIsOpen,
             requestOpen,
             beginAdoption,
+            capturePreChatDraft,
             snapshotPreChatDraft,
             isLocked,
             beginRun,

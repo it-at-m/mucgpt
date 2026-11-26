@@ -391,12 +391,12 @@ describe("useCanvasController pre-chat canvas draft", () => {
         editors.active = editorStub;
     });
 
-    it("re-arms the draft with the content captured at adoption, not with a later chat switch's editor content", async () => {
+    it("re-arms the draft with the content captured at request start, not with a later chat switch's editor content", async () => {
         const view = render(<Owner conversationId={undefined} />);
 
         editorStub.markdownText = "# pre-chat";
         editorStub.emit("update");
-        act(() => capturedController!.beginAdoption());
+        act(() => capturedController!.capturePreChatDraft());
         // Adoption completes with the first conversation id.
         loadStateMock.mockResolvedValue(null);
         await act(async () => view.rerender(<Owner conversationId="conv-new" />));
@@ -414,13 +414,48 @@ describe("useCanvasController pre-chat canvas draft", () => {
         expect(localStorage.getItem("canvas-draft")).toBe("# pre-chat");
     });
 
+    it("re-arms the content captured at request start after a mid-request chat switch", async () => {
+        const view = render(<Owner conversationId={undefined} />);
+
+        editorStub.markdownText = "# pre-chat";
+        editorStub.emit("update");
+        act(() => capturedController!.capturePreChatDraft());
+
+        // The user selects an existing chat while the placeholder creation
+        // awaits: its canvas replaces the editor, and the adoption is not
+        // announced for it.
+        loadStateMock.mockResolvedValue("# stored");
+        await act(async () => view.rerender(<Owner conversationId="other-1" />));
+        await waitFor(() => expect(editorStub.markdownText).toBe("# stored"));
+
+        act(() => capturedController!.snapshotPreChatDraft());
+
+        expect(localStorage.getItem("canvas-draft")).toBe("# pre-chat");
+    });
+
+    it("disarms the adoption flag on a switch that does not consume it", async () => {
+        const view = render(<Owner conversationId={undefined} />);
+
+        act(() => capturedController!.beginAdoption());
+
+        // The placeholder arrives while a chat selection is already active:
+        // the adoption cannot happen anymore, and the flag must not reach the
+        // next existing-chat selection.
+        await act(async () => view.rerender(<Owner conversationId="conv-a" />));
+        await act(async () => view.rerender(<Owner conversationId={undefined} />));
+        loadStateMock.mockResolvedValue("# stored");
+        await act(async () => view.rerender(<Owner conversationId="existing-1" />));
+        await waitFor(() => expect(editorStub.markdownText).toBe("# stored"));
+    });
+
     it("keeps a pre-chat draft saved after the capture when the stale adoption re-arms", async () => {
         const view = render(<Owner conversationId={undefined} />);
 
-        // First request: adoption captures the pre-chat content and clears
-        // the draft slot.
+        // First request: the page captures the pre-chat content at request
+        // start; the adoption then clears the draft slot.
         editorStub.markdownText = "# from old request";
         editorStub.emit("update");
+        act(() => capturedController!.capturePreChatDraft());
         act(() => capturedController!.beginAdoption());
         await act(async () => view.rerender(<Owner conversationId="conv-a" />));
 

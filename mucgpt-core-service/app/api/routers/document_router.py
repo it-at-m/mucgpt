@@ -83,6 +83,37 @@ async def delete_document(
 
 
 @router.post(
+    "/{document_id}/acknowledge-sensitivity",
+    status_code=204,
+    summary="Confirm the sensitivity scan findings of an owned document",
+    description=(
+        "Records that the owner has seen the warning about likely personal data "
+        "or secrets. Required before a flagged document can be attached to a "
+        "chat. Idempotent; only ready documents can be confirmed."
+    ),
+    responses={
+        404: {"description": "Document unavailable"},
+        500: {"description": "Confirmation could not be stored"},
+    },
+)
+async def acknowledge_document_sensitivity(
+    document_id: UUID,
+    user_info: Annotated[AuthenticationResult, Depends(authenticate_user)],
+) -> None:
+    try:
+        await DocumentLibraryService().acknowledge_sensitivity(
+            user_info, str(document_id)
+        )
+    except DocumentUnavailableError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except Exception as exc:
+        logger.exception("Document sensitivity acknowledgement failed")
+        raise HTTPException(
+            status_code=500, detail="Confirmation could not be stored."
+        ) from exc
+
+
+@router.post(
     "",
     status_code=201,
     response_model=DocumentMetadata,

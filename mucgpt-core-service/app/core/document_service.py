@@ -1,13 +1,14 @@
 from collections.abc import Sequence
 from dataclasses import dataclass
 from datetime import datetime
+from typing import Any
 from uuid import UUID, uuid4
 
 from anyio import CancelScope, to_thread
 from fastapi import UploadFile
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
-from config.settings import DocumentConfig, get_settings
+from config.settings import DocumentConfig, DocumentSensitivityConfig, get_settings
 from core.auth_models import AuthenticationResult
 from core.logtools import getLogger
 from core.virtual_file_system_helper import (
@@ -21,6 +22,7 @@ from database.document_catalog import DocumentCatalogManager
 from database.document_lock import document_work_lock
 from database.document_repo import DOCUMENT_LIMIT, DocumentRepository
 from parsing.factory import get_parser
+from sensitivity import Finding, SensitivityReport, scan_text
 
 logger = getLogger()
 
@@ -70,6 +72,63 @@ class DocumentProcessingError(ValueError):
     """Public deletion cannot interrupt processing or another active document operation."""
 
 
+class DocumentAcknowledgementRequiredError(DocumentUnavailableError):
+    """A selected document contains likely personal data or secrets and was not confirmed."""
+
+
+@dataclass(frozen=True)
+class DocumentSensitivity:
+    """Scan result exposed to the owner; `findings=None` means not scanned."""
+
+    findings: tuple[Finding, ...] | None
+    requires_acknowledgement: bool
+    acknowledged: bool
+
+
+NOT_SCANNED = DocumentSensitivity(
+    findings=None, requires_acknowledgement=False, acknowledged=False
+)
+
+
+def _document_sensitivity(
+    findings: list[dict[str, Any]] | None,
+    acknowledged_at: datetime | None,
+    settings: DocumentSensitivityConfig,
+) -> DocumentSensitivity:
+    """Derive the acknowledgement state at read time, so config changes apply."""
+    parsed = (
+        None
+        if findings is None
+        else tuple(Finding.model_validate(finding) for finding in findings)
+    )
+    return DocumentSensitivity(
+        findings=parsed,
+        requires_acknowledgement=settings.require_acknowledgement and bool(parsed),
+        acknowledged=acknowledged_at is not None,
+    )
+
+
+def scan_document_text(
+    text: str, settings: DocumentSensitivityConfig
+) -> SensitivityReport | None:
+    """Scan extracted text; returns None when disabled or when scanning fails.
+
+    A broken scanner must not block uploads, and the log never contains text.
+    """
+    if not settings.enabled:
+        return None
+    try:
+        return scan_text(
+            text,
+            max_chars=settings.max_chars,
+            ignored_email_domains=settings.ignored_email_domains,
+            disabled_categories=settings.disabled_categories,
+        )
+    except Exception:
+        logger.exception("Document sensitivity scan failed")
+        return None
+
+
 @dataclass(frozen=True)
 class SelectedDocument:
     id: str
@@ -81,6 +140,7 @@ class SelectedDocument:
     preview_kind: str
     path: str
     created_at: datetime
+    sensitivity: DocumentSensitivity = NOT_SCANNED
 
 
 @dataclass(frozen=True)
@@ -109,9 +169,12 @@ class LibraryDocument:
     path: str
     status: str
     created_at: datetime
+    sensitivity: DocumentSensitivity = NOT_SCANNED
 
 
-def _selected_document(row: Document) -> SelectedDocument:
+def _selected_document(
+    row: Document, settings: DocumentSensitivityConfig
+) -> SelectedDocument:
     """Build the selected-document contract from a ready catalog row."""
     if row.text_length is None or row.preview is None or row.preview_kind is None:
         raise DocumentStorageError("Ready document metadata is incomplete")
@@ -125,18 +188,36 @@ def _selected_document(row: Document) -> SelectedDocument:
         preview_kind=row.preview_kind,
         path=get_document_path(row.id),
         created_at=row.created_at,
+        sensitivity=_document_sensitivity(
+            row.sensitivity_findings, row.sensitivity_acknowledged_at, settings
+        ),
     )
 
 
 class DocumentLibraryService:
     """User library operations with independently owned catalog sessions."""
 
-    def __init__(self, session_factory: async_sessionmaker[AsyncSession] | None = None):
+    def __init__(
+        self,
+        session_factory: async_sessionmaker[AsyncSession] | None = None,
+        settings: DocumentConfig | None = None,
+    ):
         self.session_factory = (
             session_factory
             if session_factory is not None
             else DocumentCatalogManager.get_session_factory()
         )
+        self.settings = settings if settings is not None else get_settings().documents
+
+    async def acknowledge_sensitivity(
+        self, user_info: AuthenticationResult, document_id: str
+    ) -> None:
+        """Confirm an owned ready document's scan findings; idempotent."""
+        async with self.session_factory.begin() as session:
+            if not await DocumentRepository(session).acknowledge_sensitivity(
+                user_info.user_id, document_id
+            ):
+                raise DocumentUnavailableError("Document unavailable")
 
     async def list_documents(
         self, user_info: AuthenticationResult
@@ -156,6 +237,11 @@ class DocumentLibraryService:
                     path=get_document_path(row.id),
                     status=row.status,
                     created_at=row.created_at,
+                    sensitivity=_document_sensitivity(
+                        row.sensitivity_findings,
+                        row.sensitivity_acknowledged_at,
+                        self.settings.sensitivity,
+                    ),
                 )
                 for row in rows
             ]
@@ -285,6 +371,14 @@ class DocumentIngestionService:
                 preview = await to_thread.run_sync(
                     create_initial_excerpt, text, self.settings
                 )
+                report = await to_thread.run_sync(
+                    scan_document_text, text, self.settings.sensitivity
+                )
+                findings = (
+                    None
+                    if report is None
+                    else [finding.model_dump() for finding in report.findings]
+                )
                 backend = create_document_backend(user_info.user_id)
                 write_attempted = True
                 result = await backend.awrite(
@@ -304,6 +398,9 @@ class DocumentIngestionService:
                     preview_kind="initial_excerpt",
                     path=get_document_path(document_id),
                     created_at=created_at,
+                    sensitivity=_document_sensitivity(
+                        findings, None, self.settings.sensitivity
+                    ),
                 )
                 with CancelScope(shield=True):
                     async with self.session_factory.begin() as session:
@@ -312,6 +409,7 @@ class DocumentIngestionService:
                             document_id,
                             text_length=len(text),
                             preview=preview,
+                            sensitivity_findings=findings,
                         ):
                             raise DocumentStorageError(
                                 "Document could not be marked ready"
@@ -391,8 +489,15 @@ class DocumentIngestionService:
 class DocumentService:
     """Resolve IDs using identity supplied by the existing authenticate_user flow."""
 
-    def __init__(self, repository: DocumentRepository):
+    def __init__(
+        self,
+        repository: DocumentRepository,
+        settings: DocumentSensitivityConfig | None = None,
+    ):
         self.repository = repository
+        self.settings = (
+            settings if settings is not None else get_settings().documents.sensitivity
+        )
 
     async def resolve_selected_documents(
         self,
@@ -442,8 +547,23 @@ class DocumentService:
                 "One or more selected documents are unavailable"
             )
         documents = tuple(
-            _selected_document(row)
+            _selected_document(row, self.settings)
             for document_id in ids
             if (row := ready.get(document_id)) is not None
         )
+        # Enforce the confirmation server-side, not only in the UI.
+        unconfirmed = tuple(
+            document.id
+            for document in documents
+            if document.sensitivity.requires_acknowledgement
+            and not document.sensitivity.acknowledged
+        )
+        if unconfirmed and not saved_selection:
+            raise DocumentAcknowledgementRequiredError(
+                "One or more selected documents contain likely personal data or "
+                "secrets and must be confirmed before use"
+            )
+        if unconfirmed:
+            documents = tuple(d for d in documents if d.id not in unconfirmed)
+            unavailable = unavailable + unconfirmed
         return DocumentSelection(documents=documents, unavailable_ids=unavailable)

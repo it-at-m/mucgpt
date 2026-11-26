@@ -23,5 +23,7 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
-    op.execute("ALTER TABLE documents DROP COLUMN IF EXISTS sensitivity_acknowledged_at")
+    op.execute(
+        "ALTER TABLE documents DROP COLUMN IF EXISTS sensitivity_acknowledged_at"
+    )
     op.execute("ALTER TABLE documents DROP COLUMN IF EXISTS sensitivity_findings")

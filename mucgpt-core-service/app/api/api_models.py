@@ -13,6 +13,19 @@ from pydantic import (
 
 from api.exception import ProviderErrorPayload
 from config.settings import ReasoningEffort, get_settings
+from sensitivity.models import Finding
+
+
+class DocumentSensitivityInfo(BaseModel):
+    """Personal-data/secret scan result; categories and counts, never values."""
+
+    findings: list[Finding] | None = Field(
+        description="Detected categories; null when the text was not scanned."
+    )
+    requires_acknowledgement: bool = Field(
+        description="The owner must confirm the findings before the document can be attached."
+    )
+    acknowledged: bool
 
 
 class DocumentMetadata(BaseModel):
@@ -29,6 +42,7 @@ class DocumentMetadata(BaseModel):
     preview_kind: Literal["initial_excerpt"]
     path: str = Field(description="Stable model-visible document path.")
     created_at: datetime
+    sensitivity: DocumentSensitivityInfo
 
 
 class DocumentLibraryEntry(BaseModel):
@@ -44,6 +58,7 @@ class DocumentLibraryEntry(BaseModel):
     preview_kind: Literal["initial_excerpt"] | None = None
     path: str
     created_at: datetime
+    sensitivity: DocumentSensitivityInfo
 
 
 class SummarizeResult(BaseModel):

@@ -88,9 +88,7 @@ def detect_private_keys(text: str, _options: ScanOptions) -> Iterator[Hit]:
         yield _hit("private_key", "secret", "certain", match)
 
 
-_JWT_RE = re.compile(
-    r"\beyJ[A-Za-z0-9_-]{8,}\.eyJ[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}"
-)
+_JWT_RE = re.compile(r"\beyJ[A-Za-z0-9_-]{8,}\.eyJ[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}")
 
 
 def detect_jwts(text: str, _options: ScanOptions) -> Iterator[Hit]:
@@ -404,7 +402,9 @@ def detect_emails(text: str, options: ScanOptions) -> Iterator[Hit]:
         yield _hit("email", "pii", "certain", match)
 
 
-_PHONE_RE = re.compile(r"(?<![\w+/.,-])(?:\+|00)?\d[\d ()/-]{5,22}\d(?![\w/-])(?![.,]\d)")
+_PHONE_RE = re.compile(
+    r"(?<![\w+/.,-])(?:\+|00)?\d[\d ()/-]{5,22}\d(?![\w/-])(?![.,]\d)"
+)
 
 
 def detect_phone_numbers(text: str, _options: ScanOptions) -> Iterator[Hit]:

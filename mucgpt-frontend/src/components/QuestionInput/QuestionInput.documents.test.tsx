@@ -3,7 +3,7 @@ import { act, fireEvent, render, screen, waitFor } from "@testing-library/react"
 import { useState } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { deleteDocumentApi, listDocumentsApi, uploadDocumentApi } from "../../api/documents-client";
+import { acknowledgeDocumentSensitivityApi, deleteDocumentApi, listDocumentsApi, uploadDocumentApi } from "../../api/documents-client";
 import { ApiError } from "../../api/fetch-utils";
 import type { DocumentLibraryEntry, DocumentMetadata } from "../../api/models";
 import { DEFAULT_APP_CONFIG } from "../../constants";
@@ -18,7 +18,12 @@ vi.mock("@fluentui/react-components", async importOriginal => ({
     ...(await importOriginal<typeof import("@fluentui/react-components")>()),
     useAnnounce: () => ({ announce })
 }));
-vi.mock("../../api/documents-client", () => ({ listDocumentsApi: vi.fn(), deleteDocumentApi: vi.fn(), uploadDocumentApi: vi.fn() }));
+vi.mock("../../api/documents-client", () => ({
+    listDocumentsApi: vi.fn(),
+    deleteDocumentApi: vi.fn(),
+    uploadDocumentApi: vi.fn(),
+    acknowledgeDocumentSensitivityApi: vi.fn()
+}));
 
 const libraryEntry = (overrides: Partial<DocumentLibraryEntry> = {}): DocumentLibraryEntry => ({
     id: "library-1",
@@ -30,6 +35,7 @@ const libraryEntry = (overrides: Partial<DocumentLibraryEntry> = {}): DocumentLi
     preview_kind: "initial_excerpt",
     path: "/documents/library-1.txt",
     created_at: "2026-11-02",
+    sensitivity: { findings: [], requires_acknowledgement: false, acknowledged: false },
     status: "ready",
     ...overrides
 });
@@ -71,6 +77,74 @@ const dropFiles = (files: File[]) => fireEvent.drop(screen.getByRole("textbox"),
 beforeEach(() => {
     vi.clearAllMocks();
     vi.mocked(listDocumentsApi).mockResolvedValue([]);
+});
+
+const flaggedUpload = (): DocumentMetadata =>
+    ({
+        ...libraryEntry({ id: "flagged", filename: "Antrag.txt" }),
+        sensitivity: {
+            findings: [{ category: "iban", kind: "pii", confidence: "certain", count: 2 }],
+            requires_acknowledgement: true,
+            acknowledged: false
+        }
+    }) as DocumentMetadata;
+
+describe("QuestionInput sensitive documents", () => {
+    const uploadFlagged = async () => {
+        vi.mocked(uploadDocumentApi).mockResolvedValue(flaggedUpload());
+        render(<Harness />);
+        dropFiles([new File(["DE89 3704 0044 0532 0130 00"], "Antrag.txt", { type: "text/plain" })]);
+        return screen.findByText("document_library.sensitivity_title");
+    };
+
+    it("blocks sending a flagged upload until the user confirms it and keeps the badge afterwards", async () => {
+        vi.mocked(acknowledgeDocumentSensitivityApi).mockResolvedValue();
+        await uploadFlagged();
+
+        expect(screen.getByText("document_library.sensitivity_finding", { exact: false })).toBeInTheDocument();
+        expect(sendButton()).toBeDisabled();
+        fireEvent.keyDown(screen.getByRole("textbox"), { key: "Enter" });
+        expect(onSend).not.toHaveBeenCalled();
+
+        fireEvent.click(screen.getByRole("button", { name: "document_library.sensitivity_confirm" }));
+
+        await waitFor(() => expect(screen.queryByText("document_library.sensitivity_title")).not.toBeInTheDocument());
+        expect(acknowledgeDocumentSensitivityApi).toHaveBeenCalledWith("flagged");
+        expect(announce).toHaveBeenCalledWith("document_library.sensitivity_confirmed", { polite: true });
+        expect(sendButton()).toBeEnabled();
+        expect(screen.getByText("document_library.sensitivity_badge")).toBeInTheDocument();
+    });
+
+    it("detaches unconfirmed flagged documents without deleting them from the library", async () => {
+        await uploadFlagged();
+
+        fireEvent.click(screen.getByRole("button", { name: "document_library.sensitivity_remove" }));
+
+        expect(screen.queryByText("Antrag.txt")).not.toBeInTheDocument();
+        expect(screen.queryByText("document_library.sensitivity_title")).not.toBeInTheDocument();
+        expect(deleteDocumentApi).not.toHaveBeenCalled();
+        expect(acknowledgeDocumentSensitivityApi).not.toHaveBeenCalled();
+        expect(sendButton()).toBeEnabled();
+    });
+
+    it("keeps the document blocked and explains a failed confirmation", async () => {
+        vi.mocked(acknowledgeDocumentSensitivityApi).mockRejectedValue(new ApiError("unavailable", 500));
+        vi.spyOn(console, "error").mockImplementation(() => {});
+        await uploadFlagged();
+
+        fireEvent.click(screen.getByRole("button", { name: "document_library.sensitivity_confirm" }));
+
+        expect(await screen.findByRole("alert")).toHaveTextContent("document_library.sensitivity_confirm_failed");
+        expect(screen.getByText("document_library.sensitivity_title")).toBeInTheDocument();
+        expect(sendButton()).toBeDisabled();
+    });
+
+    it("shows no warning for clean documents", () => {
+        render(<Harness initialData={[attached()]} />);
+
+        expect(screen.queryByText("document_library.sensitivity_title")).not.toBeInTheDocument();
+        expect(screen.queryByText("document_library.sensitivity_badge")).not.toBeInTheDocument();
+    });
 });
 
 describe("QuestionInput documents", () => {

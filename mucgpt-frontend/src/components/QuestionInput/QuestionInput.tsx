@@ -22,6 +22,7 @@ import { useConfigContext } from "../../context/ConfigContext";
 import { DocumentAttachMenu } from "../ChatDocuments/DocumentAttachMenu";
 import { DocumentChips } from "../ChatDocuments/DocumentChips";
 import { DuplicateDocumentNotice } from "../ChatDocuments/DuplicateDocumentNotice";
+import { SensitiveDocumentNotice } from "../ChatDocuments/SensitiveDocumentNotice";
 import type { ChatDocument } from "../ChatDocuments/documentSelection";
 import { useChatDocuments } from "../ChatDocuments/useChatDocuments";
 import { useFileDropZone } from "../ChatDocuments/useFileDropZone";
@@ -199,6 +200,16 @@ const QuestionInputContent = ({
                     names={chatDocuments.duplicateUploads.map(duplicate => duplicate.file.name)}
                     onUploadAnyway={chatDocuments.uploadDuplicatesAnyway}
                     onDismiss={chatDocuments.dismissDuplicates}
+                />
+            )}
+
+            {allowFileUpload && chatDocuments.unconfirmedDocuments.length > 0 && (
+                <SensitiveDocumentNotice
+                    documents={chatDocuments.unconfirmedDocuments}
+                    isConfirming={chatDocuments.isConfirmingSensitive}
+                    hasFailed={chatDocuments.hasConfirmationFailed}
+                    onConfirm={() => void chatDocuments.confirmSensitiveDocuments()}
+                    onRemove={chatDocuments.removeUnconfirmedDocuments}
                 />
             )}
 

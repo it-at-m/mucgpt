@@ -79,7 +79,16 @@
     gap: var(--spacingVerticalXXS);
 }
 
+/* Keeps a status badge next to the name while the name truncates. */
+.rowTitle {
+    display: flex;
+    align-items: center;
+    gap: var(--spacingHorizontalS);
+    min-width: 0;
+}
+
 .rowName {
+    min-width: 0;
     overflow: hidden;
     font-weight: var(--fontWeightSemibold);
     white-space: nowrap;

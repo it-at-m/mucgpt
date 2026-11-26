@@ -1,0 +1,13 @@
+.messageBar {
+    margin-bottom: var(--spacingVerticalS);
+}
+
+.list {
+    margin: var(--spacingVerticalXS) 0 0;
+    padding-inline-start: var(--spacingHorizontalL);
+}
+
+.name {
+    font-weight: var(--fontWeightSemibold);
+    overflow-wrap: anywhere;
+}

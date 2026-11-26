@@ -58,6 +58,39 @@ export type CanvasState = {
     truncated?: boolean;
 };
 
+/** Mirrors `SensitivityCategory` in the core service (`app/sensitivity/models.py`). */
+export type SensitivityCategory =
+    | "email"
+    | "phone"
+    | "iban"
+    | "credit_card"
+    | "tax_id"
+    | "social_security_number"
+    | "id_document_number"
+    | "date_of_birth"
+    | "private_key"
+    | "access_token"
+    | "jwt"
+    | "connection_string"
+    | "credential_assignment"
+    | "high_entropy_secret";
+
+/** Likely personal data or secrets found in a document's text; counts only, never the values. */
+export type SensitivityFinding = {
+    category: SensitivityCategory;
+    kind: "pii" | "secret";
+    confidence: "certain" | "likely";
+    count: number;
+};
+
+export type DocumentSensitivity = {
+    /** Null when the document was not scanned. */
+    findings: SensitivityFinding[] | null;
+    /** The owner must confirm the findings once before the document can be attached to a chat. */
+    requires_acknowledgement: boolean;
+    acknowledged: boolean;
+};
+
 export type DocumentMetadata = {
     id: string;
     filename: string;
@@ -68,6 +101,7 @@ export type DocumentMetadata = {
     preview_kind: string;
     path: string;
     created_at: string;
+    sensitivity: DocumentSensitivity;
 };
 
 export type DocumentLibraryEntry = Omit<DocumentMetadata, "text_length" | "preview" | "preview_kind"> & {

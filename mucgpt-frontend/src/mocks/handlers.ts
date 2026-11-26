@@ -15,7 +15,7 @@ import {
 } from "../api";
 import { buildAssistantCreateResponse, buildOwnersDetailedFromOwnerIds, buildChatMessage, buildRichMarkdownChatMessage } from "./data/generators";
 import { CREATIVITY_HIGH, CREATIVITY_MEDIUM } from "../constants";
-import type { AssistantAuditEvent, DocumentLibraryEntry } from "../api/models";
+import type { AssistantAuditEvent, DocumentLibraryEntry, SensitivityFinding } from "../api/models";
 import { CANVAS_TOOL_IDS } from "../utils/canvasStream";
 import { loadMockAssistants, loadMockSubscriptions, saveMockAssistants, saveMockSubscriptions } from "./data/assistant-store";
 import { MOCK_DELETED_SUBSCRIBED_SNAPSHOT, MOCK_SUBSCRIPTION_SEED } from "./data/browser-scenario-seed";
@@ -684,6 +684,19 @@ const MOCK_DOCUMENT_MAX_BYTES = 20 * 1024 * 1024;
 const MOCK_UNSUPPORTED_DOCUMENT_EXTENSIONS = [".exe", ".zip", ".mp4"];
 const mockDocuments: DocumentLibraryEntry[] = [];
 
+/** Rough stand-in for the core service's sensitivity scanner, so the warning flow can be tried in mocked dev mode. */
+const MOCK_SENSITIVITY_PATTERNS: { finding: Omit<SensitivityFinding, "count">; pattern: RegExp }[] = [
+    { finding: { category: "iban", kind: "pii", confidence: "certain" }, pattern: /\b[A-Z]{2}\d{2}(?: ?\d{4}){4} ?\d{2}\b/g },
+    { finding: { category: "email", kind: "pii", confidence: "certain" }, pattern: /[\w.+-]+@[\w-]+\.[\w.]+/g },
+    { finding: { category: "credential_assignment", kind: "secret", confidence: "likely" }, pattern: /\b(?:password|passwort)\s*[:=]\s*\S{6,}/gi }
+];
+
+const mockScan = (text: string): SensitivityFinding[] =>
+    MOCK_SENSITIVITY_PATTERNS.flatMap(({ finding, pattern }) => {
+        const count = text.match(pattern)?.length ?? 0;
+        return count > 0 ? [{ ...finding, count }] : [];
+    });
+
 /** Mocked document library upload: mirrors the backend's quota, size and format rejections. */
 async function uploadDocumentHandler({ request }: { request: Request }) {
     await delay(1500);
@@ -719,7 +732,11 @@ async function uploadDocumentHandler({ request }: { request: Request }) {
         preview_kind: "initial_excerpt",
         path: `/documents/${id}.txt`,
         created_at: new Date().toISOString(),
-        status: "ready"
+        status: "ready",
+        sensitivity: (() => {
+            const findings = mockScan(text);
+            return { findings, requires_acknowledgement: findings.length > 0, acknowledged: false };
+        })()
     };
     mockDocuments.unshift(document);
     return HttpResponse.json(document, { status: 201 });
@@ -1759,6 +1776,15 @@ export const handlers = [
 
     http.get("/api/backend/v1/documents", () => HttpResponse.json(mockDocuments)),
     http.post("/api/backend/v1/documents", uploadDocumentHandler),
+    http.post("/api/backend/v1/documents/:documentId/acknowledge-sensitivity", async ({ params }) => {
+        await delay(300);
+        const document = mockDocuments.find(entry => entry.id === params.documentId && entry.status === "ready");
+        if (!document) {
+            return HttpResponse.json({ detail: "Document unavailable" }, { status: 404 });
+        }
+        document.sensitivity = { ...document.sensitivity, acknowledged: true };
+        return new HttpResponse(null, { status: 204 });
+    }),
     http.delete("/api/backend/v1/documents/:documentId", async ({ params }) => {
         await delay(300);
         const index = mockDocuments.findIndex(document => document.id === params.documentId);

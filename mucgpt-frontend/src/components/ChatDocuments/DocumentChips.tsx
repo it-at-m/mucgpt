@@ -8,6 +8,7 @@ import { Button } from "../../ui/Button";
 import { EdelweissSpinner } from "../EdelweissSpinner";
 import styles from "./DocumentChips.module.css";
 import { DocumentTypeIcon } from "./DocumentTypeIcon";
+import { SensitivityBadge } from "./SensitivityBadge";
 import type { ChatDocument } from "./documentSelection";
 
 interface Props {
@@ -124,6 +125,7 @@ export const DocumentChips = ({ documents, onRemove, onRetry, onFocusLeave, disa
                     <span className={styles.name} title={document.name}>
                         {document.name}
                     </span>
+                    {document.status === "ready" && <SensitivityBadge findings={document.sensitiveFindings} confirmed={!document.needsConfirmation} />}
                     {statusText && (
                         <span className={styles.status} title={statusText}>
                             {statusText}
@@ -179,7 +181,7 @@ export const DocumentChips = ({ documents, onRemove, onRetry, onFocusLeave, disa
             <ul ref={listRef} className={styles.chips} aria-label={t("document_library.chips_label")}>
                 {documents.map(document => (
                     // Chips that need attention stay visible when the row overflows.
-                    <OverflowItem key={document.id} id={document.id} priority={document.status === "ready" ? 0 : 1}>
+                    <OverflowItem key={document.id} id={document.id} priority={document.status === "ready" && !document.needsConfirmation ? 0 : 1}>
                         {renderChip(document)}
                     </OverflowItem>
                 ))}

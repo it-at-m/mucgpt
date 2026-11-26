@@ -2,13 +2,14 @@ import { useAnnounce } from "@fluentui/react-components";
 import { useCallback, useEffect, useRef, useState, type Dispatch, type SetStateAction } from "react";
 import { useTranslation } from "react-i18next";
 
-import { listDocumentsApi, uploadDocumentApi } from "../../api/documents-client";
+import { acknowledgeDocumentSensitivityApi, listDocumentsApi, uploadDocumentApi } from "../../api/documents-client";
 import type { DocumentLibraryEntry } from "../../api/models";
 import {
     createPendingUpload,
     findLibraryDuplicate,
     getDocumentSignature,
     getFileSignature,
+    getUnconfirmedDocuments,
     isLibraryDocument,
     isSendBlockedByDocuments,
     toChatDocument,
@@ -32,6 +33,8 @@ export const useChatDocuments = (documents: ChatDocument[], setDocuments: Dispat
     const { t } = useTranslation();
     const { announce } = useAnnounce();
     const [duplicateUploads, setDuplicateUploads] = useState<DuplicateUpload[]>([]);
+    const [isConfirmingSensitive, setIsConfirmingSensitive] = useState(false);
+    const [hasConfirmationFailed, setHasConfirmationFailed] = useState(false);
     // Uploads finish independently of renders, so state changes always go through updater functions;
     // this ref is only read for decisions that tolerate a value from the last render.
     const latestDocumentsRef = useRef(documents);
@@ -49,6 +52,7 @@ export const useChatDocuments = (documents: ChatDocument[], setDocuments: Dispat
 
     const hasUnavailableDocuments = documents.some(document => document.status === "unavailable");
     const isSendBlocked = isSendBlockedByDocuments(documents);
+    const unconfirmedDocuments = getUnconfirmedDocuments(documents);
 
     const upload = useCallback(
         (pending: UploadingChatDocument) => {
@@ -166,6 +170,36 @@ export const useChatDocuments = (documents: ChatDocument[], setDocuments: Dispat
         [setDocuments, upload]
     );
 
+    /** Records the user's confirmation of likely personal data or secrets; documents that fail stay unconfirmed and keep blocking the send. */
+    const confirmSensitiveDocuments = useCallback(async () => {
+        const ids = getUnconfirmedDocuments(latestDocumentsRef.current).map(document => document.id);
+        if (ids.length === 0) return;
+        setIsConfirmingSensitive(true);
+        setHasConfirmationFailed(false);
+        const results = await Promise.allSettled(ids.map(id => acknowledgeDocumentSensitivityApi(id)));
+        const confirmed = new Set(ids.filter((_, index) => results[index].status === "fulfilled"));
+        setDocuments(current =>
+            current.map(document => (document.status === "ready" && confirmed.has(document.id) ? { ...document, needsConfirmation: false } : document))
+        );
+        setIsConfirmingSensitive(false);
+        if (confirmed.size < ids.length) {
+            console.error("Failed to confirm sensitive documents:", results);
+            setHasConfirmationFailed(true);
+            announce(t("document_library.sensitivity_confirm_failed"), { alert: true });
+        } else {
+            announce(t("document_library.sensitivity_confirmed"), { polite: true });
+        }
+    }, [announce, setDocuments, t]);
+
+    /** Detaches unconfirmed flagged documents from this chat; they stay in the library. */
+    const removeUnconfirmedDocuments = useCallback(() => {
+        const ids = new Set(getUnconfirmedDocuments(latestDocumentsRef.current).map(document => document.id));
+        if (ids.size === 0) return;
+        setDocuments(current => current.filter(document => !ids.has(document.id)));
+        setHasConfirmationFailed(false);
+        announce(t("document_library.sensitivity_removed"), { polite: true });
+    }, [announce, setDocuments, t]);
+
     /** Documents sent with a turn may have been read by the agent, which changes what removing them means. */
     const markReadyDocumentsAsUsed = useCallback(() => {
         if (!latestDocumentsRef.current.some(document => document.status === "ready" && !document.usedInChat)) return;
@@ -175,6 +209,11 @@ export const useChatDocuments = (documents: ChatDocument[], setDocuments: Dispat
     return {
         hasUnavailableDocuments,
         isSendBlocked,
+        unconfirmedDocuments,
+        isConfirmingSensitive,
+        hasConfirmationFailed,
+        confirmSensitiveDocuments,
+        removeUnconfirmedDocuments,
         duplicateUploads,
         attachFiles,
         uploadDuplicatesAnyway,

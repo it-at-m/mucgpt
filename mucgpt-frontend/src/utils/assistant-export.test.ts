@@ -9,7 +9,11 @@ describe("sanitizeAssistantFilename", () => {
     });
 
     it("replaces filesystem-hostile characters", () => {
-        expect(sanitizeAssistantFilename('a/b\\c:d*e?f"g<h>i|j')).toBe("a_b_c_d_e_f_g_h_i_j");
+        expect(sanitizeAssistantFilename('a/b\\c:d*e?f"g<h>i|j.k')).toBe("a_b_c_d_e_f_g_h_i_j_k");
+    });
+
+    it("replaces dots so exported files can be imported again", () => {
+        expect(sanitizeAssistantFilename("My Assistant Version 1.2")).toBe("My Assistant Version 1_2");
     });
 
     it("trims surrounding whitespace", () => {

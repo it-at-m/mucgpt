@@ -103,7 +103,10 @@ and `created_at`.
 6. Mark the row `ready` and return its metadata.
 
 On any failure or cancellation the row is marked `deleting`, the body is deleted if
-a write was attempted, and then the row is removed.
+a write was attempted, and then the row is removed. If this cleanup itself fails, the
+handler only logs it: the row stays in `deleting` (or `processing`, if marking it
+failed) and keeps its quota slot. There is no automatic retry; the user removes the
+entry with `DELETE /v1/documents/{id}`, which accepts such leftover rows.
 
 Status codes: 400 invalid upload or parser rejection, 409 limit reached,
 413 too large, 415 unsupported format, 422 no usable or invalid text,
@@ -177,8 +180,11 @@ Python. It isn't PostgreSQL full-text search. This saves model context, not
 database reads or memory. With at most 10 size-bounded documents per user this is
 acceptable. Measure before raising the limits.
 
-Not implemented yet: document summaries, and retrieval for long documents (such as
-reading N lines around a key phrase).
+Long documents are read in parts: `grep` (output mode `content`) returns the
+matching line numbers, and `read_file` with `offset` and `limit` reads the lines
+around them.
+
+Not implemented yet: document summaries.
 
 ## References
 

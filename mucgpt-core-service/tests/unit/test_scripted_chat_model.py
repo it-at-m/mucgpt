@@ -1,10 +1,11 @@
 import asyncio
 
 import pytest
-from langchain_core.messages import AIMessage, AIMessageChunk, HumanMessage
+from langchain_core.messages import AIMessage, AIMessageChunk, HumanMessage, ToolMessage
 from langchain_core.tools import tool
 from tests.fakes.scripted_chat_model import (
     ScriptedChatModel,
+    answer_from_tool,
     content_filtered,
     malformed_tool_call,
     message,
@@ -103,6 +104,51 @@ async def test_astream_of_message_preserves_tool_call() -> None:
 
     assert chunks[0].tool_calls[0]["id"] == "read-1"
     model.assert_consumed()
+
+
+def test_answer_from_tool_derives_content_from_the_tool_result() -> None:
+    model = ScriptedChatModel(
+        script=[
+            read_file("/documents/a.txt", id="read-1"),
+            answer_from_tool(tool_call_id="read-1", prefix="Answer: "),
+        ]
+    )
+    first = model.invoke([HumanMessage("Read the file")])
+    result = ToolMessage(
+        content="@@ lines 1-1 of 1 @@\nMunicipal source", tool_call_id="read-1"
+    )
+
+    answer = model.invoke([HumanMessage("Read the file"), first, result])
+
+    assert answer.content == "Answer: @@ lines 1-1 of 1 @@\nMunicipal source"
+    model.assert_consumed()
+
+
+def test_answer_from_tool_uses_the_latest_result() -> None:
+    model = ScriptedChatModel(script=[answer_from_tool()])
+    stale = ToolMessage(content="stale", tool_call_id="read-1")
+    latest = ToolMessage(content="fresh", tool_call_id="read-2")
+
+    assert model.invoke([stale, latest]).content == "fresh"
+    model.assert_consumed()
+
+
+@pytest.mark.asyncio
+async def test_answer_from_tool_streams_the_derived_content() -> None:
+    model = ScriptedChatModel(script=[answer_from_tool(tool_call_id="read-1")])
+    result = ToolMessage(content="streamed body", tool_call_id="read-1")
+
+    chunks = [chunk async for chunk in model.astream([result])]
+
+    assert "".join(str(chunk.content) for chunk in chunks) == "streamed body"
+    model.assert_consumed()
+
+
+def test_answer_from_tool_rejects_a_missing_tool_result() -> None:
+    model = ScriptedChatModel(script=[answer_from_tool(tool_call_id="read-9")])
+
+    with pytest.raises(AssertionError, match="Missing tool result for read-9"):
+        model.invoke([HumanMessage("Read the file")])
 
 
 def test_invoke_records_supplied_stop() -> None:

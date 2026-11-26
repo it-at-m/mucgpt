@@ -7,10 +7,17 @@ from uuid import UUID, uuid4
 
 import psycopg
 import pytest
-from langchain_core.messages import ToolMessage
+from langchain_core.messages import AIMessage, HumanMessage, ToolMessage
 from psycopg.conninfo import make_conninfo
-from tests.fakes.scripted_chat_model import read_file, text
+from tests.fakes.scripted_chat_model import (
+    RecordedModelCall,
+    answer_from_tool,
+    message_text,
+    read_file,
+    text,
+)
 from tests.integration.postgres_http_harness import (
+    DEFAULT_SCRIPTED_MODEL,
     PostgresHttpHarness,
     final_text,
     postgres_http_harness,
@@ -52,34 +59,51 @@ def _persisted_body(
     conversation_id: str,
     messages: Sequence[dict[str, str]],
     document_ids: list[str],
+    *,
+    model_name: str = DEFAULT_SCRIPTED_MODEL,
 ) -> dict[str, object]:
     """Build a browser-style persisted request with an explicit attachment list."""
-    return harness.persisted_chat_body("unused", conversation_id=conversation_id) | {
-        "messages": list(messages),
-        "document_ids": document_ids,
-    }
+    body = harness.persisted_chat_body(
+        "unused", conversation_id=conversation_id, model_name=model_name
+    )
+    return body | {"messages": list(messages), "document_ids": document_ids}
+
+
+_PERSISTED_TABLES = ("chats", "checkpoints", "checkpoint_writes", "checkpoint_blobs")
+
+
+async def _persistence_rows(
+    harness: PostgresHttpHarness, conversation_id: str
+) -> dict[str, list[str]]:
+    """Export durable rows so rejected requests prove no side effect at all.
+
+    Row counts alone cannot show that validation precedes persistence: an
+    ownership refresh changes ``chats.updated_at`` without adding a row.
+    """
+    conninfo = make_conninfo(
+        **harness.database.connection_args, dbname=harness.database.name
+    )
+    async with await psycopg.AsyncConnection.connect(conninfo, autocommit=True) as conn:
+        rows: dict[str, list[str]] = {}
+        for table in _PERSISTED_TABLES:
+            column = "conversation_id" if table == "chats" else "thread_id"
+            result = await conn.execute(
+                f"SELECT to_jsonb(t)::text FROM {table} AS t "
+                f"WHERE {column} = %s ORDER BY to_jsonb(t)::text",
+                (conversation_id,),
+            )
+            rows[table] = [row[0] for row in await result.fetchall()]
+        return rows
 
 
 async def _persistence_counts(
     harness: PostgresHttpHarness, conversation_id: str
 ) -> dict[str, int]:
-    """Return durable conversation rows so rejected requests prove no side effect."""
-    conninfo = make_conninfo(
-        **harness.database.connection_args, dbname=harness.database.name
-    )
-    async with await psycopg.AsyncConnection.connect(conninfo, autocommit=True) as conn:
-        counts: dict[str, int] = {}
-        for table in ("chats", "checkpoints", "checkpoint_writes", "checkpoint_blobs"):
-            result = await conn.execute(
-                f"SELECT count(*) FROM {table} WHERE conversation_id = %s"
-                if table == "chats"
-                else f"SELECT count(*) FROM {table} WHERE thread_id = %s",
-                (conversation_id,),
-            )
-            row = await result.fetchone()
-            assert row is not None
-            counts[table] = row[0]
-        return counts
+    """Count durable rows of a conversation that must not have been written."""
+    return {
+        table: len(rows)
+        for table, rows in (await _persistence_rows(harness, conversation_id)).items()
+    }
 
 
 def _read_result(model: object, tool_call_id: str) -> ToolMessage:
@@ -95,6 +119,59 @@ def _read_result(model: object, tool_call_id: str) -> ToolMessage:
     raise AssertionError(f"Missing tool result for {tool_call_id}")
 
 
+def _chat_model_calls(model: object, prompt: str) -> list[RecordedModelCall]:
+    """Select the recorded model calls that belong to one chat."""
+    return [
+        call
+        for call in getattr(model, "recorded_inputs")
+        if any(
+            isinstance(value, HumanMessage) and prompt in message_text(value.content)
+            for value in call.messages
+        )
+    ]
+
+
+def _assert_chat_read_document(
+    model: object, prompt: str, document_path: str, expected_text: str
+) -> ToolMessage:
+    """Tie one successful document read to the chat that issued it."""
+    calls = _chat_model_calls(model, prompt)
+    assert calls, f"Chat {prompt!r} never reached the model"
+    tool_calls = [
+        tool_call
+        for call in calls
+        for value in call.messages
+        if isinstance(value, AIMessage)
+        for tool_call in value.tool_calls
+    ]
+    assert [tool_call["args"] for tool_call in tool_calls] == [
+        {"file_path": document_path}
+    ]
+    results = [
+        value
+        for call in calls
+        for value in call.messages
+        if isinstance(value, ToolMessage) and value.tool_call_id == tool_calls[0]["id"]
+    ]
+    assert len(results) == 1
+    assert results[0].status == "success"
+    assert expected_text in message_text(results[0].content)
+    return results[0]
+
+
+def _assert_documents_excluded(model: object, *contents: str) -> None:
+    """Prove unavailable documents never reach tool output or model input."""
+    recorded_inputs = getattr(model, "recorded_inputs")
+    assert recorded_inputs
+    for call in recorded_inputs:
+        for message in call.messages:
+            message_content = message_text(message.content)
+            for content in contents:
+                assert content not in message_content, (
+                    f"Unavailable document content reached the model input: {content!r}"
+                )
+
+
 @pytest.mark.asyncio
 async def test_uploaded_attachment_is_read_immediately_and_remains_safe_through_lifecycle(
     monkeypatch,
@@ -102,6 +179,8 @@ async def test_uploaded_attachment_is_read_immediately_and_remains_safe_through_
     """Read a newly uploaded attachment without reload, restart safely, then reject it after deletion."""
     async with postgres_http_harness(monkeypatch) as harness:
         extracted_text = "Council decision\nImmediate durable attachment detail"
+        unselected_text = "Unselected owner attachment"
+        foreign_text = "Foreign confidential attachment"
         harness.parser.text = extracted_text
         uploaded = await harness.upload_document("council-decision.txt", b"source")
 
@@ -115,9 +194,15 @@ async def test_uploaded_attachment_is_read_immediately_and_remains_safe_through_
         assert stored_document is not None
         assert stored_document.value["content"] == extracted_text
 
+        # Another owner document is uploaded but never selected: its content may
+        # not reach any request, just like another user's document.
+        harness.parser.text = unselected_text
+        unselected_upload = await harness.upload_document("unselected.txt", b"unused")
+        assert unselected_upload.status_code == 201
+
         # A different user's document must be rejected before a conversation or
         # checkpoint can be created for the owner.
-        harness.parser.text = "Foreign confidential attachment"
+        harness.parser.text = foreign_text
         with harness.as_user(harness.foreign_user) as foreign_harness:
             foreign_upload = await foreign_harness.upload_document("foreign.txt", b"x")
         assert foreign_upload.status_code == 201
@@ -148,9 +233,9 @@ async def test_uploaded_attachment_is_read_immediately_and_remains_safe_through_
         model = harness.set_model_script(
             [
                 read_file(document_path, id="read-immediate"),
-                text("The council decision is available immediately."),
+                answer_from_tool(tool_call_id="read-immediate"),
                 read_file(document_path, id="read-after-restart"),
-                text("The council decision survived the manager restart."),
+                answer_from_tool(tool_call_id="read-after-restart"),
             ]
         )
         first_events = await harness.chat_events(
@@ -161,12 +246,14 @@ async def test_uploaded_attachment_is_read_immediately_and_remains_safe_through_
                 [document_id],
             )
         )
-        assert (
-            final_text(first_events) == "The council decision is available immediately."
-        )
         first_read = _read_result(model, "read-immediate")
         assert first_read.status == "success"
-        assert extracted_text in first_read.content
+        # The answer is composed from the tool result, so it can only contain the
+        # document detail if PostgreSQL actually served the stored content.
+        first_answer = message_text(first_read.content)
+        assert extracted_text in first_answer
+        assert final_text(first_events) == first_answer
+        _assert_documents_excluded(model, foreign_text, unselected_text)
 
         metadata = await PersistanceHelpers.get_conversations_for_user(
             harness.owner.user_id
@@ -184,7 +271,7 @@ async def test_uploaded_attachment_is_read_immediately_and_remains_safe_through_
         assert first_history.status_code == 200
         assert [message["content"] for message in first_history.json()] == [
             "Read the attached council decision.",
-            "The council decision is available immediately.",
+            first_answer,
         ]
 
         await DocumentCatalogManager.close()
@@ -199,50 +286,40 @@ async def test_uploaded_attachment_is_read_immediately_and_remains_safe_through_
                 harness,
                 conversation_id,
                 _browser_history(
-                    (
-                        "Read the attached council decision.",
-                        "The council decision is available immediately.",
-                    ),
+                    ("Read the attached council decision.", first_answer),
                     prompt="Read the attachment again after restart.",
                 ),
                 [document_id],
             )
         )
-        assert (
-            final_text(second_events)
-            == "The council decision survived the manager restart."
-        )
         restarted_read = _read_result(model, "read-after-restart")
         assert restarted_read.status == "success"
-        assert extracted_text in restarted_read.content
+        second_answer = message_text(restarted_read.content)
+        assert extracted_text in second_answer
+        assert final_text(second_events) == second_answer
+        _assert_documents_excluded(model, foreign_text, unselected_text)
         reconstructed_history = await harness.client.get(
             f"/v1/conversations/{conversation_id}/messages"
         )
         assert reconstructed_history.status_code == 200
         assert [message["content"] for message in reconstructed_history.json()] == [
             "Read the attached council decision.",
-            "The council decision is available immediately.",
+            first_answer,
             "Read the attachment again after restart.",
-            "The council decision survived the manager restart.",
+            second_answer,
         ]
 
         deleted = await harness.client.delete(f"/v1/documents/{document_id}")
         assert deleted.status_code == 204
-        counts_before_reselection = await _persistence_counts(harness, conversation_id)
+        rows_before_reselection = await _persistence_rows(harness, conversation_id)
         rejected_deleted = await harness.client.post(
             "/v1/chat/v2/completions",
             json=_persisted_body(
                 harness,
                 conversation_id,
                 _browser_history(
-                    (
-                        "Read the attached council decision.",
-                        "The council decision is available immediately.",
-                    ),
-                    (
-                        "Read the attachment again after restart.",
-                        "The council decision survived the manager restart.",
-                    ),
+                    ("Read the attached council decision.", first_answer),
+                    ("Read the attachment again after restart.", second_answer),
                     prompt="Read the deleted attachment.",
                 ),
                 [document_id],
@@ -252,9 +329,8 @@ async def test_uploaded_attachment_is_read_immediately_and_remains_safe_through_
         assert rejected_deleted.json() == {
             "detail": "One or more selected documents are unavailable"
         }
-        assert (
-            await _persistence_counts(harness, conversation_id)
-            == counts_before_reselection
+        assert await _persistence_rows(harness, conversation_id) == (
+            rows_before_reselection
         )
 
         historical_metadata = await PersistanceHelpers.get_conversations_for_user(
@@ -313,6 +389,10 @@ async def test_persisted_chat_replaces_preserves_and_detaches_document_selection
             )
             == "Read the first attachment."
         )
+        first_read = _read_result(model, "read-first")
+        assert first_read.status == "success"
+        assert "First attachment" in message_text(first_read.content)
+        assert "Second attachment" not in message_text(first_read.content)
 
         second_messages = _browser_history(
             ("Read the first attachment.", "Read the first attachment."),
@@ -328,6 +408,10 @@ async def test_persisted_chat_replaces_preserves_and_detaches_document_selection
             )
             == "Read the second attachment."
         )
+        second_read = _read_result(model, "read-second")
+        assert second_read.status == "success"
+        assert "Second attachment" in message_text(second_read.content)
+        assert "First attachment" not in message_text(second_read.content)
 
         metadata = await PersistanceHelpers.get_conversations_for_user(
             harness.owner.user_id
@@ -403,47 +487,56 @@ async def test_parallel_chats_can_read_the_same_selected_document(monkeypatch) -
         assert uploaded.status_code == 201
         document_id = str(UUID(uploaded.json()["id"]))
         document_path = get_document_path(document_id)
-        model = harness.set_model_script(
+        first_model = harness.set_model_script(
             [
                 read_file(document_path, id="parallel-read-one"),
+                answer_from_tool(tool_call_id="parallel-read-one"),
+            ],
+            model_name="scripted-model-parallel-one",
+        )
+        second_model = harness.set_model_script(
+            [
                 read_file(document_path, id="parallel-read-two"),
-                text("First parallel chat read the document."),
-                text("Second parallel chat read the document."),
-            ]
+                answer_from_tool(tool_call_id="parallel-read-two"),
+            ],
+            model_name="scripted-model-parallel-two",
         )
 
         first_conversation_id = f"parallel-document-one-{uuid4()}"
         second_conversation_id = f"parallel-document-two-{uuid4()}"
+        first_prompt = "Read the shared document in the first parallel chat."
+        second_prompt = "Read the shared document in the second parallel chat."
         first_events, second_events = await asyncio.gather(
             harness.chat_events(
                 _persisted_body(
                     harness,
                     first_conversation_id,
-                    [{"role": "user", "content": "Read the shared document."}],
+                    [{"role": "user", "content": first_prompt}],
                     [document_id],
+                    model_name="scripted-model-parallel-one",
                 )
             ),
             harness.chat_events(
                 _persisted_body(
                     harness,
                     second_conversation_id,
-                    [{"role": "user", "content": "Read the shared document."}],
+                    [{"role": "user", "content": second_prompt}],
                     [document_id],
+                    model_name="scripted-model-parallel-two",
                 )
             ),
         )
 
-        assert {
-            final_text(first_events),
-            final_text(second_events),
-        } == {
-            "First parallel chat read the document.",
-            "Second parallel chat read the document.",
-        }
-        for tool_call_id in ("parallel-read-one", "parallel-read-two"):
-            read_result = _read_result(model, tool_call_id)
-            assert read_result.status == "success"
-            assert extracted_text in read_result.content
+        # Each chat has its own script, so each answer must come from that chat's
+        # own read of the PostgreSQL-backed document.
+        for chat_model, prompt, events in (
+            (first_model, first_prompt, first_events),
+            (second_model, second_prompt, second_events),
+        ):
+            read = _assert_chat_read_document(
+                chat_model, prompt, document_path, extracted_text
+            )
+            assert final_text(events) == message_text(read.content)
 
         metadata = await PersistanceHelpers.get_conversations_for_user(
             harness.owner.user_id
@@ -464,7 +557,7 @@ async def test_parallel_chats_can_read_the_same_selected_document(monkeypatch) -
 async def test_document_insert_does_not_block_chats_reading_other_documents(
     monkeypatch,
 ) -> None:
-    """An in-progress upload remains isolated from concurrent selected-document chats."""
+    """An in-progress upload remains isolated from chats reading existing documents."""
     async with postgres_http_harness(monkeypatch) as harness:
         harness.parser.text = "First existing document"
         first_upload = await harness.upload_document("first-existing.txt", b"first")
@@ -492,50 +585,63 @@ async def test_document_insert_does_not_block_chats_reading_other_documents(
 
         first_path = get_document_path(first_id)
         second_path = get_document_path(second_id)
-        model = harness.set_model_script(
+        first_model = harness.set_model_script(
             [
                 read_file(first_path, id="concurrent-insert-read-first"),
+                answer_from_tool(tool_call_id="concurrent-insert-read-first"),
+            ],
+            model_name="scripted-model-insert-one",
+        )
+        second_model = harness.set_model_script(
+            [
                 read_file(second_path, id="concurrent-insert-read-second"),
-                text("First chat read its existing document."),
-                text("Second chat read its existing document."),
-            ]
+                answer_from_tool(tool_call_id="concurrent-insert-read-second"),
+            ],
+            model_name="scripted-model-insert-two",
         )
         first_conversation_id = f"insert-during-chat-one-{uuid4()}"
         second_conversation_id = f"insert-during-chat-two-{uuid4()}"
+        first_prompt = "Read the first existing document."
+        second_prompt = "Read the second existing document."
         first_events, second_events = await asyncio.gather(
             harness.chat_events(
                 _persisted_body(
                     harness,
                     first_conversation_id,
-                    [{"role": "user", "content": "Read the first existing document."}],
+                    [{"role": "user", "content": first_prompt}],
                     [first_id],
+                    model_name="scripted-model-insert-one",
                 )
             ),
             harness.chat_events(
                 _persisted_body(
                     harness,
                     second_conversation_id,
-                    [{"role": "user", "content": "Read the second existing document."}],
+                    [{"role": "user", "content": second_prompt}],
                     [second_id],
+                    model_name="scripted-model-insert-two",
                 )
             ),
         )
 
-        assert {
-            final_text(first_events),
-            final_text(second_events),
-        } == {
-            "First chat read its existing document.",
-            "Second chat read its existing document.",
-        }
-        assert (
-            "First existing document"
-            in _read_result(model, "concurrent-insert-read-first").content
-        )
-        assert (
-            "Second existing document"
-            in _read_result(model, "concurrent-insert-read-second").content
-        )
+        for chat_model, prompt, events, path, content in (
+            (
+                first_model,
+                first_prompt,
+                first_events,
+                first_path,
+                "First existing document",
+            ),
+            (
+                second_model,
+                second_prompt,
+                second_events,
+                second_path,
+                "Second existing document",
+            ),
+        ):
+            read = _assert_chat_read_document(chat_model, prompt, path, content)
+            assert final_text(events) == message_text(read.content)
 
         finish_insertion.set()
         inserted = await insertion

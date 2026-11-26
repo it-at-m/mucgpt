@@ -61,3 +61,26 @@ async def test_harness_runs_real_agent_and_decodes_agui_events(monkeypatch) -> N
         assert final_text(events) == "A deterministic answer"
         assert any(event["type"] == "RUN_FINISHED" for event in events)
         assert model.recorded_inputs
+
+
+@pytest.mark.asyncio
+async def test_harness_scripts_each_model_name_independently(monkeypatch) -> None:
+    async with postgres_http_harness(monkeypatch) as harness:
+        harness.set_model_script(
+            [text("First scripted answer")], model_name="scripted-model-one"
+        )
+        harness.set_model_script(
+            [text("Second scripted answer")], model_name="scripted-model-two"
+        )
+
+        first_events = await harness.chat_events(
+            harness.persisted_chat_body("Hello", model_name="scripted-model-one")
+        )
+        second_events = await harness.chat_events(
+            harness.persisted_chat_body("Hello", model_name="scripted-model-two")
+        )
+
+        assert final_text(first_events) == "First scripted answer"
+        assert final_text(second_events) == "Second scripted answer"
+        assert {"scripted-model-one", "scripted-model-two"} <= harness.models.keys()
+        harness.assert_model_consumed()

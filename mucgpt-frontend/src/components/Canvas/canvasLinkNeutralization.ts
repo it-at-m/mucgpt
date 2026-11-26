@@ -1,4 +1,11 @@
-import { classifyImageUrl, classifyUrl, describeLinkText, stripScheme } from "../MarkdownRenderer/markdownLinkPolicy";
+import {
+    INLINE_IMAGE_SHAPE_RE,
+    classifyImageUrl,
+    classifyUrl,
+    describeLinkText,
+    destinationOf,
+    linkTextRedundant
+} from "../MarkdownRenderer/markdownLinkPolicy";
 
 /**
  * Canvas ingestion neutralization (issue #228): pasted rich text must not
@@ -66,7 +73,6 @@ const pasteReadyImages = (html: string, allowedDomains: readonly string[]): stri
 /** URL path image extensions recognized when pasting a bare image URL. */
 const IMAGE_PATH_EXTENSIONS = /\.(?:png|jpe?g|gif|webp|svg|avif|bmp|ico)$/i;
 const BARE_URL_RE = /^(https?:\/\/\S+)$/i;
-const IMAGE_MARKDOWN_RE = /^!\[[^\]\n]*\]\(([^()\s]+)\)$/i;
 
 /**
  * Markdown for a pasted image reference, or null when the pasted text is no
@@ -77,11 +83,11 @@ const IMAGE_MARKDOWN_RE = /^!\[[^\]\n]*\]\(([^()\s]+)\)$/i;
 export const imagePasteMarkdown = (text: string, allowedDomains: readonly string[]): string | null => {
     const trimmed = text.trim();
     if (trimmed.includes("\n")) return null;
-    const markdownMatch = trimmed.match(IMAGE_MARKDOWN_RE);
+    const markdownMatch = trimmed.match(INLINE_IMAGE_SHAPE_RE);
     if (markdownMatch) {
-        const { kind, url } = classifyImageUrl(markdownMatch[1], allowedDomains);
+        const { kind, url } = classifyImageUrl(destinationOf(markdownMatch[2]), allowedDomains);
         if (kind === "blocked") return null;
-        return `![${trimmed.slice(2, trimmed.indexOf("]"))}](<${url}>)`;
+        return `![${markdownMatch[1]}](<${url}>)`;
     }
     const bare = trimmed.match(BARE_URL_RE);
     if (!bare) return null;
@@ -114,7 +120,7 @@ export const flattenPastedLinks = (html: string, allowedDomains: readonly string
     doc.querySelectorAll("a").forEach(anchor => {
         const label = anchor.textContent ?? "";
         const url = classifyUrl(anchor.getAttribute("href") ?? "", allowedDomains).url;
-        const text = label.includes(url) || stripScheme(label) === stripScheme(url) ? url || label : describeLinkText(label, url);
+        const text = linkTextRedundant(label, url) ? url || label : describeLinkText(label, url);
         anchor.replaceWith(doc.createTextNode(text));
     });
     return doc.body.innerHTML;

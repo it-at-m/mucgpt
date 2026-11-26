@@ -14,16 +14,11 @@ import { Button, Tooltip, Dialog, DialogActions, DialogBody, DialogContent, Dial
 import styles from "./AssistantsettingsDrawer.module.css";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import Markdown from "react-markdown";
-import remarkGfm from "remark-gfm";
-import CodeBlockRenderer from "../CodeBlockRenderer/CodeBlockRenderer";
-import { safeMarkdownComponents } from "../MarkdownRenderer/markdownLinkPolicy";
+import { SafeMarkdown } from "../MarkdownRenderer/SafeMarkdown";
 import { Assistant } from "../../api";
 import { useNavigate } from "react-router-dom";
 import { Collapse } from "@fluentui/react-motion-components-preview";
 import { AssistantStrategy, DeletedCommunityAssistantStrategy } from "../../pages/assistant/AssistantStrategy";
-import rehypeKatex from "rehype-katex";
-import rehypeExternalLinks from "rehype-external-links";
 import { downloadAssistantExport, mapAssistantToExportData, sanitizeAssistantFilename } from "../../utils/assistant-export";
 import { useGlobalToastContext } from "../GlobalToastHandler/GlobalToastContext";
 
@@ -112,15 +107,6 @@ export const AssistantsettingsDrawer = ({ assistant, onDeleteAssistant, isOwned,
         [showDeleteDialog, onDeleteAssistant, publish, t]
     );
 
-    const rehypeKatexOptions = {
-        output: "mathml"
-    };
-    // Defense in depth: safeMarkdownComponents already applies the link
-    // policy; this plugin only matters if that override is ever removed.
-    const rehypeExternalLinksOptions = {
-        target: "_blank",
-        rel: ["nofollow", "noopener", "noreferrer"]
-    };
     // sidebar content
     return (
         <>
@@ -134,19 +120,9 @@ export const AssistantsettingsDrawer = ({ assistant, onDeleteAssistant, isOwned,
 
             <div className={styles.descriptionSection}>
                 <div className={styles.markdownDescription}>
-                    <Markdown
-                        remarkPlugins={[remarkGfm]}
-                        rehypePlugins={[
-                            [rehypeKatex, rehypeKatexOptions],
-                            [rehypeExternalLinks, rehypeExternalLinksOptions]
-                        ]}
-                        components={{
-                            ...safeMarkdownComponents,
-                            code: CodeBlockRenderer
-                        }}
-                    >
+                    <SafeMarkdown math code>
                         {description}
-                    </Markdown>
+                    </SafeMarkdown>
                 </div>
             </div>
 

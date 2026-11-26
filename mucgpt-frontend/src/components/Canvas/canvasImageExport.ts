@@ -1,5 +1,5 @@
-import { getApprovedImageUrls } from "../MarkdownRenderer/imageApprovals";
-import { INLINE_IMAGE_RE, classifyImageUrl, describeLinkText, destinationOf } from "../MarkdownRenderer/markdownLinkPolicy";
+import DOMPurify from "dompurify";
+import { INLINE_IMAGE_RE, classifyImageUrl, describeLinkText, destinationOf, isEmbeddableImageUrl } from "../MarkdownRenderer/markdownLinkPolicy";
 import type { ExportTarget } from "../../api/core-client";
 
 /**
@@ -11,14 +11,8 @@ import type { ExportTarget } from "../../api/core-client";
  * image semantics (issue #228).
  */
 
-/** Mimes the DOCX converter accepts (mirrors _DATA_IMAGE_RE in the backend). */
-const DOCX_DECODABLE_MIMES = new Set(["image/png", "image/jpeg", "image/gif", "image/bmp", "image/tiff"]);
-
-/**
- * True when the URL qualifies for embedding: allowlisted host or explicit approval.
- */
-const isEmbeddable = (url: string, allowedDomains: readonly string[]): boolean =>
-    classifyImageUrl(url, allowedDomains).kind === "allowed" || getApprovedImageUrls().includes(url);
+/** Mimes the DOCX converter accepts (mirrors IMAGE_DATA_MIMES in the backend). */
+export const DOCX_DECODABLE_MIMES = new Set(["image/png", "image/jpeg", "image/gif", "image/bmp", "image/tiff"]);
 
 /**
  * Allowlisted https hosts are fetched server-side during export (their
@@ -32,7 +26,7 @@ const isAllowlistedHost = (url: string, allowedDomains: readonly string[]): bool
 export const markdownForExport = (markdown: string, allowedDomains: readonly string[]): string =>
     markdown.replace(INLINE_IMAGE_RE, (match, alt: string, destination: string) => {
         const url = destinationOf(destination);
-        return isEmbeddable(url, allowedDomains) ? match : describeLinkText(alt, url);
+        return isEmbeddableImageUrl(url, allowedDomains) ? match : describeLinkText(alt, url);
     });
 
 /**
@@ -111,7 +105,7 @@ export const inlineApprovedImages = async (html: string, target: ExportTarget, a
             // Keep the URL form: the server fetches allowlisted-host images itself.
             continue;
         }
-        const wantsImage = target !== "xlsx" && isEmbeddable(src, allowedDomains);
+        const wantsImage = target !== "xlsx" && isEmbeddableImageUrl(src, allowedDomains);
         const dataUri = wantsImage ? await toDataUri(src) : null;
         if (dataUri) {
             const image = doc.createElement("img");
@@ -125,5 +119,11 @@ export const inlineApprovedImages = async (html: string, target: ExportTarget, a
             node.replaceWith(doc.createTextNode(describeLinkText(alt, src)));
         }
     }
-    return doc.body.innerHTML;
+    // Same sanitization profile as the versions preview: raw HTML outside the
+    // editor's ingestion whitelist cannot reach the converters; links and the
+    // canvas image spans must survive, so their attributes are added back.
+    return DOMPurify.sanitize(doc.body.innerHTML, {
+        USE_PROFILES: { html: true },
+        ADD_ATTR: ["data-canvas-image-src", "data-canvas-image-alt"]
+    });
 };

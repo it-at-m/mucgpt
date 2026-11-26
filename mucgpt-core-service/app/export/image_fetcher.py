@@ -20,6 +20,14 @@ _MAX_IMAGE_BYTES = 5 * 1024 * 1024
 _MAX_REDIRECTS = 3
 _FETCH_TIMEOUT_SECONDS = 10.0
 
+# Image formats the export converters decode natively (python-docx header
+# parsers / Pillow); data URIs and served content types outside this set
+# degrade to alt text or are re-encoded. Mirrored by DOCX_DECODABLE_MIMES in
+# the frontend (canvasImageExport.ts) — a parity test pins both sides.
+IMAGE_DATA_MIMES = frozenset(
+    {"image/png", "image/jpeg", "image/gif", "image/bmp", "image/tiff"}
+)
+
 
 def _host_allowed(url: str, hosts: list[str]) -> bool:
     parsed = urlparse(url)

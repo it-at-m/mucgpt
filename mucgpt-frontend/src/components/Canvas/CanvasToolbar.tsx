@@ -122,11 +122,7 @@ export const CanvasToolbar = ({ editor, controller, onOpenVersions, disabled }: 
         if (!editor) return;
         setIsExporting(target);
         try {
-            const blob = await exportCanvasApi(
-                markdownForExport(controller.getMarkdown(), allowedDomains),
-                await inlineApprovedImages(editor.getHTML(), target, allowedDomains),
-                target
-            );
+            const blob = await exportCanvasApi(await inlineApprovedImages(editor.getHTML(), target, allowedDomains), target);
             const url = URL.createObjectURL(blob);
             const anchor = document.createElement("a");
             anchor.href = url;

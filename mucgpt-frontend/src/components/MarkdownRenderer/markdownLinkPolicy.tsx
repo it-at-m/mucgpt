@@ -4,8 +4,8 @@ import type { Components } from "react-markdown";
 import { useTranslation } from "react-i18next";
 import { collectVerbatimRanges } from "../Canvas/canvasHtmlWhitelist";
 import { useConfigContext } from "../../context/ConfigContext";
+import { getApprovedImageUrls, useImageApprovals } from "./imageApprovals";
 import { isAllowedForSession, requestExternalLink } from "./externalLinkGuard";
-import { useImageApprovals } from "./imageApprovals";
 import styles from "./MarkdownRenderer.module.css";
 
 /**
@@ -64,6 +64,12 @@ export const describeLinkText = (label: string, url: string): string => {
 
 export type UrlPolicyKind = "allowed" | "sanitized" | "blocked";
 
+/**
+ * True when the link text already shows the URL (or its scheme-less form),
+ * so appending the parenthesized URL would duplicate it.
+ */
+export const linkTextRedundant = (text: string, url: string): boolean => text.includes(url) || stripScheme(text) === stripScheme(url);
+
 export interface ClassifiedUrl {
     kind: UrlPolicyKind;
     url: string;
@@ -111,6 +117,13 @@ export const classifyUrl = (raw: string, allowedDomains: readonly string[]): Cla
 export const classifyImageUrl = (raw: string, allowedDomains: readonly string[]): ClassifiedUrl => classifyBySchemes(raw, allowedDomains, ["https:", "http:"]);
 
 /**
+ * Embeddable outside the render policy (export inlining): allowlisted host
+ * or explicitly approved for the conversation.
+ */
+export const isEmbeddableImageUrl = (url: string, allowedDomains: readonly string[]): boolean =>
+    classifyImageUrl(url, allowedDomains).kind === "allowed" || getApprovedImageUrls().includes(url);
+
+/**
  * Click target for rendered links. Autolink literals invent a scheme for
  * bare hosts (www.muenchen.de -> http://www.muenchen.de); an allowlisted
  * bare host is a trusted TLS endpoint, so the invented scheme is upgraded
@@ -145,7 +158,7 @@ export const SafeMarkdownLink = ({ href, children }: SafeLinkProps) => {
             </>
         );
     }
-    if (text.includes(url) || text.includes(raw) || stripScheme(text) === stripScheme(url)) {
+    if (linkTextRedundant(text, url) || text.includes(raw)) {
         return (
             <a href={url} target="_blank" rel="noopener noreferrer" onClick={guardedActivation} onAuxClick={guardedActivation}>
                 {children}
@@ -250,6 +263,12 @@ const TITLE_PATTERN = "[ \\t]*(?:\"[^\"]*\"|'[^']*'|\\([^()]*\\))?[ \\t]*";
 export const INLINE_IMAGE_RE = new RegExp(`!\\[${LABEL_PATTERN}\\]\\([ \\t]*${DESTINATION_PATTERN}${TITLE_PATTERN}\\)`, "g");
 export const INLINE_LINK_RE = new RegExp(`\\[${LABEL_PATTERN}\\]\\([ \\t]*${DESTINATION_PATTERN}${TITLE_PATTERN}\\)`, "g");
 
+/** Anchored single-image shape (paste detection); same grammar as INLINE_IMAGE_RE. */
+export const INLINE_IMAGE_SHAPE_RE = new RegExp(`^!\\[${LABEL_PATTERN}\\]\\([ \\t]*${DESTINATION_PATTERN}${TITLE_PATTERN}\\)$`, "i");
+
+/** Autolinks `<scheme:rest>`; the scheme list mirrors GFM's understood schemes. */
+export const AUTOLINK_RE = /<((?:https?|mailto|xmpp):[^>\s]+)>/g;
+
 // `[desc](url "title")` — an angle-wrapped destination keeps its inner value as-is.
 export const destinationOf = (destination: string): string => {
     const trimmed = destination.trim();
@@ -257,32 +276,12 @@ export const destinationOf = (destination: string): string => {
     return wrapped ? wrapped[1] : trimmed;
 };
 
-const stripLinks = (markdown: string): string =>
-    markdown
-        // autolinks before escaping: `<https://example.com>` is not a tag
-        .replace(/<((?:https?|mailto|xmpp):[^>\s]+)>/g, "$1")
-        // images ![alt](url) -> alt
-        .replace(INLINE_IMAGE_RE, (_match, alt: string) => alt)
-        // inline links [text](url) -> text
-        .replace(INLINE_LINK_RE, (_match, text: string) => text)
-        // reference links [text][ref] -> text
-        .replace(/\[([^\]]+)\]\[[^\]]*\]/g, "$1")
-        // link definitions [ref]: url — URL-like destinations only (scheme,
-        // leading /, relative ./ or ../ paths), never `[Policy]: text`
-        .replace(/^\s*\[([^^][^\]\n]*)\]:[ \t]*(?:<[^\s>]*>|\/\S*|\.{1,2}\/\S*|(?:[a-z][a-z0-9+.-]*:(?:\/\/)?\S+))[^\n]*$/gim, "")
-        // no link syntax must survive (unforeseen grammar variants): the bracket
-        // adjacency is what makes `](url)` render as a link
-        .replace(/\]\(/g, "] ")
-        // the output is display text: escape remaining `<` so element-like
-        // fragments (e.g. unterminated `<script`) cannot ever appear
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;");
-
-/**
- * Neutralize markdown link/image syntax in a plain-text context (e.g. before
- * rendering a mindmap), keeping fenced and inline code untouched.
- */
-export const stripMarkdownLinks = (markdown: string): string => transformOutsideVerbatim(markdown, stripLinks);
+interface FlattenOptions {
+    /** Escape `<`/`>` in the output so element-like fragments cannot appear (plain-text display contexts). */
+    escapeHtml?: boolean;
+    /** Keep destinations as `label (url)` text; false keeps labels only (compact node labels). */
+    keepDestinations?: boolean;
+}
 
 // Link definitions `[ref]: url` — the destination must look like a URL (scheme,
 // leading `/`, relative `./` or `../`, or `<…>`-wrapped) so plain texts like
@@ -291,6 +290,44 @@ const DEFINITION_RE =
     /^ {0,3}\[([^^][^\]]*)\]:[ \t]*(<[^\s>]*>|\/\S*|\.{1,2}\/\S*|[a-z][a-z0-9+.-]*:(?:\/\/)?\S+)[^\S\n]*(?:"[^"]*"|'[^']*'|\([^)]*\))?[^\S\n]*$\n?/gim;
 
 const referenceKey = (label: string): string => label.trim().toLowerCase();
+
+const flattenPart = (part: string, definitions: Map<string, string>, options: Required<FlattenOptions>): string => {
+    let text = part;
+    // Definition lines go first: their destinations must not turn into
+    // resolved shortcut references below
+    text = text.replace(DEFINITION_RE, "");
+    const withDestination = (label: string, url: string): string => (options.keepDestinations ? describeLinkText(label, url) : label);
+    const resolveReference = (label: string, ref: string): string => {
+        const url = definitions.get(referenceKey(ref || label));
+        return url ? withDestination(label, url) : label;
+    };
+    // Reference-style images ![alt][ref] and collapsed references [desc][]
+    text = text.replace(/!\[([^\]]*)\]\[([^\]]*)\]/g, (_match, alt: string, ref: string) => resolveReference(alt, ref));
+    // Reference links [desc][ref], collapsed [desc][]
+    text = text.replace(/\[([^\]]+)\]\[([^\]]*)\]/g, (_match, desc: string, ref: string) => resolveReference(desc, ref));
+    // Shortcut references ![label] / [label] resolve only when a definition
+    // exists; without one CommonMark renders them literally as well
+    text = text.replace(/(!?)\[([^^\]\n]+)\](?!\[|\()/g, (match, _bang: string, label: string) => {
+        const url = definitions.get(referenceKey(label));
+        if (!url) return match;
+        return withDestination(label, url);
+    });
+    // Images ![alt](url) before links, so [![alt](src)](url) keeps its shape
+    text = text.replace(INLINE_IMAGE_RE, (_match, alt: string, url: string) => withDestination(alt, destinationOf(url)));
+    // Inline links [desc](url)
+    text = text.replace(INLINE_LINK_RE, (_match, desc: string, url: string) => withDestination(desc, destinationOf(url)));
+    // Autolinks <https://example.com>
+    text = text.replace(AUTOLINK_RE, "$1");
+    // No `](` adjacency may survive conversion: labels can legitimately
+    // contain nested link syntax, whose leftovers must not re-form links.
+    text = text.replace(/\]\(/g, "] ");
+    if (options.escapeHtml) {
+        // the output is display text: escape remaining `<` so element-like
+        // fragments (e.g. unterminated `<script`) cannot ever appear
+        text = text.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    }
+    return text;
+};
 
 const splitAtVerbatimRanges = (markdown: string): string[] => {
     const parts: string[] = [];
@@ -305,15 +342,12 @@ const splitAtVerbatimRanges = (markdown: string): string[] => {
 };
 
 /**
- * Break markdown links and images down to their visible plain-text form
- * ("description (url)"). Used in the canvas ingestion pipeline, where
- * prepareCanvasMarkdown protects policy-compliant image syntax from this
- * conversion; the link-mark pass afterwards decides which "(url)" parts
- * become clickable. Fenced and inline code are kept untouched.
+ * One implementation behind both flattening entry points: definitions are
+ * collected once across all non-code ranges (a code span between a reference
+ * and its definition must not hide the definition), then every link/image
+ * form is broken down outside fenced and inline code.
  */
-export const markdownLinksToPlainText = (markdown: string): string => {
-    // Definitions are collected once across all non-code ranges: a code span
-    // between a reference and its definition must not hide the definition.
+const flattenMarkdownLinks = (markdown: string, options: Required<FlattenOptions>): string => {
     const definitions = new Map<string, string>();
     for (const part of splitAtVerbatimRanges(markdown)) {
         for (const match of part.matchAll(DEFINITION_RE)) {
@@ -321,37 +355,20 @@ export const markdownLinksToPlainText = (markdown: string): string => {
             if (!definitions.has(key)) definitions.set(key, match[2]);
         }
     }
-    return transformOutsideVerbatim(markdown, part => {
-        let text = part;
-        // Definition lines go first: their destinations must not turn into
-        // resolved shortcut references below
-        text = text.replace(DEFINITION_RE, "");
-        // Reference-style images ![alt][ref] and collapsed references [desc][]
-        text = text.replace(/!\[([^\]]*)\]\[([^\]]*)\]/g, (_match, alt: string, ref: string) => {
-            const url = definitions.get(referenceKey(ref || alt));
-            return url ? describeLinkText(alt, url) : alt;
-        });
-        // Reference links [desc][ref], collapsed [desc][]
-        text = text.replace(/\[([^\]]+)\]\[([^\]]*)\]/g, (_match, desc: string, ref: string) => {
-            const url = definitions.get(referenceKey(ref || desc));
-            return url ? describeLinkText(desc, url) : desc;
-        });
-        // Shortcut references ![label] / [label] resolve only when a definition
-        // exists; without one CommonMark renders them literally as well
-        text = text.replace(/(!?)\[([^^\]\n]+)\](?!\[|\()/g, (match, bang: string, label: string) => {
-            const url = definitions.get(referenceKey(label));
-            if (!url) return match;
-            return bang ? describeLinkText(label, url) : describeLinkText(label, url);
-        });
-        // Images ![alt](url) before links, so [![alt](src)](url) keeps its shape
-        text = text.replace(INLINE_IMAGE_RE, (_match, alt: string, url: string) => describeLinkText(alt, destinationOf(url)));
-        // Inline links [desc](url)
-        text = text.replace(INLINE_LINK_RE, (_match, desc: string, url: string) => describeLinkText(desc, destinationOf(url)));
-        // Autolinks <https://example.com>
-        text = text.replace(/<((?:https?|mailto|xmpp):[^>\s]+)>/g, "$1");
-        // No `](` adjacency may survive conversion: labels can legitimately
-        // contain nested link syntax, whose leftovers must not re-form links.
-        text = text.replace(/\]\(/g, "] ");
-        return text;
-    });
+    return transformOutsideVerbatim(markdown, part => flattenPart(part, definitions, options));
 };
+
+/**
+ * Neutralize markdown link/image syntax to labels only (e.g. before rendering
+ * a mindmap): destinations and definitions vanish, `<`/`>` are escaped.
+ */
+export const stripMarkdownLinks = (markdown: string): string => flattenMarkdownLinks(markdown, { escapeHtml: true, keepDestinations: false });
+
+/**
+ * Break markdown links and images down to their visible plain-text form
+ * ("description (url)"). Used in the canvas ingestion pipeline, where
+ * prepareCanvasMarkdown protects policy-compliant image syntax from this
+ * conversion; the link-mark pass afterwards decides which "(url)" parts
+ * become clickable.
+ */
+export const markdownLinksToPlainText = (markdown: string): string => flattenMarkdownLinks(markdown, { escapeHtml: false, keepDestinations: true });

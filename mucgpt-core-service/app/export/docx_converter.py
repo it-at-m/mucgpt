@@ -10,17 +10,17 @@ from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
 from PIL import Image, ImageOps
 
-from export.image_fetcher import fetch_allowed_image
+from export.image_fetcher import IMAGE_DATA_MIMES, fetch_allowed_image
 
 _MONO_FONT = "Courier New"
 
 # Image sources from the export HTML: data URIs (approved images inlined in
 # the frontend) and https URLs on allowed_link_domains hosts (fetched by
 # _load_image_bytes); anything else degrades to its alt text. python-docx
-# parses PNG/JPEG/GIF/BMP/TIFF headers itself — everything else goes through
+# parses the IMAGE_DATA_MIMES headers itself — everything else goes through
 # the Pillow re-encode in _reencode_to_png (or degrades).
 _DATA_IMAGE_RE = re.compile(
-    r"^data:image/(?:png|jpe?g|gif|bmp|tiff);base64,([A-Za-z0-9+/=]+)$"
+    rf"^data:image/(?:{'|'.join(sorted(m.removeprefix('image/') for m in IMAGE_DATA_MIMES))});base64,([A-Za-z0-9+/=]+)$"
 )
 
 _LIST_STYLES = {
@@ -175,25 +175,13 @@ def _walk_inline(paragraph: Any, element: Any, **fmt: bool) -> None:
         # A link with no text but an attached image (e.g. a linked
         # screenshot) renders the picture; python-docx hyperlinks cannot
         # contain runs with images.
-        if not element.get_text(strip=True) and (
-            element.find("img")
-            or element.find("span", attrs={"data-canvas-image-src": True})
-        ):
+        if not element.get_text(strip=True) and element.find("img"):
             _walk_inline(paragraph, element)
             return
         _add_hyperlink(paragraph, element.get("href", ""), element.get_text())
         return
     if name == "img":
         _add_image(paragraph, element.get("src", ""), element.get("alt", ""))
-        return
-    if name == "span" and element.has_attr("data-canvas-image-src"):
-        # The editor serializes image nodes as spans with data attributes
-        # (no fetchable src; issue #228).
-        _add_image(
-            paragraph,
-            element.get("data-canvas-image-src", ""),
-            element.get("data-canvas-image-alt", ""),
-        )
         return
     child_fmt = {**fmt, **_INLINE_FORMAT.get(name, {})}
     for child in element.children:

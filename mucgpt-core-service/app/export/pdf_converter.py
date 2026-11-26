@@ -1,7 +1,6 @@
 from io import BytesIO
 from urllib.parse import urlparse
 
-from bs4 import BeautifulSoup
 from weasyprint import HTML, URLFetcher
 from weasyprint.urls import URLFetcherResponse
 
@@ -9,10 +8,10 @@ from export.image_fetcher import fetch_allowed_image
 
 
 class ExportURLFetcher(URLFetcher):
-    """data: URIs via the base fetcher plus images hosted on the deployment's
-    allowed_link_domains, fetched server-side (the browser export cannot read
-    those responses because of CORS). Everything else degrades silently; any
-    base scheme other than data: stays forbidden."""
+    """data:image/* URIs via the base fetcher plus images hosted on the
+    deployment's allowed_link_domains, fetched server-side (the browser export
+    cannot read those responses because of CORS). Everything else degrades
+    silently; any base scheme other than data:image/* stays forbidden."""
 
     def __init__(self):
         super().__init__(allowed_protocols={"data"})
@@ -27,6 +26,8 @@ class ExportURLFetcher(URLFetcher):
             return URLFetcherResponse(
                 url, BytesIO(data), {"Content-Type": content_type}, 200
             )
+        if parsed.scheme == "data" and not url.lower().startswith("data:image/"):
+            raise ValueError(f"Only image data URIs are supported: {url[:64]}")
         return super().fetch(url, headers)
 
 
@@ -34,15 +35,6 @@ _url_fetcher = ExportURLFetcher()
 
 
 def convert_pdf(html: str) -> bytes:
-    soup = BeautifulSoup(html, "html.parser")
-    for tag in soup.find_all(["script", "style"]):
-        tag.decompose()
-    # The editor serializes image nodes as spans with data attributes (no
-    # fetchable src; issue #228): materialize img tags so the fetcher sees them.
-    for span in soup.find_all("span", attrs={"data-canvas-image-src": True}):
-        img = soup.new_tag("img")
-        src = str(span.get("data-canvas-image-src", ""))
-        alt = str(span.get("data-canvas-image-alt", ""))
-        img.attrs = {"src": src, "alt": alt}
-        span.replace_with(img)
-    return HTML(string=str(soup), url_fetcher=_url_fetcher).write_pdf()
+    # The input is normalized once in convert_export (script/style stripped,
+    # canvas image spans materialized, link schemes enforced).
+    return HTML(string=html, url_fetcher=_url_fetcher).write_pdf()

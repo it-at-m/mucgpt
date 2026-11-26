@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { configureImageApprovals, getApprovedImageUrls } from "../MarkdownRenderer/imageApprovals";
-import { inlineApprovedImages, markdownForExport } from "./canvasImageExport";
+import { DOCX_DECODABLE_MIMES, inlineApprovedImages, markdownForExport } from "./canvasImageExport";
 import { flattenImagesToText } from "./canvasLinkNeutralization";
 import { generateHTML } from "@tiptap/html";
 import { canvasExtensions } from "./canvasExtensions";
@@ -95,5 +95,14 @@ describe("flattenImagesToText with the span serialization", () => {
         expect(result).not.toContain("data-canvas-image-src");
         expect(result).toContain("Plan (https://example.com/p.png)");
         expect(result).toContain("Bild (https://example.com/x.png)");
+    });
+});
+
+// Parity pin: the backend's IMAGE_DATA_MIMES (app/export/image_fetcher.py)
+// must match this set — a data URI with a MIME outside it is rasterized in
+// the browser because the DOCX converter cannot decode it.
+describe("DOCX_DECODABLE_MIMES parity with the backend", () => {
+    it("matches the backend's shared image data MIME set", () => {
+        expect([...DOCX_DECODABLE_MIMES].sort()).toEqual(["image/bmp", "image/gif", "image/jpeg", "image/png", "image/tiff"]);
     });
 });

@@ -267,11 +267,10 @@ export type ExportTarget = "pdf" | "docx" | "xlsx";
  * Converts the canvas document to a binary file via the backend export endpoint
  * (the converters consume the HTML serialization).
  */
-export async function exportCanvasApi(markdown: string, html: string, target: ExportTarget): Promise<Blob> {
+export async function exportCanvasApi(html: string, target: ExportTarget): Promise<Blob> {
     const response = await fetch(
         API_BASE + "v1/export",
         postConfig({
-            markdown,
             html,
             target
         })

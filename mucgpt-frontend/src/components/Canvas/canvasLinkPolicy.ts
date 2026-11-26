@@ -3,6 +3,7 @@ import { Plugin, PluginKey } from "@tiptap/pm/state";
 import type { EditorState, Transaction } from "@tiptap/pm/state";
 
 import {
+    AUTOLINK_RE,
     INLINE_IMAGE_RE,
     INLINE_LINK_RE,
     anchorHrefOf,
@@ -38,7 +39,7 @@ export const prepareCanvasMarkdown = (markdown: string, allowedDomains: readonly
         return kind === "blocked" ? url : safeUrl;
     };
     let prepared = markdown.replace(INLINE_LINK_RE, (_match, label: string, destination: string) => `[${label}](${policyUrl(destination)})`);
-    prepared = prepared.replace(/<((?:https?|mailto|xmpp):[^>\s]+)>/g, (match, url: string) => {
+    prepared = prepared.replace(AUTOLINK_RE, (match, url: string) => {
         const { kind, url: safeUrl } = classifyUrl(url, allowedDomains);
         return kind === "blocked" ? match : `<${safeUrl}>`;
     });

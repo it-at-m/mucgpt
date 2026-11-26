@@ -1,12 +1,5 @@
-import Markdown from "react-markdown";
-import remarkGfm from "remark-gfm";
-import remarkMath from "remark-math";
-import rehypeKatex from "rehype-katex";
-import rehypeExternalLinks from "rehype-external-links";
-import CodeBlockRenderer from "../CodeBlockRenderer/CodeBlockRenderer";
-import TableRenderer from "../TableRenderer/TableRenderer";
 import { DrawioRenderContext } from "../CodeBlockRenderer/drawioRenderContext";
-import { safeMarkdownComponents } from "./markdownLinkPolicy";
+import { SafeMarkdown } from "./SafeMarkdown";
 import styles from "./MarkdownRenderer.module.css";
 
 interface MarkdownRendererProps {
@@ -19,40 +12,14 @@ interface MarkdownRendererProps {
 }
 
 export const MarkdownRenderer = ({ children, className, allowDrawio = false, isStreaming = false }: MarkdownRendererProps) => {
-    const remarkMathOptions = {
-        singleDollarTextMath: false
-    };
-    const rehypeKatexOptions = {
-        output: "mathml"
-    };
-    // Defense in depth: the `a` component override already renders links with
-    // the policy attributes; this plugin only matters if that override is
-    // ever removed.
-    const rehypeExternalLinksOptions = {
-        target: "_blank",
-        rel: ["nofollow", "noopener", "noreferrer"]
-    };
-
-    const content = (
-        <DrawioRenderContext.Provider value={{ allowDrawio, isStreaming }}>
-            <Markdown
-                remarkPlugins={[[remarkMath, remarkMathOptions], remarkGfm]}
-                rehypePlugins={[
-                    [rehypeKatex, rehypeKatexOptions],
-                    [rehypeExternalLinks, rehypeExternalLinksOptions]
-                ]}
-                components={{
-                    ...safeMarkdownComponents,
-                    code: CodeBlockRenderer,
-                    table: TableRenderer
-                }}
-            >
-                {children}
-            </Markdown>
-        </DrawioRenderContext.Provider>
-    );
-
     const wrapperClassName = className ? `${styles.markdown} ${className}` : styles.markdown;
-
-    return <div className={wrapperClassName}>{content}</div>;
+    return (
+        <div className={wrapperClassName}>
+            <DrawioRenderContext.Provider value={{ allowDrawio, isStreaming }}>
+                <SafeMarkdown math code tables>
+                    {children}
+                </SafeMarkdown>
+            </DrawioRenderContext.Provider>
+        </div>
+    );
 };

@@ -108,24 +108,83 @@ def test_xlsx_neutralizes_formula_injection() -> None:
 def test_export_request_rejects_oversized_fields() -> None:
     from api.api_models import CANVAS_EDITOR_MAX_CHARS
 
-    for field in ("markdown", "html"):
-        request = {
-            "markdown": "m",
-            "html": "h",
-            "target": "pdf",
-            field: "x" * (4 * CANVAS_EDITOR_MAX_CHARS + 1),
-        }
-        with pytest.raises(ValidationError):
-            ExportRequest(**request)
+    request = {
+        "html": "x" * (4 * CANVAS_EDITOR_MAX_CHARS + 1),
+        "target": "pdf",
+    }
+    with pytest.raises(ValidationError):
+        ExportRequest(**request)
 
 
 @pytest.mark.unit
 def test_export_request_ignores_unknown_fields() -> None:
-    """Older frontends may still send doc_json; nothing consumes it."""
+    """Older frontends may still send markdown/doc_json; nothing consumes them."""
     request = ExportRequest.model_validate(
         {"markdown": "m", "html": "h", "target": "pdf", "doc_json": '{"type":"doc"}'}
     )
-    assert request.markdown == "m"
+    assert request.html == "h"
+
+
+@pytest.mark.unit
+def test_normalize_export_html_strips_script_and_style() -> None:
+    from export.converter import normalize_export_html
+
+    html = "<p>a</p><script>evil()</script><style>.x{}</style><p>b</p>"
+    assert normalize_export_html(html) == "<p>a</p><p>b</p>"
+
+
+@pytest.mark.unit
+def test_normalize_export_html_materializes_canvas_image_spans() -> None:
+    from export.converter import normalize_export_html
+
+    html = '<p><span data-canvas-image-src="https://www.muenchen.de/i.png" data-canvas-image-alt="Logo"></span></p>'
+    assert (
+        normalize_export_html(html)
+        == '<p><img alt="Logo" src="https://www.muenchen.de/i.png"/></p>'
+    )
+
+
+@pytest.mark.unit
+def test_normalize_export_html_enforces_link_schemes() -> None:
+    from export.converter import normalize_export_html
+
+    html = (
+        '<a href="https://www.muenchen.de">keep</a>'
+        '<a href="http://example.com">keep</a>'
+        '<a href="mailto:a@b.de">keep</a>'
+        '<a href="javascript:alert(1)">drop</a>'
+        '<a href="data:text/html,evil">drop</a>'
+        '<a href="relative/path">drop</a>'
+    )
+    result = normalize_export_html(html)
+    assert result.count('href="https://www.muenchen.de"') == 1
+    assert result.count('href="http://example.com"') == 1
+    assert result.count('href="mailto:a@b.de"') == 1
+    for dropped in ("javascript:", "data:text/html", "relative/path"):
+        assert dropped not in result
+    assert "drop" in result
+
+
+@pytest.mark.unit
+def test_convert_export_normalizes_html_before_dispatch(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    import export.pdf_converter as pdf_converter
+
+    received: dict[str, str] = {}
+    monkeypatch.setattr(
+        pdf_converter, "convert_pdf", lambda html: received.update(html=html) or b"pdf"
+    )
+
+    request = ExportRequest(
+        html='<p>a</p><script>evil()</script><span data-canvas-image-src="https://www.muenchen.de/i.png" data-canvas-image-alt="L"></span><a href="javascript:alert(1)">x</a>',
+        target="pdf",
+    )
+    convert_export(request)
+    assert (
+        received["html"]
+        == '<p>a</p><img alt="L" src="https://www.muenchen.de/i.png"/><a>x</a>'
+    )
 
 
 @pytest.mark.unit
@@ -138,7 +197,7 @@ def test_dispatch_returns_mimetype_and_filename(
     monkeypatch.setattr("export.converter.convert_docx", lambda md: b"docx")
     monkeypatch.setattr("export.converter.convert_xlsx", lambda html: b"xlsx")
 
-    request = ExportRequest(markdown="m", html="h", target="pdf")
+    request = ExportRequest(html="h", target="pdf")
     data, mimetype, filename = convert_export(request)
     assert data == b"pdf"
     assert mimetype == "application/pdf"
@@ -373,8 +432,10 @@ def test_pdf_url_fetcher_serves_data_uris_and_allowlisted_hosts_only(
         assert response.read() == b"\xff\xd8png"
         assert response.content_type == "image/png"
 
-    _url_fetcher.fetch("data:text/plain,hello")
+    _url_fetcher.fetch("data:image/png;base64,iVBORw0KGgo=")
     for url in (
+        "data:text/plain,hello",
+        "data:text/html,<b>x</b>",
         "http://127.0.0.1:1/x.png",
         "https://example.com/x.css",
         "file:///tmp/leak.css",
@@ -382,6 +443,21 @@ def test_pdf_url_fetcher_serves_data_uris_and_allowlisted_hosts_only(
     ):
         with pytest.raises(ValueError):
             _url_fetcher.fetch(url)
+
+
+@pytest.mark.unit
+def test_data_image_re_covers_the_shared_mime_set() -> None:
+    """Pin _DATA_IMAGE_RE against IMAGE_DATA_MIMES (the frontend's
+    DOCX_DECODABLE_MIMES mirrors the same set; keep both sides in sync)."""
+    from export.docx_converter import _DATA_IMAGE_RE
+    from export.image_fetcher import IMAGE_DATA_MIMES
+
+    for mime in IMAGE_DATA_MIMES:
+        assert _DATA_IMAGE_RE.match(f"data:{mime};base64,QUJD") is not None
+    # anything outside the shared set degrades (incl. the nonstandard jpg alias)
+    assert _DATA_IMAGE_RE.match("data:image/jpg;base64,QUJD") is None
+    assert _DATA_IMAGE_RE.match("data:image/svg+xml;base64,QUJD") is None
+    assert _DATA_IMAGE_RE.match("data:text/plain,hello") is None
 
 
 @pytest.mark.unit

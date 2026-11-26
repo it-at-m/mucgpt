@@ -182,3 +182,23 @@ def test_tools_sharing_a_name_share_the_strictest_limit():
     limiters = tool_run_limit_middleware([search, other_search])
     assert list(limiters) == ["search"]
     assert limiters["search"].run_limit == 2
+
+
+def test_unconfigured_tools_use_the_shared_default_limit():
+    @tool
+    def search() -> str:
+        """Search documents."""
+        return ""
+
+    limiters = tool_run_limit_middleware([search])
+    assert limiters["search"].run_limit == 10
+
+
+def test_explicit_unlimited_tool_has_no_limiter():
+    @tool
+    def search() -> str:
+        """Search documents."""
+        return ""
+
+    search.metadata = {"run_limit": None}
+    assert tool_run_limit_middleware([search]) == {}

@@ -147,6 +147,23 @@ class TestBuildConnection:
 
 
 class TestApplyToolCustomizations:
+    def test_unconfigured_mcp_source_leaves_limit_for_shared_default(self):
+        from langchain_core.tools import StructuredTool
+
+        source = MCPSourceConfig(url="http://x", transport=MCPTransport.SSE)
+        tool = StructuredTool(
+            name="search_docs",
+            description="Search documents",
+            args_schema={"type": "object", "properties": {}},
+            coroutine=AsyncMock(),
+            metadata={"run_limit": 999},
+        )
+
+        McpLoader._apply_tool_customizations(tool, "src", source)
+
+        assert tool.metadata is not None
+        assert "run_limit" not in tool.metadata
+
     @pytest.mark.parametrize(
         "override, expected",
         [
@@ -532,7 +549,7 @@ class TestLoadMcpTools:
         assert tools[0].name == "a"
         assert tools[0].metadata is not None
         assert tools[0].metadata["mcp_source"] == "src"
-        assert tools[0].metadata["run_limit"] is None
+        assert "run_limit" not in tools[0].metadata
         assert updated_tools[0].metadata is not None
         assert updated_tools[0].metadata["run_limit"] == 3
 

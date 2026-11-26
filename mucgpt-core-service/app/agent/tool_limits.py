@@ -8,6 +8,8 @@ from langchain.tools.tool_node import ToolCallRequest
 from langchain_core.messages import AIMessage, ToolCall
 from langchain_core.tools import BaseTool
 
+DEFAULT_TOOL_RUN_LIMIT = 10
+
 
 class ToolRunLimitState(AgentState):
     thread_tool_call_count: NotRequired[Annotated[dict[str, int], PrivateStateAttr]]
@@ -59,8 +61,13 @@ def tool_run_limit_middleware(
     # tools sharing a name (e.g. from two MCP sources) share the strictest limit.
     limits: dict[str, int] = {}
     for tool in tools:
-        if (limit := (tool.metadata or {}).get("run_limit")) is not None:
-            limits[tool.name] = min(limit, limits.get(tool.name, limit))
+        metadata = tool.metadata or {}
+        limit = metadata.get("run_limit", DEFAULT_TOOL_RUN_LIMIT)
+        if limit is not None:
+            existing_limit = limits.get(tool.name)
+            limits[tool.name] = (
+                limit if existing_limit is None else min(limit, existing_limit)
+            )
     return {
         name: ToolRunLimitMiddleware(tool_name=name, run_limit=limit)
         for name, limit in limits.items()

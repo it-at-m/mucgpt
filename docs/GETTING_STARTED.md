@@ -456,11 +456,11 @@ MUCGPT_CORE_MCP__CACHE_TTL=43200
 
 #### Tool call budgets
 
-Set `run_limit` on an MCP source to cap each of its tools per user turn,
-including approval resumes. The default is `null` (unlimited). Source defaults
-also cover newly discovered or renamed tools; no tool-name heuristic is used.
-An optional `overrides` entry can replace the budget for an exact discovered
-tool name:
+MCP and local tools default to 10 calls per user turn, including approval
+resumes. Set `run_limit` on an MCP source to replace that per-tool default;
+source limits also cover newly discovered or renamed tools. An optional
+`overrides` entry can replace the source limit for an exact discovered tool
+name. Explicit `null` means unlimited:
 
 ```yaml
 mcp:
@@ -476,11 +476,11 @@ mcp:
           run_limit: null
 ```
 
-An omitted override inherits the source limit; explicit `null` disables it.
-Limits must be positive integers. The source budget is applied separately to
-each tool, not shared across the server. Excess calls return a tool error so
-the agent can finish with its available information. Configuration is applied
-on MCP cache hits as well as fresh discovery.
+An omitted override inherits the source limit; explicit `null` disables the
+limit for that tool. Limits must be positive integers. The source budget is
+applied separately to each tool, not shared across the server. Excess calls
+return a tool error so the agent can finish with its available information.
+Configuration is applied on MCP cache hits as well as fresh discovery.
 
 For Deep Agents built-ins, configure limits alongside enabled tools under each
 model's `deep_agent` settings:

@@ -10,6 +10,7 @@ from langgraph.config import get_stream_writer
 from langgraph.prebuilt import InjectedState, ToolRuntime
 from langgraph.types import Command, StreamWriter
 
+from agent.middleware import RequestContext
 from agent.tools.spec import LocalTool
 from agent.tools.tool_chunk import ToolStreamChunk, ToolStreamState
 from api.api_models import (
@@ -215,7 +216,7 @@ def _next_revision(context: Any) -> int:
 
 
 def _effective_canvas(
-    runtime: ToolRuntime | None, canvas_state: Any
+    runtime: ToolRuntime[RequestContext] | None, canvas_state: Any
 ) -> CanvasState | None:
     """Return the canvas the tool operates on.
 
@@ -232,7 +233,7 @@ def _effective_canvas(
     return _ensure_canvas(canvas_state)
 
 
-def _tool_context(runtime: ToolRuntime | None) -> Any:
+def _tool_context(runtime: ToolRuntime[RequestContext] | None) -> RequestContext | None:
     return getattr(runtime, "context", None)
 
 
@@ -291,7 +292,9 @@ def make_canvas_write_tool(logger: Logger) -> BaseTool:
     def canvas_write(
         content: str,
         canvas_state: _CANVAS_STATE_ARG = None,
-        runtime: ToolRuntime = None,  # ty: ignore[invalid-parameter-default]
+        runtime: ToolRuntime[
+            RequestContext
+        ] = None,  # ty: ignore[invalid-parameter-default]
     ) -> str:
         # The canvas is always editable: when no canvas exists in this
         # conversation yet, canvas_write creates one.
@@ -344,7 +347,9 @@ def make_canvas_edit_tool(logger: Logger) -> BaseTool:
         old_text: str,
         new_text: str,
         canvas_state: _CANVAS_STATE_ARG = None,
-        runtime: ToolRuntime = None,  # ty: ignore[invalid-parameter-default]
+        runtime: ToolRuntime[
+            RequestContext
+        ] = None,  # ty: ignore[invalid-parameter-default]
     ) -> str:
         # Shape validation stays before the batch gate: an empty-argument call
         # never touches the canvas, so it must not fail the batch for the
@@ -497,7 +502,9 @@ def make_canvas_read_tool(logger: Logger) -> BaseTool:
         canvas_state: _CANVAS_STATE_ARG = None,
         around_cursor: bool = False,
         messages: Annotated[list | None, InjectedState("messages")] = None,
-        runtime: ToolRuntime = None,  # ty: ignore[invalid-parameter-default]
+        runtime: ToolRuntime[
+            RequestContext
+        ] = None,  # ty: ignore[invalid-parameter-default]
     ) -> str | Command:
         context = _tool_context(runtime)
         lock = getattr(context, "canvas_lock", None)

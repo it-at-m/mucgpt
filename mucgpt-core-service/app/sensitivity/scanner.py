@@ -1,4 +1,3 @@
-from bisect import bisect_right, insort
 from collections import Counter
 from collections.abc import Iterable, Sequence
 
@@ -13,22 +12,6 @@ from sensitivity.models import (
 
 _KIND_ORDER: dict[SensitivityKind, int] = {"secret": 0, "pii": 1}
 _CONFIDENCE_ORDER: dict[SensitivityConfidence, int] = {"certain": 0, "likely": 1}
-
-
-class _ClaimedSpans:
-    """Non-overlapping spans; the first detector to claim a span wins."""
-
-    def __init__(self) -> None:
-        self._spans: list[tuple[int, int]] = []
-
-    def claim(self, start: int, end: int) -> bool:
-        index = bisect_right(self._spans, (start, end))
-        if index > 0 and self._spans[index - 1][1] > start:
-            return False
-        if index < len(self._spans) and self._spans[index][0] < end:
-            return False
-        insort(self._spans, (start, end))
-        return True
 
 
 def scan_text(
@@ -53,7 +36,7 @@ def scan_text(
         )
     )
     disabled = frozenset(disabled_categories)
-    claimed = _ClaimedSpans()
+    claimed = bytearray(len(text))
     counts: Counter[
         tuple[SensitivityCategory, SensitivityKind, SensitivityConfidence]
     ] = Counter()
@@ -61,7 +44,10 @@ def scan_text(
         for hit in detector(text, options):
             # Disabled categories still claim their span so that, e.g., an
             # ignored IBAN is not reported again as a card or phone number.
-            if claimed.claim(hit.start, hit.end) and hit.category not in disabled:
+            if claimed.find(b"\x01", hit.start, hit.end) >= 0:
+                continue
+            claimed[hit.start : hit.end] = b"\x01" * (hit.end - hit.start)
+            if hit.category not in disabled:
                 counts[(hit.category, hit.kind, hit.confidence)] += 1
     findings = sorted(
         (

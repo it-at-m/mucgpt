@@ -125,6 +125,7 @@ def test_upload_returns_only_ready_metadata_and_uses_authenticated_owner(upload_
             "findings": [],
             "requires_acknowledgement": False,
             "acknowledged": False,
+            "truncated": False,
         },
     }
     assert metadata["created_at"]

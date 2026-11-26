@@ -246,7 +246,7 @@ def detect_social_security_numbers(text: str, _options: ScanOptions) -> Iterator
             yield _hit("social_security_number", "pii", "certain", match)
 
 
-_IBAN_RE = re.compile(r"\b[A-Z]{2}\d{2}(?: ?[A-Z0-9]){11,30}\b")
+_IBAN_RE = re.compile(r"(?=(\b[A-Z]{2}\d{2}(?: ?[A-Z0-9]){11,30}\b))")
 _IBAN_LENGTHS = {
     "AT": 20,
     "BE": 16,
@@ -289,7 +289,7 @@ def detect_ibans(text: str, _options: ScanOptions) -> Iterator[Hit]:
     for match in _IBAN_RE.finditer(text):
         # The pattern may swallow a following uppercase token ("... 00 BIC");
         # try the longest prefix ending at a group boundary that validates.
-        parts = match.group(0).split(" ")
+        parts = match.group(1).split(" ")
         for size in range(len(parts), 0, -1):
             if _is_valid_iban("".join(parts[:size])):
                 end = match.start() + len(" ".join(parts[:size]))

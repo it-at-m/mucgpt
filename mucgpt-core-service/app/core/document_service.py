@@ -83,6 +83,7 @@ class DocumentSensitivity:
     findings: tuple[Finding, ...] | None
     requires_acknowledgement: bool
     acknowledged: bool
+    truncated: bool | None = None
 
 
 NOT_SCANNED = DocumentSensitivity(
@@ -94,6 +95,7 @@ def _document_sensitivity(
     findings: list[dict[str, Any]] | None,
     acknowledged_at: datetime | None,
     settings: DocumentSensitivityConfig,
+    truncated: bool | None = None,
 ) -> DocumentSensitivity:
     """Derive the acknowledgement state at read time, so config changes apply."""
     parsed = (
@@ -103,6 +105,7 @@ def _document_sensitivity(
     )
     return DocumentSensitivity(
         findings=parsed,
+        truncated=truncated,
         requires_acknowledgement=settings.require_acknowledgement and bool(parsed),
         acknowledged=acknowledged_at is not None,
     )
@@ -189,7 +192,10 @@ def _selected_document(
         path=get_document_path(row.id),
         created_at=row.created_at,
         sensitivity=_document_sensitivity(
-            row.sensitivity_findings, row.sensitivity_acknowledged_at, settings
+            row.sensitivity_findings,
+            row.sensitivity_acknowledged_at,
+            settings,
+            row.sensitivity_truncated,
         ),
     )
 
@@ -241,6 +247,7 @@ class DocumentLibraryService:
                         row.sensitivity_findings,
                         row.sensitivity_acknowledged_at,
                         self.settings.sensitivity,
+                        row.sensitivity_truncated,
                     ),
                 )
                 for row in rows
@@ -374,6 +381,7 @@ class DocumentIngestionService:
                 report = await to_thread.run_sync(
                     scan_document_text, text, self.settings.sensitivity
                 )
+                truncated = report.truncated if report is not None else None
                 findings = (
                     None
                     if report is None
@@ -399,7 +407,7 @@ class DocumentIngestionService:
                     path=get_document_path(document_id),
                     created_at=created_at,
                     sensitivity=_document_sensitivity(
-                        findings, None, self.settings.sensitivity
+                        findings, None, self.settings.sensitivity, truncated
                     ),
                 )
                 with CancelScope(shield=True):
@@ -410,6 +418,7 @@ class DocumentIngestionService:
                             text_length=len(text),
                             preview=preview,
                             sensitivity_findings=findings,
+                            sensitivity_truncated=truncated,
                         ):
                             raise DocumentStorageError(
                                 "Document could not be marked ready"

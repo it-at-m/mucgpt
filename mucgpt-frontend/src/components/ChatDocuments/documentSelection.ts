@@ -23,6 +23,7 @@ interface AttachedLibraryDocument {
     /** The document was part of a sent turn, so the agent may already have read it into the chat history. */
     usedInChat: boolean;
     /** Likely personal data or secrets in the document; shown as a lasting warning badge. */
+    scanTruncated?: boolean;
     sensitiveFindings?: SensitivityFinding[];
     /** The findings were not confirmed yet, so the document cannot be sent. */
     needsConfirmation?: boolean;
@@ -75,6 +76,7 @@ export const toChatDocument = (document: DocumentMetadata | DocumentLibraryEntry
     name: document.filename,
     size: document.original_size,
     usedInChat,
+    scanTruncated: document.sensitivity?.truncated === true,
     sensitiveFindings: getSensitiveFindings(document.sensitivity),
     needsConfirmation: needsSensitivityConfirmation(document.sensitivity)
 });

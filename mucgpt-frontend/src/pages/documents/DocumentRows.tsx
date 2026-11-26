@@ -112,7 +112,11 @@ export const LibraryDocumentRow = ({ document, isBusy, formatDate, onStartChat, 
             name={document.filename}
             badge={
                 document.status === "ready" && (
-                    <SensitivityBadge findings={getSensitiveFindings(document.sensitivity)} confirmed={document.sensitivity?.acknowledged === true} />
+                    <SensitivityBadge
+                        truncated={document.sensitivity?.truncated === true}
+                        findings={getSensitiveFindings(document.sensitivity)}
+                        confirmed={document.sensitivity?.acknowledged === true}
+                    />
                 )
             }
             meta={joinMeta([formatDate(document.created_at), formatFileSize(document.original_size), statusKey && t(statusKey)])}

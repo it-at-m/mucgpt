@@ -110,6 +110,7 @@ const QuestionInputContent = ({
     const allowFileUpload = config.document_processing_enabled && setDocuments !== undefined;
     const resolvedPlaceholder = placeholder ?? (allowFileUpload ? t("chat.prompt") : t("chat.prompt_no_upload"));
     const textareaRef = useAutoGrowTextarea(question);
+    const warningActionRef = useRef(false);
     const wasDisabledRef = useRef(disabled);
     const recordingBaseRef = useRef("");
     const isTranscriptionActive = transcriptionStatus === "recording" || transcriptionStatus === "transcribing";
@@ -178,6 +179,13 @@ const QuestionInputContent = ({
         [attachFiles]
     );
 
+    useEffect(() => {
+        if (warningActionRef.current && chatDocuments.unconfirmedDocuments.length === 0) {
+            warningActionRef.current = false;
+            if (document.activeElement === document.body) textareaRef.current?.focus();
+        }
+    }, [chatDocuments.unconfirmedDocuments.length, textareaRef]);
+
     const focusTextarea = useCallback(() => textareaRef.current?.focus(), [textareaRef]);
 
     const uploadFiles = useCallback((files: File[]) => void attachFiles(files), [attachFiles]);
@@ -208,8 +216,14 @@ const QuestionInputContent = ({
                     documents={chatDocuments.unconfirmedDocuments}
                     isConfirming={chatDocuments.isConfirmingSensitive}
                     hasFailed={chatDocuments.hasConfirmationFailed}
-                    onConfirm={() => void chatDocuments.confirmSensitiveDocuments()}
-                    onRemove={chatDocuments.removeUnconfirmedDocuments}
+                    onConfirm={() => {
+                        warningActionRef.current = true;
+                        void chatDocuments.confirmSensitiveDocuments();
+                    }}
+                    onRemove={() => {
+                        warningActionRef.current = true;
+                        chatDocuments.removeUnconfirmedDocuments();
+                    }}
                 />
             )}
 

@@ -106,7 +106,10 @@ describe("QuestionInput sensitive documents", () => {
         fireEvent.keyDown(screen.getByRole("textbox"), { key: "Enter" });
         expect(onSend).not.toHaveBeenCalled();
 
-        fireEvent.click(screen.getByRole("button", { name: "document_library.sensitivity_confirm" }));
+        const button = screen.getByRole("button", { name: "document_library.sensitivity_confirm" });
+        button.focus();
+        fireEvent.click(button);
+        await waitFor(() => expect(screen.getByRole("textbox")).toHaveFocus());
 
         await waitFor(() => expect(screen.queryByText("document_library.sensitivity_title")).not.toBeInTheDocument());
         expect(acknowledgeDocumentSensitivityApi).toHaveBeenCalledWith("flagged");
@@ -118,7 +121,10 @@ describe("QuestionInput sensitive documents", () => {
     it("detaches unconfirmed flagged documents without deleting them from the library", async () => {
         await uploadFlagged();
 
-        fireEvent.click(screen.getByRole("button", { name: "document_library.sensitivity_remove" }));
+        const button = screen.getByRole("button", { name: "document_library.sensitivity_remove" });
+        button.focus();
+        fireEvent.click(button);
+        await waitFor(() => expect(screen.getByRole("textbox")).toHaveFocus());
 
         expect(screen.queryByText("Antrag.txt")).not.toBeInTheDocument();
         expect(screen.queryByText("document_library.sensitivity_title")).not.toBeInTheDocument();

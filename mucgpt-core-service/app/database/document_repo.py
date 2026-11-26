@@ -121,6 +121,7 @@ class DocumentRepository:
         *,
         text_length: int,
         preview: str,
+        sensitivity_truncated: bool | None = None,
         sensitivity_findings: list[dict[str, Any]] | None = None,
     ) -> bool:
         """Finalize owned processing metadata after the caller has stored the body."""
@@ -139,6 +140,7 @@ class DocumentRepository:
                 text_length=text_length,
                 preview=preview,
                 preview_kind="initial_excerpt",
+                sensitivity_truncated=sensitivity_truncated,
                 sensitivity_findings=sensitivity_findings,
             )
             .returning(Document.id)

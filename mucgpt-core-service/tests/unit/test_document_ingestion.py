@@ -604,3 +604,15 @@ async def test_scanner_failure_does_not_block_upload(ingestion, monkeypatch):
     row = sessions.rows()[0]
     assert row.status == "ready" and row.sensitivity_findings is None
     assert metadata.sensitivity.findings is None
+
+
+@pytest.mark.asyncio
+async def test_partial_scan_with_no_findings_survives_selection(ingestion):
+    service, sessions, _, parser = ingestion
+    service.settings.sensitivity.max_chars = 10
+    parser.parse.return_value = "ordinary text followed by person@example.org"
+    metadata = await service.ingest_document(user(), upload())
+    assert metadata.sensitivity.truncated is True
+    assert metadata.sensitivity.findings == ()
+    selection = await resolve(sessions, [metadata.id])
+    assert selection.documents[0].sensitivity == metadata.sensitivity

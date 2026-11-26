@@ -241,11 +241,13 @@ def test_listing_exposes_sensitivity_findings_without_values(library_api):
         "findings": [IBAN_FINDING],
         "requires_acknowledgement": True,
         "acknowledged": False,
+        "truncated": None,
     }
     assert entries[clean]["sensitivity"] == {
         "findings": [],
         "requires_acknowledgement": False,
         "acknowledged": False,
+        "truncated": None,
     }
     assert entries[unscanned]["sensitivity"]["findings"] is None
     assert entries[unscanned]["sensitivity"]["requires_acknowledgement"] is False

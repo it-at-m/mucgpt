@@ -125,7 +125,9 @@ export const DocumentChips = ({ documents, onRemove, onRetry, onFocusLeave, disa
                     <span className={styles.name} title={document.name}>
                         {document.name}
                     </span>
-                    {document.status === "ready" && <SensitivityBadge findings={document.sensitiveFindings} confirmed={!document.needsConfirmation} />}
+                    {document.status === "ready" && (
+                        <SensitivityBadge truncated={document.scanTruncated} findings={document.sensitiveFindings} confirmed={!document.needsConfirmation} />
+                    )}
                     {statusText && (
                         <span className={styles.status} title={statusText}>
                             {statusText}

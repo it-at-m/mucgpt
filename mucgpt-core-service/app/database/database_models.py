@@ -107,6 +107,7 @@ class Document(Base):
     sensitivity_findings: Mapped[list[dict[str, Any]] | None] = mapped_column(
         JSON, nullable=True
     )
+    sensitivity_truncated: Mapped[bool | None] = mapped_column(nullable=True)
     sensitivity_acknowledged_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True
     )

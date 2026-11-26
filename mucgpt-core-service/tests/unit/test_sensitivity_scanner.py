@@ -15,6 +15,7 @@ def summary(text: str, **kwargs) -> set[tuple[str, str, int]]:
     [
         # Personal data
         ("an DE89 3704 0044 0532 0130 00 BIC COBADEFFXXX", ("iban", "certain")),
+        ("AB12 DE89 3704 0044 0532 0130 00", ("iban", "certain")),
         ("IBAN: DE89370400440532013000", ("iban", "certain")),
         ("Steuer-ID: 86095742719", ("tax_id", "certain")),
         ("Nummer 86 095 742 719", ("tax_id", "likely")),

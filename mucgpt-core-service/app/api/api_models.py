@@ -26,6 +26,7 @@ class DocumentSensitivityInfo(BaseModel):
         description="The owner must confirm the findings before the document can be attached."
     )
     acknowledged: bool
+    truncated: bool | None = None
 
 
 class DocumentMetadata(BaseModel):

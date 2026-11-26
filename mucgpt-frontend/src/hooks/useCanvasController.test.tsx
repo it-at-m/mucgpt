@@ -415,7 +415,7 @@ describe("useCanvasController pre-chat canvas draft", () => {
         expect(localStorage.getItem("canvas-draft")).toBe("# pre-chat");
     });
 
-    it("re-arms the content captured at request start after a mid-request chat switch", async () => {
+    it("does not re-arm a capture from an earlier pre-chat session", async () => {
         const view = render(<Owner conversationId={undefined} />);
 
         editorStub.markdownText = "# pre-chat";
@@ -429,12 +429,13 @@ describe("useCanvasController pre-chat canvas draft", () => {
         await act(async () => view.rerender(<Owner conversationId="other-1" />));
         await waitFor(() => expect(editorStub.markdownText).toBe("# stored"));
 
+        localStorage.clear();
         act(() => capturedController!.snapshotPreChatDraft(capture));
 
-        expect(localStorage.getItem("canvas-draft")).toBe("# pre-chat");
+        expect(localStorage.getItem("canvas-draft")).toBeNull();
     });
 
-    it("keeps an older request's recovery capture when a later request starts after a persisted-chat switch", async () => {
+    it("does not adopt an older capture into a later pre-chat session", async () => {
         const view = render(<Owner conversationId={undefined} />);
 
         editorStub.markdownText = "# first request";
@@ -446,15 +447,12 @@ describe("useCanvasController pre-chat canvas draft", () => {
         await waitFor(() => expect(editorStub.markdownText).toBe("# persisted"));
         await act(async () => view.rerender(<Owner conversationId={undefined} />));
 
-        editorStub.markdownText = "# later request";
-        editorStub.emit("update");
-        capturedController!.capturePreChatDraft();
+        // The older request cannot flag this new pre-chat session for adoption.
+        act(() => capturedController!.beginAdoption(firstCapture));
+        loadStateMock.mockResolvedValue("# target");
+        await act(async () => view.rerender(<Owner conversationId="target-1" />));
 
-        // The later request has not saved a draft. Its capture must not replace
-        // the failed first request's recovery content.
-        act(() => capturedController!.snapshotPreChatDraft(firstCapture));
-
-        expect(localStorage.getItem("canvas-draft")).toBe("# first request");
+        await waitFor(() => expect(editorStub.markdownText).toBe("# target"));
     });
 
     it("disarms the adoption flag on a switch that does not consume it", async () => {
@@ -496,6 +494,18 @@ describe("useCanvasController pre-chat canvas draft", () => {
         act(() => capturedController!.snapshotPreChatDraft(capture));
 
         expect(localStorage.getItem("canvas-draft")).toBe("# newer draft");
+    });
+
+    it("does not clear a draft saved after the capture during adoption", async () => {
+        const view = render(<Owner conversationId={undefined} />);
+
+        editorStub.markdownText = "# captured";
+        const capture = capturedController!.capturePreChatDraft();
+        localStorage.setItem("canvas-draft", "# saved later");
+        act(() => capturedController!.beginAdoption(capture));
+        await act(async () => view.rerender(<Owner conversationId="conv-a" />));
+
+        expect(localStorage.getItem("canvas-draft")).toBe("# saved later");
     });
 
     it("re-arms after an aborted first turn that failed with no draft saved since adoption", async () => {

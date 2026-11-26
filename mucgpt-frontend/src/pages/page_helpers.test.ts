@@ -13,9 +13,7 @@ const mockRunInputs: Array<Record<string, unknown>> = [];
 
 vi.mock("../api/core-client", () => ({
     createChatName: vi.fn(),
-    mucgptForwardedProps: vi.fn((request: { language?: string }) => ({
-        mucgpt: { language: request.language }
-    })),
+    mucgptForwardedProps: vi.fn((request: Record<string, unknown>) => ({ mucgpt: request })),
     MucgptAgUiAgent: class {
         pendingInterrupts = [];
 
@@ -360,6 +358,27 @@ describe("chat title generation", () => {
             expect(wiring.adoptNewConversation).not.toHaveBeenCalled();
             // The placeholder is still activated so the sidebar shows it.
             expect(vi.mocked(storage.create)).toHaveBeenCalledTimes(1);
+        });
+
+        it("sends the canvas that was present before placeholder creation", async () => {
+            vi.stubGlobal("requestAnimationFrame", vi.fn());
+            const outgoingCanvas = { content: "# outgoing", selection: null };
+            const wiring = {
+                getCanvasState: vi.fn(() => outgoingCanvas),
+                onStreamEvent: vi.fn(),
+                onRunStarted: vi.fn(),
+                onRunFinished: vi.fn()
+            };
+            const { promise: createPending, resolve: resolveCreate } = deferred<string>();
+            const storage = makeStorage({ create: vi.fn().mockReturnValue(createPending) });
+
+            const request = makeApiRequest(...adoptArgs(wiring, { current: undefined }, storage));
+            await flushMicrotasks();
+            wiring.getCanvasState.mockReturnValue({ content: "# later", selection: null });
+            resolveCreate("chat-1");
+            await request;
+
+            expect(mockRunInputs.at(-1)?.forwardedProps).toEqual(expect.objectContaining({ mucgpt: expect.objectContaining({ canvas: outgoingCanvas }) }));
         });
     });
 });

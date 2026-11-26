@@ -384,6 +384,9 @@ export const makeApiRequest = async (
         : undefined;
 
     let preChatDraftCapture: PreChatDraftCapture | undefined;
+    // Placeholder creation is asynchronous. Preserve the outgoing canvas for
+    // this first turn before it can be replaced by a chat selection.
+    const freshConversationCanvas = newChatLocalId ? (canvasWiring?.getCanvasState() ?? undefined) : undefined;
     if (newChatLocalId) {
         // Capture the canvas content synchronously: a chat selection during
         // the await below must not end up in the recovery capture.
@@ -474,7 +477,7 @@ export const makeApiRequest = async (
         conversation_id: conversationId,
         persist,
         data_sources: data_sources && data_sources.length > 0 ? data_sources : undefined,
-        canvas: canvasWiring?.getCanvasState() ?? undefined,
+        canvas: isNewPersistedConversation ? freshConversationCanvas : (canvasWiring?.getCanvasState() ?? undefined),
         document_ids: options.document_ids
     };
 

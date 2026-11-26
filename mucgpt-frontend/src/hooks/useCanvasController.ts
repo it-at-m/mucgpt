@@ -21,6 +21,12 @@ import { effectiveAllowedTags, sanitizeCanvasMarkdown } from "../components/Canv
 /** Opaque, request-scoped handle for a pre-chat canvas capture. */
 export type PreChatDraftCapture = object;
 
+interface PreChatDraftCaptureData {
+    markdown: string;
+    preChatSession: number;
+    adoptedConversationId?: string;
+}
+
 export interface CanvasController {
     isOpen: boolean;
     setIsOpen(open: boolean): void;
@@ -325,7 +331,8 @@ export function useCanvasController(conversationId: string | undefined, serverCo
     // Captures belong to individual fresh-chat requests. A request can outlive
     // a chat switch and another fresh-chat attempt, so one shared capture slot
     // would let the older request recover the newer request's content.
-    const preChatDraftCapturesRef = useRef(new WeakMap<PreChatDraftCapture, string>());
+    const preChatSessionRef = useRef(0);
+    const preChatDraftCapturesRef = useRef(new WeakMap<PreChatDraftCapture, PreChatDraftCaptureData>());
     // Mirrors isOpen for the switch effect, which must not depend on the state value
     // (adding it to the deps would re-run the whole switch on every open/close toggle).
     const isOpenRef = useRef(false);
@@ -463,6 +470,11 @@ export function useCanvasController(conversationId: string | undefined, serverCo
     useEffect(() => {
         const previous = prevConversationIdRef.current;
         prevConversationIdRef.current = conversationId;
+        // Any conversation switch ends the current pre-chat session. Captures
+        // from it must not adopt or recover their stale canvas after this point.
+        if (previous !== "uninitialized" && previous !== conversationId) {
+            preChatSessionRef.current += 1;
+        }
         // An open request made before a fresh-chat reset stays pending while the
         // switch runs; it is consumed as soon as the new chat has an id.
         const pendingOpen = pendingOpenRef.current;
@@ -476,10 +488,17 @@ export function useCanvasController(conversationId: string | undefined, serverCo
         // adoption can never hijack a later chat selection — the request may
         // have raced a switch to another chat during placeholder creation,
         // making its assignment defined→defined.
-        const announcedAdoption = previous === undefined && conversationId !== undefined && adoptingCaptureRef.current !== undefined;
+        const adoptingCapture = adoptingCaptureRef.current;
+        const announcedAdoption = previous === undefined && conversationId !== undefined && adoptingCapture !== undefined;
         adoptingCaptureRef.current = undefined;
         if (announcedAdoption) {
-            clearCanvasDraft();
+            const captured = preChatDraftCapturesRef.current.get(adoptingCapture!);
+            if (captured) captured.adoptedConversationId = conversationId;
+            const stored = loadCanvasDraft();
+            // A distinct stored value was saved after the capture (by this tab
+            // or another tab). It belongs to a later pre-chat draft and must
+            // survive this request's adoption.
+            if (stored === null || stored === captured?.markdown) clearCanvasDraft();
             // A canvas explicitly closed before the send stays closed: the
             // pending open request is not honored across the adoption.
             return;
@@ -583,12 +602,13 @@ export function useCanvasController(conversationId: string | undefined, serverCo
     // id assignment; both are page-driven and must be kept in that order.
     const capturePreChatDraft = useCallback(() => {
         const capture = {};
-        preChatDraftCapturesRef.current.set(capture, getMarkdown());
+        preChatDraftCapturesRef.current.set(capture, { markdown: getMarkdown(), preChatSession: preChatSessionRef.current });
         return capture;
     }, [getMarkdown]);
 
     const beginAdoption = useCallback((capture?: PreChatDraftCapture) => {
-        if (!capture || !preChatDraftCapturesRef.current.has(capture)) return;
+        const captured = capture ? preChatDraftCapturesRef.current.get(capture) : undefined;
+        if (!captured || captured.preChatSession !== preChatSessionRef.current) return;
         adoptingCaptureRef.current = capture;
     }, []);
 
@@ -602,14 +622,15 @@ export function useCanvasController(conversationId: string | undefined, serverCo
                 if (live.trim()) saveCanvasDraft(live);
                 return;
             }
+            if (captured.preChatSession !== preChatSessionRef.current && captured.adoptedConversationId !== conversationId) return;
             // The adoption cleared the slot, so a stored draft differing from the
             // capture was written afterwards (a later session or tab) and is
             // newer: kept. Identical or missing re-arms the capture.
             const stored = loadCanvasDraft();
-            if (stored !== null && stored !== captured) return;
-            if (captured.trim()) saveCanvasDraft(captured);
+            if (stored !== null && stored !== captured.markdown) return;
+            if (captured.markdown.trim()) saveCanvasDraft(captured.markdown);
         },
-        [getMarkdown]
+        [getMarkdown, conversationId]
     );
 
     // Called on RUN_STARTED: the server numbers canvas_revision per run,

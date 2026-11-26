@@ -4,6 +4,7 @@ import { MessageBar } from "@fluentui/react-components";
 
 import { putCanvasRevisionsApi } from "../../api/core-client";
 import type { CanvasControllerInstance } from "../../hooks/useCanvasController";
+import { clearCanvasDraft, saveCanvasDraft } from "./canvasDraft";
 import { saveCanvasContent } from "../../service/canvasStorage";
 import { useCanvasLimits } from "./canvasLimits";
 import { CANVAS_PASTE_CLIPPED_EVENT } from "./canvasTextLimit";
@@ -153,8 +154,23 @@ export const CanvasPanel = ({ controller, conversationId, serverConversationId, 
     // The controller's subscribe channel debounces 1 s and flushes
     // synchronously on unsubscribe (canvas close, switch, unmount).
     useEffect(() => {
-        return controllerRef.current.subscribe(markdown => persistContent(markdown));
-    }, [persistContent]);
+        const onEdit = (markdown: string) => {
+            if (readOnly) return;
+            // Without a conversation there is no server autosave yet: the
+            // debounced edit stream feeds the pre-chat localStorage draft
+            // instead. A trimmed-empty document is an intentional clear and
+            // drops the draft; over-limit content neither overwrites the
+            // draft nor clears it — it keeps the last valid draft, like the
+            // server persist below, which skips such writes.
+            if (!conversationId) {
+                if (!markdown.trim()) clearCanvasDraft();
+                else if (markdown.length <= limits.contentLimitChars) saveCanvasDraft(markdown);
+                return;
+            }
+            persistContent(markdown);
+        };
+        return controllerRef.current.subscribe(onEdit);
+    }, [conversationId, persistContent, limits.contentLimitChars, readOnly]);
 
     // Run end: persist the final state so agent edits don't lag the stored
     // copy; forced, because the server may hold turn-start content the panel
@@ -168,11 +184,24 @@ export const CanvasPanel = ({ controller, conversationId, serverConversationId, 
 
     // Reload/close: flush content and revision rings with keepalive fetches
     // that survive the unload. Oversized payloads fail closed and keep the
-    // debounce/unmount behavior.
+    // debounce/unmount behavior. Without a conversation the localStorage
+    // draft takes the place of the server save: synchronous and debounce-free,
+    // so the last edit window survives the unload.
     useEffect(() => {
-        if (readOnly || !serverId || !conversationId) return;
+        if (readOnly) return;
         const onPageHide = () => {
-            persistContent(controllerRef.current.getMarkdown(), { keepalive: true, force: true });
+            const markdown = controllerRef.current.getMarkdown();
+            if (!conversationId) {
+                if (markdown.trim() && markdown.length <= limits.contentLimitChars) saveCanvasDraft(markdown);
+                // A trimmed-empty document is an intentional clear, but only
+                // from a live editor: a mid-recreation or destroyed editor
+                // serializes to "" untrustworthily (same caveat as the
+                // server persist) and must not wipe the draft.
+                else if (!markdown.trim() && controllerRef.current.editor && !controllerRef.current.editor.isDestroyed) clearCanvasDraft();
+                return;
+            }
+            if (!serverId) return;
+            persistContent(markdown, { keepalive: true, force: true });
             const revisions = controllerRef.current.listRevisions();
             if (!revisions.auto.length && !revisions.manual.length) return;
             // Browsers cap keepalive bodies at 64 kB; rings carry document
@@ -183,7 +212,7 @@ export const CanvasPanel = ({ controller, conversationId, serverConversationId, 
         };
         window.addEventListener("pagehide", onPageHide);
         return () => window.removeEventListener("pagehide", onPageHide);
-    }, [readOnly, serverId, conversationId, persistContent]);
+    }, [readOnly, serverId, conversationId, persistContent, limits.contentLimitChars]);
 
     // Retry a failed autosave once on unmount or conversation switch: after a
     // failure the debounce timer is gone, so navigation would otherwise drop

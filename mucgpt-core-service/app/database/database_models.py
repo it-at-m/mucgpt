@@ -35,6 +35,14 @@ class Chat(Base):
     document_names: Mapped[dict[str, str]] = mapped_column(
         JSON, nullable=False, default=dict, server_default="{}"
     )
+    # Image URLs the user explicitly approved for rendering in this chat.
+    approved_images: Mapped[list[str]] = mapped_column(
+        JSON, nullable=False, default=list, server_default="[]"
+    )
+    # Image URLs the user declined to render; they stay broken down to text.
+    rejected_images: Mapped[list[str]] = mapped_column(
+        JSON, nullable=False, default=list, server_default="[]"
+    )
     chat_title: Mapped[str] = mapped_column(
         String, nullable=False, server_default="New Chat"
     )

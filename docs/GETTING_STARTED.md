@@ -208,6 +208,18 @@ canvas_allowed_html_tags: ["u"] # default; [] disables raw HTML entirely
 
 The list is exposed to the frontend via `/config`, embeds the allowed tags into the `canvas_write`/`canvas_edit` tool descriptions, and the frontend sanitizer escapes every other raw HTML tag to literal text. Tags may not carry attributes. Entries must be lowercase plain tag names — and must be part of the release's supported set (`SUPPORTED_CANVAS_HTML_TAGS` in `mucgpt-core-service/app/config/settings.py`, mirroring `CANVAS_SUPPORTED_HTML_TAGS` in `mucgpt-frontend/src/components/Canvas/canvasHtmlWhitelist.ts`): the config may only **restrict**, never extend — a tag the editor schema does not understand cannot be rendered, serialized, or exported, so referencing one fails core startup. Extending the whitelist requires a core+frontend release.
 
+### Link domain allowlist (YAML)
+
+Markdown links in chat and canvas are sanitized against a domain allowlist (default: `www.muenchen.de`):
+
+```yaml
+allowed_link_domains: ["www.muenchen.de"] # default; [] leaves no link unsanitized
+```
+
+Matching is exact host: no subdomains, ports or userinfo in the URL. The list is exposed to the frontend via `/config`. Links are displayed as `description (url)` with the URL part clickable — allowlisted hosts keep their full URL; every other link stays clickable but loses its query string, fragment and userinfo (the channels that could transmit conversation data to a server). Images from allowlisted hosts load automatically; any other image shows a placeholder with the sanitized URL and is fetched only after the user approves it. Approvals are stored per conversation in the `chats` table (`approved_images`/`rejected_images` columns).
+
+The approval lists are enforced where images render: the browser decides which images display in chat and inlines approved images as data URIs into the export request. The server-side image fetch during PDF/DOCX export checks only `allowed_link_domains` — never the per-conversation approvals — so the core service never fetches a user-approved arbitrary host (that would make the export endpoint an SSRF proxy). During export the core service downloads images hosted on the allowlisted domains server-side (the browser cannot read their bytes because they do not send CORS headers): HTTPS only, redirects re-validated against the allowlist, a 5 MiB per-image response cap, a 10 s timeout and `image/*` content types required — the core service therefore needs outbound HTTPS access to these hosts. Export links carry only `http`/`https`/`mailto` schemes; anything else is dropped server-side before the converters run.
+
 ### Models Configuration (Environment Variable)
 
 Alternatively, models can be configured via environment variables. Providers are set as a JSON object (`MUCGPT_CORE_PROVIDERS`), models as a JSON array (`MUCGPT_CORE_MODELS`) whose entries reference a provider instead of carrying inline endpoint/credentials:

@@ -11,7 +11,10 @@ from parsing import xberg
 
 def _backend(monkeypatch: pytest.MonkeyPatch, transport) -> xberg.XbergBackend:
     settings = xberg.get_settings().model_copy(
-        update={"parser_backend": ParserBackendType.XBERG, "xberg_url": "http://xberg.test"}
+        update={
+            "parser_backend": ParserBackendType.XBERG,
+            "xberg_url": "http://xberg.test",
+        }
     )
     monkeypatch.setattr(xberg, "get_settings", lambda: settings)
     real_client = httpx.AsyncClient
@@ -38,7 +41,10 @@ def _transport(handler) -> httpx.MockTransport:
     ("payload", "expected"),
     [
         ({"results": [{"content": "alpha"}, {"content": "beta"}]}, "alpha\n\nbeta"),
-        ({"results": [{"content": "a"}, {"other": 1}, {}]}, "a"),  # empty contents dropped
+        (
+            {"results": [{"content": "a"}, {"other": 1}, {}]},
+            "a",
+        ),  # empty contents dropped
         ([{"content": "legacy"}, {"content": "list"}], "legacy\n\nlist"),  # old shape
         ({}, ""),  # no results at all
         (

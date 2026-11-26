@@ -1,10 +1,9 @@
 import { ReactNode, useCallback, useEffect, useRef, useState, type CSSProperties } from "react";
 import { Button } from "@fluentui/react-components";
 import { ArrowDown24Regular } from "@fluentui/react-icons";
-import Markdown from "react-markdown";
-import remarkGfm from "remark-gfm";
 
 import styles from "./ChatLayout.module.css";
+import { SafeMarkdown } from "../MarkdownRenderer/SafeMarkdown";
 import { ChatDisclaimer } from "../ChatDisclaimer";
 
 interface Props {
@@ -175,7 +174,7 @@ export const ChatLayout = ({
                                 (header_as_markdown ? (
                                     <div className={styles.chatEmptyStateSubtitleMarkdown}>
                                         <div className={styles.answerText}>
-                                            <Markdown remarkPlugins={[remarkGfm]}>{welcomeMessage}</Markdown>
+                                            <SafeMarkdown>{welcomeMessage}</SafeMarkdown>
                                         </div>
                                     </div>
                                 ) : (

@@ -41,6 +41,7 @@ import Unauthorized from "../Unauthorized";
 import { ConfigContext } from "../../context/ConfigContext";
 import { AppSidebar } from "../../components/AppSidebar";
 import { UnifiedHistoryProvider, UnifiedSidebarHistory } from "../../components/UnifiedHistory";
+import { ExternalLinkDialog } from "../../components/MarkdownRenderer/ExternalLinkDialog";
 import { EdelweissSpinner } from "../../components/EdelweissSpinner";
 import { VersionInfo } from "../../components/VersionInfo";
 import { Button } from "../../ui/Button";
@@ -382,6 +383,7 @@ export const Layout = () => {
                             </TranscriptionProvider>
                         )}
                         <GlobalToastHandler />
+                        <ExternalLinkDialog />
                     </UserContextProvider>
                 </ConfigContext.Provider>
             </AppThemeContext.Provider>

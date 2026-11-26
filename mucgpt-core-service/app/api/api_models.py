@@ -153,6 +153,8 @@ CANVAS_EDITOR_MAX_CHARS = _canvas_settings.canvas_editor_max_chars
 CANVAS_ALLOWED_HTML_TAGS: frozenset[str] = frozenset(
     _canvas_settings.canvas_allowed_html_tags
 )
+# Hostnames whose links render clickable without URL sanitization.
+ALLOWED_LINK_DOMAINS: frozenset[str] = frozenset(_canvas_settings.allowed_link_domains)
 # Full canvas reads stop here so the tool result stays inside the model context;
 # the remaining document is reached via canvas_read(around_cursor).
 CANVAS_READ_LIMIT_CHARS = (CANVAS_CONTENT_MAX_CHARS * 95) // 100
@@ -726,6 +728,14 @@ class ConversationMetadata(BaseModel):
         default_factory=dict,
         description="Original filenames of selected documents, retained after deletion.",
     )
+    approved_images: list[str] = Field(
+        default_factory=list,
+        description="Image URLs the user approved for rendering in this conversation.",
+    )
+    rejected_images: list[str] = Field(
+        default_factory=list,
+        description="Image URLs the user declined; they render as plain text in this conversation.",
+    )
 
     @field_validator("title", mode="before")
     @staticmethod
@@ -734,6 +744,29 @@ class ConversationMetadata(BaseModel):
         if not value:
             return "Neuer Chat"
         return value.strip().replace("\n", " ")
+
+
+class ApprovedImagesUpsertRequest(BaseModel):
+    """Wholesale replacement of a conversation's image decision lists."""
+
+    approved_images: list[str] = Field(
+        default_factory=list,
+        max_length=100,
+        description="Full list of approved image URLs.",
+    )
+    rejected_images: list[str] = Field(
+        default_factory=list,
+        max_length=100,
+        description="Full list of rejected image URLs.",
+    )
+
+    @field_validator("approved_images", "rejected_images")
+    @classmethod
+    def validate_urls(cls, value: list[str]) -> list[str]:
+        for url in value:
+            if len(url) > 2048:
+                raise ValueError("Image URL exceeds 2048 characters")
+        return value
 
 
 class ModelsDTO(BaseModel):
@@ -870,4 +903,8 @@ class ConfigResponse(BaseModel):
     canvas_allowed_html_tags: list[str] = Field(
         default_factory=lambda: sorted(CANVAS_ALLOWED_HTML_TAGS),
         description="HTML tag names allowed inside canvas markdown (e.g. <u> for underline). The frontend sanitizer escapes every other raw HTML tag to literal text.",
+    )
+    allowed_link_domains: list[str] = Field(
+        default_factory=lambda: sorted(ALLOWED_LINK_DOMAINS),
+        description="Hostnames whose links are rendered clickable without URL sanitization (exact host match). All other links lose query string, fragment and userinfo but stay clickable.",
     )

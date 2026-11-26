@@ -4,19 +4,23 @@ import { Button, DrawerBody, DrawerHeader, DrawerHeaderTitle, OverlayDrawer } fr
 import { ArrowUndo24Regular } from "@fluentui/react-icons";
 import { useTranslation } from "react-i18next";
 
+import { useConfigContext } from "../../context/ConfigContext";
 import type { CanvasRevision } from "../../service/canvasStorage";
 import type { CanvasControllerInstance } from "../../hooks/useCanvasController";
 import { canvasExtensions } from "./canvasExtensions";
+import { withPolicyLinkMarks } from "./canvasLinkPolicy";
+import { flattenImagesToText } from "./canvasLinkNeutralization";
 import styles from "./CanvasVersionsDrawer.module.css";
 
-// Revision previews are rendered via dangerouslySetInnerHTML, so any link that
-// survives sanitization must not navigate the app or leak window references.
-// Namespace-scoped so other DOMPurify consumers (e.g. SVG sanitization) stay untouched.
+// Revision previews are rendered via dangerouslySetInnerHTML, so links must
+// not navigate anywhere (issue #228: markdown injection): their href is
+// stripped, the link text stays visible. Namespace-scoped so other DOMPurify
+// consumers (e.g. SVG sanitization) stay untouched.
 DOMPurify.addHook("afterSanitizeAttributes", node => {
     const element = node as Element;
     if (element.namespaceURI === "http://www.w3.org/1999/xhtml" && element.tagName === "A") {
-        element.setAttribute("rel", "noopener noreferrer");
-        element.setAttribute("target", "_blank");
+        element.removeAttribute("href");
+        element.removeAttribute("xlink:href");
     }
 });
 
@@ -40,6 +44,7 @@ const buildGroups = (revisions: { auto: CanvasRevision[]; manual: CanvasRevision
 
 export const CanvasVersionsDrawer = ({ open, onClose, controller, disabled = false }: Props) => {
     const { t, i18n } = useTranslation();
+    const { allowed_link_domains: allowedDomains } = useConfigContext();
     const groups = buildGroups(controller.revisions, t);
 
     const formatTimestamp = (timestamp: number) =>
@@ -49,7 +54,13 @@ export const CanvasVersionsDrawer = ({ open, onClose, controller, disabled = fal
 
     const previewHtml = (docJson: unknown) => {
         try {
-            return DOMPurify.sanitize(generateHTML(docJson as Parameters<typeof generateHTML>[0], canvasExtensions()), { USE_PROFILES: { html: true } });
+            // The preview must fetch nothing: images render as their
+            // "alt (url)" text, links keep their text without a href.
+            const rawHtml = flattenImagesToText(
+                generateHTML(withPolicyLinkMarks(docJson, allowedDomains) as Parameters<typeof generateHTML>[0], canvasExtensions()),
+                allowedDomains
+            );
+            return DOMPurify.sanitize(rawHtml, { USE_PROFILES: { html: true } });
         } catch (error) {
             console.error("Canvas revision preview failed:", error);
             return "";

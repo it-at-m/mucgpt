@@ -138,3 +138,26 @@ async def test_delete_is_scoped_to_owner() -> None:
     assert "UPDATE chats SET deleted_at=now()" in sql
     assert "chats.conversation_id = 'conversation'" in sql
     assert "chats.user_id = 'owner'" in sql
+
+
+@pytest.mark.unit
+@pytest.mark.asyncio
+async def test_approved_images_replacement_is_scoped_to_live_owned_rows() -> None:
+    session = AsyncMock()
+    session.execute.return_value = Mock(
+        scalar_one_or_none=Mock(return_value="conversation")
+    )
+    repository = ConversationRepository(session)
+
+    assert await repository.set_approved_images(
+        "owner",
+        "conversation",
+        ["https://example.com/a.png"],
+        ["https://example.com/r.png"],
+    )
+
+    sql = str(session.execute.await_args.args[0].compile(dialect=postgresql.dialect()))
+    assert "rejected_images" in sql
+    assert "chats.user_id = %(user_id_1)s" in sql
+    assert "chats.deleted_at IS NULL" in sql
+    assert "RETURNING chats.conversation_id" in sql

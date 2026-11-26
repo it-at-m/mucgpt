@@ -27,6 +27,44 @@ export function isSafeDiagramInput(raw: string, label: string): boolean {
 }
 
 /**
+ * Remove the mxGraph model-level link attributes from draw.io XML before the
+ * viewer loads it: the viewer opens a clicked cell's `link` value directly
+ * (getClickableLinkForCell), which anchors-in-the-output stripping cannot reach.
+ * Parsed with DOMParser so values containing ` link="…"` text stay intact; the
+ * attribute regex only guards unparseable input.
+ */
+export function stripDrawioCellLinks(xml: string): string {
+    const attributeStrip = (value: string): string => value.replace(/\s+(?:link|xlink:href)\s*=\s*(?:"[^"]*"|'[^']*')/g, "");
+    try {
+        const doc = new DOMParser().parseFromString(xml, "text/xml");
+        if (doc.querySelector("parsererror")) return attributeStrip(xml);
+        for (const element of Array.from(doc.querySelectorAll("*"))) {
+            element.removeAttribute("link");
+            element.removeAttribute("xlink:href");
+        }
+        return new XMLSerializer().serializeToString(doc);
+    } catch {
+        return xml.replace(/\s+(?:link|xlink:href)\s*=\s*(?:"[^"]*"|'[^']*')/g, "");
+    }
+}
+
+/**
+ * Draw.io supports compressed `<diagram>` bodies (base64 or CDATA, inflated by
+ * the viewer before parsing); those bypass the model-level link strip above,
+ * so only literal XML diagrams may be rendered. The viewer inflates any
+ * nonempty text body, mixed bodies included; attribute values (e.g.
+ * name="A &gt; B") must not decide, so the check runs on the parsed element body.
+ */
+export function hasCompressedDiagram(xml: string): boolean {
+    const doc = new DOMParser().parseFromString(xml, "text/xml");
+    if (doc.querySelector("parsererror")) return true; // unparseable: refuse
+    for (const diagram of Array.from(doc.getElementsByTagName("diagram"))) {
+        if ((diagram.textContent ?? "").trim()) return true;
+    }
+    return false;
+}
+
+/**
  * Sanitize draw.io viewer DOM in place.
  *
  * Why not DOMPurify on the whole SVG? draw.io labels with style html=1 live in
@@ -35,6 +73,13 @@ export function isSafeDiagramInput(raw: string, label: string): boolean {
  */
 export function sanitizeDrawioViewerHost(host: HTMLElement): boolean {
     host.querySelectorAll([...FORBIDDEN_TAGS].join(",")).forEach(node => node.remove());
+
+    // Anchors in draw.io HTML labels must not navigate (issue #228: markdown
+    // injection); the link text stays visible.
+    host.querySelectorAll("a").forEach(anchor => {
+        anchor.removeAttribute("href");
+        anchor.removeAttribute("xlink:href");
+    });
 
     host.querySelectorAll("*").forEach(element => {
         for (const attr of Array.from(element.attributes)) {

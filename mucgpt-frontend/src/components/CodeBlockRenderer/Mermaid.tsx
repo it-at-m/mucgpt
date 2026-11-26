@@ -263,7 +263,9 @@ export const Mermaid: React.FC<MermaidProps> = ({ text, darkTheme }) => {
                                 "aria-label",
                                 "tabindex"
                             ],
-                            FORBID_TAGS: ["script", "object", "embed", "link", "meta", "base"],
+                            // Mermaid click/link directives must not produce clickable
+                            // links (issue #228: markdown injection); KEEP_CONTENT keeps the label text.
+                            FORBID_TAGS: ["a", "script", "object", "embed", "link", "meta", "base"],
                             FORBID_ATTR: [
                                 "onload",
                                 "onerror",

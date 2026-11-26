@@ -40,6 +40,19 @@ interface Range {
     end: number;
 }
 
+/** A closing fence repeats the opening fence character at least `fence.length`
+ * times after up to three leading spaces: backtick fences must have no
+ * backtick in the rest, tilde fences only whitespace. */
+const isClosingFence = (line: string, fence: string): boolean => {
+    const indent = line.slice(0, line.length - line.trimStart().length);
+    if (!/^ {0,3}$/.test(indent)) return false;
+    if (!line.startsWith(indent + fence)) return false;
+    let end = indent.length + fence.length;
+    while (line[end] === fence[0]) end++;
+    const rest = line.slice(end);
+    return fence[0] === "~" ? /^\s*$/.test(rest) : !rest.includes("`");
+};
+
 /** Fenced code block ranges (unterminated fences run to the end). */
 const collectFenceRanges = (text: string): Range[] => {
     const ranges: Range[] = [];
@@ -54,10 +67,9 @@ const collectFenceRanges = (text: string): Range[] => {
             continue;
         }
         const fence = opening[1];
-        const closePattern = new RegExp(`^ {0,3}${fence[0]}{${fence.length},}${fence[0] === "~" ? "[\\s]*$" : "[^`]*\\s*$"}`);
         let endLine = lines.length - 1;
         for (let scan = index + 1; scan < lines.length; scan++) {
-            if (closePattern.test(lines[scan])) {
+            if (isClosingFence(lines[scan], fence)) {
                 endLine = scan;
                 break;
             }
@@ -70,6 +82,33 @@ const collectFenceRanges = (text: string): Range[] => {
     }
     return ranges;
 };
+
+/**
+ * Ranges that downstream markdown passes must keep verbatim: fenced code
+ * blocks plus inline code spans. Shared so every pre-parse pass (HTML
+ * escaping, link neutralization) sees the same code boundaries.
+ */
+export function collectVerbatimRanges(text: string): Range[] {
+    if (text.length === 0) return [];
+    const fenceRanges = collectFenceRanges(text);
+
+    const codeSpanRanges: Range[] = [];
+    let cursor = 0;
+    const freeSegments: Range[] = [];
+    for (const range of fenceRanges) {
+        if (cursor < range.start) freeSegments.push({ start: cursor, end: range.start });
+        cursor = Math.max(cursor, range.end);
+    }
+    if (cursor < text.length) freeSegments.push({ start: cursor, end: text.length });
+    for (const segment of freeSegments) {
+        const segmentText = text.slice(segment.start, segment.end);
+        for (const match of segmentText.matchAll(INLINE_CODE_SPAN_PATTERN)) {
+            const matchStart = segment.start + (match.index ?? 0);
+            codeSpanRanges.push({ start: matchStart, end: matchStart + match[0].length });
+        }
+    }
+    return [...fenceRanges, ...codeSpanRanges].sort((left, right) => left.start - right.start);
+}
 
 /** Escapes every raw HTML tag that is not an attribute-free whitelisted tag. */
 const escapeDisallowedTags = (text: string, allowedNames: ReadonlySet<string>): string =>
@@ -84,29 +123,10 @@ const escapeDisallowedTags = (text: string, allowedNames: ReadonlySet<string>): 
 export function sanitizeCanvasMarkdown(markdown: string, allowedTags: readonly string[]): string {
     if (!markdown) return markdown;
     const allowedNames = new Set(allowedTags.map(tag => tag.toLowerCase()));
-    const fenceRanges = collectFenceRanges(markdown);
-
-    // Inline code spans live only between fences (a fence's content must not
-    // become the delimiter half of a code span).
-    const codeSpanRanges: Range[] = [];
-    let cursor = 0;
-    const freeSegments: Range[] = [];
-    for (const range of fenceRanges) {
-        if (cursor < range.start) freeSegments.push({ start: cursor, end: range.start });
-        cursor = Math.max(cursor, range.end);
-    }
-    if (cursor < markdown.length) freeSegments.push({ start: cursor, end: markdown.length });
-    for (const segment of freeSegments) {
-        const segmentText = markdown.slice(segment.start, segment.end);
-        for (const match of segmentText.matchAll(INLINE_CODE_SPAN_PATTERN)) {
-            const matchStart = segment.start + (match.index ?? 0);
-            codeSpanRanges.push({ start: matchStart, end: matchStart + match[0].length });
-        }
-    }
+    const verbatimRanges = collectVerbatimRanges(markdown);
 
     const output: string[] = [];
     let position = 0;
-    const verbatimRanges = [...fenceRanges, ...codeSpanRanges].sort((left, right) => left.start - right.start);
     for (const range of verbatimRanges) {
         if (position > range.start) continue; // already covered (code span inside a fence)
         if (position < range.start) {

@@ -18,6 +18,7 @@ import { isCanvasToolCall, parseCanvasStreamEvent, type CanvasStreamEvent } from
 import { buildToolApprovalResume, toToolApprovalRequests, type ToolApprovalHandler } from "../utils/toolApproval";
 import { fromAgUiRunError, ChatProviderError } from "../utils/providerError";
 import { deleteConversationApi } from "../api/conversations-client";
+import { bindImageApprovals } from "../components/MarkdownRenderer/imageApprovals";
 import { scrollIntoNearestContainer } from "../utils/scrollIntoNearestContainer";
 import { getConversationActionCapabilities } from "../utils/conversationActions";
 
@@ -463,6 +464,13 @@ export const makeApiRequest = async (
             status_code: transportError.status
         };
     };
+
+    if (persist) {
+        // The backend row exists from this turn on: bind the image decision
+        // store to the conversation so decisions issued before the next
+        // reopen are persisted immediately.
+        bindImageApprovals(conversationId);
+    }
 
     // Build the API request object
     const request: ChatRequest = {

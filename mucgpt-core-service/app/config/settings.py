@@ -32,6 +32,12 @@ MODEL_INFO_TIMEOUT_SECONDS = 8.0
 # Plain HTML tag name without attributes or brackets (canvas_allowed_html_tags).
 _HTML_TAG_NAME = re.compile(r"^[a-z][a-z0-9]*$")
 
+# Bare hostname for allowed_link_domains: no scheme, port, path, userinfo or
+# wildcard (IDN A-labels are letters/digits/hyphens, punycode "xn--" included).
+_LINK_DOMAIN = re.compile(
+    r"^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)*$"
+)
+
 # Raw HTML tags the canvas editor schema understands (mirrors
 # CANVAS_SUPPORTED_HTML_TAGS in mucgpt-frontend canvasHtmlWhitelist.ts;
 # core and frontend are updated in sync). canvas_allowed_html_tags may only
@@ -687,6 +693,12 @@ class Settings(BaseSettings):
     # HTML in the canvas entirely.
     canvas_allowed_html_tags: list[str] = ["u"]
 
+    # Hostnames whose links the frontend renders clickable without URL
+    # sanitization (exact host match: no subdomains, ports, userinfo or
+    # credentials). All other links keep their desc (url) display but lose
+    # query string, fragment and userinfo before becoming clickable.
+    allowed_link_domains: list[str] = ["www.muenchen.de"]
+
     # Nested sub-configurations
     sso: SSOConfig = Field(default_factory=SSOConfig)
     mcp: MCPConfig = Field(default_factory=MCPConfig)
@@ -740,6 +752,28 @@ class Settings(BaseSettings):
                     f"canvas_allowed_html_tags entry {tag!r} is not supported by this "
                     f"release. Supported tags: {sorted(SUPPORTED_CANVAS_HTML_TAGS)}. "
                     "Extending the whitelist requires a core+frontend release."
+                )
+        return settings
+
+    @field_validator("allowed_link_domains", mode="before")
+    @classmethod
+    def normalize_allowed_link_domains(cls, value):
+        """Lowercases entries so YAML/env can carry 'WWW.Muenchen.de'."""
+        if not isinstance(value, list):
+            return value
+        return [entry.lower() if isinstance(entry, str) else entry for entry in value]
+
+    @model_validator(mode="after")
+    @staticmethod
+    def validate_allowed_link_domains(settings) -> "Settings":
+        """The frontend matches URL hosts byte-for-byte against these entries:
+        deviating shapes (ports, wildcards, path prefixes) would silently
+        weaken the match or never match at all."""
+        for domain in settings.allowed_link_domains:
+            if not isinstance(domain, str) or not _LINK_DOMAIN.match(domain):
+                raise ValueError(
+                    f"Invalid allowed_link_domains entry {domain!r}: entries must be "
+                    "plain lowercase hostnames without scheme, port, path, userinfo or wildcard."
                 )
         return settings
 

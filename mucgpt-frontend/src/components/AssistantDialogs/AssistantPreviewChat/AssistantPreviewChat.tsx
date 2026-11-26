@@ -13,6 +13,7 @@ import { LLMContext } from "../../LLMSelector/LLMContextProvider";
 import { FollowUpActionContext, FollowUpActionModel } from "../../FollowUpAction";
 import { useToolsContext } from "../../ToolsProvider";
 import { ToolStatus } from "../../../utils/ToolStreamHandler";
+import { resumeImageApprovals, suspendImageApprovals } from "../../MarkdownRenderer/imageApprovals";
 import { initialRunActivity, type RunActivity } from "../../../utils/agUiActivity";
 import { useToolStatusToasts } from "../../../hooks/useToolStatusToasts";
 import { getChatReducer, makeApiRequest } from "../../../pages/page_helpers";
@@ -105,6 +106,13 @@ export const AssistantPreviewChat = ({
         setFollowUpActions(followUpActions);
         return () => setFollowUpActions([]);
     }, [followUpActions, setFollowUpActions]);
+
+    // The preview runs stateless: no approvals may be shown here or written
+    // to the previously opened conversation; restoring brings them back.
+    useEffect(() => {
+        suspendImageApprovals();
+        return () => resumeImageApprovals();
+    }, []);
 
     // When the assistant pins a default model, the selector below is filtered to only
     // that model. Switch the actual context LLM to match, so the preview requests run

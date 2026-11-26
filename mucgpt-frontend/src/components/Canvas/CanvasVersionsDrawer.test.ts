@@ -82,13 +82,14 @@ describe("CanvasVersionsDrawer", () => {
         expect(previewOf(articles[0])).toContain("Valid entry");
     });
 
-    it("hardens anchors surviving sanitization with rel and a safe target", () => {
+    it("strips the href of anchors surviving sanitization so they cannot navigate", () => {
         const sanitized = DOMPurify.sanitize('<a href="https://example.com">link</a>', { USE_PROFILES: { html: true } });
-        expect(sanitized).toContain('rel="noopener noreferrer"');
-        expect(sanitized).toContain('target="_blank"');
+        expect(sanitized).toContain("<a");
+        expect(sanitized).toContain("link");
+        expect(sanitized).not.toContain("href");
     });
 
-    it("hardens the link of a rendered revision preview, not just sanitized strings", () => {
+    it("renders a revision containing a link mark without a navigable href", () => {
         const articles = renderDrawer({
             auto: [
                 {
@@ -109,13 +110,43 @@ describe("CanvasVersionsDrawer", () => {
             manual: []
         });
         expect(articles).toHaveLength(1);
-        const anchor = articles[0].querySelector("a");
-        expect(anchor).not.toBeNull();
-        expect(anchor!.getAttribute("rel")).toBe("noopener noreferrer");
-        expect(anchor!.getAttribute("target")).toBe("_blank");
+        const preview = previewOf(articles[0]);
+        expect(preview).toContain("<a");
+        expect(preview).toContain("link");
+        expect(preview).not.toContain("href");
     });
 
-    it("leaves SVG-namespace anchors untouched by the HTML-only hardening hook", () => {
+    it("renders images as alt (url) text instead of fetching them", () => {
+        const articles = renderDrawer({
+            auto: [
+                {
+                    revision: 1,
+                    doc_json: {
+                        type: "doc",
+                        content: [
+                            {
+                                type: "paragraph",
+                                content: [
+                                    { type: "text", text: "Schaubild " },
+                                    { type: "image", attrs: { src: "https://example.com/p?d=1", alt: "Plan" } }
+                                ]
+                            }
+                        ]
+                    },
+                    timestamp: 1,
+                    source: "agent"
+                }
+            ],
+            manual: []
+        });
+        const preview = previewOf(articles[0]);
+        expect(preview).not.toContain("<img");
+        expect(preview).not.toContain("d=1");
+        expect(preview).toContain("Plan");
+        expect(preview).toContain("https://example.com/p");
+    });
+
+    it("leaves SVG-namespace anchors untouched by the HTML-only href-stripping hook", () => {
         const sanitized = DOMPurify.sanitize('<svg xmlns="http://www.w3.org/2000/svg"><a href="https://example.com"><text>x</text></a></svg>', {
             USE_PROFILES: { svg: true }
         });

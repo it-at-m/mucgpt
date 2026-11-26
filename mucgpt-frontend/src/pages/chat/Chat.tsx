@@ -7,6 +7,7 @@ import { LanguageContext } from "../../components/LanguageSelector/LanguageConte
 import { useTranslation } from "react-i18next";
 import { LLMContext } from "../../components/LLMSelector/LLMContextProvider";
 import { ChatLayout } from "../../components/ChatLayout/ChatLayout";
+import { configureImageApprovals } from "../../components/MarkdownRenderer/imageApprovals";
 import { CHAT_STORE, CREATIVITY_LOW } from "../../constants";
 import { DBMessage, StorageService } from "../../service/storage";
 import { AnswerList } from "../../components/AnswerList/AnswerList";
@@ -242,6 +243,9 @@ const Chat = () => {
         cancelToolApproval();
         lastQuestionRef.current = "";
         setError(undefined);
+        // Image approvals are per conversation; a fresh chat must not write
+        // them to the previously opened conversation.
+        configureImageApprovals(null, []);
         dispatch({ type: "SET_ACTIVE_CHAT", payload: undefined });
         dispatch({ type: "CLEAR_ANSWERS" });
     }, [lastQuestionRef.current, cancelToolApproval]);

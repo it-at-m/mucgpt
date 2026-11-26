@@ -63,6 +63,8 @@ class ConversationRepository:
                 Chat.updated_at,
                 Chat.document_ids,
                 Chat.document_names,
+                Chat.approved_images,
+                Chat.rejected_images,
             )
             .where(Chat.user_id == user_id, Chat.deleted_at.is_(None))
             .order_by(Chat.updated_at.desc())
@@ -87,6 +89,26 @@ class ConversationRepository:
         result = await self.session.execute(
             update(Chat)
             .values(document_ids=document_ids, document_names=document_names or {})
+            .where(
+                Chat.conversation_id == conversation_id,
+                Chat.user_id == user_id,
+                Chat.deleted_at.is_(None),
+            )
+            .returning(Chat.conversation_id)
+        )
+        return result.scalar_one_or_none() is not None
+
+    async def set_approved_images(
+        self,
+        user_id: str,
+        conversation_id: str,
+        approved_images: list[str],
+        rejected_images: list[str],
+    ) -> bool:
+        """Replace a live owner's approved and rejected image URL lists wholesale."""
+        result = await self.session.execute(
+            update(Chat)
+            .values(approved_images=approved_images, rejected_images=rejected_images)
             .where(
                 Chat.conversation_id == conversation_id,
                 Chat.user_id == user_id,

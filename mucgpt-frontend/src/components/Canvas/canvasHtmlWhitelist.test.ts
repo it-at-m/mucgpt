@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { CANVAS_SUPPORTED_HTML_TAGS, effectiveAllowedTags, sanitizeCanvasMarkdown } from "./canvasHtmlWhitelist";
+import { CANVAS_SUPPORTED_HTML_TAGS, collectVerbatimRanges, effectiveAllowedTags, sanitizeCanvasMarkdown } from "./canvasHtmlWhitelist";
 
 describe("sanitizeCanvasMarkdown", () => {
     it("passes whitelisted bare tags through", () => {
@@ -26,6 +26,18 @@ describe("sanitizeCanvasMarkdown", () => {
 
     it("preserves code span content verbatim (the renderer escapes it)", () => {
         expect(sanitizeCanvasMarkdown("<u>a</u> und `<u>b</u>`", ["u"])).toBe("<u>a</u> und `<u>b</u>`");
+    });
+
+    it("identifies longer runs of the same fence character as closing fences", () => {
+        const text = "```\n<unescaped>\n`````\n```\n<b>verbatim</b>\n```\nund <b>escaped</b>";
+        expect(sanitizeCanvasMarkdown(text, [])).toBe("```\n<unescaped>\n`````\n```\n<b>verbatim</b>\n```\nund &lt;b&gt;escaped&lt;/b&gt;");
+    });
+
+    it("does not close fences on tab- or 4-space-indented lines", () => {
+        const text = "```\n<unescaped>\n\t```\n```\n<b>after close</b>";
+        expect(sanitizeCanvasMarkdown(text, [])).toBe("```\n<unescaped>\n\t```\n```\n&lt;b&gt;after close&lt;/b&gt;");
+        const indentedClose = "```\n<unescaped>\n    ```\n```\n<u>b</u>";
+        expect(sanitizeCanvasMarkdown(indentedClose, ["u"])).toBe(indentedClose);
     });
 
     it("preserves code fences verbatim", () => {
@@ -99,5 +111,34 @@ describe("effectiveAllowedTags", () => {
 
     it("deduplicates lowercase entries", () => {
         expect(effectiveAllowedTags(["u", "u"])).toEqual(["u"]);
+    });
+});
+
+// Parity vectors for the verbatim-range parser (issue #228 mirror): the
+// backend's _code_ranges in generation_router.py must produce identical
+// ranges for the same inputs — keep both suites' vectors in sync.
+describe("collectVerbatimRanges parity with the backend mirror", () => {
+    const vectors: Array<[string, Array<[number, number]>]> = [
+        ["```\ncode\n```\ntext", [[0, 13]]],
+        ["a `span` b", [[2, 8]]],
+        ["text\n\n~~~\nunclosed ~~~ fence\nmore", [[6, 33]]],
+        [
+            "before\n```\n`inner span`\n```\nafter `x` end",
+            [
+                [7, 28],
+                [34, 37]
+            ]
+        ],
+        [
+            "```\nfirst\n```\nmiddle\n```\nsecond\n```",
+            [
+                [0, 14],
+                [21, 35]
+            ]
+        ]
+    ];
+
+    it.each(vectors)("keeps the same verbatim ranges as the backend for %j", (text, expected) => {
+        expect(collectVerbatimRanges(text).map(range => [range.start, range.end])).toEqual(expected);
     });
 });

@@ -1,4 +1,5 @@
 import asyncio
+import re
 from typing import Any, Literal
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -86,6 +87,117 @@ def _normalize_chat_title(value: str) -> str:
         title = title[:max_length].rstrip()
 
     return title
+
+
+_FENCE_OPEN = re.compile(r"^ {0,3}(`{3,}|~{3,})")
+_INLINE_CODE = re.compile(r"(`+)[\s\S]*?\1")
+_LINK_TITLE = r"[ \t]*(?:\"[^\"]*\"|'[^']*'|\([^)]*\))?[ \t]*"
+
+
+def _closing_fence(line: str, fence: str) -> bool:
+    indent = line[: len(line) - len(line.lstrip(" "))]
+    if not re.fullmatch(r" {0,3}", indent):
+        return False
+    if not line.startswith(f"{indent}{fence}"):
+        return False
+    run_end = len(indent) + len(fence)
+    while run_end < len(line) and line[run_end] == fence[0]:
+        run_end += 1
+    rest = line[run_end:]
+    if fence[0] == "~":
+        return re.fullmatch(r"\s*", rest) is not None
+    return "`" not in rest
+
+
+def _code_ranges(text: str) -> list[tuple[int, int]]:
+    """Ranges that must stay verbatim: fenced blocks (CommonMark opener and
+    closing rules, unterminated fences run to the end) and inline code spans
+    with equal-length backtick runs. Mirrors the frontend's
+    collectVerbatimRanges in canvasHtmlWhitelist.ts."""
+    ranges: list[tuple[int, int]] = []
+    lines = text.split("\n")
+    offset = 0
+    index = 0
+    while index < len(lines):
+        open_match = _FENCE_OPEN.match(lines[index])
+        if open_match is None:
+            offset += len(lines[index]) + 1
+            index += 1
+            continue
+        fence = open_match.group(1)
+        end_line = len(lines) - 1
+        for scan in range(index + 1, len(lines)):
+            if _closing_fence(lines[scan], fence):
+                end_line = scan
+                break
+        start = offset
+        end = min(
+            offset + sum(len(line) + 1 for line in lines[index : end_line + 1]),
+            len(text),
+        )
+        ranges.append((start, end))
+        offset = end
+        index = end_line + 1
+    ranges.extend(
+        (inline.start(), inline.end())
+        for inline in _INLINE_CODE.finditer(text)
+        if not any(
+            inline.start() < end and inline.end() > start for start, end in ranges
+        )
+    )
+    ranges.sort()
+    return ranges
+
+
+def _strip_markdown_links(value: str) -> str:
+    """Neutralize markdown link/image syntax in generated draft fields.
+
+    Drafts can be shared and their description and system prompt are rendered
+    as markdown in other users' browsers. Rendered links and images can
+    exfiltrate data on display (issue #228). Unlike the chat/canvas render
+    policy, drafts keep no clickable links at all: the fields are metadata
+    seen outside an active conversation's approval context, so the strictest
+    form is the safe one. Labels allow balanced brackets one level deep.
+    Fenced and inline code stays untouched.
+    """
+
+    stripped: list[str] = []
+    position = 0
+    for range_start, range_end in _code_ranges(value):
+        if position > range_start:  # already covered (code span inside a fence)
+            continue
+        if position < range_start:
+            stripped.append(
+                _strip_markdown_links_outside_code(value[position:range_start])
+            )
+        stripped.append(value[range_start:range_end])
+        position = range_end
+    if position < len(value):
+        stripped.append(_strip_markdown_links_outside_code(value[position:]))
+    return "".join(stripped)
+
+
+def _strip_markdown_links_outside_code(value: str) -> str:
+    value = re.sub(
+        rf"!\[((?:[^\[\]]|\[[^\[\]]*\])*)\]\([ \t]*(?:<[^>]*>|(?:[^()\s]|\([^()]*\))+)(?:{_LINK_TITLE})?\)",
+        r"\1",
+        value,
+    )  # images
+    value = re.sub(
+        rf"\[((?:[^\[\]]|\[[^\[\]]*\])*)\]\([ \t]*(?:<[^>]*>|(?:[^()\s]|\([^()]*\))+)(?:{_LINK_TITLE})?\)",
+        r"\1",
+        value,
+    )  # inline links
+    value = re.sub(r"\[([^\]]+)\]\[[^\]]*\]", r"\1", value)  # reference links
+    value = re.sub(r"<((?:https?|mailto|xmpp):[^>\s]+)>", r"\1", value)  # autolinks
+    value = re.sub(
+        r"^\s*\[[^\]]+\]:[ \t]*(?:<[^\s>]*>|(?:[a-z][a-z0-9+.-]*:(?://)?\S+|/\S*|\.{1,2}/\S*)).*$",
+        "",
+        value,
+        flags=re.MULTILINE | re.IGNORECASE,
+    )  # link definitions (URL-like destinations only, never `[Policy]: text`)
+    value = value.replace("](", "] ")  # no link adjacency must survive conversion
+    return value
 
 
 @router.post(
@@ -184,8 +296,8 @@ async def generate_assistant_draft(
 
                 result = AssistantDraftResult(
                     title=title,
-                    description=description,
-                    system_prompt=generated_system_prompt,
+                    description=_strip_markdown_links(description),
+                    system_prompt=_strip_markdown_links(generated_system_prompt),
                 )
                 observation.update(output=result.model_dump())
                 return result

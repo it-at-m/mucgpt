@@ -189,6 +189,36 @@ class TestSettings:
             settings = Settings()
             assert settings.canvas_allowed_html_tags == []
 
+    def test_allowed_link_domains_defaults_to_muenchen(self):
+        with patch.dict(os.environ, {}, clear=True):
+            settings = Settings()
+            assert settings.allowed_link_domains == ["www.muenchen.de"]
+
+    def test_allowed_link_domains_normalizes_case_from_env(self):
+        with patch.dict(
+            os.environ,
+            {"MUCGPT_CORE_ALLOWED_LINK_DOMAINS": '["WWW.Muenchen.de"]'},
+            clear=True,
+        ):
+            settings = Settings()
+            assert settings.allowed_link_domains == ["www.muenchen.de"]
+
+    def test_allowed_link_domains_rejects_entries_beyond_bare_hostnames(self):
+        for bad in (
+            '["https://www.muenchen.de"]',
+            '["www.muenchen.de:8443"]',
+            '["*.muenchen.de"]',
+            '["evil@www.muenchen.de"]',
+            '["/path"]',
+        ):
+            with patch.dict(
+                os.environ,
+                {"MUCGPT_CORE_ALLOWED_LINK_DOMAINS": bad},
+                clear=True,
+            ):
+                with pytest.raises(ValidationError):
+                    Settings()
+
     def test_nested_env_variables(self):
         """Test that nested environment variables work correctly."""
         with patch.dict(

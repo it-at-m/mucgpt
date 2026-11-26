@@ -7,6 +7,8 @@ import { Button, Tooltip, MessageBar } from "@fluentui/react-components";
 import { ArrowDownload24Regular, ContentView24Regular, ScaleFill24Regular, ArrowExpand24Regular } from "@fluentui/react-icons";
 import { IPureNode } from "markmap-common";
 import { AppThemeContext } from "../../../ui/theme/AppThemeContext";
+import { stripMarkdownLinks } from "../../MarkdownRenderer/markdownLinkPolicy";
+import { neutralizeImageAndLinkTokens } from "./markmapNeutralizer";
 import { BaseFragment } from "../BaseFragment/BaseFragment";
 import { BaseFragmentProps } from "../types";
 import { EdelweissSpinner } from "../../EdelweissSpinner";
@@ -39,7 +41,16 @@ export const BrainstormFragment = ({ content, markdown, showLineNumbers = true }
     // Use markdown prop if provided, otherwise use content
     const markdownContent = markdown || content;
     const { t } = useTranslation();
-    const transformer = useMemo(() => new Transformer(), []);
+    const transformer = useMemo(() => {
+        const transformer = new Transformer();
+        // Mindmap nodes must not contain raw HTML: markmap renders label HTML,
+        // so anchors and images in the source would become live elements.
+        transformer.md.set({ html: false });
+        // Link/image markdown turns into live elements regardless of html: false;
+        // rewrite those tokens to plain text (see markmapNeutralizer.ts).
+        neutralizeImageAndLinkTokens(transformer.md);
+        return transformer;
+    }, []);
     const svgEl = useRef<SVGSVGElement>(null);
     const markmapInstance = useRef<Markmap | null>(null);
     const [isSourceView, setIsSourceView] = useState(false);
@@ -98,7 +109,9 @@ export const BrainstormFragment = ({ content, markdown, showLineNumbers = true }
 
         try {
             setError(null);
-            return transformer.transform(debouncedMarkdown);
+            // Mindmap nodes must not contain clickable links (issue #228):
+            // strip link/image markdown so the SVG holds plain text only.
+            return transformer.transform(stripMarkdownLinks(debouncedMarkdown));
         } catch (err) {
             setError(t("components.mindmap.errors.transformationError"));
             console.error("Mindmap transformation error:", err);

@@ -54,6 +54,14 @@ canvas_editor_max_chars: 524288
 # startup (extending it requires a core+frontend release). An empty list
 # disables raw HTML in the canvas entirely.
 canvas_allowed_html_tags: ["u"]
+
+# Hostnames whose links are rendered clickable with their full URL (exact
+# host match, no subdomains/ports/userinfo). All other links stay clickable
+# but lose query string, fragment and userinfo; images are only loaded
+# automatically from these hosts; during PDF/DOCX export the core service
+# also downloads images hosted on these domains server-side.
+allowed_link_domains: ["www.muenchen.de"]
+
 frontend_version: "unknown"
 assistant_version: "unknown"
 footer_link_url: ""

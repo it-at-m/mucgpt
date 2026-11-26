@@ -1,9 +1,8 @@
 import { useCallback, useSyncExternalStore } from "react";
 import { Button, Tooltip } from "@fluentui/react-components";
 import { Copy24Regular } from "@fluentui/react-icons";
-import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
 import { useTranslation } from "react-i18next";
+import { SafeMarkdown } from "../../MarkdownRenderer/SafeMarkdown";
 import { BaseFragment } from "../BaseFragment/BaseFragment";
 import { BaseFragmentProps } from "../types";
 import { copyIntoCanvas, hasCopyIntoCanvasHandler, subscribeToCopyIntoCanvasHandler } from "../../../utils/canvasStream";
@@ -33,7 +32,7 @@ export const CanvasFragment = ({ content }: BaseFragmentProps) => {
     return (
         <BaseFragment title={t("canvas.fragment.title")} content={content} actions={copyAction}>
             <div className={styles.canvasPreview}>
-                <ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>
+                <SafeMarkdown>{content}</SafeMarkdown>
             </div>
         </BaseFragment>
     );

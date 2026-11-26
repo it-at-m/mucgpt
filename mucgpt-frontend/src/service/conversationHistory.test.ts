@@ -6,6 +6,7 @@ import { StorageService } from "./storage";
 import { ASSISTANT_STORE, CHAT_STORE } from "../constants";
 import { loadConversation, syncConversationHistory, toChatTurns } from "./conversationHistory";
 import { migrateLocalChatsToBackend } from "./chatMigration/chatMigration";
+import { getApprovedImageUrls } from "../components/MarkdownRenderer/imageApprovals";
 
 vi.mock("../api/conversations-client", () => ({
     getConversationMessagesApi: vi.fn(),
@@ -373,5 +374,27 @@ describe("conversation history", () => {
         vi.mocked(StorageService.prototype.get).mockResolvedValue({ ...cached, backendPersisted: false });
         vi.mocked(getConversationMessagesApi).mockRejectedValue(new ApiError("No ownership row", 403));
         expect((await loadConversation(storage, "local", "local", {})).messages).toEqual(cached.messages);
+    });
+
+    it("scopes image approvals to the conversation even when a cached transcript is served", async () => {
+        const cached = { id: "local", backendPersisted: false, config: {}, messages: [{ user: "Question", response: { answer: "Answer" } }] };
+        vi.mocked(StorageService.prototype.get).mockResolvedValue(cached);
+        const storage = new StorageService<ChatResponse, Record<string, never>>(CHAT_STORE);
+        vi.mocked(getConversationMessagesApi).mockRejectedValue(new ApiError("Missing", 404));
+        vi.mocked(listConversationsApi).mockResolvedValue([
+            {
+                conversation_id: "local",
+                assistant_id: null,
+                title: "Chat",
+                created_at: "2026-10-20T10:00:00Z",
+                updated_at: "2026-10-20T10:00:00Z",
+                document_ids: [],
+                approved_images: ["https://example.com/show-me.png"]
+            }
+        ]);
+
+        await loadConversation(storage, "local", "local", {});
+
+        expect(getApprovedImageUrls()).toEqual(["https://example.com/show-me.png"]);
     });
 });

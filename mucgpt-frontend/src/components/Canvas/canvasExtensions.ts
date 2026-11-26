@@ -6,6 +6,8 @@ import StarterKit from "@tiptap/starter-kit";
 import { Markdown } from "tiptap-markdown";
 import type { Extensions } from "@tiptap/core";
 
+import { CanvasImage } from "./canvasImage";
+import { canvasLinkMarks } from "./canvasLinkPolicy";
 import { CanvasSelectionPersistence } from "./canvasSelectionPersistence";
 import { canvasTextLimit, type CanvasTextLimitOptions } from "./canvasTextLimit";
 
@@ -18,14 +20,32 @@ import { canvasTextLimit, type CanvasTextLimitOptions } from "./canvasTextLimit"
  * live markup; every other tag is escaped to literal text. Hard-break parsing
  * is on.
  *
+ * Links carry the schema's link mark, but only the canvasLinkMarks pass
+ * creates one, classifying each URL (allowlist: full URL; otherwise the
+ * sanitized URL without query/fragment/userinfo; blocked: no mark). Images
+ * become approval-gated nodes. The link-mark pass needs the domain
+ * allowlist; call sites with policy enforcement pass a getter, and
+ * schema-only uses (e.g. HTML generation in the Versions drawer) omit it.
+ *
  * The size limits come from the backend config; call sites pass the values
- * from useCanvasLimits() (omitting them keeps the built-in defaults, e.g. for
- * schema-only uses like HTML generation in the Versions drawer).
+ * from useCanvasLimits() (omitting them keeps the built-in defaults).
  */
-export const canvasExtensions = (limits?: Partial<CanvasTextLimitOptions>): Extensions => [
+export const canvasExtensions = (limits?: Partial<CanvasTextLimitOptions>, getAllowedDomains: () => readonly string[] = () => []): Extensions => [
     StarterKit.configure({
-        underline: {}
+        underline: {},
+        link: {
+            // Navigation is explicit: interceptLinkClicks opens trusted links
+            // and dialog-confirms untrusted ones (TipTap's own open handler
+            // cannot be intercepted afterwards, and plain clicks inside
+            // contenteditable never follow the DOM anchor default).
+            openOnClick: false,
+            autolink: false,
+            linkOnPaste: false,
+            HTMLAttributes: { target: "_blank", rel: "noopener noreferrer" }
+        }
     }),
+    CanvasImage,
+    canvasLinkMarks(getAllowedDomains),
     Table.configure({
         resizable: false
     }),

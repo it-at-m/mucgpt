@@ -371,7 +371,9 @@ class PersistanceHelpers:
                 await connection.execute(
                     "UPDATE chats SET deleted_at = COALESCE(deleted_at, now()), "
                     "chat_title = 'New Chat', assistant_id = NULL, "
-                    "document_ids = '[]', document_names = '{}' WHERE conversation_id = %s",
+                    "document_ids = '[]', document_names = '{}', "
+                    "approved_images = '[]', rejected_images = '[]' "
+                    "WHERE conversation_id = %s",
                     (conversation_id,),
                 )
                 # The canvas is personal data of the conversation and must not
@@ -417,6 +419,20 @@ class PersistanceHelpers:
         async with factory.begin() as session:
             await CanvasRepository(session).upsert_canvas_revisions(
                 conversation_id, revisions, user_id
+            )
+
+    @staticmethod
+    async def set_approved_images(
+        user_id: str,
+        conversation_id: str,
+        approved_images: list[str],
+        rejected_images: list[str],
+    ) -> bool:
+        """Replace the approved and rejected image URLs of a conversation."""
+        factory = PersistanceHelpers._get_session_factory()
+        async with factory.begin() as session:
+            return await ConversationRepository(session).set_approved_images(
+                user_id, conversation_id, approved_images, rejected_images
             )
 
     @staticmethod

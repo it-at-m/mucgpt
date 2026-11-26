@@ -72,6 +72,7 @@ class _ConfiguredLangChainDeepAgentGraph:
         self.tools = tools
         self.logger = logger
         self.debug = debug
+        self.checkpointer = checkpointer
         default_prompt = PromptPool.get_resolved_prompt("default_instructions")
         self.default_langfuse_prompt = default_prompt.langfuse_prompt
 
@@ -198,16 +199,29 @@ class _ConfiguredLangChainDeepAgentGraph:
             if request_context.canvas:
                 graph_input["canvas"] = request_context.canvas
 
-        stream = self.agent.astream(
-            graph_input,
-            # langgraph stubs narrow stream_mode to its literal values; callers
-            # pass validated mode names, so widen at this boundary.
-            stream_mode=cast("StreamMode | Sequence[StreamMode] | None", stream_mode),
-            config=config,
-            context=request_context,
-            durability=CHECKPOINT_DURABILITY,
-            **kwargs,
-        )
+        if self.checkpointer is not None:
+            stream = self.agent.astream(
+                graph_input,
+                # langgraph stubs narrow stream_mode to its literal values;
+                # callers pass validated mode names, so widen at this boundary.
+                stream_mode=cast(
+                    "StreamMode | Sequence[StreamMode] | None", stream_mode
+                ),
+                config=config,
+                context=request_context,
+                durability=CHECKPOINT_DURABILITY,
+                **kwargs,
+            )
+        else:
+            stream = self.agent.astream(
+                graph_input,
+                stream_mode=cast(
+                    "StreamMode | Sequence[StreamMode] | None", stream_mode
+                ),
+                config=config,
+                context=request_context,
+                **kwargs,
+            )
         try:
             async for item in stream:
                 yield item
@@ -311,11 +325,18 @@ class _ConfiguredLangChainDeepAgentGraph:
             if request_context.canvas:
                 input_payload["canvas"] = request_context.canvas
 
+        if self.checkpointer is not None:
+            return await self.agent.ainvoke(
+                input_payload,
+                config=config,
+                context=request_context,
+                durability=CHECKPOINT_DURABILITY,
+                **kwargs,
+            )
         return await self.agent.ainvoke(
             input_payload,
             config=config,
             context=request_context,
-            durability=CHECKPOINT_DURABILITY,
             **kwargs,
         )
 

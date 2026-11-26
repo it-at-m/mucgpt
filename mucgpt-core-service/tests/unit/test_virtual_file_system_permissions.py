@@ -65,7 +65,7 @@ async def run_tools(user_id, selected_ids, calls, *, asynchronous, files=None):
         middleware=[
             FilesystemMiddleware(
                 backend=vfs.create_backend(user_id, selected_ids),
-                _permissions=vfs.create_permissions(selected_ids),
+                permissions=vfs.create_permissions(selected_ids),
             )
         ],
     )

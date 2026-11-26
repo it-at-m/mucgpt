@@ -458,3 +458,109 @@ async def test_parallel_chats_can_read_the_same_selected_document(monkeypatch) -
             second_conversation_id: [document_id],
         }
         harness.assert_model_consumed()
+
+
+@pytest.mark.asyncio
+async def test_document_insert_does_not_block_chats_reading_other_documents(
+    monkeypatch,
+) -> None:
+    """An in-progress upload remains isolated from concurrent selected-document chats."""
+    async with postgres_http_harness(monkeypatch) as harness:
+        harness.parser.text = "First existing document"
+        first_upload = await harness.upload_document("first-existing.txt", b"first")
+        assert first_upload.status_code == 201
+        first_id = str(UUID(first_upload.json()["id"]))
+
+        harness.parser.text = "Second existing document"
+        second_upload = await harness.upload_document("second-existing.txt", b"second")
+        assert second_upload.status_code == 201
+        second_id = str(UUID(second_upload.json()["id"]))
+
+        insertion_started = asyncio.Event()
+        finish_insertion = asyncio.Event()
+
+        async def delayed_parse(_file: object) -> str:
+            insertion_started.set()
+            await finish_insertion.wait()
+            return "Document inserted during chats"
+
+        monkeypatch.setattr(harness.parser, "parse", delayed_parse)
+        insertion = asyncio.create_task(
+            harness.upload_document("inserted-during-chats.txt", b"inserted")
+        )
+        await insertion_started.wait()
+
+        first_path = get_document_path(first_id)
+        second_path = get_document_path(second_id)
+        model = harness.set_model_script(
+            [
+                read_file(first_path, id="concurrent-insert-read-first"),
+                read_file(second_path, id="concurrent-insert-read-second"),
+                text("First chat read its existing document."),
+                text("Second chat read its existing document."),
+            ]
+        )
+        first_conversation_id = f"insert-during-chat-one-{uuid4()}"
+        second_conversation_id = f"insert-during-chat-two-{uuid4()}"
+        first_events, second_events = await asyncio.gather(
+            harness.chat_events(
+                _persisted_body(
+                    harness,
+                    first_conversation_id,
+                    [{"role": "user", "content": "Read the first existing document."}],
+                    [first_id],
+                )
+            ),
+            harness.chat_events(
+                _persisted_body(
+                    harness,
+                    second_conversation_id,
+                    [{"role": "user", "content": "Read the second existing document."}],
+                    [second_id],
+                )
+            ),
+        )
+
+        assert {
+            final_text(first_events),
+            final_text(second_events),
+        } == {
+            "First chat read its existing document.",
+            "Second chat read its existing document.",
+        }
+        assert (
+            "First existing document"
+            in _read_result(model, "concurrent-insert-read-first").content
+        )
+        assert (
+            "Second existing document"
+            in _read_result(model, "concurrent-insert-read-second").content
+        )
+
+        finish_insertion.set()
+        inserted = await insertion
+        assert inserted.status_code == 201
+        inserted_id = str(UUID(inserted.json()["id"]))
+        stored_inserted_document = await FileStoreManager.get_store().aget(
+            get_document_namespace(harness.owner.user_id),
+            get_document_storage_key(inserted_id),
+        )
+        assert stored_inserted_document is not None
+        assert (
+            stored_inserted_document.value["content"]
+            == "Document inserted during chats"
+        )
+
+        metadata = await PersistanceHelpers.get_conversations_for_user(
+            harness.owner.user_id
+        )
+        selections = {
+            row["conversation_id"]: row["document_ids"]
+            for row in metadata
+            if row["conversation_id"] in {first_conversation_id, second_conversation_id}
+        }
+        assert selections == {
+            first_conversation_id: [first_id],
+            second_conversation_id: [second_id],
+        }
+        harness.assert_model_consumed()

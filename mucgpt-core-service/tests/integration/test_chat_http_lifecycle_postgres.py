@@ -2,6 +2,7 @@
 
 import os
 from collections.abc import Sequence
+from typing import Literal, TypedDict
 from uuid import uuid4
 
 import psycopg
@@ -15,6 +16,19 @@ from tests.integration.postgres_http_harness import (
 )
 
 from core.persistance_helpers import PersistanceHelpers
+
+
+class CanvasRevision(TypedDict):
+    revision: int
+    doc_json: dict[str, object]
+    timestamp: int
+    source: Literal["agent", "manual", "restore", "autosave", "cleared"]
+
+
+class CanvasRevisions(TypedDict):
+    auto: list[CanvasRevision]
+    manual: list[CanvasRevision]
+
 
 pytestmark = [
     pytest.mark.integration,
@@ -58,10 +72,16 @@ async def _persistence_counts(
     )
     async with await psycopg.AsyncConnection.connect(conninfo, autocommit=True) as conn:
         counts: dict[str, int] = {}
-        for table in ("chats", "checkpoints", "checkpoint_writes", "checkpoint_blobs"):
+        for table in (
+            "chats",
+            "checkpoints",
+            "checkpoint_writes",
+            "checkpoint_blobs",
+            "canvas_documents",
+        ):
             result = await conn.execute(
                 f"SELECT count(*) FROM {table} WHERE conversation_id = %s"
-                if table == "chats"
+                if table in {"chats", "canvas_documents"}
                 else f"SELECT count(*) FROM {table} WHERE thread_id = %s",
                 (conversation_id,),
             )
@@ -132,11 +152,38 @@ async def test_persisted_chat_http_lifecycle_survives_restart_and_deletion(
             "Second deterministic answer",
         ]
 
+        # A different user cannot read the persisted conversation.
         with harness.as_user(harness.foreign_user) as foreign_harness:
             foreign_messages = await foreign_harness.client.get(
                 f"/v1/conversations/{conversation_id}/messages"
             )
             assert foreign_messages.status_code == 403
+
+        # Canvas content and revision rings survive a persistence-manager restart.
+        canvas_content: str = (
+            "# Council decision\n\nCanvas content survives until deletion."
+        )
+        canvas_revisions: CanvasRevisions = {
+            "auto": [
+                {
+                    "revision": 1,
+                    "doc_json": {"type": "doc", "content": []},
+                    "timestamp": 1,
+                    "source": "agent",
+                }
+            ],
+            "manual": [],
+        }
+        saved_canvas = await harness.client.put(
+            f"/v1/conversations/{conversation_id}/canvas",
+            json={"content": canvas_content, "truncated": False},
+        )
+        assert saved_canvas.status_code == 204
+        saved_revisions = await harness.client.put(
+            f"/v1/conversations/{conversation_id}/canvas/revisions",
+            json=canvas_revisions,
+        )
+        assert saved_revisions.status_code == 204
 
         await PersistanceHelpers.close()
         await PersistanceHelpers.init(harness.database.settings)
@@ -144,6 +191,17 @@ async def test_persisted_chat_http_lifecycle_survives_restart_and_deletion(
         conversations_after_restart = await harness.client.get("/v1/conversations")
         assert conversations_after_restart.status_code == 200
         assert conversations_after_restart.json() == conversation_metadata
+        assert (
+            await harness.client.get(f"/v1/conversations/{conversation_id}/canvas")
+        ).json()["content"] == canvas_content
+        assert (
+            await harness.client.get(
+                f"/v1/conversations/{conversation_id}/canvas/revisions"
+            )
+        ).json() == canvas_revisions
+        assert (await _persistence_counts(harness, conversation_id))[
+            "canvas_documents"
+        ] == 1
 
         stored_messages = await PersistanceHelpers.get_conversation_messages(
             conversation_id
@@ -202,8 +260,10 @@ async def test_persisted_chat_http_lifecycle_survives_restart_and_deletion(
             "checkpoints": 0,
             "checkpoint_writes": 0,
             "checkpoint_blobs": 0,
+            "canvas_documents": 0,
         }
 
+        # Deletion removes every durable representation of the conversation.
         deleted = await harness.client.delete(f"/v1/conversations/{conversation_id}")
         assert deleted.status_code == 204
         assert await _persistence_counts(harness, conversation_id) == {
@@ -211,6 +271,7 @@ async def test_persisted_chat_http_lifecycle_survives_restart_and_deletion(
             "checkpoints": 0,
             "checkpoint_writes": 0,
             "checkpoint_blobs": 0,
+            "canvas_documents": 0,
         }
         assert (await harness.client.get("/v1/conversations")).json() == []
 
@@ -218,6 +279,24 @@ async def test_persisted_chat_http_lifecycle_survives_restart_and_deletion(
             f"/v1/conversations/{conversation_id}/messages"
         )
         assert retired_messages.status_code == 403
+        # Retired conversations cannot recreate a canvas row.
+        retired_canvas = await harness.client.get(
+            f"/v1/conversations/{conversation_id}/canvas"
+        )
+        assert retired_canvas.status_code == 403
+        retired_canvas_save = await harness.client.put(
+            f"/v1/conversations/{conversation_id}/canvas",
+            json={"content": canvas_content, "truncated": False},
+        )
+        assert retired_canvas_save.status_code == 403
+        retired_revisions_save = await harness.client.put(
+            f"/v1/conversations/{conversation_id}/canvas/revisions",
+            json=canvas_revisions,
+        )
+        assert retired_revisions_save.status_code == 403
+        assert (await _persistence_counts(harness, conversation_id))[
+            "canvas_documents"
+        ] == 0
         revival = await harness.client.post(
             "/v1/chat/v2/completions",
             json=_persisted_body(

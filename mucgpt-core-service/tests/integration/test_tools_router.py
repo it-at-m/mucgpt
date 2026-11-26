@@ -16,8 +16,6 @@ def test_tools_list(test_client: TestClient):
     assert isinstance(data["tools"], list)
     assert data["tools"]
     assert all(
-        "name" in tool
-        and "description" in tool
-        and "mcp_group" in tool
+        "name" in tool and "description" in tool and "mcp_group" in tool
         for tool in data["tools"]
     )

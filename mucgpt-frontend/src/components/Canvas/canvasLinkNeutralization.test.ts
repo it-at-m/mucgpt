@@ -47,9 +47,9 @@ describe("flattenPastedLinks", () => {
         expect(flattenPastedLinks('<p><img alt="x"> okay</p>', [])).toBe("<p> okay</p>");
     });
 
-    it("drops images wrapped in flattened anchors", () => {
+    it("keeps link-wrapped images as their alt (src) text inside the flattened anchor", () => {
         expect(flattenPastedLinks('<a href="https://evil.example.com/a"><img src="https://evil.example.com/b.png" alt="B"></a>', [])).toBe(
-            "https://evil.example.com/a"
+            "B (https://evil.example.com/b.png) (https://evil.example.com/a)"
         );
     });
 

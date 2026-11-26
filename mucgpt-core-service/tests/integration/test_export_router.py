@@ -36,8 +36,7 @@ def test_export_streams_converted_file_with_download_headers():
     assert response.content == b"PDFBYTES"
     assert response.headers["content-type"].startswith("application/pdf")
     assert (
-        response.headers["content-disposition"]
-        == 'attachment; filename="canvas.pdf"'
+        response.headers["content-disposition"] == 'attachment; filename="canvas.pdf"'
     )
     request = convert.call_args.args[0]
     assert isinstance(request, ExportRequest)

@@ -50,7 +50,8 @@ canvas_allowed_html_tags: ["u"]
 # Hostnames whose links are rendered clickable with their full URL (exact
 # host match, no subdomains/ports/userinfo); exposed to the frontend via
 # /config. All other links stay clickable but lose query string, fragment
-# and userinfo; images are only loaded automatically from these hosts.
+# and userinfo; images are only loaded automatically from these hosts; during
+# PDF/DOCX export the core service also downloads these hosts' images server-side.
 allowed_link_domains: ["www.muenchen.de"]
 app_version: "2.0"
 frontend_version: "0.0.2"

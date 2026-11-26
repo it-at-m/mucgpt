@@ -284,9 +284,7 @@ async def test_grep_searches_complete_text_and_preserves_limits(
     )
     assert result.error is None
     matches = result.matches or []
-    assert [match["line"] for match in matches] == list(
-        range(2001, 2001 + max_count)
-    )
+    assert [match["line"] for match in matches] == list(range(2001, 2001 + max_count))
     assert all(match["text"] == "needle.*" for match in matches)
     assert result.truncated is (max_count == 1)
 

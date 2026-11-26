@@ -423,9 +423,9 @@ class PersistanceHelpers:
 
     @staticmethod
     async def set_approved_images(
+        user_id: str,
         conversation_id: str,
         approved_images: list[str],
-        user_id: str,
         rejected_images: list[str],
     ) -> bool:
         """Replace the approved and rejected image URLs of a conversation."""

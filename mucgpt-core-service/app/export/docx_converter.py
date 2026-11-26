@@ -1,3 +1,5 @@
+import base64
+import re
 from io import BytesIO
 from typing import Any
 
@@ -6,8 +8,20 @@ from docx import Document
 from docx.opc.constants import RELATIONSHIP_TYPE as RT
 from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
+from PIL import Image, ImageOps
+
+from export.image_fetcher import fetch_allowed_image
 
 _MONO_FONT = "Courier New"
+
+# Image sources from the export HTML: data URIs (approved images inlined in
+# the frontend) and https URLs on allowed_link_domains hosts (fetched by
+# _load_image_bytes); anything else degrades to its alt text. python-docx
+# parses PNG/JPEG/GIF/BMP/TIFF headers itself — everything else goes through
+# the Pillow re-encode in _reencode_to_png (or degrades).
+_DATA_IMAGE_RE = re.compile(
+    r"^data:image/(?:png|jpe?g|gif|bmp|tiff);base64,([A-Za-z0-9+/=]+)$"
+)
 
 _LIST_STYLES = {
     (False, 1): "List Bullet",
@@ -87,6 +101,67 @@ def _add_hyperlink(paragraph: Any, url: str, text: str) -> None:
     paragraph._p.append(hyperlink)
 
 
+def _decode_data_image(src: str) -> bytes | None:
+    match = _DATA_IMAGE_RE.match(src.strip())
+    if not match:
+        return None
+    try:
+        return base64.b64decode(match.group(1), validate=True)
+    except ValueError:
+        return None
+
+
+def _reencode_to_png(raw: bytes) -> bytes | None:
+    """Re-encode through Pillow for images python-docx cannot parse (e.g.
+    JPEGs without JFIF/EXIF metadata, which many photo services strip);
+    exif_transpose keeps the pixel orientation while metadata is dropped.
+    Pillow lacking the codec (e.g. AVIF) also degrades here."""
+    try:
+        with Image.open(BytesIO(raw)) as image:
+            upright = ImageOps.exif_transpose(image)
+            buffer = BytesIO()
+            upright.save(buffer, format="PNG")
+            return buffer.getvalue()
+    except Exception:
+        return None
+
+
+def _load_image_bytes(src: str) -> bytes | None:
+    """Data URIs are decoded; allowlisted-host URLs are fetched server-side
+    (the deployment trusts these hosts for images exactly like for clickable
+    links). Other sources degrade."""
+    if src.startswith(("http://", "https://")):
+        fetched = fetch_allowed_image(src)
+        return fetched[0] if fetched else None
+    return _decode_data_image(src)
+
+
+def _add_image(paragraph: Any, src: str, alt: str) -> None:
+    """Render an img tag as an inline picture; undecodable images degrade to
+    their alt text instead of failing the export."""
+    raw = _load_image_bytes(src)
+    if raw is None:
+        if alt:
+            _add_run(paragraph, alt)
+        return
+    try:
+        paragraph.add_run().add_picture(BytesIO(raw))
+    except Exception:
+        # python-docx's own header parsers only cover a subset of encodings
+        # (e.g. JPEGs without APP0/APP1 raise); Pillow's decoders are more
+        # complete, so re-encode and retry before giving up.
+        normalized = _reencode_to_png(raw)
+        if normalized is None:
+            if alt:
+                _add_run(paragraph, alt)
+            return
+        try:
+            paragraph.add_run().add_picture(BytesIO(normalized))
+        except Exception:
+            if alt:
+                _add_run(paragraph, alt)
+
+
 def _walk_inline(paragraph: Any, element: Any, **fmt: bool) -> None:
     if isinstance(element, NavigableString):
         if str(element).strip() or paragraph.text:
@@ -97,7 +172,28 @@ def _walk_inline(paragraph: Any, element: Any, **fmt: bool) -> None:
         paragraph.add_run().add_break()
         return
     if name == "a":
+        # A link with no text but an attached image (e.g. a linked
+        # screenshot) renders the picture; python-docx hyperlinks cannot
+        # contain runs with images.
+        if not element.get_text(strip=True) and (
+            element.find("img")
+            or element.find("span", attrs={"data-canvas-image-src": True})
+        ):
+            _walk_inline(paragraph, element)
+            return
         _add_hyperlink(paragraph, element.get("href", ""), element.get_text())
+        return
+    if name == "img":
+        _add_image(paragraph, element.get("src", ""), element.get("alt", ""))
+        return
+    if name == "span" and element.has_attr("data-canvas-image-src"):
+        # The editor serializes image nodes as spans with data attributes
+        # (no fetchable src; issue #228).
+        _add_image(
+            paragraph,
+            element.get("data-canvas-image-src", ""),
+            element.get("data-canvas-image-alt", ""),
+        )
         return
     child_fmt = {**fmt, **_INLINE_FORMAT.get(name, {})}
     for child in element.children:
@@ -285,6 +381,19 @@ def _render_block(doc: Any, tag: Tag) -> None:
         _walk_inline(doc.add_paragraph(), tag)
 
 
+def _clamp_inline_image_widths(doc: Any) -> None:
+    """Scale pictures that exceed the usable page width proportionally
+    (python-docx derives the native size from image headers at ~72 dpi,
+    which overflows the page for typical screenshots)."""
+    section = doc.sections[0]
+    usable = section.page_width - section.left_margin - section.right_margin
+    for shape in doc.inline_shapes:
+        if shape.width > usable:
+            ratio = usable / shape.width
+            shape.width = int(shape.width * ratio)
+            shape.height = int(shape.height * ratio)
+
+
 def convert_docx(html: str) -> bytes:
     soup = BeautifulSoup(html, "html.parser")
     doc = Document()
@@ -293,6 +402,7 @@ def convert_docx(html: str) -> bytes:
             _render_block(doc, element)
         elif isinstance(element, NavigableString) and element.strip():
             _walk_inline(doc.add_paragraph(), element)
+    _clamp_inline_image_widths(doc)
     buffer = BytesIO()
     doc.save(buffer)
     return buffer.getvalue()

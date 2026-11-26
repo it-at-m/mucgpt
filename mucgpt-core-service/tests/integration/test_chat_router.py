@@ -479,9 +479,9 @@ class TestConversationApprovedImages:
 
         assert response.status_code == 204, response.text
         store.assert_awaited_once_with(
+            "test_user_123",
             DUMMY_CONVERSATION_ID,
             ["https://example.com/a.png"],
-            "test_user_123",
             ["https://example.com/r.png"],
         )
 
@@ -497,7 +497,7 @@ class TestConversationApprovedImages:
 
         assert response.status_code == 204, response.text
         store.assert_awaited_once_with(
-            DUMMY_CONVERSATION_ID, ["https://example.com/a.png"], "test_user_123", []
+            "test_user_123", DUMMY_CONVERSATION_ID, ["https://example.com/a.png"], []
         )
 
     def test_put_approved_images_is_scoped_to_the_owner(

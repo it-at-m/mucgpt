@@ -331,9 +331,9 @@ async def put_conversation_approved_images(
     """Wholesale-overwrite the image decision lists (max 100 each)."""
     await _authorize_conversation_access(conversation_id, user_info.user_id)
     if not await PersistanceHelpers.set_approved_images(
+        user_info.user_id,
         conversation_id,
         request.approved_images,
-        user_info.user_id,
         request.rejected_images,
     ):
         raise HTTPException(status_code=404, detail="Conversation not found")

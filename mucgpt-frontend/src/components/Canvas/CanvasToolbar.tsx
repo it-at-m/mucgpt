@@ -30,6 +30,7 @@ import { useGlobalToastContext } from "../GlobalToastHandler/GlobalToastContext"
 import { EdelweissSpinner } from "../EdelweissSpinner";
 import type { CanvasController } from "../../hooks/useCanvasController";
 import { inlineApprovedImages, markdownForExport } from "./canvasImageExport";
+import { useConfigContext } from "../../context/ConfigContext";
 import styles from "./CanvasToolbar.module.css";
 
 interface Props {
@@ -72,6 +73,7 @@ const useActiveStyles = makeStyles({
 
 export const CanvasToolbar = ({ editor, controller, onOpenVersions, disabled }: Props) => {
     const { t } = useTranslation();
+    const { allowed_link_domains: allowedDomains } = useConfigContext();
     const { showError, showSuccess } = useGlobalToastContext();
     const headingStyles = useHeadingStyles();
     const activeStyles = useActiveStyles();
@@ -104,7 +106,7 @@ export const CanvasToolbar = ({ editor, controller, onOpenVersions, disabled }: 
     };
 
     const downloadMarkdown = () => {
-        const blob = new Blob([markdownForExport(controller.getMarkdown())], {
+        const blob = new Blob([markdownForExport(controller.getMarkdown(), allowedDomains)], {
             type: "text/markdown;charset=utf-8"
         });
         const url = URL.createObjectURL(blob);
@@ -120,7 +122,11 @@ export const CanvasToolbar = ({ editor, controller, onOpenVersions, disabled }: 
         if (!editor) return;
         setIsExporting(target);
         try {
-            const blob = await exportCanvasApi(markdownForExport(controller.getMarkdown()), await inlineApprovedImages(editor.getHTML(), target), target);
+            const blob = await exportCanvasApi(
+                markdownForExport(controller.getMarkdown(), allowedDomains),
+                await inlineApprovedImages(editor.getHTML(), target, allowedDomains),
+                target
+            );
             const url = URL.createObjectURL(blob);
             const anchor = document.createElement("a");
             anchor.href = url;

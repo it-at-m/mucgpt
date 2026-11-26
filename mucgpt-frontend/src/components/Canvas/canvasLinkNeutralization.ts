@@ -50,6 +50,12 @@ const pasteReadyImages = (html: string, allowedDomains: readonly string[]): stri
             image.replaceWith(doc.createTextNode(describeLinkText(image.getAttribute("alt") ?? "", url)));
             return;
         }
+        if (image.closest("a")) {
+            // Anchor flatten keeps only the anchor's text: a link-wrapped
+            // image becomes its "alt (url)" text inside that text.
+            image.replaceWith(doc.createTextNode(describeLinkText(image.getAttribute("alt") ?? "", url)));
+            return;
+        }
         image.setAttribute("src", url);
         image.setAttribute("alt", image.getAttribute("alt") ?? "");
         ["srcset", "sizes", "loading", "width", "height", "style", "class", "id"].forEach(attribute => image.removeAttribute(attribute));
@@ -58,9 +64,9 @@ const pasteReadyImages = (html: string, allowedDomains: readonly string[]): stri
 };
 
 /** URL path image extensions recognized when pasting a bare image URL. */
-const IMAGE_PATH_EXTENSIONS = /(?:png|jpe?g|gif|webp|svg|avif|bmp|ico)$/i;
+const IMAGE_PATH_EXTENSIONS = /\.(?:png|jpe?g|gif|webp|svg|avif|bmp|ico)$/i;
 const BARE_URL_RE = /^(https?:\/\/\S+)$/i;
-const IMAGE_MARKDOWN_RE = /^!\[[^\]\n]*\]\([^()\s]+\)$/i;
+const IMAGE_MARKDOWN_RE = /^!\[[^\]\n]*\]\(([^()\s]+)\)$/i;
 
 /**
  * Markdown for a pasted image reference, or null when the pasted text is no
@@ -71,16 +77,18 @@ const IMAGE_MARKDOWN_RE = /^!\[[^\]\n]*\]\([^()\s]+\)$/i;
 export const imagePasteMarkdown = (text: string, allowedDomains: readonly string[]): string | null => {
     const trimmed = text.trim();
     if (trimmed.includes("\n")) return null;
-    if (IMAGE_MARKDOWN_RE.test(trimmed)) {
-        const markdown = prepareMarkdownDestination(trimmed, allowedDomains);
-        return markdown ?? null;
+    const markdownMatch = trimmed.match(IMAGE_MARKDOWN_RE);
+    if (markdownMatch) {
+        const { kind, url } = classifyImageUrl(markdownMatch[1], allowedDomains);
+        if (kind === "blocked") return null;
+        return `![${trimmed.slice(2, trimmed.indexOf("]"))}](<${url}>)`;
     }
     const bare = trimmed.match(BARE_URL_RE);
     if (!bare) return null;
-    const { kind, url } = classifyUrl(bare[1], allowedDomains);
+    const { kind, url } = classifyImageUrl(bare[1], allowedDomains);
+    if (kind === "blocked") return null;
     const pathPortion = url.split(/[?#]/)[0];
     if (!pathPortion.match(IMAGE_PATH_EXTENSIONS)) return null;
-    if (kind === "blocked") return null;
     const file = pathPortion.split("/").pop() ?? "";
     let label = file;
     try {
@@ -88,15 +96,9 @@ export const imagePasteMarkdown = (text: string, allowedDomains: readonly string
     } catch {
         // keep the raw basename for malformed sequences
     }
+    // label characters that would terminate the label bracket
+    label = label.replace(/[[\]()<>]/g, "");
     return `![${label}](<${url}>)`;
-};
-
-const prepareMarkdownDestination = (markdown: string, allowedDomains: readonly string[]): string | null => {
-    const match = markdown.match(/^!\[([^\]\n]*)\]\(([^()\s]+)\)$/i);
-    if (!match) return null;
-    const { kind, url } = classifyImageUrl(match[2], allowedDomains);
-    if (kind === "blocked") return null;
-    return `![${match[1]}](<${url}>)`;
 };
 
 /**

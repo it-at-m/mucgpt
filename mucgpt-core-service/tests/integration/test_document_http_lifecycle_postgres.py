@@ -12,7 +12,7 @@ from core.virtual_file_system_helper import (
     get_document_storage_key,
 )
 from database.document_catalog import DocumentCatalogManager
-from database.document_repo import DocumentRepository
+from database.document_repo import DOCUMENT_LIMIT, DocumentRepository
 
 pytestmark = [
     pytest.mark.integration,
@@ -95,7 +95,7 @@ async def test_document_http_lifecycle_survives_restart_and_deletion(
         assert restarted_stored_document is not None
         assert restarted_stored_document.value["content"] == extracted_text
 
-        for number in range(1, 10):
+        for number in range(1, DOCUMENT_LIMIT):
             response = await harness.upload_document(
                 f"additional-document-{number}.txt", b"source"
             )
@@ -120,4 +120,4 @@ async def test_document_http_lifecycle_survives_restart_and_deletion(
         assert replacement.status_code == 201
         documents_after_replacement = await harness.client.get("/v1/documents")
         assert documents_after_replacement.status_code == 200
-        assert len(documents_after_replacement.json()) == 10
+        assert len(documents_after_replacement.json()) == DOCUMENT_LIMIT

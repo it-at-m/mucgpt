@@ -84,12 +84,8 @@ export type SensitivityFinding = {
 };
 
 export type DocumentSensitivity = {
-    truncated?: boolean | null;
-    /** Null when the document was not scanned. */
     findings: SensitivityFinding[] | null;
-    /** The owner must confirm the findings once before the document can be attached to a chat. */
-    requires_acknowledgement: boolean;
-    acknowledged: boolean;
+    confirmed_at: string | null;
 };
 
 export type DocumentMetadata = {

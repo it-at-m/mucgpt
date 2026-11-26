@@ -123,9 +123,7 @@ def test_upload_returns_only_ready_metadata_and_uses_authenticated_owner(upload_
         "created_at": metadata["created_at"],
         "sensitivity": {
             "findings": [],
-            "requires_acknowledgement": False,
-            "acknowledged": False,
-            "truncated": False,
+            "confirmed_at": None,
         },
     }
     assert metadata["created_at"]
@@ -281,3 +279,35 @@ def test_upload_openapi_documents_multipart_metadata_and_errors(upload_api):
     properties = schema["components"]["schemas"]["DocumentMetadata"]["properties"]
     assert "preview" in properties and "path" in properties
     assert not {"content", "user_id", "storage_key", "namespace"} & properties.keys()
+
+
+def test_flagged_upload_requires_confirmation_before_publication(upload_api):
+    client, _, parser, engine, store, owner, _ = upload_api
+    parser.parse.return_value = "Email: user@example.org"
+    warning = post_document(client)
+    assert warning.status_code == 409
+    detail = warning.json()["detail"]
+    assert detail["code"] == "sensitivity_confirmation_required"
+    assert "user@example.org" not in warning.text
+    assert rows(engine) == []
+    assert store.search(get_document_namespace(owner.user_id)) == []
+    saved = post_document(
+        client, data={"confirmation_fingerprint": detail["fingerprint"]}
+    )
+    assert saved.status_code == 201
+    assert saved.json()["sensitivity"]["confirmed_at"]
+    assert saved.json()["sensitivity"]["findings"] == detail["findings"]
+
+
+def test_scan_error_returns_retryable_response_and_stores_nothing(
+    upload_api, monkeypatch
+):
+    client, _, _, engine, store, owner, _ = upload_api
+    monkeypatch.setattr(
+        services, "scan_text", MagicMock(side_effect=RuntimeError("private value"))
+    )
+    response = post_document(client)
+    assert response.status_code == 503
+    assert "private value" not in response.text
+    assert rows(engine) == []
+    assert store.search(get_document_namespace(owner.user_id)) == []

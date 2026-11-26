@@ -148,18 +148,16 @@ personal data (IBAN, Steuer-ID, Sozialversicherungsnummer, ID card numbers,
 credit cards, dates of birth, email addresses, phone numbers) and secrets
 (private keys, access tokens, JWTs, connection strings, credential
 assignments). Detection uses patterns plus checksums; it does not detect names
-or addresses. Only categories and counts are stored, never the matched values.
+or addresses. The scan report stores categories and counts. Matched values stay in the document itself.
 
-A flagged document shows a warning badge and must be confirmed once
-(`POST /v1/documents/{id}/acknowledge-sensitivity`) before it can be attached
-to a chat; chat requests with unconfirmed flagged documents fail with `409`.
+A flagged upload returns HTTP 409 with code `sensitivity_confirmation_required` and releases the quota reservation. The warning lists the categories. Selecting **Save document** resubmits the file with its confirmation fingerprint. The service scans again before storing the text and recording the confirmation time. The library and attached document retain a badge, and the owner can reuse the document in another chat without confirming again. Cancelling leaves the file unsaved. A scanner failure returns HTTP 503 and can be retried. Apply core database migrations before rolling out the service and frontend.
+
 Configure it under `documents.sensitivity`:
 
 ```yaml
 documents:
   sensitivity:
     enabled: true                  # scan new uploads
-    require_acknowledgement: true  # false: warn only, never block attaching
     ignored_email_domains: ["muenchen.de"]
     disabled_categories: []        # e.g. ["phone"]
 ```

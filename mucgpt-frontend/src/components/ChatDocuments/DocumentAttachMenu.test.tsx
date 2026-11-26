@@ -24,7 +24,7 @@ const entry = (overrides: Partial<DocumentLibraryEntry> = {}): DocumentLibraryEn
     preview_kind: "initial_excerpt",
     path: "/documents/ready.txt",
     created_at: "2026-11-02",
-    sensitivity: { findings: [], requires_acknowledgement: false, acknowledged: false },
+    sensitivity: { findings: [], confirmed_at: null },
     status: "ready",
     ...overrides
 });

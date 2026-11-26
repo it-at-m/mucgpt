@@ -89,7 +89,6 @@ async def get_documents_for_agent(
 
     # The service and repository import filesystem helpers themselves.
     from core.document_service import (
-        DocumentAcknowledgementRequiredError,
         DocumentService,
         DocumentUnavailableError,
         InvalidDocumentSelectionError,
@@ -105,8 +104,6 @@ async def get_documents_for_agent(
         return list(selection.documents)
     except InvalidDocumentSelectionError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
-    except DocumentAcknowledgementRequiredError as exc:
-        raise HTTPException(status_code=409, detail=str(exc)) from exc
     except DocumentUnavailableError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
 

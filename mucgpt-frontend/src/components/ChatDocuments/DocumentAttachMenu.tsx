@@ -141,7 +141,6 @@ export const DocumentAttachMenu = ({ documents: attachedDocuments, onToggleDocum
                                     {documents.map(document => {
                                         const statusKey = getLibraryStatusKey(document.status);
                                         const findings = getSensitiveFindings(document.sensitivity);
-                                        // Attaching an unconfirmed flagged document shows the confirmation notice in the composer.
                                         const subText = statusKey
                                             ? t(statusKey)
                                             : findings.length > 0

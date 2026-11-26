@@ -25,7 +25,7 @@ const entry = (overrides: Partial<DocumentLibraryEntry> = {}): DocumentLibraryEn
     preview_kind: "initial_excerpt",
     path: "/documents/ready.txt",
     created_at: "2026-11-02",
-    sensitivity: { findings: [], requires_acknowledgement: false, acknowledged: false },
+    sensitivity: { findings: [], confirmed_at: null },
     status: "ready",
     ...overrides
 });
@@ -131,4 +131,51 @@ it("keeps every finished upload when list reloads resolve out of order", async (
     await waitFor(() => expect(screen.queryByText("document_library.loading")).not.toBeInTheDocument());
     expect(screen.getByText("A.txt")).toBeInTheDocument();
     expect(screen.getByText("B.txt")).toBeInTheDocument();
+});
+
+it.each(["upload", "legacy"])("keeps a flagged %s unsaved on cancel and saves only on confirmation", async source => {
+    const key = "MUCGPT_PARSED_DOCUMENTS_V1";
+    const legacy = {
+        id: "old",
+        name: "Flagged.txt",
+        content: "text",
+        size: 4,
+        mimeType: "text/plain",
+        lastModified: 0,
+        fileSignature: "old",
+        parsedAt: "2026-09-14"
+    };
+    if (source === "legacy") localStorage.setItem(key, JSON.stringify([legacy]));
+    const saved: DocumentLibraryEntry[] = [];
+    vi.mocked(listDocumentsApi).mockImplementation(async () => [...saved]);
+    vi.mocked(uploadDocumentApi).mockImplementation(async (file, confirm) => {
+        const findings = [{ category: "phone", kind: "pii", confidence: "likely", count: 1 }] as const;
+        if (file.name === legacy.name && !(await confirm!(file.name, [...findings]))) throw new DOMException("Cancelled", "AbortError");
+        const item = entry({
+            id: file.name,
+            filename: file.name,
+            sensitivity: { findings: file.name === legacy.name ? [...findings] : [], confirmed_at: null }
+        });
+        saved.push(item);
+        return item as DocumentMetadata;
+    });
+    renderPage();
+    await screen.findByText("document_library.empty_title");
+    const start = async (mixed: boolean) => {
+        if (source === "legacy") fireEvent.click(await screen.findByRole("button", { name: "document_library.legacy_migrate_aria" }));
+        else {
+            const files = [new File(["text"], legacy.name)];
+            if (mixed) files.push(new File(["hi"], "Clean.txt"));
+            fireEvent.change(screen.getByLabelText("document_library.upload", { selector: "input" }), { target: { files } });
+        }
+    };
+    await start(true);
+    fireEvent.click(await screen.findByRole("button", { name: "common.cancel" }));
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+    expect(saved.map(item => item.filename)).toEqual(source === "legacy" ? [] : ["Clean.txt"]);
+    if (source === "legacy") expect(JSON.parse(localStorage.getItem(key)!)).toEqual([legacy]);
+    await start(false);
+    fireEvent.click(await screen.findByRole("button", { name: "document_library.save_document" }));
+    await waitFor(() => expect(saved.filter(item => item.filename === legacy.name)).toHaveLength(1));
+    if (source === "legacy") expect(JSON.parse(localStorage.getItem(key) ?? "[]")).toEqual([]);
 });

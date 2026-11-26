@@ -57,10 +57,6 @@ class SensitivityReport(BaseModel):
     model_config = ConfigDict(frozen=True)
 
     findings: tuple[Finding, ...] = ()
-    truncated: bool = Field(
-        default=False,
-        description="True when only the first configured characters were scanned.",
-    )
 
     @property
     def is_flagged(self) -> bool:

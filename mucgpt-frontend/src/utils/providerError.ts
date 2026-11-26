@@ -46,7 +46,9 @@ export function providerErrorCodeToI18nKey(code: string): string {
 
 function parsePayload(raw: unknown): ProviderErrorPayload {
     if (isRecord(raw)) {
-        const detail = typeof raw.detail === "string" ? raw.detail : typeof raw.message === "string" ? raw.message : "";
+        // Structured HTTP details carry their text in `detail.message`.
+        const nested = isRecord(raw.detail) && typeof raw.detail.message === "string" ? raw.detail.message : undefined;
+        const detail = typeof raw.detail === "string" ? raw.detail : (nested ?? (typeof raw.message === "string" ? raw.message : ""));
         let code = typeof raw.code === "string" ? (raw.code as ProviderErrorCode) : "unknown";
         if (!(PROVIDER_ERROR_CODES as readonly string[]).includes(code)) {
             code = "unknown";

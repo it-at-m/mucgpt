@@ -57,15 +57,19 @@ def test_document_ids_require_a_list_of_strings(document_ids):
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
-    "error, status_code",
+    "error, status_code, detail",
     [
-        (None, None),
-        (InvalidDocumentSelectionError("Invalid IDs"), 400),
-        (DocumentUnavailableError("Documents unavailable"), 404),
+        (None, None, None),
+        (InvalidDocumentSelectionError("Invalid IDs"), 400, "Invalid IDs"),
+        (
+            DocumentUnavailableError("Documents unavailable"),
+            404,
+            "Documents unavailable",
+        ),
     ],
 )
 async def test_selection_uses_authenticated_service_and_closes_session(
-    monkeypatch, user_info, error, status_code
+    monkeypatch, user_info, error, status_code, detail
 ):
     session_context = MagicMock()
     session = session_context.__aenter__.return_value
@@ -104,7 +108,7 @@ async def test_selection_uses_authenticated_service_and_closes_session(
         with pytest.raises(HTTPException) as exc:
             await virtual_file_system_helper.get_documents_for_agent(request, user_info)
         assert exc.value.status_code == status_code
-        assert exc.value.detail == str(error)
+        assert exc.value.detail == detail
     else:
         assert await virtual_file_system_helper.get_documents_for_agent(
             request, user_info

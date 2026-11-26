@@ -66,7 +66,8 @@ def _is_placeholder(value: str) -> bool:
     return (
         lowered in _PLACEHOLDER_WORDS
         or set(value) <= set("*xX•.-_<>#?")
-        or value.startswith(("<", "${", "{{", "%(", "$"))
+        or value.startswith(("<", "${", "{{", "%("))
+        or re.fullmatch(r"\$[A-Z_][A-Z0-9_]*", value) is not None
         or "xxx" in lowered
         or "***" in value
     )
@@ -403,16 +404,17 @@ def detect_emails(text: str, options: ScanOptions) -> Iterator[Hit]:
 
 
 _PHONE_RE = re.compile(
-    r"(?<![\w+/.,-])(?:\+|00)?\d[\d ()/-]{5,22}\d(?![\w/-])(?![.,]\d)"
+    r"(?<![\w+/.,-])(?:\+\d|\(0|0)[\d ()/-]{5,22}\d(?![\w/-])(?![.,]\d)"
 )
 
 
 def detect_phone_numbers(text: str, _options: ScanOptions) -> Iterator[Hit]:
     for match in _PHONE_RE.finditer(text):
         value = match.group(0)
-        # Phone numbers start with an international prefix or a trunk "0";
-        # this excludes dates, amounts and most reference numbers.
-        if not value.startswith(("+", "0")):
+        # Do not restart inside a grouped identifier such as an invalid IBAN.
+        if value.startswith("0") and re.search(
+            r"\d{4} $", text[max(0, match.start() - 5) : match.start()]
+        ):
             continue
         digits = re.sub(r"\D", "", value)
         if 8 <= len(digits) <= 15 and len(set(digits)) > 2:

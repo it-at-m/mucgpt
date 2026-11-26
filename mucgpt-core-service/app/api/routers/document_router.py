@@ -2,7 +2,7 @@ from typing import Annotated
 from uuid import UUID
 
 import httpx
-from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
+from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 
 from api.api_models import DocumentLibraryEntry, DocumentMetadata
 from core.auth import authenticate_user
@@ -12,6 +12,7 @@ from core.document_service import (
     DocumentLibraryService,
     DocumentProcessingDisabledError,
     DocumentProcessingError,
+    DocumentScanError,
     DocumentSizeExceededError,
     DocumentUnavailableError,
     EmptyDocumentExtractionError,
@@ -19,6 +20,7 @@ from core.document_service import (
     InvalidDocumentUploadError,
     LibraryDocument,
     SelectedDocument,
+    SensitivityConfirmationRequired,
 )
 from core.logtools import getLogger
 from database.document_repo import DocumentQuotaExceededError
@@ -83,37 +85,6 @@ async def delete_document(
 
 
 @router.post(
-    "/{document_id}/acknowledge-sensitivity",
-    status_code=204,
-    summary="Confirm the sensitivity scan findings of an owned document",
-    description=(
-        "Records that the owner has seen the warning about likely personal data "
-        "or secrets. Required before a flagged document can be attached to a "
-        "chat. Idempotent; only ready documents can be confirmed."
-    ),
-    responses={
-        404: {"description": "Document unavailable"},
-        500: {"description": "Confirmation could not be stored"},
-    },
-)
-async def acknowledge_document_sensitivity(
-    document_id: UUID,
-    user_info: Annotated[AuthenticationResult, Depends(authenticate_user)],
-) -> None:
-    try:
-        await DocumentLibraryService().acknowledge_sensitivity(
-            user_info, str(document_id)
-        )
-    except DocumentUnavailableError as exc:
-        raise HTTPException(status_code=404, detail=str(exc)) from exc
-    except Exception as exc:
-        logger.exception("Document sensitivity acknowledgement failed")
-        raise HTTPException(
-            status_code=500, detail="Confirmation could not be stored."
-        ) from exc
-
-
-@router.post(
     "",
     status_code=201,
     response_model=DocumentMetadata,
@@ -125,24 +96,38 @@ async def acknowledge_document_sensitivity(
     ),
     responses={
         400: {"description": "Invalid upload or parser rejected the document"},
-        409: {"description": "Document library limit of ten reached"},
+        409: {"description": "Document library limit reached or sensitivity_confirmation_required"},
         413: {"description": "Upload or extracted text exceeds its byte limit"},
         415: {"description": "Parser does not support the document format"},
         422: {"description": "Missing file, invalid extraction, or no usable text"},
         500: {"description": "Document storage or ingestion failed"},
         502: {"description": "Parser service returned an error"},
-        503: {"description": "Document processing is not enabled"},
+        503: {"description": "Document processing disabled or sensitivity scan failed"},
         504: {"description": "Parser service timed out"},
     },
 )
 async def upload_document(
     file: Annotated[UploadFile, File(description="Document to extract and store")],
     user_info: Annotated[AuthenticationResult, Depends(authenticate_user)],
+    confirmation_fingerprint: Annotated[str | None, Form()] = None,
 ) -> SelectedDocument:
     # FastAPI owns the multipart upload's lifetime. Ingestion bounds actual file
     # reads before parsing; these limits do not bound HTTP multipart spooling.
     try:
-        return await DocumentIngestionService().ingest_document(user_info, file)
+        return await DocumentIngestionService().ingest_document(
+            user_info, file, confirmation_fingerprint
+        )
+    except SensitivityConfirmationRequired as exc:
+        raise HTTPException(
+            409,
+            detail={
+                "code": "sensitivity_confirmation_required",
+                "findings": exc.findings,
+                "fingerprint": exc.fingerprint,
+            },
+        ) from exc
+    except DocumentScanError as exc:
+        raise HTTPException(503, detail=str(exc)) from exc
     except InvalidDocumentUploadError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
     except DocumentQuotaExceededError as exc:

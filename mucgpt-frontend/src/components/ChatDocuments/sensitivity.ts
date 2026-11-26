@@ -4,10 +4,6 @@ import type { DocumentSensitivity, SensitivityCategory, SensitivityFinding } fro
 
 export const getSensitiveFindings = (sensitivity: DocumentSensitivity | undefined): SensitivityFinding[] => sensitivity?.findings ?? [];
 
-/** Flagged documents must be confirmed once before the backend accepts them in a chat turn. */
-export const needsSensitivityConfirmation = (sensitivity: DocumentSensitivity | undefined) =>
-    sensitivity !== undefined && sensitivity.requires_acknowledgement && !sensitivity.acknowledged;
-
 /** Lists categories with counts, e.g. "2× IBAN, 1× password or credential"; the matched values are never known to the frontend. */
 export const describeFindings = (findings: SensitivityFinding[], t: TFunction) => {
     // "certain" and "likely" hits of one category are shown together.

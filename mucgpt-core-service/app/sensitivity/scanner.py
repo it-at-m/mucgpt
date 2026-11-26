@@ -17,7 +17,6 @@ _CONFIDENCE_ORDER: dict[SensitivityConfidence, int] = {"certain": 0, "likely": 1
 def scan_text(
     text: str,
     *,
-    max_chars: int | None = None,
     ignored_email_domains: Iterable[str] = (),
     disabled_categories: Iterable[SensitivityCategory] = (),
     detectors: Sequence[Detector] = DEFAULT_DETECTORS,
@@ -27,9 +26,6 @@ def scan_text(
     The report holds categories and counts only, never matched values, so it
     is safe to persist, log and return to the client.
     """
-    truncated = max_chars is not None and len(text) > max_chars
-    if truncated:
-        text = text[:max_chars]
     options = ScanOptions(
         ignored_email_domains=frozenset(
             domain.strip().lower().lstrip("@") for domain in ignored_email_domains
@@ -60,4 +56,4 @@ def scan_text(
             f.category,
         ),
     )
-    return SensitivityReport(findings=tuple(findings), truncated=truncated)
+    return SensitivityReport(findings=tuple(findings))

@@ -35,8 +35,11 @@ import { toIntlLocale } from "../../utils/locale";
 import { LegacyDocumentRow, LibraryDocumentRow, UploadRow, type PendingUpload } from "./DocumentRows";
 import styles from "./Documents.module.css";
 
+import { useUploadConfirmation } from "../../components/ChatDocuments/useUploadConfirmation";
+
 const Documents = () => {
     const { t, i18n } = useTranslation();
+    const { createConfirmation, dialog } = useUploadConfirmation();
     const navigate = useNavigate();
     const { document_processing_enabled: isDocumentProcessingEnabled } = useConfigContext();
     const [documents, setDocuments] = useState<DocumentLibraryEntry[] | null>(null);
@@ -72,16 +75,20 @@ const Documents = () => {
     const runUpload = useCallback(
         async (upload: PendingUpload) => {
             try {
-                const document = await uploadDocumentApi(upload.file);
+                const document = await uploadDocumentApi(upload.file, createConfirmation());
                 // The row stays until the reloaded list contains the document, so it never disappears in between.
                 setUploads(current => current.map(entry => (entry.id === upload.id ? { ...entry, documentId: document.id } : entry)));
             } catch (error) {
+                if (error instanceof DOMException && error.name === "AbortError") {
+                    setUploads(current => current.filter(entry => entry.id !== upload.id));
+                    return;
+                }
                 console.error("Failed to upload document:", error);
                 setUploads(current => current.map(entry => (entry.id === upload.id ? { ...entry, errorMessage: t(getUploadErrorKey(error)) } : entry)));
             }
             await loadDocuments();
         },
-        [loadDocuments, t]
+        [createConfirmation, loadDocuments, t]
     );
 
     const uploadFiles = useCallback(
@@ -131,10 +138,11 @@ const Documents = () => {
             // Only the extracted text was kept in the browser, so it is stored as a text file.
             const filename = document.name.toLowerCase().endsWith(".txt") ? document.name : `${document.name}.txt`;
             try {
-                await uploadDocumentApi(new File([document.content], filename, { type: "text/plain" }));
+                await uploadDocumentApi(new File([document.content], filename, { type: "text/plain" }), createConfirmation());
                 removeStoredParsedDocument(document.id);
                 setLegacyDocuments(getStoredParsedDocuments());
             } catch (error) {
+                if (error instanceof DOMException && error.name === "AbortError") return;
                 console.error("Failed to move the browser document to the library:", error);
                 setActionError(t("document_library.upload_failed_named", { name: document.name, reason: t(getUploadErrorKey(error)) }));
             }
@@ -282,6 +290,7 @@ const Documents = () => {
                 )}
             </div>
 
+            {dialog}
             <Dialog open={documentToDelete !== null} onOpenChange={(_, data) => !data.open && setDocumentToDelete(null)}>
                 <DialogSurface>
                     <DialogBody>

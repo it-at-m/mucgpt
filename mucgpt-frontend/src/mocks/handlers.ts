@@ -721,6 +721,14 @@ async function uploadDocumentHandler({ request }: { request: Request }) {
         return HttpResponse.json({ detail: "Document extraction returned no usable text." }, { status: 422 });
     }
 
+    const findings = mockScan(text);
+    if (findings.length) {
+        const data = new TextEncoder().encode(JSON.stringify([file.name, text, findings]));
+        const digest = await crypto.subtle.digest("SHA-256", data);
+        const fingerprint = Array.from(new Uint8Array(digest), b => b.toString(16).padStart(2, "0")).join("");
+        if (formData.get("confirmation_fingerprint") !== fingerprint)
+            return HttpResponse.json({ detail: { code: "sensitivity_confirmation_required", findings, fingerprint } }, { status: 409 });
+    }
     const id = crypto.randomUUID();
     const document: DocumentLibraryEntry = {
         id,
@@ -733,10 +741,7 @@ async function uploadDocumentHandler({ request }: { request: Request }) {
         path: `/documents/${id}.txt`,
         created_at: new Date().toISOString(),
         status: "ready",
-        sensitivity: (() => {
-            const findings = mockScan(text);
-            return { findings, requires_acknowledgement: findings.length > 0, acknowledged: false };
-        })()
+        sensitivity: { findings, confirmed_at: findings.length ? new Date().toISOString() : null }
     };
     mockDocuments.unshift(document);
     return HttpResponse.json(document, { status: 201 });
@@ -1776,15 +1781,6 @@ export const handlers = [
 
     http.get("/api/backend/v1/documents", () => HttpResponse.json(mockDocuments)),
     http.post("/api/backend/v1/documents", uploadDocumentHandler),
-    http.post("/api/backend/v1/documents/:documentId/acknowledge-sensitivity", async ({ params }) => {
-        await delay(300);
-        const document = mockDocuments.find(entry => entry.id === params.documentId && entry.status === "ready");
-        if (!document) {
-            return HttpResponse.json({ detail: "Document unavailable" }, { status: 404 });
-        }
-        document.sensitivity = { ...document.sensitivity, acknowledged: true };
-        return new HttpResponse(null, { status: 204 });
-    }),
     http.delete("/api/backend/v1/documents/:documentId", async ({ params }) => {
         await delay(300);
         const index = mockDocuments.findIndex(document => document.id === params.documentId);

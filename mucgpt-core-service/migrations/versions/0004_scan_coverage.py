@@ -1,4 +1,4 @@
-"""Preserve scan coverage. Older rows have unknown coverage."""
+"""Preserve scan coverage and scan failures. Older rows have unknown coverage."""
 
 import sqlalchemy as sa
 from alembic import op
@@ -13,7 +13,17 @@ def upgrade() -> None:
     op.add_column(
         "documents", sa.Column("sensitivity_truncated", sa.Boolean(), nullable=True)
     )
+    op.add_column(
+        "documents",
+        sa.Column(
+            "sensitivity_scan_failed",
+            sa.Boolean(),
+            nullable=False,
+            server_default=sa.false(),
+        ),
+    )
 
 
 def downgrade() -> None:
+    op.drop_column("documents", "sensitivity_scan_failed")
     op.drop_column("documents", "sensitivity_truncated")

@@ -9,6 +9,7 @@ from sqlalchemy import (
     String,
     Text,
     UniqueConstraint,
+    false,
     func,
 )
 from sqlalchemy.dialects.postgresql import JSONB
@@ -108,6 +109,10 @@ class Document(Base):
         JSON, nullable=True
     )
     sensitivity_truncated: Mapped[bool | None] = mapped_column(nullable=True)
+    # The scanner raised, so the text may contain unreported findings.
+    sensitivity_scan_failed: Mapped[bool] = mapped_column(
+        nullable=False, default=False, server_default=false()
+    )
     sensitivity_acknowledged_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True
     )

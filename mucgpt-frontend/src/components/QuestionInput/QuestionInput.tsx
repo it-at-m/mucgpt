@@ -22,7 +22,6 @@ import { useConfigContext } from "../../context/ConfigContext";
 import { DocumentAttachMenu } from "../ChatDocuments/DocumentAttachMenu";
 import { DocumentChips } from "../ChatDocuments/DocumentChips";
 import { DuplicateDocumentNotice } from "../ChatDocuments/DuplicateDocumentNotice";
-import { SensitiveDocumentNotice } from "../ChatDocuments/SensitiveDocumentNotice";
 import type { ChatDocument } from "../ChatDocuments/documentSelection";
 import { useChatDocuments } from "../ChatDocuments/useChatDocuments";
 import { useFileDropZone } from "../ChatDocuments/useFileDropZone";
@@ -110,7 +109,6 @@ const QuestionInputContent = ({
     const allowFileUpload = config.document_processing_enabled && setDocuments !== undefined;
     const resolvedPlaceholder = placeholder ?? (allowFileUpload ? t("chat.prompt") : t("chat.prompt_no_upload"));
     const textareaRef = useAutoGrowTextarea(question);
-    const warningActionRef = useRef(false);
     const wasDisabledRef = useRef(disabled);
     const recordingBaseRef = useRef("");
     const isTranscriptionActive = transcriptionStatus === "recording" || transcriptionStatus === "transcribing";
@@ -179,13 +177,6 @@ const QuestionInputContent = ({
         [attachFiles]
     );
 
-    useEffect(() => {
-        if (warningActionRef.current && chatDocuments.unconfirmedDocuments.length === 0) {
-            warningActionRef.current = false;
-            if (document.activeElement === document.body) textareaRef.current?.focus();
-        }
-    }, [chatDocuments.unconfirmedDocuments.length, textareaRef]);
-
     const focusTextarea = useCallback(() => textareaRef.current?.focus(), [textareaRef]);
 
     const uploadFiles = useCallback((files: File[]) => void attachFiles(files), [attachFiles]);
@@ -211,21 +202,7 @@ const QuestionInputContent = ({
                 />
             )}
 
-            {allowFileUpload && chatDocuments.unconfirmedDocuments.length > 0 && (
-                <SensitiveDocumentNotice
-                    documents={chatDocuments.unconfirmedDocuments}
-                    isConfirming={chatDocuments.isConfirmingSensitive}
-                    hasFailed={chatDocuments.hasConfirmationFailed}
-                    onConfirm={() => {
-                        warningActionRef.current = true;
-                        void chatDocuments.confirmSensitiveDocuments();
-                    }}
-                    onRemove={() => {
-                        warningActionRef.current = true;
-                        chatDocuments.removeUnconfirmedDocuments();
-                    }}
-                />
-            )}
+            {chatDocuments.dialog}
 
             <div className={mergeClasses(styles.composer, isDragActive && styles.dragActive)} onClick={focusInputOnBackgroundClick} {...dropZoneProps}>
                 {allowFileUpload && (

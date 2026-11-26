@@ -31,6 +31,8 @@ def summary(text: str, **kwargs) -> set[tuple[str, str, int]]:
         ("geboren am 3. Mai 1980", ("date_of_birth", "certain")),
         ("Date of birth: 1980-05-03", ("date_of_birth", "certain")),
         ("Kontakt: max.mustermann@example.org", ("email", "certain")),
+        ("Tel. (089) 233-12345", ("phone", "likely")),
+        ("Password=$Summer2024!", ("credential_assignment", "likely")),
         ("Tel. 089 233-12345", ("phone", "likely")),
         ("mobil +49 170 1234567", ("phone", "likely")),
         # Secrets
@@ -124,12 +126,10 @@ def test_disabled_categories_still_claim_their_span():
     assert summary(text, disabled_categories=["iban"]) == set()
 
 
-def test_truncation_is_reported_and_bounds_the_scan():
-    report = scan_text("x" * 100 + " max@example.org", max_chars=100)
-
-    assert report.truncated is True
-    assert report.findings == ()
-    assert scan_text("max@example.org", max_chars=100).truncated is False
+def test_full_numeric_document_reaches_final_email():
+    suffix = " max@example.org"
+    text = ("12345678 " * 600000)[: 5 * 1024 * 1024 - len(suffix)] + suffix
+    assert any(f.category == "email" for f in scan_text(text).findings)
 
 
 def test_custom_detectors_are_supported():

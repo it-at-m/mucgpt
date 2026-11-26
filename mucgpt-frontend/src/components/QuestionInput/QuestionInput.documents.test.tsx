@@ -3,12 +3,12 @@ import { act, fireEvent, render, screen, waitFor } from "@testing-library/react"
 import { useState } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { acknowledgeDocumentSensitivityApi, deleteDocumentApi, listDocumentsApi, uploadDocumentApi } from "../../api/documents-client";
+import { deleteDocumentApi, listDocumentsApi, uploadDocumentApi } from "../../api/documents-client";
 import { ApiError } from "../../api/fetch-utils";
 import type { DocumentLibraryEntry, DocumentMetadata } from "../../api/models";
 import { DEFAULT_APP_CONFIG } from "../../constants";
 import { ConfigContext } from "../../context/ConfigContext";
-import type { ChatDocument } from "../ChatDocuments/documentSelection";
+import type { ChatDocument, LibraryChatDocument } from "../ChatDocuments/documentSelection";
 import { QuestionInput } from "./QuestionInput";
 
 vi.mock("react-i18next", () => ({ useTranslation: () => ({ t: (key: string) => key }) }));
@@ -21,8 +21,7 @@ vi.mock("@fluentui/react-components", async importOriginal => ({
 vi.mock("../../api/documents-client", () => ({
     listDocumentsApi: vi.fn(),
     deleteDocumentApi: vi.fn(),
-    uploadDocumentApi: vi.fn(),
-    acknowledgeDocumentSensitivityApi: vi.fn()
+    uploadDocumentApi: vi.fn()
 }));
 
 const libraryEntry = (overrides: Partial<DocumentLibraryEntry> = {}): DocumentLibraryEntry => ({
@@ -35,12 +34,12 @@ const libraryEntry = (overrides: Partial<DocumentLibraryEntry> = {}): DocumentLi
     preview_kind: "initial_excerpt",
     path: "/documents/library-1.txt",
     created_at: "2026-11-02",
-    sensitivity: { findings: [], requires_acknowledgement: false, acknowledged: false },
+    sensitivity: { findings: [], confirmed_at: null },
     status: "ready",
     ...overrides
 });
 
-const attached = ({ status = "ready", usedInChat = false }: { status?: "ready" | "unavailable"; usedInChat?: boolean } = {}): ChatDocument => ({
+const attached = ({ status = "ready", usedInChat = false }: { status?: "ready" | "unavailable"; usedInChat?: boolean } = {}): LibraryChatDocument => ({
     id: "library-1",
     name: "Policy.txt",
     size: 5,
@@ -84,71 +83,60 @@ const flaggedUpload = (): DocumentMetadata =>
         ...libraryEntry({ id: "flagged", filename: "Antrag.txt" }),
         sensitivity: {
             findings: [{ category: "iban", kind: "pii", confidence: "certain", count: 2 }],
-            requires_acknowledgement: true,
-            acknowledged: false
+            confirmed_at: null
         }
     }) as DocumentMetadata;
 
 describe("QuestionInput sensitive documents", () => {
-    const uploadFlagged = async () => {
-        vi.mocked(uploadDocumentApi).mockResolvedValue(flaggedUpload());
+    it.each([true, false])("asks before attaching a flagged upload (save=%s)", async save => {
+        vi.mocked(uploadDocumentApi).mockImplementation(async (file, confirm) => {
+            const metadata = flaggedUpload();
+            if (!(await confirm!(file.name, metadata.sensitivity.findings!))) throw new DOMException("Cancelled", "AbortError");
+            return metadata;
+        });
         render(<Harness />);
-        dropFiles([new File(["DE89 3704 0044 0532 0130 00"], "Antrag.txt", { type: "text/plain" })]);
-        return screen.findByText("document_library.sensitivity_title");
-    };
-
-    it("blocks sending a flagged upload until the user confirms it and keeps the badge afterwards", async () => {
-        vi.mocked(acknowledgeDocumentSensitivityApi).mockResolvedValue();
-        await uploadFlagged();
-
-        expect(screen.getByText("document_library.sensitivity_finding", { exact: false })).toBeInTheDocument();
-        expect(sendButton()).toBeDisabled();
-        fireEvent.keyDown(screen.getByRole("textbox"), { key: "Enter" });
-        expect(onSend).not.toHaveBeenCalled();
-
-        const button = screen.getByRole("button", { name: "document_library.sensitivity_confirm" });
-        button.focus();
+        dropFiles([new File(["text"], "Antrag.txt")]);
+        const button = await screen.findByRole("button", { name: save ? "document_library.save_document" : "common.cancel" });
         fireEvent.click(button);
-        await waitFor(() => expect(screen.getByRole("textbox")).toHaveFocus());
-
-        await waitFor(() => expect(screen.queryByText("document_library.sensitivity_title")).not.toBeInTheDocument());
-        expect(acknowledgeDocumentSensitivityApi).toHaveBeenCalledWith("flagged");
-        expect(announce).toHaveBeenCalledWith("document_library.sensitivity_confirmed", { polite: true });
-        expect(sendButton()).toBeEnabled();
-        expect(screen.getByText("document_library.sensitivity_badge")).toBeInTheDocument();
+        await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+        await waitFor(() => expect(Boolean(screen.queryByText("document_library.sensitivity_badge"))).toBe(save));
     });
 
-    it("detaches unconfirmed flagged documents without deleting them from the library", async () => {
-        await uploadFlagged();
-
-        const button = screen.getByRole("button", { name: "document_library.sensitivity_remove" });
-        button.focus();
-        fireEvent.click(button);
-        await waitFor(() => expect(screen.getByRole("textbox")).toHaveFocus());
-
-        expect(screen.queryByText("Antrag.txt")).not.toBeInTheDocument();
-        expect(screen.queryByText("document_library.sensitivity_title")).not.toBeInTheDocument();
-        expect(deleteDocumentApi).not.toHaveBeenCalled();
-        expect(acknowledgeDocumentSensitivityApi).not.toHaveBeenCalled();
-        expect(sendButton()).toBeEnabled();
+    it("cancels a pending confirmation when switching chats", async () => {
+        const saved = vi.fn();
+        vi.mocked(uploadDocumentApi).mockImplementation(async (file, confirm) => {
+            const metadata = flaggedUpload();
+            if (!(await confirm!(file.name, metadata.sensitivity.findings!))) throw new DOMException("Cancelled", "AbortError");
+            saved();
+            return metadata;
+        });
+        const { rerender } = render(<Harness conversationKey="first" />);
+        dropFiles([new File(["text"], "Flagged.txt")]);
+        await screen.findByRole("dialog");
+        rerender(<Harness conversationKey="second" />);
+        await waitFor(() => expect(screen.queryByText("Flagged.txt")).not.toBeInTheDocument());
+        expect(saved).not.toHaveBeenCalled();
     });
 
-    it("keeps the document blocked and explains a failed confirmation", async () => {
-        vi.mocked(acknowledgeDocumentSensitivityApi).mockRejectedValue(new ApiError("unavailable", 500));
-        vi.spyOn(console, "error").mockImplementation(() => {});
-        await uploadFlagged();
-
-        fireEvent.click(screen.getByRole("button", { name: "document_library.sensitivity_confirm" }));
-
-        expect(await screen.findByRole("alert")).toHaveTextContent("document_library.sensitivity_confirm_failed");
-        expect(screen.getByText("document_library.sensitivity_title")).toBeInTheDocument();
-        expect(sendButton()).toBeDisabled();
+    it("allows a saved flagged document in a second chat and exposes badge details on focus", async () => {
+        render(
+            <Harness
+                conversationKey="second"
+                initialData={[{ ...attached(), status: "ready", confirmed: true, sensitiveFindings: flaggedUpload().sensitivity.findings! }]}
+            />
+        );
+        expect(sendButton()).toBeEnabled();
+        expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+        const badge = screen.getByText("document_library.sensitivity_badge");
+        badge.focus();
+        expect(badge).toHaveFocus();
+        expect(badge).toHaveTextContent("document_library.sensitivity_badge_confirmed");
     });
 
     it("shows no warning for clean documents", () => {
         render(<Harness initialData={[attached()]} />);
 
-        expect(screen.queryByText("document_library.sensitivity_title")).not.toBeInTheDocument();
+        expect(screen.queryByText("document_library.save_question")).not.toBeInTheDocument();
         expect(screen.queryByText("document_library.sensitivity_badge")).not.toBeInTheDocument();
     });
 });

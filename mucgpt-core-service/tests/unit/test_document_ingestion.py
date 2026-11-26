@@ -516,61 +516,51 @@ SENSITIVE_TEXT = (
 )
 
 
-async def resolve(sessions, document_ids, settings=None, **kwargs):
+async def resolve(sessions, document_ids, **kwargs):
     async with sessions.begin() as session:
         return await services.DocumentService(
             DocumentRepository(session),
-            settings if settings is not None else DocumentSensitivityConfig(),
         ).resolve_selected_documents(user(), document_ids, **kwargs)
 
 
 @pytest.mark.asyncio
-async def test_findings_are_stored_without_values_and_block_selection_until_confirmed(
-    ingestion,
-):
-    service, sessions, _, parser = ingestion
+@pytest.mark.parametrize("change", ["owner", "filename", "text", "findings", None])
+async def test_confirmation_binds_reviewed_upload(ingestion, change):
+    service, sessions, store, parser = ingestion
     parser.parse.return_value = SENSITIVE_TEXT
-
-    metadata = await service.ingest_document(user(), upload())
-
-    assert metadata.sensitivity.requires_acknowledgement is True
-    assert metadata.sensitivity.acknowledged is False
-    assert {f.category for f in metadata.sensitivity.findings or ()} == {
-        "iban",
-        "credential_assignment",
-    }
-    stored = sessions.rows()[0].sensitivity_findings
-    assert stored is not None and len(stored) == 2
-    assert "DE89" not in str(stored) and "Sommer2024" not in str(stored)
-
-    with pytest.raises(services.DocumentAcknowledgementRequiredError):
-        await resolve(sessions, [metadata.id])
-    saved = await resolve(sessions, [metadata.id], saved_selection=True)
-    assert saved.documents == () and saved.unavailable_ids == (metadata.id,)
-
-    await services.DocumentLibraryService(
-        cast("async_sessionmaker[AsyncSession]", sessions), DocumentConfig()
-    ).acknowledge_sensitivity(user(), metadata.id)
-    selection = await resolve(sessions, [metadata.id])
-    assert selection.document_ids == (metadata.id,)
-    assert selection.documents[0].sensitivity.acknowledged is True
-
-
-@pytest.mark.asyncio
-async def test_acknowledgement_can_be_disabled_by_configuration(ingestion):
-    service, sessions, _, parser = ingestion
-    parser.parse.return_value = SENSITIVE_TEXT
-    metadata = await service.ingest_document(user(), upload())
-
-    selection = await resolve(
-        sessions,
-        [metadata.id],
-        DocumentSensitivityConfig(require_acknowledgement=False),
+    with pytest.raises(services.SensitivityConfirmationRequired) as warning:
+        await service.ingest_document(user(), upload())
+    assert sessions.rows() == []
+    assert store.search(get_document_namespace(user().user_id)) == []
+    owner = user("other") if change == "owner" else user()
+    file = upload(filename="other.pdf") if change == "filename" else upload()
+    if change == "text":
+        parser.parse.return_value += " extra"
+    if change == "findings":
+        service.settings.sensitivity.disabled_categories = ["iban"]
+    save = service.ingest_document(owner, file, warning.value.fingerprint)
+    if change:
+        with pytest.raises(services.SensitivityConfirmationRequired):
+            await save
+        assert sessions.rows() == []
+        return
+    metadata = await save
+    assert metadata.sensitivity.confirmed_at
+    row = sessions.rows()[0]
+    assert row.sensitivity_findings == warning.value.findings
+    assert (
+        store.get(get_document_namespace(owner.user_id), row.storage_key).value[
+            "content"
+        ]
+        == SENSITIVE_TEXT
     )
-
-    assert selection.document_ids == (metadata.id,)
-    assert selection.documents[0].sensitivity.findings
-    assert selection.documents[0].sensitivity.requires_acknowledgement is False
+    service.settings.sensitivity.enabled = False
+    library = services.DocumentLibraryService(
+        cast("async_sessionmaker[AsyncSession]", sessions.begin),
+    )
+    listed = await library.list_documents(owner)
+    assert listed[0].sensitivity.findings == metadata.sensitivity.findings
+    assert (await resolve(sessions, [metadata.id])).document_ids == (metadata.id,)
 
 
 @pytest.mark.asyncio
@@ -590,7 +580,9 @@ async def test_disabled_scan_stores_no_findings(ingestion):
 
 
 @pytest.mark.asyncio
-async def test_scanner_failure_does_not_block_upload(ingestion, monkeypatch):
+async def test_scanner_failure_releases_reservation_and_blocks_upload(
+    ingestion, monkeypatch
+):
     service, sessions, _, parser = ingestion
     parser.parse.return_value = SENSITIVE_TEXT
 
@@ -599,20 +591,6 @@ async def test_scanner_failure_does_not_block_upload(ingestion, monkeypatch):
 
     monkeypatch.setattr(services, "scan_text", fail)
 
-    metadata = await service.ingest_document(user(), upload())
-
-    row = sessions.rows()[0]
-    assert row.status == "ready" and row.sensitivity_findings is None
-    assert metadata.sensitivity.findings is None
-
-
-@pytest.mark.asyncio
-async def test_partial_scan_with_no_findings_survives_selection(ingestion):
-    service, sessions, _, parser = ingestion
-    service.settings.sensitivity.max_chars = 10
-    parser.parse.return_value = "ordinary text followed by person@example.org"
-    metadata = await service.ingest_document(user(), upload())
-    assert metadata.sensitivity.truncated is True
-    assert metadata.sensitivity.findings == ()
-    selection = await resolve(sessions, [metadata.id])
-    assert selection.documents[0].sensitivity == metadata.sensitivity
+    with pytest.raises(services.DocumentScanError):
+        await service.ingest_document(user(), upload())
+    assert sessions.rows() == []

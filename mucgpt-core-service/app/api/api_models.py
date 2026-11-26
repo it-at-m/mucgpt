@@ -22,11 +22,7 @@ class DocumentSensitivityInfo(BaseModel):
     findings: list[Finding] | None = Field(
         description="Detected categories; null when the text was not scanned."
     )
-    requires_acknowledgement: bool = Field(
-        description="The owner must confirm the findings before the document can be attached."
-    )
-    acknowledged: bool
-    truncated: bool | None = None
+    confirmed_at: datetime | None = None
 
 
 class DocumentMetadata(BaseModel):

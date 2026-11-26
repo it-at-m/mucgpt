@@ -239,59 +239,13 @@ def test_listing_exposes_sensitivity_findings_without_values(library_api):
 
     assert entries[flagged]["sensitivity"] == {
         "findings": [IBAN_FINDING],
-        "requires_acknowledgement": True,
-        "acknowledged": False,
-        "truncated": None,
+        "confirmed_at": None,
     }
     assert entries[clean]["sensitivity"] == {
         "findings": [],
-        "requires_acknowledgement": False,
-        "acknowledged": False,
-        "truncated": None,
+        "confirmed_at": None,
     }
     assert entries[unscanned]["sensitivity"]["findings"] is None
-    assert entries[unscanned]["sensitivity"]["requires_acknowledgement"] is False
-
-
-def test_acknowledgement_is_owner_scoped_and_idempotent(library_api):
-    client, _, _, engine, store, owner, _ = library_api
-    document_id = add_document(
-        engine, owner.user_id, sensitivity_findings=[IBAN_FINDING]
-    )
-    url = f"/api/v1/documents/{document_id}/acknowledge-sensitivity"
-
-    assert client.post(url).status_code == 204
-    first = rows(engine)[0].sensitivity_acknowledged_at
-    assert first is not None
-    assert client.post(url).status_code == 204
-    assert rows(engine)[0].sensitivity_acknowledged_at == first
-
-    entry = client.get("/api/v1/documents").json()[0]
-    assert entry["sensitivity"]["acknowledged"] is True
-    assert store.mock_calls == []
-
-
-@pytest.mark.parametrize("status", ["processing", "deleting"])
-def test_acknowledgement_requires_a_ready_document(library_api, status):
-    client, _, _, engine, _, owner, _ = library_api
-    document_id = add_document(engine, owner.user_id, status=status)
-
-    response = client.post(f"/api/v1/documents/{document_id}/acknowledge-sensitivity")
-
-    assert response.status_code == 404
-    assert rows(engine)[0].sensitivity_acknowledged_at is None
-
-
-def test_foreign_and_missing_acknowledgements_are_uniform(library_api):
-    client, _, _, engine, _, _, _ = library_api
-    foreign_id = add_document(engine, "foreign-owner")
-
-    foreign = client.post(f"/api/v1/documents/{foreign_id}/acknowledge-sensitivity")
-    missing = client.post(f"/api/v1/documents/{uuid4()}/acknowledge-sensitivity")
-
-    assert foreign.status_code == missing.status_code == 404
-    assert foreign.json() == missing.json()
-    assert rows(engine)[0].sensitivity_acknowledged_at is None
 
 
 @pytest.mark.parametrize(

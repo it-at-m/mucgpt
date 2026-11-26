@@ -548,10 +548,6 @@ class DocumentSensitivityConfig(BaseModel):
     """Scan extracted document text for personal data and secrets."""
 
     enabled: bool = True
-    # Users must confirm a flagged document once before it can be attached.
-    require_acknowledgement: bool = True
-    # Defaults to the document text limit, so the whole text is scanned.
-    max_chars: PositiveInt = 5 * 1024 * 1024
     # Own organisation's addresses (e.g. "muenchen.de") appear in nearly every
     # official letter; ignoring them avoids flagging every upload.
     ignored_email_domains: list[str] = Field(default_factory=list)

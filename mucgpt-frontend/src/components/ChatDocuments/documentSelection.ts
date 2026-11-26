@@ -2,7 +2,7 @@ import i18next from "i18next";
 
 import { listDocumentsApi } from "../../api/documents-client";
 import type { DocumentLibraryEntry, DocumentMetadata, SensitivityFinding } from "../../api/models";
-import { getSensitiveFindings, needsSensitivityConfirmation } from "./sensitivity";
+import { getSensitiveFindings } from "./sensitivity";
 
 /** Mirrors the backend's per-user library limit (`DOCUMENT_LIMIT` in the core service). */
 export const DOCUMENT_LIBRARY_LIMIT = 10;
@@ -23,10 +23,8 @@ interface AttachedLibraryDocument {
     /** The document was part of a sent turn, so the agent may already have read it into the chat history. */
     usedInChat: boolean;
     /** Likely personal data or secrets in the document; shown as a lasting warning badge. */
-    scanTruncated?: boolean;
     sensitiveFindings?: SensitivityFinding[];
-    /** The findings were not confirmed yet, so the document cannot be sent. */
-    needsConfirmation?: boolean;
+    confirmed?: boolean;
 }
 
 /**
@@ -47,16 +45,11 @@ export const isLibraryDocument = (document: ChatDocument): document is LibraryCh
 
 export const getSelectedDocumentIds = (documents: ChatDocument[]) => documents.filter(isLibraryDocument).map(document => document.id);
 
-/** Ready documents whose likely personal data or secrets the user has not confirmed yet. */
-export const getUnconfirmedDocuments = (documents: ChatDocument[]) =>
-    documents.filter((document): document is Extract<ChatDocument, { status: "ready" }> => document.status === "ready" && document.needsConfirmation === true);
-
 /**
  * A turn must not be sent while an upload is in flight or an attached document is gone, or it would silently lack documents.
- * Unconfirmed flagged documents would be rejected by the backend.
  */
 export const isSendBlockedByDocuments = (documents: ChatDocument[]) =>
-    documents.some(document => document.status === "uploading" || document.status === "unavailable") || getUnconfirmedDocuments(documents).length > 0;
+    documents.some(document => document.status === "uploading" || document.status === "unavailable");
 
 export const getFileSignature = (file: File) => `${file.name}-${file.size}-${file.lastModified}`;
 
@@ -76,9 +69,8 @@ export const toChatDocument = (document: DocumentMetadata | DocumentLibraryEntry
     name: document.filename,
     size: document.original_size,
     usedInChat,
-    scanTruncated: document.sensitivity?.truncated === true,
-    sensitiveFindings: getSensitiveFindings(document.sensitivity),
-    needsConfirmation: needsSensitivityConfirmation(document.sensitivity)
+    confirmed: Boolean(document.sensitivity?.confirmed_at),
+    sensitiveFindings: getSensitiveFindings(document.sensitivity)
 });
 
 /** Restores a chat's saved selection. These documents were sent before, hence `usedInChat`. */

@@ -70,6 +70,7 @@ export const parseAssistantImport = (filename: string, content: string): Assista
     const followUpActions = optionalArray(parsed, "quick_prompts", isFollowUpAction);
     const starterPrompts = optionalArray(parsed, "examples", isStarterPrompt);
     const hierarchicalAccess = optionalArray(parsed, "hierarchical_access", (value): value is string => typeof value === "string");
+    // TODO: Tags are currently not configurable in the UI. Preserve them when tag management is added.
     const tags = optionalArray(parsed, "tags", (value): value is string => typeof value === "string");
 
     if (

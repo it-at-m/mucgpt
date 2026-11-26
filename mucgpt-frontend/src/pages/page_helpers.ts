@@ -4,6 +4,7 @@ import { DBMessage, StorageService } from "../service/storage";
 import { DBObject } from "../service/storage";
 import { ChatMessage, ChatOptions } from "./chat/Chat";
 import { ChatRequest, ChatResponse, CanvasState, ChatTurn, DataSource, Model } from "../api";
+import type { PreChatDraftCapture } from "../hooks/useCanvasController";
 import { ToolStreamHandler, ToolStatus } from "../utils/ToolStreamHandler";
 
 import language from "react-syntax-highlighter/dist/esm/languages/hljs/1c";
@@ -228,17 +229,17 @@ export interface CanvasWiring {
      * current canvas content for the failed-request draft recovery, before
      * any await could replace the editor with another chat's content.
      * Absent for non-persisted requests (previews) and tests. */
-    capturePreChatDraft?: () => void;
+    capturePreChatDraft?: () => PreChatDraftCapture;
     /** Right before a fresh conversation's id assignment: the captured canvas
      * content is adopted into it, so the controller must not treat the
      * assignment as a conversation switch. Absent for non-persisted requests
      * (previews) and tests. */
-    adoptNewConversation?: () => void;
+    adoptNewConversation?: (capture: PreChatDraftCapture | undefined) => void;
     /** A fresh conversation's first request failed and it is discarded:
      * re-arms the pre-chat canvas draft so the content survives the following
      * conversation reset. Absent for non-persisted requests (previews) and
      * tests. */
-    savePreChatDraft?: () => void;
+    savePreChatDraft?: (capture: PreChatDraftCapture | undefined) => void;
 }
 
 /** A completed turn used as extra context when regenerating a chat title. */
@@ -382,10 +383,11 @@ export const makeApiRequest = async (
             : conversationId
         : undefined;
 
+    let preChatDraftCapture: PreChatDraftCapture | undefined;
     if (newChatLocalId) {
         // Capture the canvas content synchronously: a chat selection during
         // the await below must not end up in the recovery capture.
-        if (canvasWiring) canvasWiring.capturePreChatDraft?.();
+        preChatDraftCapture = canvasWiring?.capturePreChatDraft?.();
         // Create the chat right away with an unnamed placeholder title so it is
         // visible in the sidebar and header while the first answer streams.
         // The generated title replaces the placeholder once the turn completes.
@@ -395,7 +397,7 @@ export const makeApiRequest = async (
             // announced while the pre-chat state survived the await: a
             // selection during placeholder creation belongs to another
             // conversation and must not be adopted.
-            if (!activeChatRef.current) canvasWiring?.adoptNewConversation?.();
+            if (!activeChatRef.current) canvasWiring?.adoptNewConversation?.(preChatDraftCapture);
             activeChatRef.current = placeholderId;
             dispatch({ type: "SET_ACTIVE_CHAT", payload: placeholderId });
             fetchHistory?.();
@@ -409,7 +411,7 @@ export const makeApiRequest = async (
             // conversation existed with it: re-arm the pre-chat draft from the
             // still-current editor, so the conversation reset below restores
             // it as an unpersisted draft.
-            canvasWiring?.savePreChatDraft?.();
+            canvasWiring?.savePreChatDraft?.(preChatDraftCapture);
             let serverConversationDeleted = false;
             try {
                 await deleteConversationApi(conversationId);

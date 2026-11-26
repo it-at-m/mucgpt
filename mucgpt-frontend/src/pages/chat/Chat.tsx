@@ -300,8 +300,8 @@ const Chat = () => {
                 c.unlock();
             },
             capturePreChatDraft: () => canvasRef.current.capturePreChatDraft(),
-            adoptNewConversation: () => canvasRef.current.beginAdoption(),
-            savePreChatDraft: () => canvasRef.current.snapshotPreChatDraft()
+            adoptNewConversation: capture => canvasRef.current.beginAdoption(capture),
+            savePreChatDraft: capture => canvasRef.current.snapshotPreChatDraft(capture)
         };
     }, []);
 

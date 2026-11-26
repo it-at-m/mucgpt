@@ -2,6 +2,7 @@
 import { describe, expect, it, vi } from "vitest";
 import type { Assistant } from "../api/models";
 import { downloadAssistantExport, mapAssistantToExportData, mapVersionToExportData, sanitizeAssistantFilename } from "./assistant-export";
+import { parseAssistantImport } from "./assistant-import";
 
 describe("sanitizeAssistantFilename", () => {
     it("keeps clean names as they are", () => {
@@ -73,6 +74,12 @@ describe("export mapping", () => {
                 is_visible: false
             })
         );
+    });
+
+    it("round-trips an assistant without a default model through JSON import", () => {
+        const exported = mapAssistantToExportData({ ...baseAssistant, tools: [{ id: "tool-a" }] });
+
+        expect(parseAssistantImport("assistant.json", JSON.stringify(exported)).defaultModel).toBe(undefined);
     });
 
     it("maps a version response onto the same export shape", () => {

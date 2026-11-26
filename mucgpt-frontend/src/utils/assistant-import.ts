@@ -80,7 +80,7 @@ export const parseAssistantImport = (filename: string, content: string): Assista
         parsed.system_message.trim() === "" ||
         (parsed.description !== undefined && typeof parsed.description !== "string") ||
         (parsed.creativity !== undefined && (typeof parsed.creativity !== "string" || !supportedCreativityLevels.has(parsed.creativity))) ||
-        (parsed.default_model !== undefined && typeof parsed.default_model !== "string") ||
+        (parsed.default_model !== undefined && parsed.default_model !== null && typeof parsed.default_model !== "string") ||
         (parsed.is_visible !== undefined && typeof parsed.is_visible !== "boolean") ||
         tools === null ||
         followUpActions === null ||
@@ -96,7 +96,7 @@ export const parseAssistantImport = (filename: string, content: string): Assista
         description: parsed.description ?? "",
         systemMessage: parsed.system_message,
         creativity: parsed.creativity ?? CREATIVITY_LOW,
-        defaultModel: parsed.default_model,
+        defaultModel: parsed.default_model ?? undefined,
         tools,
         followUpActions,
         starterPrompts,

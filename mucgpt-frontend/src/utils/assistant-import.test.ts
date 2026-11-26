@@ -68,6 +68,10 @@ describe("parseAssistantImport", () => {
         });
     });
 
+    it("treats a null default model as no default model", () => {
+        expect(parseAssistantImport("assistant.json", JSON.stringify({ ...validExport, default_model: null })).defaultModel).toBe(undefined);
+    });
+
     it("rejects a filename with a double extension before parsing its content", () => {
         expect(errorCode(() => parseAssistantImport("assistant.exe.json", JSON.stringify(validExport)))).toBe("unsupported_filename");
     });

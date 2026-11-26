@@ -406,6 +406,34 @@ export function useCanvasController(conversationId: string | undefined, serverCo
         };
     }, [editor, notifySubscribers]);
 
+    // No conversation: the canvas is an unpersisted pre-chat draft. Seeds the
+    // stored draft into an empty editor and opens it; shared by the switch
+    // effect and the recreation retry below.
+    const seedPreChatDraft = useCallback(() => {
+        const current = editorRef.current;
+        if (!current || current.isDestroyed || hasCanvasContent()) return;
+        const draft = loadCanvasDraft();
+        if (!draft?.trim()) return;
+        current.commands.setContent(sanitize(draft));
+        current.view.dispatch(current.state.tr.setMeta(CANVAS_PERSISTENCE_RESET, true));
+        // The seed is not a user edit: keep its notification (which would
+        // only rewrite the identical draft) out of the edit stream.
+        clearPendingNotify();
+        setIsOpen(true);
+    }, [sanitize, hasCanvasContent, clearPendingNotify]);
+
+    // A replaced editor at mount (the throwaway 1 ms useEditor instance, the
+    // limits config) starts empty and outlives the switch's single seed run:
+    // without a retry the canvas stays closed and a later empty open clears
+    // the draft. Retry while nothing was ever captured and no conversation
+    // exists; once captured, the recreation restore below re-applies it.
+    useEffect(() => {
+        if (conversationId) return;
+        if (!editor || editor.isDestroyed) return;
+        if (lastCurrentDocRef.current !== null) return;
+        seedPreChatDraft();
+    }, [conversationId, editor, seedPreChatDraft]);
+
     // Editor recreation (e.g. the limits config arriving) starts empty and the
     // conversation-switch effect does not re-run for it. Reapply the latest
     // document — including an intentional clear — so a recreated empty editor
@@ -513,28 +541,15 @@ export function useCanvasController(conversationId: string | undefined, serverCo
                 }
             })();
         } else {
-            // No conversation: the canvas is an unpersisted pre-chat draft.
-            // Seed it from the stored draft when the editor is empty — on the
-            // initial mount, and on any reset to a conversation-less chat:
-            // an aborted first turn re-arms the draft just before, and a
-            // deliberate new chat restores the surviving draft. A live
-            // document stays; its next edit refreshes the draft.
-            const editor = editorRef.current;
-            const draft = !editor || editor.isDestroyed ? null : loadCanvasDraft();
-            if (editor && !hasCanvasContent() && draft?.trim()) {
-                editor.commands.setContent(sanitize(draft));
-                editor.view.dispatch(editor.state.tr.setMeta(CANVAS_PERSISTENCE_RESET, true));
-                // The seed is the switch's doing, not a user edit: keep its
-                // notification (which would only rewrite the identical
-                // draft) out of the edit stream.
-                clearPendingNotify();
-                setIsOpen(true);
-            }
+            // No conversation: the canvas is an unpersisted pre-chat draft
+            // (surviving from a deliberate new chat or re-armed after an
+            // aborted first turn).
+            seedPreChatDraft();
         }
         return () => {
             cancelled = true;
         };
-    }, [conversationId, hasCanvasContent, serverId, flushPendingNotify, clearPendingNotify]);
+    }, [conversationId, hasCanvasContent, serverId, flushPendingNotify, clearPendingNotify, seedPreChatDraft]);
 
     const setIsOpen = useCallback((open: boolean) => {
         isOpenRef.current = open;

@@ -107,6 +107,9 @@ const clearedRings = {
 };
 
 beforeEach(() => {
+    // The editor stub is shared across tests; leftover content would make the
+    // switch effect's reset emit a real update and pollute the next test.
+    editorStub.markdownText = "";
     saveMock.mockResolvedValue(true);
     loadStateMock.mockResolvedValue(null);
     loadRevisionsMock.mockResolvedValue(null);
@@ -372,6 +375,20 @@ describe("useCanvasController pre-chat canvas draft", () => {
 
         view.rerender(<Owner conversationId={undefined} />);
         expect(editorStub.markdownText).toBe("# first turn content");
+    });
+
+    it("re-seeds the draft into a recreated editor when the mount seed fell into a recreation window", () => {
+        const view = render(<Owner conversationId={undefined} />);
+        // No document was ever captured: the seed ran against a since-replaced,
+        // empty editor, and the draft was saved before that.
+        localStorage.setItem("canvas-draft", "# draft");
+        const recreated = makeEditorStub();
+        editors.active = recreated;
+        view.rerender(<Owner conversationId={undefined} />);
+
+        expect(recreated.markdownText).toBe("# draft");
+        expect(capturedController!.isOpen).toBe(true);
+        editors.active = editorStub;
     });
 
     it("re-arms the draft with the content captured at adoption, not with a later chat switch's editor content", () => {

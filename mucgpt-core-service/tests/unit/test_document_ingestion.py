@@ -16,7 +16,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from sqlalchemy.orm import Session
 from starlette.datastructures import Headers
 
-from config.settings import DocumentConfig
+from config.settings import DocumentConfig, DocumentSensitivityConfig
 from core import document_service as services
 from core.auth_models import AuthenticationResult
 from core.virtual_file_system_helper import (
@@ -509,3 +509,98 @@ async def test_catalog_cleanup_failure_keeps_a_recoverable_row(
     await service._compensate(user().user_id, row.id, True)
     assert sessions.rows() == []
     assert store.search(get_document_namespace(user().user_id)) == []
+
+
+SENSITIVE_TEXT = (
+    "Bitte überweisen an DE89 3704 0044 0532 0130 00.\nPassword = Sommer2024!"
+)
+
+
+async def resolve(sessions, document_ids, settings=None, **kwargs):
+    async with sessions.begin() as session:
+        return await services.DocumentService(
+            DocumentRepository(session),
+            settings if settings is not None else DocumentSensitivityConfig(),
+        ).resolve_selected_documents(user(), document_ids, **kwargs)
+
+
+@pytest.mark.asyncio
+async def test_findings_are_stored_without_values_and_block_selection_until_confirmed(
+    ingestion,
+):
+    service, sessions, _, parser = ingestion
+    parser.parse.return_value = SENSITIVE_TEXT
+
+    metadata = await service.ingest_document(user(), upload())
+
+    assert metadata.sensitivity.requires_acknowledgement is True
+    assert metadata.sensitivity.acknowledged is False
+    assert {f.category for f in metadata.sensitivity.findings or ()} == {
+        "iban",
+        "credential_assignment",
+    }
+    stored = sessions.rows()[0].sensitivity_findings
+    assert stored is not None and len(stored) == 2
+    assert "DE89" not in str(stored) and "Sommer2024" not in str(stored)
+
+    with pytest.raises(services.DocumentAcknowledgementRequiredError):
+        await resolve(sessions, [metadata.id])
+    saved = await resolve(sessions, [metadata.id], saved_selection=True)
+    assert saved.documents == () and saved.unavailable_ids == (metadata.id,)
+
+    await services.DocumentLibraryService(
+        cast("async_sessionmaker[AsyncSession]", sessions), DocumentConfig()
+    ).acknowledge_sensitivity(user(), metadata.id)
+    selection = await resolve(sessions, [metadata.id])
+    assert selection.document_ids == (metadata.id,)
+    assert selection.documents[0].sensitivity.acknowledged is True
+
+
+@pytest.mark.asyncio
+async def test_acknowledgement_can_be_disabled_by_configuration(ingestion):
+    service, sessions, _, parser = ingestion
+    parser.parse.return_value = SENSITIVE_TEXT
+    metadata = await service.ingest_document(user(), upload())
+
+    selection = await resolve(
+        sessions,
+        [metadata.id],
+        DocumentSensitivityConfig(require_acknowledgement=False),
+    )
+
+    assert selection.document_ids == (metadata.id,)
+    assert selection.documents[0].sensitivity.findings
+    assert selection.documents[0].sensitivity.requires_acknowledgement is False
+
+
+@pytest.mark.asyncio
+async def test_disabled_scan_stores_no_findings(ingestion):
+    _, sessions, _, parser = ingestion
+    parser.parse.return_value = SENSITIVE_TEXT
+    service = services.DocumentIngestionService(
+        cast("async_sessionmaker[AsyncSession]", sessions),
+        DocumentConfig(sensitivity=DocumentSensitivityConfig(enabled=False)),
+    )
+
+    metadata = await service.ingest_document(user(), upload())
+
+    assert metadata.sensitivity == services.NOT_SCANNED
+    assert sessions.rows()[0].sensitivity_findings is None
+    assert (await resolve(sessions, [metadata.id])).document_ids == (metadata.id,)
+
+
+@pytest.mark.asyncio
+async def test_scanner_failure_does_not_block_upload(ingestion, monkeypatch):
+    service, sessions, _, parser = ingestion
+    parser.parse.return_value = SENSITIVE_TEXT
+
+    def fail(*_args, **_kwargs):
+        raise RuntimeError("scanner bug")
+
+    monkeypatch.setattr(services, "scan_text", fail)
+
+    metadata = await service.ingest_document(user(), upload())
+
+    row = sessions.rows()[0]
+    assert row.status == "ready" and row.sensitivity_findings is None
+    assert metadata.sensitivity.findings is None

@@ -121,6 +121,11 @@ def test_upload_returns_only_ready_metadata_and_uses_authenticated_owner(upload_
         "preview_kind": "initial_excerpt",
         "path": f"/documents/{document_id}.txt",
         "created_at": metadata["created_at"],
+        "sensitivity": {
+            "findings": [],
+            "requires_acknowledgement": False,
+            "acknowledged": False,
+        },
     }
     assert metadata["created_at"]
     row = rows(engine)[0]

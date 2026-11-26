@@ -141,6 +141,32 @@ Where:
 - `xberg_url`: Points to your Xberg parsing service.
 - `xberg_timeout`: Execution timeout in seconds.
 
+### Personal data and secret warnings for documents
+
+After extraction, the core service scans each uploaded document for likely
+personal data (IBAN, Steuer-ID, Sozialversicherungsnummer, ID card numbers,
+credit cards, dates of birth, email addresses, phone numbers) and secrets
+(private keys, access tokens, JWTs, connection strings, credential
+assignments). Detection uses patterns plus checksums; it does not detect names
+or addresses. Only categories and counts are stored, never the matched values.
+
+A flagged document shows a warning badge and must be confirmed once
+(`POST /v1/documents/{id}/acknowledge-sensitivity`) before it can be attached
+to a chat; chat requests with unconfirmed flagged documents fail with `409`.
+Configure it under `documents.sensitivity`:
+
+```yaml
+documents:
+  sensitivity:
+    enabled: true                  # scan new uploads
+    require_acknowledgement: true  # false: warn only, never block attaching
+    ignored_email_domains: ["muenchen.de"]
+    disabled_categories: []        # e.g. ["phone"]
+```
+
+Documents uploaded before the scan existed, or while it was disabled, are not
+flagged.
+
 ### Virtual filesystem for selected documents
 
 After a document is uploaded and parsed, its extracted text is stored in the

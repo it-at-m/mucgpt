@@ -132,11 +132,11 @@ async def test_persisted_chat_http_lifecycle_survives_restart_and_deletion(
             "Second deterministic answer",
         ]
 
-        foreign_messages = await harness.as_user(harness.foreign_user).client.get(
-            f"/v1/conversations/{conversation_id}/messages"
-        )
-        assert foreign_messages.status_code == 403
-        harness.use_owner()
+        with harness.as_user(harness.foreign_user) as foreign_harness:
+            foreign_messages = await foreign_harness.client.get(
+                f"/v1/conversations/{conversation_id}/messages"
+            )
+            assert foreign_messages.status_code == 403
 
         await PersistanceHelpers.close()
         await PersistanceHelpers.init(harness.database.settings)

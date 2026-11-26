@@ -10,8 +10,8 @@ routers, ``init_agent`` and the Deep Agent graph.
 from __future__ import annotations
 
 import json
-from collections.abc import AsyncGenerator, Sequence
-from contextlib import asynccontextmanager, nullcontext
+from collections.abc import AsyncGenerator, Generator, Sequence
+from contextlib import asynccontextmanager, contextmanager, nullcontext
 from dataclasses import dataclass, field
 from typing import Any
 from unittest.mock import AsyncMock
@@ -92,15 +92,17 @@ class PostgresHttpHarness:
     _current_user: AuthenticationResult
     _runtime_state: dict[str, Any] = field(repr=False)
 
-    def as_user(self, user: AuthenticationResult) -> PostgresHttpHarness:
-        """Select the identity returned by the real routers' auth dependency."""
+    @contextmanager
+    def as_user(self, user: AuthenticationResult) -> Generator[PostgresHttpHarness]:
+        """Temporarily select the identity returned by the auth dependency."""
+        previous_user = self._current_user
         self._current_user = user
         self._runtime_state["user"] = user
-        return self
-
-    def use_owner(self) -> PostgresHttpHarness:
-        """Restore the default owner identity after an authorization assertion."""
-        return self.as_user(self.owner)
+        try:
+            yield self
+        finally:
+            self._current_user = previous_user
+            self._runtime_state["user"] = previous_user
 
     def set_model_script(self, script: Sequence[ScriptStep]) -> ScriptedChatModel:
         """Replace the finite scripted-model sequence for the next agent request."""

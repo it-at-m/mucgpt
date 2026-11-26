@@ -70,15 +70,15 @@ async def test_document_http_lifecycle_survives_restart_and_deletion(
         assert owner_documents.status_code == 200
         assert [document["id"] for document in owner_documents.json()] == [document_id]
 
-        foreign_documents = await harness.as_user(harness.foreign_user).client.get(
-            "/v1/documents"
-        )
-        assert foreign_documents.status_code == 200
-        assert foreign_documents.json() == []
-        foreign_delete = await harness.client.delete(f"/v1/documents/{document_id}")
-        assert foreign_delete.status_code == 404
-        assert foreign_delete.json() == {"detail": "Document is unavailable."}
-        harness.use_owner()
+        with harness.as_user(harness.foreign_user) as foreign_harness:
+            foreign_documents = await foreign_harness.client.get("/v1/documents")
+            assert foreign_documents.status_code == 200
+            assert foreign_documents.json() == []
+            foreign_delete = await foreign_harness.client.delete(
+                f"/v1/documents/{document_id}"
+            )
+            assert foreign_delete.status_code == 404
+            assert foreign_delete.json() == {"detail": "Document is unavailable."}
 
         await DocumentCatalogManager.close()
         await FileStoreManager.close()

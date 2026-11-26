@@ -1,6 +1,5 @@
 import { useEffect, useState, type CSSProperties, type ReactNode } from "react";
-import { Button, OverlayDrawer } from "@fluentui/react-components";
-import { PanelRight24Regular } from "@fluentui/react-icons";
+import { OverlayDrawer } from "@fluentui/react-components";
 import { useTranslation } from "react-i18next";
 
 import type { CanvasControllerInstance } from "../../hooks/useCanvasController";
@@ -87,11 +86,6 @@ export const CanvasSplitView = ({ controller, conversationId, serverConversation
                 <OverlayDrawer position="end" size="medium" open onOpenChange={(_, data) => !data.open && controller.setIsOpen(false)}>
                     {panel}
                 </OverlayDrawer>
-            )}
-            {!controller.isOpen && (
-                <Button appearance="secondary" className={styles.floatingToggle} icon={<PanelRight24Regular />} onClick={() => controller.setIsOpen(true)}>
-                    {t("canvas.toggle")}
-                </Button>
             )}
         </div>
     );

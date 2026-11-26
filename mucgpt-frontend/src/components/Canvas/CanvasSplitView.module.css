@@ -60,11 +60,3 @@
 .divider:focus-visible .dividerHandle {
     background-color: var(--colorBrandForeground1);
 }
-
-/* Floating toggle to open the canvas; mirrors the AssistantEditorPage preview toggle. */
-.floatingToggle {
-    position: absolute;
-    top: 68px;
-    right: 16px;
-    z-index: 4;
-}

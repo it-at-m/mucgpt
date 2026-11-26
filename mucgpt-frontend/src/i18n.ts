@@ -129,7 +129,6 @@ i18n
                         last_used: "Zuletzt verwendet",
                         recommended: "Empfohlen",
                         chat_header: "Hallo {{user}}, was hast du heute vor?",
-                        new_chat_with_canvas: "Neuer Chat mit Canvas",
                         discover_all: "Alle Assistenten entdecken",
                         explore_badge: "Entdecken",
                         discover_all_description: "Entdecke und verwalte alle verfügbaren Assistenten.",
@@ -202,7 +201,7 @@ i18n
                         }
                     },
                     canvas: {
-                        toggle: "Canvas",
+                        toggle: "Canvas öffnen",
                         panel_title: "Canvas",
                         status_writing: "Agent schreibt…",
                         limit_warning: "Text zu lang: der ausgegraute Bereich wird nicht vom Agenten gelesen, bleibt aber im Chat gespeichert.",
@@ -1132,7 +1131,6 @@ i18n
                         last_used: "Last used",
                         recommended: "Recommended",
                         chat_header: "Hello {{user}}, what are you planning today?",
-                        new_chat_with_canvas: "New chat with canvas",
                         discover_all: "Discover all assistants",
                         explore_badge: "Discover",
                         discover_all_description: "Discover and manage all available assistants.",
@@ -1204,7 +1202,7 @@ i18n
                         }
                     },
                     canvas: {
-                        toggle: "Canvas",
+                        toggle: "Open canvas",
                         panel_title: "Canvas",
                         status_writing: "Agent is writing…",
                         limit_warning: "Text too long: the greyed-out section is not read by the agent but stays saved with the chat.",
@@ -2102,7 +2100,6 @@ i18n
                         last_used: "Zuletzt verwendet",
                         recommended: "Empfohlen",
                         chat_header: "Griaß di {{user}}, wos host heid vor?",
-                        new_chat_with_canvas: "Neier Chat mit Canvas",
                         discover_all: "Alle Assistentn entdecka",
                         explore_badge: "Entdecka",
                         discover_all_description: "Entdeck und verwalt olle verfügbaren Assistentn.",
@@ -2235,7 +2232,7 @@ i18n
                         }
                     },
                     canvas: {
-                        toggle: "Canvas",
+                        toggle: "Canvas aufmacha",
                         panel_title: "Canvas",
                         status_writing: "Agent schreibt…",
                         limit_warning: "Text zu lang: da ausgegraute Bereich wird vom Agenten ned glesen, bleibts aber im Chat gspeichert.",
@@ -3070,7 +3067,6 @@ i18n
                         last_used: "Derniers utilisés",
                         recommended: "Recommandés",
                         chat_header: "Bonjour {{user}}, qu'est-ce que vous prévoyez aujourd'hui ?",
-                        new_chat_with_canvas: "Nouveau chat avec canvas",
                         discover_all: "Découvrir tous les assistants",
                         explore_badge: "Découvrir",
                         discover_all_description: "Découvrez et gérez tous les assistants disponibles.",
@@ -3144,7 +3140,7 @@ i18n
                         }
                     },
                     canvas: {
-                        toggle: "Canvas",
+                        toggle: "Ouvrir le canvas",
                         panel_title: "Canvas",
                         status_writing: "L'agent écrit…",
                         limit_warning: "Texte trop long : la partie grisée n'est pas lue par l'agent mais reste enregistrée avec le chat.",
@@ -4041,7 +4037,6 @@ i18n
                         last_used: "Останні використані",
                         recommended: "Рекомендовані",
                         chat_header: "Привіт {{user}}, що ти плануєш сьогодні?",
-                        new_chat_with_canvas: "Новий чат із canvas",
                         discover_all: "Переглянути всіх асистентів",
                         explore_badge: "Відкрити",
                         discover_all_description: "Переглядайте та керуйте всіма доступними асистентами.",
@@ -4114,7 +4109,7 @@ i18n
                         }
                     },
                     canvas: {
-                        toggle: "Canvas",
+                        toggle: "Відкрити canvas",
                         panel_title: "Canvas",
                         status_writing: "Агент пише…",
                         limit_warning: "Текст задовгий: сіру частину агент не читає, але вона зберігається разом із чатом.",

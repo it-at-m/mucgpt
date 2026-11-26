@@ -24,7 +24,8 @@ import { useGlobalToastContext } from "../../components/GlobalToastHandler/Globa
 import { getOwnedCommunityAssistants, getUserSubscriptionsApi, subscribeToAssistantApi, unsubscribeFromAssistantApi } from "../../api/assistant-client";
 import { NotSubscribedDialog } from "../../components/NotSubscribedDialog";
 import { useToolsContext } from "../../components/ToolsProvider";
-import { Button, Skeleton, SkeletonItem } from "@fluentui/react-components";
+import { Skeleton, SkeletonItem } from "@fluentui/react-components";
+import { Button } from "../../ui/Button";
 import { Info24Regular, Settings24Regular } from "@fluentui/react-icons";
 import { AssistantEditorPage } from "../../components/AssistantDialogs/AssistantEditorPage/AssistantEditorPage";
 import { AssistantDetailsSidebar, AssistantCardData } from "../../components/AssistantDetailsSidebar/AssistantDetailsSidebar";
@@ -51,6 +52,7 @@ import { useToolApproval } from "../../hooks/useToolApproval";
 import { useToolStatusToasts } from "../../hooks/useToolStatusToasts";
 import { useCanvasController } from "../../hooks/useCanvasController";
 import { CanvasSplitView } from "../../components/Canvas/CanvasSplitView";
+import { CanvasToggleButton } from "../../components/Canvas/CanvasToggleButton";
 import styles from "./UnifiedAssistantChat.module.css";
 import { useUnifiedHistory, useUnifiedHistoryRegistration } from "../../components/UnifiedHistory";
 import { downloadAssistantExport, mapAssistantToExportData } from "../../utils/assistant-export";
@@ -1296,6 +1298,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                         messages_description={t("common.messages")}
                         actions={
                             <>
+                                <CanvasToggleButton controller={canvas} />
                                 {canEdit && !isLegacyAssistant && (
                                     <Button
                                         appearance="subtle"

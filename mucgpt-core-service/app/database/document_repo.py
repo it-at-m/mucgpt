@@ -1,7 +1,8 @@
 from collections.abc import Sequence
+from typing import Any
 from uuid import UUID, uuid4
 
-from sqlalchemy import delete, select, update
+from sqlalchemy import delete, func, select, update
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -114,7 +115,13 @@ class DocumentRepository:
         return result.scalar_one_or_none()
 
     async def mark_ready(
-        self, user_id: str, document_id: str, *, text_length: int, preview: str
+        self,
+        user_id: str,
+        document_id: str,
+        *,
+        text_length: int,
+        preview: str,
+        sensitivity_findings: list[dict[str, Any]] | None = None,
     ) -> bool:
         """Finalize owned processing metadata after the caller has stored the body."""
         get_document_namespace(user_id)
@@ -132,6 +139,29 @@ class DocumentRepository:
                 text_length=text_length,
                 preview=preview,
                 preview_kind="initial_excerpt",
+                sensitivity_findings=sensitivity_findings,
+            )
+            .returning(Document.id)
+        )
+        return result.scalar_one_or_none() is not None
+
+    async def acknowledge_sensitivity(self, user_id: str, document_id: str) -> bool:
+        """Record the owner's confirmation of a ready document's scan findings.
+
+        Idempotent: the first acknowledgement time is kept.
+        """
+        get_document_namespace(user_id)
+        result = await self.session.execute(
+            update(Document)
+            .where(
+                Document.id == str(UUID(document_id)),
+                Document.user_id == user_id,
+                Document.status == "ready",
+            )
+            .values(
+                sensitivity_acknowledged_at=func.coalesce(
+                    Document.sensitivity_acknowledged_at, func.now()
+                )
             )
             .returning(Document.id)
         )

@@ -5,7 +5,12 @@ import type { Node as ProseMirrorNode } from "prosemirror-model";
 
 import { canvasExtensions } from "./canvasExtensions";
 import { interceptLinkClicks, prepareCanvasMarkdown } from "./canvasLinkPolicy";
-import { allowForSession } from "../MarkdownRenderer/externalLinkGuard";
+import { allowForSession, openExternalUrl, requestExternalLink } from "../MarkdownRenderer/externalLinkGuard";
+
+vi.mock("../MarkdownRenderer/externalLinkGuard", async importOriginal => {
+    const actual = await importOriginal<typeof import("../MarkdownRenderer/externalLinkGuard")>();
+    return { ...actual, openExternalUrl: vi.fn(), requestExternalLink: vi.fn() };
+});
 
 const DOMAIN = "www.muenchen.de";
 
@@ -109,20 +114,31 @@ describe("interceptLinkClicks", () => {
         return { target: anchor, preventDefault: vi.fn() } as unknown as Event;
     };
 
+    it("opens allowlisted links explicitly (contenteditable never follows the anchor default)", () => {
+        const event = makeEvent("https://www.muenchen.de/x");
+        expect(interceptLinkClicks(event, ["www.muenchen.de"])).toBe(true);
+        expect(event.preventDefault).toHaveBeenCalled();
+        expect(openExternalUrl).toHaveBeenCalledWith("https://www.muenchen.de/x");
+    });
+
+    it("opens session-allowed links without another confirmation", () => {
+        allowForSession("https://allowed.example.org/a");
+        const event = makeEvent("https://allowed.example.org/a");
+        expect(interceptLinkClicks(event, ["www.muenchen.de"])).toBe(true);
+        expect(event.preventDefault).toHaveBeenCalled();
+        expect(openExternalUrl).toHaveBeenCalledWith("https://allowed.example.org/a");
+    });
+
     it("asks for confirmation for sanitized links and blocks the default", () => {
         const event = makeEvent("https://evil.example.com/p");
         expect(interceptLinkClicks(event, ["www.muenchen.de"])).toBe(true);
         expect(event.preventDefault).toHaveBeenCalled();
+        expect(requestExternalLink).toHaveBeenCalledWith("https://evil.example.com/p");
     });
 
-    it("leaves allowlisted and session-allowed links to the default", () => {
-        expect(interceptLinkClicks(makeEvent("https://www.muenchen.de/x"), ["www.muenchen.de"])).toBe(false);
-
-        allowForSession("https://allowed.example.org/a");
-        expect(interceptLinkClicks(makeEvent("https://allowed.example.org/a"), ["www.muenchen.de"])).toBe(false);
-
-        const outside = makeEvent("https://evil.example.com/p");
-        expect(interceptLinkClicks(outside, ["www.muenchen.de"])).toBe(true);
-        expect(outside.preventDefault).toHaveBeenCalled();
+    it("confirms mailto links like the chat (the host allowlist cannot match them)", () => {
+        const event = makeEvent("mailto:office@muenchen.de");
+        expect(interceptLinkClicks(event, ["www.muenchen.de"])).toBe(true);
+        expect(requestExternalLink).toHaveBeenCalledWith("mailto:office@muenchen.de");
     });
 });

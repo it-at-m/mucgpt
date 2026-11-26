@@ -34,9 +34,10 @@ export const canvasExtensions = (limits?: Partial<CanvasTextLimitOptions>, getAl
     StarterKit.configure({
         underline: {},
         link: {
-            // Navigation follows the DOM anchor default, guarded by
-            // interceptLinkClicks (TipTap's own open handler cannot be
-            // intercepted afterwards).
+            // Navigation is explicit: interceptLinkClicks opens trusted links
+            // and dialog-confirms untrusted ones (TipTap's own open handler
+            // cannot be intercepted afterwards, and plain clicks inside
+            // contenteditable never follow the DOM anchor default).
             openOnClick: false,
             autolink: false,
             linkOnPaste: false,

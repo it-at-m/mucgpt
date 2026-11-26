@@ -1,10 +1,15 @@
 from io import BytesIO
 from urllib.parse import urlparse
 
-from weasyprint import HTML, URLFetcher
+from weasyprint import CSS, HTML, URLFetcher
 from weasyprint.urls import URLFetcherResponse
 
 from export.image_fetcher import fetch_allowed_image
+
+# WeasyPrint's UA stylesheet has no rule for anchors: without this, exported
+# links look like body text (the click annotation still exists). The color
+# matches the DOCX converter's hyperlink styling.
+_LINK_CSS = "a { color: #0563C1; text-decoration: underline; }"
 
 
 class ExportURLFetcher(URLFetcher):
@@ -37,4 +42,6 @@ _url_fetcher = ExportURLFetcher()
 def convert_pdf(html: str) -> bytes:
     # The input is normalized once in convert_export (script/style stripped,
     # canvas image spans materialized, link schemes enforced).
-    return HTML(string=html, url_fetcher=_url_fetcher).write_pdf()
+    return HTML(string=html, url_fetcher=_url_fetcher).write_pdf(
+        stylesheets=[CSS(string=_LINK_CSS)]
+    )

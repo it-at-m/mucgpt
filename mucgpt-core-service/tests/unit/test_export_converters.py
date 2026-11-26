@@ -467,8 +467,8 @@ def test_data_image_re_covers_the_shared_mime_set() -> None:
 def test_pdf_conversion_uses_the_restricted_fetcher(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Pin the wiring: the restricted fetcher must be passed on the
-    convert_pdf render path itself, not only exercised in a side render."""
+    """Pin the wiring: the restricted fetcher and the link stylesheet must be
+    passed on the convert_pdf render path itself, not only in a side render."""
     import export.pdf_converter as pdf_converter
     from export.pdf_converter import _url_fetcher, convert_pdf
 
@@ -478,13 +478,17 @@ def test_pdf_conversion_uses_the_restricted_fetcher(
         def __init__(self, **kwargs):
             rendered.update(kwargs)
 
-        def write_pdf(self) -> bytes:
+        def write_pdf(self, **kwargs) -> bytes:
+            rendered.update(kwargs)
             return b"%PDF-"
 
     monkeypatch.setattr(pdf_converter, "HTML", SpyHTML)
 
     assert convert_pdf("<p>text</p>") == b"%PDF-"
     assert rendered["url_fetcher"] is _url_fetcher
+    stylesheets = rendered["stylesheets"]
+    assert len(stylesheets) == 1
+    assert "0563C1" in pdf_converter._LINK_CSS
 
 
 @pytest.mark.integration
@@ -519,6 +523,33 @@ def test_pdf_conversion_with_weasyprint() -> None:
 
     data = convert_pdf("<h1>Titel</h1><p>Absatz.</p>")
     assert data[:5] == b"%PDF-"
+
+
+@pytest.mark.integration
+@pytest.mark.skipif(
+    not _weasyprint_available(), reason="weasyprint system libs not available"
+)
+def test_pdf_renders_links_in_the_link_color() -> None:
+    """The link stylesheet must reach the render: #0563C1 = 0.019608
+    0.388235 0.756863 as the fill color of the link text."""
+    import re
+    import zlib
+
+    from export.pdf_converter import convert_pdf
+
+    pdf = convert_pdf(
+        '<p>Siehe <a href="https://www.muenchen.de/alias">die Seite</a> online.</p>'
+    )
+    fills: list[bytes] = []
+    for match in re.finditer(rb"stream\r?\n(.*?)endstream", pdf, re.S):
+        try:
+            content = zlib.decompress(match.group(1))
+        except zlib.error:
+            continue
+        fills.extend(
+            segment for segment in content.split(b"\n") if segment.endswith(b" rg")
+        )
+    assert b"0.019608 0.388235 0.756863 rg" in fills
 
 
 # A 1x1 transparent PNG; python-docx parses the header without Pillow.

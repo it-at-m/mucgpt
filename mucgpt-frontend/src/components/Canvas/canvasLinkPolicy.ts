@@ -13,7 +13,7 @@ import {
     destinationOf,
     markdownLinksToPlainText
 } from "../MarkdownRenderer/markdownLinkPolicy";
-import { isAllowedForSession, requestExternalLink } from "../MarkdownRenderer/externalLinkGuard";
+import { isAllowedForSession, openExternalUrl, requestExternalLink } from "../MarkdownRenderer/externalLinkGuard";
 
 /**
  * Canvas link/image policy (issue #228): agent-written markdown keeps its
@@ -101,17 +101,24 @@ const policyTransactions = (state: EditorState, allowedDomains: readonly string[
 };
 
 /**
- * DOM click/auxclick guard for the canvas editor: whitelisted and
- * session-allowed links follow their default navigation, every other
- * clickable link asks for confirmation first (externalLinkGuard).
+ * DOM click/auxclick guard for the canvas editor: trusted links (allowlisted
+ * hosts and session-allowed URLs) open explicitly — the editor is
+ * contenteditable, so plain clicks never follow the DOM anchor default —
+ * every other clickable link asks for confirmation first (externalLinkGuard);
+ * blocked destinations have no mark and are left alone.
  */
 export const interceptLinkClicks = (event: Event, allowedDomains: readonly string[]): boolean => {
     const anchor = event.target instanceof Element ? event.target.closest("a[href]") : null;
     if (!anchor) return false;
     const { kind, url } = classifyUrl(anchor.getAttribute("href") ?? "", allowedDomains);
-    if (kind !== "sanitized" || isAllowedForSession(url)) return false;
+    if (kind === "blocked") return false;
+    if (kind === "sanitized" && !isAllowedForSession(url)) {
+        event.preventDefault();
+        requestExternalLink(url);
+        return true;
+    }
     event.preventDefault();
-    requestExternalLink(url);
+    openExternalUrl(anchorHrefOf(kind, url));
     return true;
 };
 

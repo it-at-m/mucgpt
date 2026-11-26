@@ -34,11 +34,29 @@ describe("canvas image export adapters", () => {
         expect(html).toContain('data-canvas-image-alt="Plan"');
     });
 
-    it("degrades unapproved images to alt (url) text in the export HTML", async () => {
+    it("degrades unapproved images to desc text plus a real link on the url only (PDF)", async () => {
         configureImageApprovals(null, []);
         const html = '<p>A <span data-canvas-image-src="https://example.com/p.png" data-canvas-image-alt="Plan"></span> B</p>';
         const result = await inlineApprovedImages(html, "pdf", DOMAINS);
-        expect(result).toBe("<p>A Plan (https://example.com/p.png) B</p>");
+        expect(result).toBe('<p>A Plan (<a href="https://example.com/p.png">https://example.com/p.png</a>) B</p>');
+        const noAlt = '<p><span data-canvas-image-src="https://example.com/p.png" data-canvas-image-alt=""></span></p>';
+        expect(await inlineApprovedImages(noAlt, "pdf", DOMAINS)).toBe('<p><a href="https://example.com/p.png">https://example.com/p.png</a></p>');
+    });
+
+    it("keeps the whole desc (url) text linked in the DOCX export", async () => {
+        configureImageApprovals(null, []);
+        const html = '<p>A <span data-canvas-image-src="https://example.com/p.png" data-canvas-image-alt="Plan"></span> B</p>';
+        const result = await inlineApprovedImages(html, "docx", DOMAINS);
+        expect(result).toBe('<p>A <a href="https://example.com/p.png">Plan (https://example.com/p.png)</a> B</p>');
+    });
+
+    it("keeps degraded images as plain text inside anchors and for blocked destinations", async () => {
+        configureImageApprovals(null, []);
+        const linked =
+            '<p><a href="https://example.com/page"><span data-canvas-image-src="https://example.com/p.png" data-canvas-image-alt="Plan"></span></a></p>';
+        expect(await inlineApprovedImages(linked, "pdf", DOMAINS)).toBe('<p><a href="https://example.com/page">Plan (https://example.com/p.png)</a></p>');
+        const blocked = '<p><span data-canvas-image-src="data:text/html,evil" data-canvas-image-alt="Plan"></span></p>';
+        expect(await inlineApprovedImages(blocked, "pdf", DOMAINS)).toBe("<p>Plan (data:text/html,evil)</p>");
     });
 
     it("inlines approved images as data URIs for the PDF export", async () => {

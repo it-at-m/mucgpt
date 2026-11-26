@@ -113,9 +113,51 @@ value, else the source's value, else the default.
       require_approval: false
 ```
 
-Local tools set both on their `LocalTool` spec. The values end up in each
-tool's `BaseTool.metadata` (`agent/tools/approval.py`); everything reads them
-from there.
+Local tools can set `LocalTool.run_limit` to replace the default. Configured
+limits end up in each tool's `BaseTool.metadata` (`agent/tools/approval.py`);
+the middleware applies the default when no limit is present.
+
+## Tool call limits
+
+Every MCP and local tool defaults to 10 calls per turn. MCP sources can set
+`run_limit` to replace that per-tool default; it also applies to newly
+discovered or renamed tools. An override with `run_limit` replaces the source
+limit; an omitted field inherits it, while explicit `null` makes that tool
+unlimited. Limits must be positive integers. This is not a shared budget
+across tools or the source.
+
+```yaml
+mcp:
+  sources:
+    knowledge:
+      url: "https://mcp.example.org/mcp"
+      transport: "streamable_http"
+      run_limit: 4
+      overrides:
+        - name: "read_document"
+          run_limit: 8
+        - name: "server_info"
+          run_limit: null
+```
+
+Configured limits are resolved into `BaseTool.metadata["run_limit"]` when tools
+are wrapped, including on cache hits. `agent/tool_limits.py` builds LangChain
+limiters from that metadata and applies the default when no limit is configured.
+Excess calls return an error to the model, allowing it to finish or use other
+tools. The budget survives approval pauses and resets for a new user turn. Tools
+that share a name (e.g. from two MCP sources) share the strictest limit. Calls
+over the budget are blocked without asking for approval; rejected calls still
+count as attempts. Tools called inside a subagent (`task`, with
+`enable_subagents`) inherit the limit. For now subagents are disabled so this is
+currently not relevant.
+
+Built-ins use `models[].deep_agent.builtin_tool_run_limits` instead. Enabled
+`read_file` and `grep` default to 20 calls each; other built-ins are unlimited.
+Partial overrides retain these defaults, and `null` disables an individual
+limit (`builtin_tool_run_limits: null` disables all of them). Harness profiles
+contain only built-in/model behavior, not MCP policy.
+
+## Approval pauses
 
 How a paused run works (`deep_agent.py`, `agent_executor.py`,
 `chat_router.py`):

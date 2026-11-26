@@ -342,6 +342,9 @@ class McpLoader:
 
         existing_metadata = dict(getattr(wrapped_tool, "metadata", {}) or {})
         old_description = existing_metadata.pop("description", None)
+        # No configured limit falls through to the shared default in
+        # tool_run_limit_middleware. Preserve an explicit null as unlimited.
+        existing_metadata.pop("run_limit", None)
 
         metadata = {
             **existing_metadata,
@@ -353,6 +356,10 @@ class McpLoader:
             ),
             **McpLoader._resolve_approval(source_config, tool_override),
         }
+        if tool_override is not None and "run_limit" in tool_override.model_fields_set:
+            metadata["run_limit"] = tool_override.run_limit
+        elif "run_limit" in source_config.model_fields_set:
+            metadata["run_limit"] = source_config.run_limit
 
         if custom_desc:
             metadata["description"] = custom_desc

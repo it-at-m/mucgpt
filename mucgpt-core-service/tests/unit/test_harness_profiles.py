@@ -107,7 +107,44 @@ def test_disabled_summarization_does_not_construct_or_enable_a_summarizer(
     register_model_harness_profile(model_config)
 
     _, profile = register_profile.call_args.args
-    assert profile.extra_middleware == ()
+    assert [(m.tool_name, m.run_limit) for m in profile.extra_middleware] == [
+        ("grep", 20),
+        ("read_file", 20),
+    ]
     assert profile.excluded_middleware == frozenset({SummarizationMiddleware})
     assert profile.excluded_tools == DEEP_AGENT_BUILTIN_TOOLS - {"read_file", "grep"}
     get_model.assert_not_called()
+
+
+def test_builtin_limits_allow_partial_overrides_and_explicit_unlimited(monkeypatch):
+    register_profile = MagicMock()
+    monkeypatch.setattr(
+        "config.harness_profiles.register_harness_profile", register_profile
+    )
+    model_config = ModelsConfig.model_construct(
+        type="openai",
+        id="test-model",
+        deep_agent=DeepAgentModelConfig(
+            enabled_builtin_tools={"read_file", "grep", "ls"},
+            builtin_tool_run_limits={"read_file": None, "ls": 3},
+        ),
+    )
+    register_model_harness_profile(model_config)
+    _, profile = register_profile.call_args.args
+    assert [(m.tool_name, m.run_limit) for m in profile.extra_middleware] == [
+        ("grep", 20),
+        ("ls", 3),
+    ]
+
+
+@pytest.mark.parametrize("limit", [0, -1])
+def test_builtin_limits_reject_non_positive_values(limit):
+    from pydantic import ValidationError
+
+    with pytest.raises(ValidationError):
+        DeepAgentModelConfig(builtin_tool_run_limits={"grep": limit})
+
+
+def test_builtin_limits_null_section_disables_all_limits():
+    config = DeepAgentModelConfig.model_validate({"builtin_tool_run_limits": None})
+    assert config.builtin_tool_run_limits == {}

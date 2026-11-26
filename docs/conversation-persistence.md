@@ -2,7 +2,7 @@
 
 ## Request and transcript behavior
 
-Both chat endpoints validate the model before preparing persistence. An unknown
+The chat endpoint (`POST /v1/chat/v2/completions`) validates the model before preparing persistence. An unknown
 model returns HTTP 400; an uninitialized model registry returns HTTP 500. Neither
 case creates an ownership row or initializes an agent.
 
@@ -23,8 +23,13 @@ request and hands it to the agent separately (not via `configurable`: LangGraph 
 plain configurable values into the checkpoint metadata). Only a request without any
 messages leaves the stored messages untouched.
 
-The v1 endpoint supports streaming and non-streaming responses; v2 always streams
-AG-UI events, regardless of the request's `stream` flag.
+The chat endpoint streams AG-UI events, regardless of the request's `stream` flag,
+once the request has been accepted. Rejections before the stream starts are plain
+HTTP errors, not
+`RUN_ERROR` events: 400 (semantic rejection of request, model, image or resume input), 403
+(conversation owned by someone else), 404 (selected document unavailable), 409
+(another run holds the conversation lock), 422 (malformed JSON or schema-invalid
+request) and 500 (model registry not initialized).
 
 Conversation listing returns only live metadata owned by the caller. Transcript
 reads check live ownership before reading through the fenced saver. Unknown,
@@ -196,7 +201,7 @@ MUCGPT_LIFECYCLE_POSTGRES_HOST=127.0.0.1 MUCGPT_LIFECYCLE_POSTGRES_PORT=5433 uv 
 Optional credentials use `MUCGPT_LIFECYCLE_POSTGRES_USER` and
 `MUCGPT_LIFECYCLE_POSTGRES_PASSWORD`. The suite covers paused checkpoint writers,
 independent saver pools, lock waits, erasure rollback/retry, ID reuse, legacy
-migration, both endpoints, generation failures, and cancellation/disconnect teardown.
+migration, the chat endpoint, generation failures, and cancellation/disconnect teardown.
 Router mocks and SQL compilation tests alone cannot establish the race invariant.
 
 From `mucgpt-frontend`:

@@ -1,0 +1,123 @@
+name: License check
+permissions:
+  contents: read
+
+on: [pull_request, workflow_dispatch]
+
+jobs:
+  check_python:
+    name: License check ${{ matrix.target }} on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: ["ubuntu-22.04"]
+        target:
+          - mucgpt-core-service
+          - mucgpt-assistant-service
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Install the latest version of uv
+        uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          version: "latest"
+          architecture: x64
+      - name: Install dependencies
+        # Installs the locked environment including dev deps; dev-only findings
+        # are reported as warnings.
+        run: |
+          cd ./${{ matrix.target }}
+          uv sync --locked
+      - name: Check third-party licenses
+        env:
+          FORCE_COLOR: "1" # GitHub Actions renders ANSI colors in run logs
+        run: |
+          uv run --project ${{ matrix.target }} --no-sync python \
+            scripts/licenses/check_licenses.py \
+            --targets ${{ matrix.target }} \
+            --summary ${{ matrix.target }}_license_summary.json
+      - name: Collect license notices (artifact)
+        run: |
+          uv run --project ${{ matrix.target }} --no-sync python \
+            scripts/licenses/collect_licenses.py \
+            --targets ${{ matrix.target }} --output /tmp/notices
+      - name: Upload license notices
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: license-notices-${{ matrix.target }}
+          path: /tmp/notices/${{ matrix.target }}/THIRD_PARTY_LICENSES
+          if-no-files-found: error
+      - name: Upload license summary
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: license-summary-${{ matrix.target }}
+          path: ${{ matrix.target }}_license_summary.json
+          if-no-files-found: warn
+
+  check_frontend:
+    name: License check Frontend on ${{ matrix.os }} Node ${{ matrix.node_version }}
+    runs-on: ${{ matrix.os }}
+    env:
+      # tomllib requires Python >= 3.11.
+      UV_PYTHON: "3.13"
+    strategy:
+      fail-fast: false
+      matrix:
+        os: ["ubuntu-22.04"]
+        node_version: ["24.18.1"]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Setup node
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: ${{ matrix.node_version }}
+          cache: npm
+          cache-dependency-path: mucgpt-frontend/package-lock.json
+      - name: Install the latest version of uv
+        # Scripts run Python 3.13+ via uv (tomllib); the runner's system python is too old.
+        uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          version: "latest"
+          architecture: x64
+      - name: Show toolchain versions
+        run: |
+          node --version
+          npm --version
+      - name: Install dependencies
+        env:
+          # onnxruntime-node is only used by local spike scripts; skip its native binary download
+          ONNXRUNTIME_NODE_INSTALL: skip
+        run: |
+          cd ./mucgpt-frontend
+          npm ci
+      - name: Check third-party licenses
+        env:
+          FORCE_COLOR: "1" # GitHub Actions renders ANSI colors in run logs
+        run: |
+          uv run --no-project python \
+            scripts/licenses/check_licenses.py \
+            --targets mucgpt-frontend \
+            --summary mucgpt-frontend_license_summary.json
+      - name: Collect license notices (artifact)
+        run: |
+          uv run --no-project python \
+            scripts/licenses/collect_licenses.py \
+            --targets mucgpt-frontend --output /tmp/notices
+      - name: Upload license notices
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: license-notices-mucgpt-frontend
+          path: /tmp/notices/mucgpt-frontend/THIRD_PARTY_LICENSES
+          if-no-files-found: error
+      - name: Upload license summary
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: license-summary-mucgpt-frontend
+          path: mucgpt-frontend_license_summary.json
+          if-no-files-found: warn

@@ -23,6 +23,7 @@ from agent.middleware import (
     ToolStatusMiddleware,
 )
 from agent.state_models.default_state import DefaultAgentState
+from agent.tool_limits import ToolRunLimitMiddleware, tool_run_limit_middleware
 from agent.tools.approval import data_classification, requires_approval
 from agent.tools.mcp import McpBearerAuthProvider
 from config.settings import DataClassification
@@ -44,6 +45,14 @@ logger = getLogger(name="mucgpt-core-react-agent")
 CHECKPOINT_DURABILITY: Durability = "exit"
 
 _APPROVAL_DECISIONS: InterruptOnConfig = {"allowed_decisions": ["approve", "reject"]}
+
+
+def _approval_config(limiter: ToolRunLimitMiddleware | None) -> InterruptOnConfig:
+    if limiter is None:
+        return _APPROVAL_DECISIONS
+    # Approval runs before the limiter counts the call: don't ask for a call it
+    # blocks. Rejected calls still count as attempts, like blocked ones.
+    return {**_APPROVAL_DECISIONS, "when": limiter.within_budget}
 
 
 @dataclass(frozen=True)
@@ -72,6 +81,7 @@ class _ConfiguredLangChainDeepAgentGraph:
         self.tools = tools
         self.logger = logger
         self.debug = debug
+        self.checkpointer = checkpointer
         default_prompt = PromptPool.get_resolved_prompt("default_instructions")
         self.default_langfuse_prompt = default_prompt.langfuse_prompt
 
@@ -79,6 +89,7 @@ class _ConfiguredLangChainDeepAgentGraph:
         self.approval_tools = {
             tool.name: tool for tool in tools if requires_approval(tool)
         }
+        self.run_limits = run_limits = tool_run_limit_middleware(self.tools)
         self.agent = create_deep_agent(
             model=cast(Any, self.model),
             tools=self.tools,
@@ -91,6 +102,7 @@ class _ConfiguredLangChainDeepAgentGraph:
                 ToolStatusMiddleware(),
                 ToolErrorMiddleware(),
                 TokenUsageMiddleware(),
+                *run_limits.values(),
             ],  # type: ignore
             system_prompt=default_prompt.content,
             debug=self.debug,
@@ -102,7 +114,10 @@ class _ConfiguredLangChainDeepAgentGraph:
             checkpointer=checkpointer,
             backend=backend,
             permissions=permissions,
-            interrupt_on={name: _APPROVAL_DECISIONS for name in self.approval_tools}
+            interrupt_on={
+                name: _approval_config(run_limits.get(name))
+                for name in self.approval_tools
+            }
             or None,
         )
 
@@ -198,16 +213,29 @@ class _ConfiguredLangChainDeepAgentGraph:
             if request_context.canvas:
                 graph_input["canvas"] = request_context.canvas
 
-        stream = self.agent.astream(
-            graph_input,
-            # langgraph stubs narrow stream_mode to its literal values; callers
-            # pass validated mode names, so widen at this boundary.
-            stream_mode=cast("StreamMode | Sequence[StreamMode] | None", stream_mode),
-            config=config,
-            context=request_context,
-            durability=CHECKPOINT_DURABILITY,
-            **kwargs,
-        )
+        if self.checkpointer is not None:
+            stream = self.agent.astream(
+                graph_input,
+                # langgraph stubs narrow stream_mode to its literal values;
+                # callers pass validated mode names, so widen at this boundary.
+                stream_mode=cast(
+                    "StreamMode | Sequence[StreamMode] | None", stream_mode
+                ),
+                config=config,
+                context=request_context,
+                durability=CHECKPOINT_DURABILITY,
+                **kwargs,
+            )
+        else:
+            stream = self.agent.astream(
+                graph_input,
+                stream_mode=cast(
+                    "StreamMode | Sequence[StreamMode] | None", stream_mode
+                ),
+                config=config,
+                context=request_context,
+                **kwargs,
+            )
         try:
             async for item in stream:
                 yield item
@@ -263,6 +291,11 @@ class _ConfiguredLangChainDeepAgentGraph:
             tool_call
             for tool_call in (last_ai_message.tool_calls if last_ai_message else [])
             if tool_call["name"] in self.approval_tools
+            # Over-budget calls were not interrupted (see _approval_config).
+            and (
+                (limiter := self.run_limits.get(tool_call["name"])) is None
+                or limiter.allows(state.values, tool_call)
+            )
         ]
         requested_names = [request["name"] for request in action_requests]
         # A mismatch would map an answer to the wrong call, so refuse instead.
@@ -311,11 +344,18 @@ class _ConfiguredLangChainDeepAgentGraph:
             if request_context.canvas:
                 input_payload["canvas"] = request_context.canvas
 
+        if self.checkpointer is not None:
+            return await self.agent.ainvoke(
+                input_payload,
+                config=config,
+                context=request_context,
+                durability=CHECKPOINT_DURABILITY,
+                **kwargs,
+            )
         return await self.agent.ainvoke(
             input_payload,
             config=config,
             context=request_context,
-            durability=CHECKPOINT_DURABILITY,
             **kwargs,
         )
 

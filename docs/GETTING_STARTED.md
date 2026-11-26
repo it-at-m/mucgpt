@@ -289,6 +289,7 @@ In addition to backend storage, the frontend uses browser storage for UX state a
   - `MUCGPT-COMMUNITY-ASSISTANTS` (community assistant data)
 - localStorage:
   - UI/user preferences (for example language, theme, selected tools, selected model)
+  - Pre-chat canvas content until it is saved with a conversation (`canvas-draft`)
   - Parsed document history/content cache (`MUCGPT_PARSED_DOCUMENTS_V1`)
 - Cache API (browser):
   - NeMo transcription model files (Canary/Parakeet encoder/decoder/vocab, cache name `mucgpt-nemo-models-v1`)
@@ -465,6 +466,49 @@ MUCGPT_CORE_MCP__CACHE_TTL=43200
     - `forward_token`: If the OAuth 2.0 JWT token used for authentication should be forwarded to the MCP endpoint.
     - `transport`: Transport protocol (`"sse"` or `"streamable_http"`), see <https://modelcontextprotocol.io/specification/2025-06-18/basic/transports>
 - `cache_ttl`: Time-to-live of cached MCP tools in seconds (default: 12h).
+
+#### Tool call budgets
+
+MCP and local tools default to 10 calls per user turn, including approval
+resumes. Set `run_limit` on an MCP source to replace that per-tool default;
+source limits also cover newly discovered or renamed tools. An optional
+`overrides` entry can replace the source limit for an exact discovered tool
+name. Explicit `null` means unlimited:
+
+```yaml
+mcp:
+  sources:
+    knowledge:
+      url: "https://mcp.example.org/mcp"
+      transport: "streamable_http"
+      run_limit: 4
+      overrides:
+        - name: "read_document"
+          run_limit: 8
+        - name: "server_info"
+          run_limit: null
+```
+
+An omitted override inherits the source limit; explicit `null` disables the
+limit for that tool. Limits must be positive integers. The source budget is
+applied separately to each tool, not shared across the server. Excess calls
+return a tool error so the agent can finish with its available information.
+Configuration is applied on MCP cache hits as well as fresh discovery.
+
+For Deep Agents built-ins, configure limits alongside enabled tools under each
+model's `deep_agent` settings:
+
+```yaml
+deep_agent:
+  enabled_builtin_tools: ["read_file", "grep"]
+  builtin_tool_run_limits:
+    read_file: 30
+    grep: null
+```
+
+Enabled `read_file` and `grep` each default to 20 calls per turn. Partial
+overrides retain unspecified defaults; explicit `null` disables one limit.
+Other built-ins are unlimited unless configured here.
 
 ## 🐋 Run with Docker
 

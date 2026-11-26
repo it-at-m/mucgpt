@@ -91,6 +91,7 @@ afterEach(async () => {
         });
         await new Promise(resolve => setTimeout(resolve, 5));
     }
+    localStorage.removeItem("canvas-draft");
 });
 
 const posOf = (editor: Editor, needle: string) => {
@@ -433,6 +434,9 @@ describe("conversation id assignment", () => {
             harness.current.setMarkdown("# Mine");
             harness.current.setIsOpen(true);
         });
+        // The page announces the adoption before makeApiRequest assigns the id.
+        const capture = harness.current.capturePreChatDraft();
+        act(() => harness.current.beginAdoption(capture));
 
         await harness.rerender("conv-1");
 
@@ -495,11 +499,35 @@ describe("conversation id assignment", () => {
 
         const harness = renderController();
         harness.render(undefined);
-        act(() => harness.current.setMarkdown("---"));
+        let capture: ReturnType<typeof harness.current.capturePreChatDraft>;
+        act(() => {
+            harness.current.setMarkdown("---");
+            capture = harness.current.capturePreChatDraft();
+            harness.current.beginAdoption(capture);
+        });
 
         await harness.rerender("conv-1");
 
         expect(harness.current.getMarkdown().trim()).not.toBe("");
+    });
+
+    it("treats an unannounced id assignment as a switch and leaves the stored draft alone", async () => {
+        localStorage.setItem("canvas-draft", "# pre-chat draft");
+        loadCanvasStateMock.mockResolvedValue("# Stored");
+        loadCanvasRevisionsMock.mockResolvedValue(emptyRevisions());
+
+        const harness = renderController();
+        harness.render(undefined);
+        act(() => {
+            harness.current.setMarkdown("# Mine");
+            harness.current.setIsOpen(true);
+        });
+
+        await harness.rerender("conv-1");
+
+        // Live pre-chat content must not leak into the other conversation.
+        expect(harness.current.getMarkdown()).toBe("# Stored");
+        expect(localStorage.getItem("canvas-draft")).toBe("# pre-chat draft");
     });
 });
 

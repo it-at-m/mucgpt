@@ -221,6 +221,37 @@ Both registries carry the same tags (`<version>` and `latest`) and the same runn
 > Note: A new frontend tag will also create a new github pages deployment with the actual version
 
 
+## Third-party licenses
+
+Policy lives in the root `pyproject.toml` under `[tool.licensecheck]`: a minimal
+`allowed` list, accepted `warn` licenses and per-package `exceptions`
+(`license`, `version`, `reason`). New licenses must be reviewed before being added.
+
+`.github/workflows/license-check.yaml` runs the check on every pull request:
+shipped dependencies fail on unapproved/unknown licenses, dev-only dependencies
+only warn.
+
+```bash
+# Check all targets (or --targets mucgpt-core-service)
+uv run python scripts/licenses/check_licenses.py
+
+# Generate the third-party notices (THIRD_PARTY_LICENSES/ per target)
+uv run python scripts/licenses/collect_licenses.py
+```
+
+Python service images generate the same `THIRD_PARTY_LICENSES/` layout at build
+time using `scripts/licenses/image_notices.py` (core, assistant and both
+migration images), which is shared with the collector. Image builds use the
+repository root as their context so the license tooling is available to the
+classic Podman builder. A direct build can be run with
+`podman build -f mucgpt-core-service/Dockerfile .`.
+The frontend image generates the notices of its bundled (production) npm
+dependencies in the builder stage and ships them under
+`/usr/share/licenses/mucgpt-frontend/THIRD_PARTY_LICENSES/` (not web-served).
+Vendored frontend components under `public/vendor/*/` are inventoried by
+convention: each directory carries a license file and a `SOURCE.txt` with
+`Version` / `Source` / `License` metadata lines.
+
 ## MCP credential handling security note
 
 MCP source credentials and auth overrides are modeled as secret types in configuration to

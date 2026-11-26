@@ -8,7 +8,9 @@ from langchain_core.tools.base import BaseTool
 from agent.tools.approval import approval_metadata
 from config.settings import DEFAULT_DATA_CLASSIFICATION, DataClassification
 
-ToolMetadata = dict[str, dict[str, str]]  # language -> {"name": ..., "description": ...}
+ToolMetadata = dict[
+    str, dict[str, str]
+]  # language -> {"name": ..., "description": ...}
 
 
 @dataclass(frozen=True)
@@ -30,6 +32,7 @@ class LocalTool:
     mcp_group: str | None = None
     require_approval: bool = False
     data_classification: DataClassification = DEFAULT_DATA_CLASSIFICATION
+    run_limit: int | None = None
 
     def build(self, model: RunnableSerializable, logger: Logger) -> BaseTool:
         tool = self.factory(model, logger) if self.needs_model else self.factory(logger)
@@ -37,6 +40,8 @@ class LocalTool:
             **(tool.metadata or {}),
             **approval_metadata(self.require_approval, self.data_classification),
         }
+        if self.run_limit is not None:
+            tool.metadata["run_limit"] = self.run_limit
         return tool
 
     def display(self, lang: str) -> dict[str, str]:

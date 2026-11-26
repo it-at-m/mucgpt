@@ -16,7 +16,8 @@ const replay = (events: BaseEvent[]): RunActivity => events.reduce((state, event
 
 const runStarted = { type: EventType.RUN_STARTED, threadId: "t", runId: "r" } as BaseEvent;
 const toolStart = (toolCallId: string, toolCallName: string) => ({ type: EventType.TOOL_CALL_START, toolCallId, toolCallName }) as BaseEvent;
-const toolResult = (toolCallId: string) => ({ type: EventType.TOOL_CALL_RESULT, toolCallId, messageId: "m", content: "ok" }) as BaseEvent;
+const toolResult = (toolCallId: string, content = "ok", metadata?: Record<string, unknown>) =>
+    ({ type: EventType.TOOL_CALL_RESULT, toolCallId, messageId: "m", content, metadata }) as BaseEvent;
 const toolArgs = (toolCallId: string, delta: string) => ({ type: EventType.TOOL_CALL_ARGS, toolCallId, delta }) as BaseEvent;
 const toolEnd = (toolCallId: string) => ({ type: EventType.TOOL_CALL_END, toolCallId }) as BaseEvent;
 const textContent = { type: EventType.TEXT_MESSAGE_CONTENT, messageId: "m", delta: "Hallo" } as BaseEvent;
@@ -42,6 +43,22 @@ describe("reduceRunActivity", () => {
         const done = reduceRunActivity(running, toolResult("c1"), 5);
         expect(done.steps[0]).toMatchObject({ status: "done", endedAt: 5 });
         expect(getRunningStep(done)).toBeUndefined();
+    });
+
+    it("marks a failed tool result as an error without failing the agent run", () => {
+        const running = replay([runStarted, toolStart("c1", "InternetSearch")]);
+
+        const failed = reduceRunActivity(running, toolResult("c1", "Tool execution failed: upstream unavailable"), 5);
+
+        expect(failed.steps[0]).toMatchObject({ status: "error", endedAt: 5 });
+    });
+
+    it("uses the structured tool failure marker when available", () => {
+        const running = replay([runStarted, toolStart("c1", "InternetSearch")]);
+
+        const failed = reduceRunActivity(running, toolResult("c1", "redacted", { mucgpt: { toolStatus: "error" } }), 5);
+
+        expect(failed.steps[0]).toMatchObject({ status: "error", endedAt: 5 });
     });
 
     it("ignores duplicate starts for the same call", () => {

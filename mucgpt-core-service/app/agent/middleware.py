@@ -817,6 +817,7 @@ class ToolErrorMiddleware(AgentMiddleware):
             return ToolMessage(
                 content=f"Tool execution failed: {exc}",
                 tool_call_id=request.tool_call["id"],
+                status="error",
             )
 
     async def awrap_tool_call(
@@ -833,6 +834,7 @@ class ToolErrorMiddleware(AgentMiddleware):
             return ToolMessage(
                 content=f"Tool execution failed: {exc}",
                 tool_call_id=request.tool_call["id"],
+                status="error",
             )
 
 

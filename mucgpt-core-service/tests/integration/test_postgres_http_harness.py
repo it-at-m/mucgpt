@@ -41,11 +41,14 @@ async def test_harness_routes_parser_and_user_switching(monkeypatch) -> None:
         assert (await harness.client.get("/v1/documents")).status_code == 200
         assert len((await harness.client.get("/v1/documents")).json()) == 1
 
-        foreign_documents = await harness.as_user(harness.foreign_user).client.get(
-            "/v1/documents"
-        )
-        assert foreign_documents.status_code == 200
-        assert foreign_documents.json() == []
+        with harness.as_user(harness.foreign_user) as foreign_harness:
+            foreign_documents = await foreign_harness.client.get("/v1/documents")
+            assert foreign_documents.status_code == 200
+            assert foreign_documents.json() == []
+
+        owner_documents = await harness.client.get("/v1/documents")
+        assert owner_documents.status_code == 200
+        assert len(owner_documents.json()) == 1
 
 
 @pytest.mark.asyncio

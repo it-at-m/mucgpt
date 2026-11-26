@@ -21,6 +21,7 @@ from core.auth import authenticate_user
 from core.auth_models import AuthenticationResult
 from core.virtual_file_system_helper import FileStoreManager, get_document_namespace
 from database.database_models import Base, Document
+from database.document_repo import DOCUMENT_LIMIT
 
 pytestmark = pytest.mark.integration
 
@@ -194,13 +195,15 @@ def test_extraction_rejection_releases_reservation(upload_api, text, expected, d
     assert store.search(get_document_namespace(owner.user_id)) == []
 
 
-def test_eleventh_upload_returns_conflict_without_eviction(upload_api):
+def test_upload_beyond_library_limit_returns_conflict_without_eviction(upload_api):
     client, _, parser, engine, _, _, _ = upload_api
-    ids = [post_document(client).json()["id"] for _ in range(10)]
+    ids = [post_document(client).json()["id"] for _ in range(DOCUMENT_LIMIT)]
     response = post_document(client)
     assert response.status_code == 409
-    assert response.json() == {"detail": "Document library limit of 10 reached"}
-    assert parser.parse.await_count == 10
+    assert response.json() == {
+        "detail": f"Document library limit of {DOCUMENT_LIMIT} reached"
+    }
+    assert parser.parse.await_count == DOCUMENT_LIMIT
     assert {row.id for row in rows(engine)} == set(ids)
     assert all(row.status == "ready" for row in rows(engine))
 

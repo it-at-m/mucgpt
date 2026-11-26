@@ -1,4 +1,4 @@
-from typing import cast
+from typing import Any, cast
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
@@ -92,6 +92,7 @@ async def test_ainvoke_reuses_compiled_agent_for_tool_changes(
 
     create_agent.assert_called_once()
     assert compiled_agent.ainvoke.call_count == 2
+    assert "durability" not in compiled_agent.ainvoke.call_args.kwargs
     assert compiled_agent.ainvoke.call_args.kwargs["context"].enabled_tools == [
         "second"
     ]
@@ -141,6 +142,7 @@ async def test_astream_reuses_compiled_agent_for_tool_changes(
 
     create_agent.assert_called_once()
     assert compiled_agent.astream.call_count == 2
+    assert "durability" not in compiled_agent.astream.call_args.kwargs
     assert compiled_agent.astream.call_args.kwargs["context"].enabled_tools == [
         "second"
     ]
@@ -150,6 +152,35 @@ async def test_astream_reuses_compiled_agent_for_tool_changes(
         ]
         == DefaultAgentState.__name__
     )
+
+
+@pytest.mark.asyncio
+async def test_agent_uses_exit_durability_with_a_checkpointer(
+    monkeypatch: pytest.MonkeyPatch,
+    user_info: AuthenticationResult,
+) -> None:
+    async def stream(*args, **kwargs):
+        yield {"messages": []}
+
+    compiled_agent = MagicMock()
+    compiled_agent.astream = MagicMock(side_effect=stream)
+    compiled_agent.ainvoke = AsyncMock(return_value={"messages": []})
+    monkeypatch.setattr(
+        "agent.deep_agent.create_deep_agent", MagicMock(return_value=compiled_agent)
+    )
+    graph = _ConfiguredLangChainDeepAgentGraph(
+        llm=FakeListChatModel(responses=["response"]),
+        tools=[],
+        logger=MagicMock(),
+        checkpointer=cast(Any, object()),
+    )
+    config = cast(RunnableConfig, {"configurable": {"user_info": user_info}})
+
+    _ = [item async for item in graph.astream({"messages": []}, config=config)]
+    await graph.ainvoke({"messages": []}, config=config)
+
+    assert compiled_agent.astream.call_args.kwargs["durability"] == "exit"
+    assert compiled_agent.ainvoke.call_args.kwargs["durability"] == "exit"
 
 
 @pytest.mark.asyncio

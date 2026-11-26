@@ -23,12 +23,13 @@ request and hands it to the agent separately (not via `configurable`: LangGraph 
 plain configurable values into the checkpoint metadata). Only a request without any
 messages leaves the stored messages untouched.
 
-The v1 endpoint supports streaming and non-streaming responses; v2 always streams
-AG-UI events, regardless of the request's `stream` flag, once the request has been
-accepted. Rejections before the stream starts are plain HTTP errors, not
-`RUN_ERROR` events: 400 (invalid request, model, image or resume input), 403
+The chat endpoint streams AG-UI events, regardless of the request's `stream` flag,
+once the request has been accepted. Rejections before the stream starts are plain
+HTTP errors, not
+`RUN_ERROR` events: 400 (semantic rejection of request, model, image or resume input), 403
 (conversation owned by someone else), 404 (selected document unavailable), 409
-(another run holds the conversation lock) and 500 (model registry not initialized).
+(another run holds the conversation lock), 422 (malformed JSON or schema-invalid
+request) and 500 (model registry not initialized).
 
 Conversation listing returns only live metadata owned by the caller. Transcript
 reads check live ownership before reading through the fenced saver. Unknown,

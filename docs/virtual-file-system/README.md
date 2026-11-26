@@ -102,11 +102,14 @@ and `created_at`.
    `documents.preview_max_chars` characters as the excerpt.
 6. Mark the row `ready` and return its metadata.
 
-On any failure or cancellation the row is marked `deleting`, the body is deleted if
-a write was attempted, and then the row is removed. If this cleanup itself fails, the
-handler only logs it: the row stays in `deleting` (or `processing`, if marking it
-failed) and keeps its quota slot. There is no automatic retry; the user removes the
-entry with `DELETE /v1/documents/{id}`, which accepts such leftover rows.
+On failure or cancellation after reservation, ingestion attempts to mark the row
+`deleting`, delete the body if a write was attempted, and remove the row. If
+compensation fails, the failure is logged and the remaining row keeps its quota
+slot. It may remain `deleting`, `processing`, or—in an ambiguous ready-commit
+failure—`ready` if the subsequent transition to `deleting` also fails. There is no
+automatic retry. Users can identify the leftover entry in the document library and
+remove it with `DELETE /v1/documents/{id}` once the document operation lock is
+available.
 
 Status codes: 400 invalid upload or parser rejection, 409 limit reached,
 413 too large, 415 unsupported format, 422 no usable or invalid text,

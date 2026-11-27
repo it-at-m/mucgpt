@@ -61,3 +61,34 @@ it("falls back to the default message when the error body has no string detail",
     await expect(deleteDocumentApi("doc-1")).rejects.toMatchObject({ message: "Failed to delete document", status: 500 });
     await expect(deleteDocumentApi("doc-1")).rejects.toMatchObject({ message: "Failed to delete document", status: 500 });
 });
+
+it.each([true, false])("resubmits a flagged file only when confirmed (save=%s)", async save => {
+    const file = new File(["text"], "report.txt");
+    const findings = [{ category: "phone", kind: "pii", confidence: "likely", count: 1 }];
+    fetchMock.mockResolvedValueOnce(
+        Response.json(
+            { detail: { code: "guardrail_confirmation_required", guardrail: "sensitive_content", fingerprint: "v1-review", findings } },
+            { status: 409 }
+        )
+    );
+    fetchMock.mockResolvedValueOnce(Response.json({ id: "saved" }));
+    const confirm = vi.fn().mockResolvedValue(save);
+    const upload = uploadDocumentApi(file, confirm);
+    if (save) {
+        await expect(upload).resolves.toEqual({ id: "saved" });
+        const body = fetchMock.mock.calls[1][1]?.body as FormData;
+        expect(body.get("file")).toBe(file);
+        expect(body.get("confirmation_fingerprint")).toBe("v1-review");
+    } else {
+        await expect(upload).rejects.toMatchObject({ name: "AbortError" });
+        expect(fetchMock).toHaveBeenCalledTimes(1);
+    }
+    expect(confirm).toHaveBeenCalledExactlyOnceWith(file.name, findings);
+});
+
+it("passes quota conflicts through without prompting", async () => {
+    const confirm = vi.fn();
+    fetchMock.mockResolvedValueOnce(Response.json({ detail: "Library full" }, { status: 409 }));
+    await expect(uploadDocumentApi(new File(["x"], "x.txt"), confirm)).rejects.toMatchObject({ status: 409, message: "Library full" });
+    expect(confirm).not.toHaveBeenCalled();
+});

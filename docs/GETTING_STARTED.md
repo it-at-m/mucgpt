@@ -141,6 +141,31 @@ Where:
 - `xberg_url`: Points to your Xberg parsing service.
 - `xberg_timeout`: Execution timeout in seconds.
 
+### Personal data and secret warnings for documents
+
+After extraction, the core service scans each uploaded document for likely
+personal data (IBAN, Steuer-ID, Sozialversicherungsnummer, ID card numbers,
+credit cards, dates of birth, email addresses, phone numbers) and secrets
+(private keys, access tokens, JWTs, connection strings, credential
+assignments). Detection uses patterns plus checksums; it does not detect names
+or addresses. The scan report stores categories and counts. Matched values stay in the document itself.
+
+A flagged upload returns HTTP 409 with code `guardrail_confirmation_required` and `guardrail: "sensitive_content"`, then releases the quota reservation. The warning lists the categories. Selecting **Save document** resubmits the file with its confirmation fingerprint. The service scans again before storing the text and recording the confirmation time. The library and attached document retain a badge, and the owner can reuse the document in another chat without confirming again. Cancelling leaves the file unsaved. A scanner failure returns HTTP 503 and can be retried. Apply core database migrations before rolling out the service and frontend.
+
+Configure the document-local guardrail under `documents.guardrails.sensitive_content`:
+
+```yaml
+documents:
+  guardrails:
+    sensitive_content:
+      enabled: true                  # scan new uploads
+      ignored_email_domains: ["muenchen.de"]
+      disabled_categories: []        # e.g. ["phone"]
+```
+
+Documents uploaded before the scan existed, or while it was disabled, are not
+flagged.
+
 ### Virtual filesystem for selected documents
 
 After a document is uploaded and parsed, its extracted text is stored in the

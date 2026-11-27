@@ -10,6 +10,7 @@ import { Button } from "../../ui/Button";
 import { MenuItem, MenuItemCheckbox, MenuItemLink } from "../../ui/MenuItem";
 import styles from "./DocumentAttachMenu.module.css";
 import { DocumentTypeIcon } from "./DocumentTypeIcon";
+import { describeFindings, getSensitiveFindings } from "./sensitiveContent";
 import { DOCUMENT_LIBRARY_LIMIT, getLibraryStatusKey, isLibraryDocument, type ChatDocument } from "./documentSelection";
 import { useFilePicker } from "./useFilePicker";
 
@@ -139,6 +140,12 @@ export const DocumentAttachMenu = ({ documents: attachedDocuments, onToggleDocum
                                 <MenuList ref={libraryListRef}>
                                     {documents.map(document => {
                                         const statusKey = getLibraryStatusKey(document.status);
+                                        const findings = getSensitiveFindings(document.guardrails.sensitive_content);
+                                        const subText = statusKey
+                                            ? t(statusKey)
+                                            : findings.length > 0
+                                              ? t("document_library.guardrails_menu_hint", { findings: describeFindings(findings, t) })
+                                              : undefined;
                                         return (
                                             <MenuItemCheckbox
                                                 key={document.id}
@@ -147,7 +154,7 @@ export const DocumentAttachMenu = ({ documents: attachedDocuments, onToggleDocum
                                                 value={document.id}
                                                 disabled={document.status !== "ready" && !attachedIds.includes(document.id)}
                                                 content={{ className: classes.documentContent }}
-                                                subText={statusKey ? { children: t(statusKey), className: classes.subText } : undefined}
+                                                subText={subText ? { children: subText, className: classes.subText } : undefined}
                                             >
                                                 <span className={styles.documentName}>{document.filename}</span>
                                             </MenuItemCheckbox>

@@ -1,13 +1,20 @@
+import hashlib
+import json
 from collections.abc import Sequence
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import UTC, datetime
+from typing import Any
 from uuid import UUID, uuid4
 
 from anyio import CancelScope, to_thread
 from fastapi import UploadFile
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
-from config.settings import DocumentConfig, get_settings
+from config.settings import (
+    DocumentConfig,
+    SensitiveContentGuardrailConfig,
+    get_settings,
+)
 from core.auth_models import AuthenticationResult
 from core.logtools import getLogger
 from core.virtual_file_system_helper import (
@@ -20,6 +27,11 @@ from database.database_models import Document
 from database.document_catalog import DocumentCatalogManager
 from database.document_lock import document_work_lock
 from database.document_repo import DOCUMENT_LIMIT, DocumentRepository
+from guardrails.sensitive_content import (
+    SensitiveContentFinding,
+    SensitiveContentReport,
+    scan_text,
+)
 from parsing.factory import get_parser
 
 logger = getLogger()
@@ -70,6 +82,81 @@ class DocumentProcessingError(ValueError):
     """Public deletion cannot interrupt processing or another active document operation."""
 
 
+class GuardrailConfirmationRequired(ValueError):
+    def __init__(self, findings: list[dict[str, Any]], fingerprint: str):
+        super().__init__("Guardrail confirmation required")
+        self.findings = findings
+        self.fingerprint = fingerprint
+
+
+class DocumentScanError(RuntimeError):
+    pass
+
+
+@dataclass(frozen=True)
+class SensitiveContentGuardrail:
+    findings: tuple[SensitiveContentFinding, ...] | None
+    confirmed_at: datetime | None = None
+
+
+NOT_SCANNED = SensitiveContentGuardrail(findings=None)
+
+
+@dataclass(frozen=True)
+class DocumentGuardrails:
+    sensitive_content: SensitiveContentGuardrail = NOT_SCANNED
+
+
+def _sensitive_content_guardrail(
+    findings: list[dict[str, Any]] | None, confirmed_at: datetime | None
+) -> SensitiveContentGuardrail:
+    return SensitiveContentGuardrail(
+        None
+        if findings is None
+        else tuple(SensitiveContentFinding.model_validate(item) for item in findings),
+        confirmed_at,
+    )
+
+
+def _stored_guardrails(row: Document) -> DocumentGuardrails:
+    # A historical prefix scan can establish a finding, but cannot clear the full document.
+    findings = row.sensitive_content_findings
+    if row.sensitive_content_scan_truncated and not findings:
+        findings = None
+    return DocumentGuardrails(
+        sensitive_content=_sensitive_content_guardrail(
+            findings, row.sensitive_content_acknowledged_at
+        )
+    )
+
+
+def scan_document_text(
+    text: str, settings: SensitiveContentGuardrailConfig
+) -> SensitiveContentReport | None:
+    if not settings.enabled:
+        return None
+    try:
+        return scan_text(
+            text,
+            ignored_email_domains=settings.ignored_email_domains,
+            disabled_categories=settings.disabled_categories,
+        )
+    except Exception:
+        raise DocumentScanError("Document scan failed. Retry upload.") from None
+
+
+def confirmation_fingerprint(
+    owner: str, filename: str, text: str, findings: list[dict[str, Any]]
+) -> str:
+    payload = json.dumps(
+        [1, owner, filename, text, findings],
+        ensure_ascii=False,
+        separators=(",", ":"),
+        sort_keys=True,
+    )
+    return "v1-" + hashlib.sha256(payload.encode()).hexdigest()
+
+
 @dataclass(frozen=True)
 class SelectedDocument:
     id: str
@@ -81,6 +168,7 @@ class SelectedDocument:
     preview_kind: str
     path: str
     created_at: datetime
+    guardrails: DocumentGuardrails = DocumentGuardrails()
 
 
 @dataclass(frozen=True)
@@ -109,6 +197,7 @@ class LibraryDocument:
     path: str
     status: str
     created_at: datetime
+    guardrails: DocumentGuardrails = DocumentGuardrails()
 
 
 def _selected_document(row: Document) -> SelectedDocument:
@@ -125,13 +214,17 @@ def _selected_document(row: Document) -> SelectedDocument:
         preview_kind=row.preview_kind,
         path=get_document_path(row.id),
         created_at=row.created_at,
+        guardrails=_stored_guardrails(row),
     )
 
 
 class DocumentLibraryService:
     """User library operations with independently owned catalog sessions."""
 
-    def __init__(self, session_factory: async_sessionmaker[AsyncSession] | None = None):
+    def __init__(
+        self,
+        session_factory: async_sessionmaker[AsyncSession] | None = None,
+    ):
         self.session_factory = (
             session_factory
             if session_factory is not None
@@ -156,6 +249,7 @@ class DocumentLibraryService:
                     path=get_document_path(row.id),
                     status=row.status,
                     created_at=row.created_at,
+                    guardrails=_stored_guardrails(row),
                 )
                 for row in rows
             ]
@@ -230,7 +324,10 @@ class DocumentIngestionService:
         self.settings = settings if settings is not None else get_settings().documents
 
     async def ingest_document(
-        self, user_info: AuthenticationResult, file: UploadFile
+        self,
+        user_info: AuthenticationResult,
+        file: UploadFile,
+        confirmation: str | None = None,
     ) -> SelectedDocument:
         """Reserve -> parse -> validate/excerpt -> store -> publish ready metadata.
 
@@ -285,6 +382,28 @@ class DocumentIngestionService:
                 preview = await to_thread.run_sync(
                     create_initial_excerpt, text, self.settings
                 )
+                report = await to_thread.run_sync(
+                    scan_document_text,
+                    text,
+                    self.settings.guardrails.sensitive_content,
+                )
+                findings = (
+                    None
+                    if report is None
+                    else [finding.model_dump() for finding in report.findings]
+                )
+                confirmed_at = None
+                if findings:
+                    fingerprint = await to_thread.run_sync(
+                        confirmation_fingerprint,
+                        user_info.user_id,
+                        filename,
+                        text,
+                        findings,
+                    )
+                    if confirmation != fingerprint:
+                        raise GuardrailConfirmationRequired(findings, fingerprint)
+                    confirmed_at = datetime.now(UTC)
                 backend = create_document_backend(user_info.user_id)
                 write_attempted = True
                 result = await backend.awrite(
@@ -304,6 +423,12 @@ class DocumentIngestionService:
                     preview_kind="initial_excerpt",
                     path=get_document_path(document_id),
                     created_at=created_at,
+                    guardrails=DocumentGuardrails(
+                        sensitive_content=_sensitive_content_guardrail(
+                            findings,
+                            confirmed_at,
+                        )
+                    ),
                 )
                 with CancelScope(shield=True):
                     async with self.session_factory.begin() as session:
@@ -312,12 +437,14 @@ class DocumentIngestionService:
                             document_id,
                             text_length=len(text),
                             preview=preview,
+                            sensitive_content_findings=findings,
+                            sensitive_content_acknowledged_at=confirmed_at,
                         ):
                             raise DocumentStorageError(
                                 "Document could not be marked ready"
                             )
                 return metadata
-            except BaseException:
+            except BaseException as ingestion_error:
                 if document_id is not None:
                     with CancelScope(shield=True):
                         try:
@@ -328,6 +455,12 @@ class DocumentIngestionService:
                             logger.exception(
                                 "Document ingestion cleanup failed for %s", document_id
                             )
+                            if isinstance(
+                                ingestion_error, GuardrailConfirmationRequired
+                            ):
+                                raise DocumentStorageError(
+                                    "Could not release document reservation"
+                                ) from None
                 raise
 
     async def _validate_upload_size(self, file: UploadFile) -> int:

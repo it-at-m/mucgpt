@@ -16,7 +16,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from sqlalchemy.orm import Session
 from starlette.datastructures import Headers
 
-from config.settings import DocumentConfig
+from config.settings import DocumentConfig, SensitiveContentGuardrailConfig
 from core import document_service as services
 from core.auth_models import AuthenticationResult
 from core.virtual_file_system_helper import (
@@ -509,3 +509,128 @@ async def test_catalog_cleanup_failure_keeps_a_recoverable_row(
     await service._compensate(user().user_id, row.id, True)
     assert sessions.rows() == []
     assert store.search(get_document_namespace(user().user_id)) == []
+
+
+SENSITIVE_TEXT = (
+    "Bitte überweisen an DE89 3704 0044 0532 0130 00.\nPassword = Sommer2024!"
+)
+
+
+async def resolve(sessions, document_ids, **kwargs):
+    async with sessions.begin() as session:
+        return await services.DocumentService(
+            DocumentRepository(session),
+        ).resolve_selected_documents(user(), document_ids, **kwargs)
+
+
+@pytest.mark.asyncio
+async def test_confirmation_cleanup_failure_logs_retained_reservation(
+    ingestion, monkeypatch, caplog
+):
+    service, sessions, store, parser = ingestion
+    parser.parse.return_value = SENSITIVE_TEXT
+    cleanup_error = RuntimeError("catalog cleanup unavailable")
+    monkeypatch.setattr(
+        DocumentRepository,
+        "remove_after_cleanup",
+        AsyncMock(side_effect=cleanup_error),
+    )
+
+    with caplog.at_level("ERROR", logger=services.logger.name):
+        with pytest.raises(
+            services.DocumentStorageError,
+            match="Could not release document reservation",
+        ):
+            await service.ingest_document(user(), upload())
+
+    row = sessions.rows()[0]
+    assert row.status == "deleting" and row.slot == 0
+    assert store.search(get_document_namespace(user().user_id)) == []
+    records = [
+        record
+        for record in caplog.records
+        if record.getMessage() == f"Document ingestion cleanup failed for {row.id}"
+    ]
+    assert len(records) == 1
+    assert records[0].exc_info is not None
+    assert records[0].exc_info[1] is cleanup_error
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("change", ["owner", "filename", "text", "findings", None])
+async def test_confirmation_binds_reviewed_upload(ingestion, change):
+    service, sessions, store, parser = ingestion
+    parser.parse.return_value = SENSITIVE_TEXT
+    with pytest.raises(services.GuardrailConfirmationRequired) as warning:
+        await service.ingest_document(user(), upload())
+    assert sessions.rows() == []
+    assert store.search(get_document_namespace(user().user_id)) == []
+    owner = user("other") if change == "owner" else user()
+    file = upload(filename="other.pdf") if change == "filename" else upload()
+    if change == "text":
+        parser.parse.return_value += " extra"
+    if change == "findings":
+        service.settings.guardrails.sensitive_content.disabled_categories = ["iban"]
+    save = service.ingest_document(owner, file, warning.value.fingerprint)
+    if change:
+        with pytest.raises(services.GuardrailConfirmationRequired):
+            await save
+        assert sessions.rows() == []
+        return
+    metadata = await save
+    assert metadata.guardrails.sensitive_content.confirmed_at
+    row = sessions.rows()[0]
+    assert row.sensitive_content_findings == warning.value.findings
+    assert (
+        store.get(get_document_namespace(owner.user_id), row.storage_key).value[
+            "content"
+        ]
+        == SENSITIVE_TEXT
+    )
+    service.settings.guardrails.sensitive_content.enabled = False
+    library = services.DocumentLibraryService(
+        cast("async_sessionmaker[AsyncSession]", sessions.begin),
+    )
+    listed = await library.list_documents(owner)
+    assert (
+        listed[0].guardrails.sensitive_content.findings
+        == metadata.guardrails.sensitive_content.findings
+    )
+    assert (await resolve(sessions, [metadata.id])).document_ids == (metadata.id,)
+
+
+@pytest.mark.asyncio
+async def test_disabled_scan_stores_no_findings(ingestion):
+    _, sessions, _, parser = ingestion
+    parser.parse.return_value = SENSITIVE_TEXT
+    service = services.DocumentIngestionService(
+        cast("async_sessionmaker[AsyncSession]", sessions),
+        DocumentConfig(
+            guardrails={
+                "sensitive_content": SensitiveContentGuardrailConfig(enabled=False)
+            }
+        ),
+    )
+
+    metadata = await service.ingest_document(user(), upload())
+
+    assert metadata.guardrails.sensitive_content == services.NOT_SCANNED
+    assert sessions.rows()[0].sensitive_content_findings is None
+    assert (await resolve(sessions, [metadata.id])).document_ids == (metadata.id,)
+
+
+@pytest.mark.asyncio
+async def test_scanner_failure_releases_reservation_and_blocks_upload(
+    ingestion, monkeypatch
+):
+    service, sessions, _, parser = ingestion
+    parser.parse.return_value = SENSITIVE_TEXT
+
+    def fail(*_args, **_kwargs):
+        raise RuntimeError("scanner bug")
+
+    monkeypatch.setattr(services, "scan_text", fail)
+
+    with pytest.raises(services.DocumentScanError):
+        await service.ingest_document(user(), upload())
+    assert sessions.rows() == []

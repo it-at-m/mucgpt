@@ -430,6 +430,7 @@ async def put_conversation_canvas_revisions(
         400: {"description": "Bad Request"},
         403: {"description": "Forbidden"},
         404: {"description": "Selected documents unavailable"},
+        409: {"description": "Another request is still running for this conversation"},
         500: {"description": "Internal Server Error"},
     },
 )

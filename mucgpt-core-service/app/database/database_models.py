@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import Any
 
 from sqlalchemy import (
     JSON,
@@ -8,6 +9,7 @@ from sqlalchemy import (
     String,
     Text,
     UniqueConstraint,
+    false,
     func,
 )
 from sqlalchemy.dialects.postgresql import JSONB
@@ -100,4 +102,17 @@ class Document(Base):
     status: Mapped[str] = mapped_column(String, nullable=False)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+    # Scan result as a list of findings (categories and counts, never matched
+    # values); NULL means the text was not scanned.
+    sensitive_content_findings: Mapped[list[dict[str, Any]] | None] = mapped_column(
+        JSON, nullable=True
+    )
+    sensitive_content_scan_truncated: Mapped[bool | None] = mapped_column(nullable=True)
+    # The scanner raised, so the text may contain unreported findings.
+    sensitive_content_scan_failed: Mapped[bool] = mapped_column(
+        nullable=False, default=False, server_default=false()
+    )
+    sensitive_content_acknowledged_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
     )

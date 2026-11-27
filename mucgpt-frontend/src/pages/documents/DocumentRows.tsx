@@ -12,6 +12,8 @@ import { useTranslation } from "react-i18next";
 
 import type { DocumentLibraryEntry } from "../../api/models";
 import { DocumentTypeIcon } from "../../components/ChatDocuments/DocumentTypeIcon";
+import { SensitiveContentBadge } from "../../components/ChatDocuments/SensitiveContentBadge";
+import { getSensitiveFindings } from "../../components/ChatDocuments/sensitiveContent";
 import { formatFileSize, getLibraryStatusKey } from "../../components/ChatDocuments/documentSelection";
 import { EdelweissSpinner } from "../../components/EdelweissSpinner";
 import type { StoredParsedDocument } from "../../service/parsedDocumentStorage";
@@ -29,6 +31,8 @@ export interface PendingUpload {
 interface DocumentRowProps {
     icon: ReactNode;
     name: string;
+    /** Compact status shown next to the name, e.g. a content guardrail badge. */
+    badge?: ReactNode;
     meta: ReactNode;
     /** Announces changing meta text, e.g. upload progress or errors. */
     metaRole?: "status" | "alert";
@@ -36,13 +40,16 @@ interface DocumentRowProps {
     actions?: ReactNode;
 }
 
-const DocumentRow = ({ icon, name, meta, metaRole, status, actions }: DocumentRowProps) => (
+const DocumentRow = ({ icon, name, badge, meta, metaRole, status, actions }: DocumentRowProps) => (
     <li className={styles.row} data-status={status}>
         <span className={styles.rowIcon} aria-hidden="true">
             {icon}
         </span>
         <div className={styles.rowCopy}>
-            <span className={styles.rowName}>{name}</span>
+            <span className={styles.rowTitle}>
+                <span className={styles.rowName}>{name}</span>
+                {badge}
+            </span>
             <Caption1 className={styles.rowMeta} role={metaRole}>
                 {meta}
             </Caption1>
@@ -103,6 +110,14 @@ export const LibraryDocumentRow = ({ document, isBusy, formatDate, onStartChat, 
         <DocumentRow
             icon={<DocumentTypeIcon filename={document.filename} size={20} />}
             name={document.filename}
+            badge={
+                document.status === "ready" && (
+                    <SensitiveContentBadge
+                        findings={getSensitiveFindings(document.guardrails.sensitive_content)}
+                        confirmed={Boolean(document.guardrails.sensitive_content.confirmed_at)}
+                    />
+                )
+            }
             meta={joinMeta([formatDate(document.created_at), formatFileSize(document.original_size), statusKey && t(statusKey)])}
             actions={
                 <>

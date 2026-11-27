@@ -1,7 +1,8 @@
 import i18next from "i18next";
 
 import { listDocumentsApi } from "../../api/documents-client";
-import type { DocumentLibraryEntry, DocumentMetadata } from "../../api/models";
+import type { DocumentLibraryEntry, DocumentMetadata, SensitiveContentFinding } from "../../api/models";
+import { getSensitiveFindings } from "./sensitiveContent";
 
 /** Mirrors the backend's per-user library limit (`DOCUMENT_LIMIT` in the core service). */
 export const DOCUMENT_LIBRARY_LIMIT = 10;
@@ -21,6 +22,9 @@ interface AttachedLibraryDocument {
     size: number;
     /** The document was part of a sent turn, so the agent may already have read it into the chat history. */
     usedInChat: boolean;
+    /** Likely personal data or secrets in the document; shown as a lasting warning badge. */
+    sensitiveFindings?: SensitiveContentFinding[];
+    confirmed?: boolean;
 }
 
 /**
@@ -41,7 +45,9 @@ export const isLibraryDocument = (document: ChatDocument): document is LibraryCh
 
 export const getSelectedDocumentIds = (documents: ChatDocument[]) => documents.filter(isLibraryDocument).map(document => document.id);
 
-/** A turn must not be sent while an upload is in flight or an attached document is gone, or it would silently lack documents. */
+/**
+ * A turn must not be sent while an upload is in flight or an attached document is gone, or it would silently lack documents.
+ */
 export const isSendBlockedByDocuments = (documents: ChatDocument[]) =>
     documents.some(document => document.status === "uploading" || document.status === "unavailable");
 
@@ -62,7 +68,9 @@ export const toChatDocument = (document: DocumentMetadata | DocumentLibraryEntry
     id: document.id,
     name: document.filename,
     size: document.original_size,
-    usedInChat
+    usedInChat,
+    confirmed: Boolean(document.guardrails?.sensitive_content.confirmed_at),
+    sensitiveFindings: getSensitiveFindings(document.guardrails?.sensitive_content)
 });
 
 /** Restores a chat's saved selection. These documents were sent before, hence `usedInChat`. */

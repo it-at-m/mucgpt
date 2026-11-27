@@ -13,6 +13,22 @@ from pydantic import (
 
 from api.exception import ProviderErrorPayload
 from config.settings import ReasoningEffort, get_settings
+from guardrails.sensitive_content.models import SensitiveContentFinding
+
+
+class SensitiveContentGuardrailInfo(BaseModel):
+    """Personal-data/secret check result; categories and counts, never values."""
+
+    findings: list[SensitiveContentFinding] | None = Field(
+        description="Detected categories; null when the text was not scanned."
+    )
+    confirmed_at: datetime | None = None
+
+
+class DocumentGuardrailsInfo(BaseModel):
+    """Results for guardrails applied to a document."""
+
+    sensitive_content: SensitiveContentGuardrailInfo
 
 
 class DocumentMetadata(BaseModel):
@@ -29,6 +45,7 @@ class DocumentMetadata(BaseModel):
     preview_kind: Literal["initial_excerpt"]
     path: str = Field(description="Stable model-visible document path.")
     created_at: datetime
+    guardrails: DocumentGuardrailsInfo
 
 
 class DocumentLibraryEntry(BaseModel):
@@ -44,6 +61,7 @@ class DocumentLibraryEntry(BaseModel):
     preview_kind: Literal["initial_excerpt"] | None = None
     path: str
     created_at: datetime
+    guardrails: DocumentGuardrailsInfo
 
 
 class SummarizeResult(BaseModel):

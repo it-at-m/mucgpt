@@ -8,7 +8,7 @@ import { ApiError } from "../../api/fetch-utils";
 import type { DocumentLibraryEntry, DocumentMetadata } from "../../api/models";
 import { DEFAULT_APP_CONFIG } from "../../constants";
 import { ConfigContext } from "../../context/ConfigContext";
-import type { ChatDocument } from "../ChatDocuments/documentSelection";
+import type { ChatDocument, LibraryChatDocument } from "../ChatDocuments/documentSelection";
 import { QuestionInput } from "./QuestionInput";
 
 vi.mock("react-i18next", () => ({ useTranslation: () => ({ t: (key: string) => key }) }));
@@ -18,7 +18,11 @@ vi.mock("@fluentui/react-components", async importOriginal => ({
     ...(await importOriginal<typeof import("@fluentui/react-components")>()),
     useAnnounce: () => ({ announce })
 }));
-vi.mock("../../api/documents-client", () => ({ listDocumentsApi: vi.fn(), deleteDocumentApi: vi.fn(), uploadDocumentApi: vi.fn() }));
+vi.mock("../../api/documents-client", () => ({
+    listDocumentsApi: vi.fn(),
+    deleteDocumentApi: vi.fn(),
+    uploadDocumentApi: vi.fn()
+}));
 
 const libraryEntry = (overrides: Partial<DocumentLibraryEntry> = {}): DocumentLibraryEntry => ({
     id: "library-1",
@@ -30,11 +34,12 @@ const libraryEntry = (overrides: Partial<DocumentLibraryEntry> = {}): DocumentLi
     preview_kind: "initial_excerpt",
     path: "/documents/library-1.txt",
     created_at: "2026-11-02",
+    guardrails: { sensitive_content: { findings: [], confirmed_at: null } },
     status: "ready",
     ...overrides
 });
 
-const attached = ({ status = "ready", usedInChat = false }: { status?: "ready" | "unavailable"; usedInChat?: boolean } = {}): ChatDocument => ({
+const attached = ({ status = "ready", usedInChat = false }: { status?: "ready" | "unavailable"; usedInChat?: boolean } = {}): LibraryChatDocument => ({
     id: "library-1",
     name: "Policy.txt",
     size: 5,
@@ -71,6 +76,71 @@ const dropFiles = (files: File[]) => fireEvent.drop(screen.getByRole("textbox"),
 beforeEach(() => {
     vi.clearAllMocks();
     vi.mocked(listDocumentsApi).mockResolvedValue([]);
+});
+
+const flaggedUpload = (): DocumentMetadata =>
+    ({
+        ...libraryEntry({ id: "flagged", filename: "Antrag.txt" }),
+        guardrails: {
+            sensitive_content: {
+                findings: [{ category: "iban", kind: "pii", confidence: "certain", count: 2 }],
+                confirmed_at: null
+            }
+        }
+    }) as DocumentMetadata;
+
+describe("QuestionInput sensitive documents", () => {
+    it.each([true, false])("asks before attaching a flagged upload (save=%s)", async save => {
+        vi.mocked(uploadDocumentApi).mockImplementation(async (file, confirm) => {
+            const metadata = flaggedUpload();
+            if (!(await confirm!(file.name, metadata.guardrails.sensitive_content.findings!))) throw new DOMException("Cancelled", "AbortError");
+            return metadata;
+        });
+        render(<Harness />);
+        dropFiles([new File(["text"], "Antrag.txt")]);
+        const button = await screen.findByRole("button", { name: save ? "document_library.save_document" : "common.cancel" });
+        fireEvent.click(button);
+        await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+        await waitFor(() => expect(Boolean(screen.queryByText("document_library.guardrails_badge"))).toBe(save));
+    });
+
+    it("cancels a pending confirmation when switching chats", async () => {
+        const saved = vi.fn();
+        vi.mocked(uploadDocumentApi).mockImplementation(async (file, confirm) => {
+            const metadata = flaggedUpload();
+            if (!(await confirm!(file.name, metadata.guardrails.sensitive_content.findings!))) throw new DOMException("Cancelled", "AbortError");
+            saved();
+            return metadata;
+        });
+        const { rerender } = render(<Harness conversationKey="first" />);
+        dropFiles([new File(["text"], "Flagged.txt")]);
+        await screen.findByRole("dialog");
+        rerender(<Harness conversationKey="second" />);
+        await waitFor(() => expect(screen.queryByText("Flagged.txt")).not.toBeInTheDocument());
+        expect(saved).not.toHaveBeenCalled();
+    });
+
+    it("allows a saved flagged document in a second chat and exposes badge details on focus", async () => {
+        render(
+            <Harness
+                conversationKey="second"
+                initialData={[{ ...attached(), status: "ready", confirmed: true, sensitiveFindings: flaggedUpload().guardrails.sensitive_content.findings! }]}
+            />
+        );
+        expect(sendButton()).toBeEnabled();
+        expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+        const badge = screen.getByText("document_library.guardrails_badge");
+        badge.focus();
+        expect(badge).toHaveFocus();
+        expect(badge).toHaveTextContent("document_library.guardrails_badge_confirmed");
+    });
+
+    it("shows no warning for clean documents", () => {
+        render(<Harness initialData={[attached()]} />);
+
+        expect(screen.queryByText("document_library.save_question")).not.toBeInTheDocument();
+        expect(screen.queryByText("document_library.guardrails_badge")).not.toBeInTheDocument();
+    });
 });
 
 describe("QuestionInput documents", () => {

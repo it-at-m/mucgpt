@@ -34,10 +34,19 @@ async def test_document_http_lifecycle_survives_restart_and_deletion(
 ) -> None:
     """Upload, restart, authorize, delete, and reuse a real document slot."""
     async with postgres_http_harness(monkeypatch) as harness:
-        extracted_text = "Council decision\nDurable extracted detail"
+        extracted_text = "Council decision\ncontact@example.org"
         harness.parser.text = extracted_text
 
-        uploaded = await harness.upload_document("council-decision.txt", b"source")
+        warning = await harness.upload_document("council-decision.txt", b"source")
+        assert warning.status_code == 409
+        detail = warning.json()["detail"]
+        assert detail["code"] == "guardrail_confirmation_required"
+        assert (await harness.client.get("/v1/documents")).json() == []
+        uploaded = await harness.client.post(
+            "/v1/documents",
+            files={"file": ("council-decision.txt", b"source", "text/plain")},
+            data={"confirmation_fingerprint": detail["fingerprint"]},
+        )
 
         assert uploaded.status_code == 201
         metadata = uploaded.json()
@@ -48,11 +57,20 @@ async def test_document_http_lifecycle_survives_restart_and_deletion(
             "mime_type": "text/plain",
             "original_size": len(b"source"),
             "text_length": len(extracted_text),
-            "preview": "Council decision\nDurable extracted detail",
+            "preview": extracted_text,
+            "guardrails": {
+                "sensitive_content": {
+                    "findings": detail["findings"],
+                    "confirmed_at": metadata["guardrails"]["sensitive_content"][
+                        "confirmed_at"
+                    ],
+                },
+            },
             "preview_kind": "initial_excerpt",
             "path": f"/documents/{document_id}.txt",
             "created_at": metadata["created_at"],
         }
+        assert metadata["guardrails"]["sensitive_content"]["confirmed_at"]
         assert metadata["created_at"]
 
         catalog_document = await _catalog_document(harness.owner.user_id, document_id)
@@ -95,6 +113,7 @@ async def test_document_http_lifecycle_survives_restart_and_deletion(
         assert restarted_stored_document is not None
         assert restarted_stored_document.value["content"] == extracted_text
 
+        harness.parser.text = "Ordinary text"
         for number in range(1, DOCUMENT_LIMIT):
             response = await harness.upload_document(
                 f"additional-document-{number}.txt", b"source"

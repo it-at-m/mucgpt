@@ -58,6 +58,40 @@ export type CanvasState = {
     truncated?: boolean;
 };
 
+/** Mirrors `SensitiveContentCategory` in the core service guardrail. */
+export type SensitiveContentCategory =
+    | "email"
+    | "phone"
+    | "iban"
+    | "credit_card"
+    | "tax_id"
+    | "social_security_number"
+    | "id_document_number"
+    | "date_of_birth"
+    | "private_key"
+    | "access_token"
+    | "jwt"
+    | "connection_string"
+    | "credential_assignment"
+    | "high_entropy_secret";
+
+/** Likely personal data or secrets found in a document's text; counts only, never the values. */
+export type SensitiveContentFinding = {
+    category: SensitiveContentCategory;
+    kind: "pii" | "secret";
+    confidence: "certain" | "likely";
+    count: number;
+};
+
+export type SensitiveContentGuardrail = {
+    findings: SensitiveContentFinding[] | null;
+    confirmed_at: string | null;
+};
+
+export type DocumentGuardrails = {
+    sensitive_content: SensitiveContentGuardrail;
+};
+
 export type DocumentMetadata = {
     id: string;
     filename: string;
@@ -68,6 +102,7 @@ export type DocumentMetadata = {
     preview_kind: string;
     path: string;
     created_at: string;
+    guardrails: DocumentGuardrails;
 };
 
 export type DocumentLibraryEntry = Omit<DocumentMetadata, "text_length" | "preview" | "preview_kind"> & {

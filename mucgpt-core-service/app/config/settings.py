@@ -27,6 +27,8 @@ from pydantic_settings import (
     YamlConfigSettingsSource,
 )
 
+from guardrails.sensitive_content.models import SensitiveContentCategory
+
 MODEL_INFO_TIMEOUT_SECONDS = 8.0
 
 # Plain HTML tag name without attributes or brackets (canvas_allowed_html_tags).
@@ -564,12 +566,33 @@ class DBConfig(BaseModel):
     password: SecretStr = SecretStr("admin")
 
 
+class SensitiveContentGuardrailConfig(BaseModel):
+    """Detect personal data and secrets in extracted document text."""
+
+    enabled: bool = True
+    # Own organisation's addresses (e.g. "muenchen.de") appear in nearly every
+    # official letter; ignoring them avoids flagging every upload.
+    ignored_email_domains: list[str] = Field(default_factory=list)
+    disabled_categories: list[SensitiveContentCategory] = Field(default_factory=list)
+
+
+class DocumentGuardrailsConfig(BaseModel):
+    """Guardrails applied while documents cross into MUCGPT storage."""
+
+    sensitive_content: SensitiveContentGuardrailConfig = Field(
+        default_factory=SensitiveContentGuardrailConfig
+    )
+
+
 class DocumentConfig(BaseModel):
     """Bounds for the extracted-text document library (not the legacy /parse API)."""
 
     max_upload_bytes: PositiveInt = 100 * 1024 * 1024
     max_text_bytes: PositiveInt = 5 * 1024 * 1024
     preview_max_chars: PositiveInt = 1000
+    guardrails: DocumentGuardrailsConfig = Field(
+        default_factory=DocumentGuardrailsConfig
+    )
 
 
 class PromptConfig(BaseModel):

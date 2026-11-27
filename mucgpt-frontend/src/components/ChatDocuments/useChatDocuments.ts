@@ -17,6 +17,8 @@ import {
 } from "./documentSelection";
 import { getUploadErrorKey } from "./uploadErrors";
 
+import { useUploadConfirmation } from "./useUploadConfirmation";
+
 export interface DuplicateUpload {
     file: File;
     documentId: string;
@@ -32,6 +34,7 @@ export const useChatDocuments = (documents: ChatDocument[], setDocuments: Dispat
     const { t } = useTranslation();
     const { announce } = useAnnounce();
     const [duplicateUploads, setDuplicateUploads] = useState<DuplicateUpload[]>([]);
+    const { createConfirmation, dialog } = useUploadConfirmation(conversationKey);
     // Uploads finish independently of renders, so state changes always go through updater functions;
     // this ref is only read for decisions that tolerate a value from the last render.
     const latestDocumentsRef = useRef(documents);
@@ -52,12 +55,16 @@ export const useChatDocuments = (documents: ChatDocument[], setDocuments: Dispat
 
     const upload = useCallback(
         (pending: UploadingChatDocument) => {
-            uploadDocumentApi(pending.file)
+            uploadDocumentApi(pending.file, createConfirmation())
                 .then(document => {
                     setDocuments(current => current.map(entry => (entry.id === pending.id ? toChatDocument(document) : entry)));
                     announce(t("document_library.announce_ready", { name: pending.name }), { polite: true });
                 })
                 .catch(error => {
+                    if (error?.name === "AbortError") {
+                        setDocuments(current => current.filter(entry => entry.id !== pending.id));
+                        return;
+                    }
                     console.error("Failed to upload document:", error);
                     const errorMessage = t(getUploadErrorKey(error));
                     const failed: ChatDocument = { ...pending, status: "failed", errorMessage };
@@ -65,7 +72,7 @@ export const useChatDocuments = (documents: ChatDocument[], setDocuments: Dispat
                     announce(t("document_library.upload_failed_named", { name: pending.name, reason: errorMessage }), { alert: true });
                 });
         },
-        [announce, setDocuments, t]
+        [announce, createConfirmation, setDocuments, t]
     );
 
     const attachFiles = useCallback(
@@ -175,6 +182,7 @@ export const useChatDocuments = (documents: ChatDocument[], setDocuments: Dispat
     return {
         hasUnavailableDocuments,
         isSendBlocked,
+        dialog,
         duplicateUploads,
         attachFiles,
         uploadDuplicatesAnyway,

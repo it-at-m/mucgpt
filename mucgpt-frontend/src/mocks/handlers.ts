@@ -15,7 +15,7 @@ import {
 } from "../api";
 import { buildAssistantCreateResponse, buildOwnersDetailedFromOwnerIds, buildChatMessage, buildRichMarkdownChatMessage } from "./data/generators";
 import { CREATIVITY_HIGH, CREATIVITY_MEDIUM } from "../constants";
-import type { AssistantAuditEvent, DocumentLibraryEntry } from "../api/models";
+import type { AssistantAuditEvent, DocumentLibraryEntry, SensitiveContentFinding } from "../api/models";
 import { CANVAS_TOOL_IDS } from "../utils/canvasStream";
 import { loadMockAssistants, loadMockSubscriptions, saveMockAssistants, saveMockSubscriptions } from "./data/assistant-store";
 import { MOCK_DELETED_SUBSCRIBED_SNAPSHOT, MOCK_SUBSCRIPTION_SEED } from "./data/browser-scenario-seed";
@@ -684,6 +684,19 @@ const MOCK_DOCUMENT_MAX_BYTES = 20 * 1024 * 1024;
 const MOCK_UNSUPPORTED_DOCUMENT_EXTENSIONS = [".exe", ".zip", ".mp4"];
 const mockDocuments: DocumentLibraryEntry[] = [];
 
+/** Rough stand-in for the core service's sensitive-content guardrail. */
+const MOCK_SENSITIVE_CONTENT_PATTERNS: { finding: Omit<SensitiveContentFinding, "count">; pattern: RegExp }[] = [
+    { finding: { category: "iban", kind: "pii", confidence: "certain" }, pattern: /\b[A-Z]{2}\d{2}(?: ?\d{4}){4} ?\d{2}\b/g },
+    { finding: { category: "email", kind: "pii", confidence: "certain" }, pattern: /[\w.+-]+@[\w-]+\.[\w.]+/g },
+    { finding: { category: "credential_assignment", kind: "secret", confidence: "likely" }, pattern: /\b(?:password|passwort)\s*[:=]\s*\S{6,}/gi }
+];
+
+const mockScan = (text: string): SensitiveContentFinding[] =>
+    MOCK_SENSITIVE_CONTENT_PATTERNS.flatMap(({ finding, pattern }) => {
+        const count = text.match(pattern)?.length ?? 0;
+        return count > 0 ? [{ ...finding, count }] : [];
+    });
+
 /** Mocked document library upload: mirrors the backend's quota, size and format rejections. */
 async function uploadDocumentHandler({ request }: { request: Request }) {
     await delay(1500);
@@ -708,6 +721,17 @@ async function uploadDocumentHandler({ request }: { request: Request }) {
         return HttpResponse.json({ detail: "Document extraction returned no usable text." }, { status: 422 });
     }
 
+    const findings = mockScan(text);
+    if (findings.length) {
+        const data = new TextEncoder().encode(JSON.stringify([file.name, text, findings]));
+        const digest = await crypto.subtle.digest("SHA-256", data);
+        const fingerprint = Array.from(new Uint8Array(digest), b => b.toString(16).padStart(2, "0")).join("");
+        if (formData.get("confirmation_fingerprint") !== fingerprint)
+            return HttpResponse.json(
+                { detail: { code: "guardrail_confirmation_required", guardrail: "sensitive_content", findings, fingerprint } },
+                { status: 409 }
+            );
+    }
     const id = crypto.randomUUID();
     const document: DocumentLibraryEntry = {
         id,
@@ -719,7 +743,8 @@ async function uploadDocumentHandler({ request }: { request: Request }) {
         preview_kind: "initial_excerpt",
         path: `/documents/${id}.txt`,
         created_at: new Date().toISOString(),
-        status: "ready"
+        status: "ready",
+        guardrails: { sensitive_content: { findings, confirmed_at: findings.length ? new Date().toISOString() : null } }
     };
     mockDocuments.unshift(document);
     return HttpResponse.json(document, { status: 201 });

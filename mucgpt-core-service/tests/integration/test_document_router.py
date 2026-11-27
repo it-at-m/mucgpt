@@ -21,7 +21,7 @@ from core.auth import authenticate_user
 from core.auth_models import AuthenticationResult
 from core.virtual_file_system_helper import FileStoreManager, get_document_namespace
 from database.database_models import Base, Document
-from database.document_repo import DOCUMENT_LIMIT
+from database.document_repo import DOCUMENT_LIMIT, DocumentRepository
 
 pytestmark = pytest.mark.integration
 
@@ -121,6 +121,9 @@ def test_upload_returns_only_ready_metadata_and_uses_authenticated_owner(upload_
         "preview_kind": "initial_excerpt",
         "path": f"/documents/{document_id}.txt",
         "created_at": metadata["created_at"],
+        "guardrails": {
+            "sensitive_content": {"findings": [], "confirmed_at": None},
+        },
     }
     assert metadata["created_at"]
     row = rows(engine)[0]
@@ -275,3 +278,56 @@ def test_upload_openapi_documents_multipart_metadata_and_errors(upload_api):
     properties = schema["components"]["schemas"]["DocumentMetadata"]["properties"]
     assert "preview" in properties and "path" in properties
     assert not {"content", "user_id", "storage_key", "namespace"} & properties.keys()
+
+
+def test_flagged_upload_requires_confirmation_before_publication(upload_api):
+    client, _, parser, engine, store, owner, _ = upload_api
+    parser.parse.return_value = "Email: user@example.org"
+    warning = post_document(client)
+    assert warning.status_code == 409
+    detail = warning.json()["detail"]
+    assert detail["code"] == "guardrail_confirmation_required"
+    assert "user@example.org" not in warning.text
+    assert rows(engine) == []
+    assert store.search(get_document_namespace(owner.user_id)) == []
+    saved = post_document(
+        client, data={"confirmation_fingerprint": detail["fingerprint"]}
+    )
+    assert saved.status_code == 201
+    guardrail = saved.json()["guardrails"]["sensitive_content"]
+    assert guardrail["confirmed_at"]
+    assert guardrail["findings"] == detail["findings"]
+
+
+def test_confirmation_cleanup_failure_returns_safe_server_error(
+    upload_api, monkeypatch
+):
+    client, _, parser, engine, store, owner, _ = upload_api
+    parser.parse.return_value = "Email: user@example.org"
+    monkeypatch.setattr(
+        DocumentRepository,
+        "remove_after_cleanup",
+        AsyncMock(side_effect=RuntimeError("private catalog failure")),
+    )
+
+    response = post_document(client)
+
+    assert response.status_code == 500
+    assert response.json() == {"detail": "Document could not be stored."}
+    assert len(rows(engine)) == 1
+    assert rows(engine)[0].status == "deleting"
+    assert store.search(get_document_namespace(owner.user_id)) == []
+
+
+def test_scan_error_returns_retryable_response_and_stores_nothing(
+    upload_api, monkeypatch
+):
+    client, _, _, engine, store, owner, _ = upload_api
+    monkeypatch.setattr(
+        services, "scan_text", MagicMock(side_effect=RuntimeError("private value"))
+    )
+    response = post_document(client)
+    assert response.status_code == 503
+    assert "private value" not in response.text
+    assert rows(engine) == []
+    assert store.search(get_document_namespace(owner.user_id)) == []

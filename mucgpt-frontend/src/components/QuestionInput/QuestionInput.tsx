@@ -202,6 +202,8 @@ const QuestionInputContent = ({
                 />
             )}
 
+            {chatDocuments.dialog}
+
             <div className={mergeClasses(styles.composer, isDragActive && styles.dragActive)} onClick={focusInputOnBackgroundClick} {...dropZoneProps}>
                 {allowFileUpload && (
                     <DocumentChips

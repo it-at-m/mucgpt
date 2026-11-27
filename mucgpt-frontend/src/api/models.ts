@@ -83,8 +83,23 @@ export type SensitiveContentFinding = {
     count: number;
 };
 
+/** A value-free detector result positioned in the exact stored extracted text. */
+export type SensitiveContentOccurrence = {
+    category: SensitiveContentCategory;
+    kind: "pii" | "secret";
+    confidence: "certain" | "likely";
+    /** End-exclusive Unicode code-point offsets, not UTF-16 string indices. */
+    start: number;
+    end: number;
+    provenance: {
+        guardrail: "sensitive_content";
+        detector: string;
+    };
+};
+
 export type SensitiveContentGuardrail = {
     findings: SensitiveContentFinding[] | null;
+    occurrences: SensitiveContentOccurrence[] | null;
     confirmed_at: string | null;
 };
 

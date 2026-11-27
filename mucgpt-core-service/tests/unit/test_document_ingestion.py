@@ -580,7 +580,8 @@ async def test_confirmation_binds_reviewed_upload(ingestion, change):
     metadata = await save
     assert metadata.guardrails.sensitive_content.confirmed_at
     row = sessions.rows()[0]
-    assert row.sensitive_content_findings == warning.value.findings
+    assert row.guardrails["sensitive_content"]["occurrences"]
+    assert row.guardrails["sensitive_content"].get("legacy_findings") is None
     assert (
         store.get(get_document_namespace(owner.user_id), row.storage_key).value[
             "content"
@@ -615,7 +616,7 @@ async def test_disabled_scan_stores_no_findings(ingestion):
     metadata = await service.ingest_document(user(), upload())
 
     assert metadata.guardrails.sensitive_content == services.NOT_SCANNED
-    assert sessions.rows()[0].sensitive_content_findings is None
+    assert sessions.rows()[0].guardrails is None
     assert (await resolve(sessions, [metadata.id])).document_ids == (metadata.id,)
 
 

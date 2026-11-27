@@ -1,5 +1,4 @@
 from collections.abc import Sequence
-from datetime import datetime
 from typing import Any
 from uuid import UUID, uuid4
 
@@ -122,8 +121,7 @@ class DocumentRepository:
         *,
         text_length: int,
         preview: str,
-        sensitive_content_acknowledged_at: datetime | None = None,
-        sensitive_content_findings: list[dict[str, Any]] | None = None,
+        guardrails: dict[str, Any] | None = None,
     ) -> bool:
         """Finalize owned processing metadata after the caller has stored the body."""
         get_document_namespace(user_id)
@@ -141,8 +139,7 @@ class DocumentRepository:
                 text_length=text_length,
                 preview=preview,
                 preview_kind="initial_excerpt",
-                sensitive_content_acknowledged_at=sensitive_content_acknowledged_at,
-                sensitive_content_findings=sensitive_content_findings,
+                guardrails=guardrails,
             )
             .returning(Document.id)
         )

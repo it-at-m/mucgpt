@@ -29,6 +29,7 @@ from database.document_lock import document_work_lock
 from database.document_repo import DOCUMENT_LIMIT, DocumentRepository
 from guardrails.sensitive_content import (
     SensitiveContentFinding,
+    SensitiveContentOccurrence,
     SensitiveContentReport,
     scan_text,
 )
@@ -95,11 +96,18 @@ class DocumentScanError(RuntimeError):
 
 @dataclass(frozen=True)
 class SensitiveContentGuardrail:
-    findings: tuple[SensitiveContentFinding, ...] | None
+    occurrences: tuple[SensitiveContentOccurrence, ...] | None
+    legacy_findings: tuple[SensitiveContentFinding, ...] | None = None
     confirmed_at: datetime | None = None
 
+    @property
+    def findings(self) -> tuple[SensitiveContentFinding, ...] | None:
+        if self.occurrences is not None:
+            return SensitiveContentReport(occurrences=self.occurrences).findings
+        return self.legacy_findings
 
-NOT_SCANNED = SensitiveContentGuardrail(findings=None)
+
+NOT_SCANNED = SensitiveContentGuardrail(occurrences=None)
 
 
 @dataclass(frozen=True)
@@ -108,24 +116,37 @@ class DocumentGuardrails:
 
 
 def _sensitive_content_guardrail(
-    findings: list[dict[str, Any]] | None, confirmed_at: datetime | None
+    data: dict[str, Any] | None,
 ) -> SensitiveContentGuardrail:
+    if data is None:
+        return NOT_SCANNED
+    occurrences = data.get("occurrences")
+    legacy_findings = data.get("legacy_findings")
+    if (
+        occurrences is None
+        and not legacy_findings
+        and data.get("coverage") != "complete"
+    ):
+        legacy_findings = None
     return SensitiveContentGuardrail(
-        None
-        if findings is None
-        else tuple(SensitiveContentFinding.model_validate(item) for item in findings),
-        confirmed_at,
+        occurrences=None
+        if occurrences is None
+        else tuple(
+            SensitiveContentOccurrence.model_validate(item) for item in occurrences
+        ),
+        legacy_findings=None
+        if legacy_findings is None
+        else tuple(
+            SensitiveContentFinding.model_validate(item) for item in legacy_findings
+        ),
+        confirmed_at=data.get("confirmed_at"),
     )
 
 
 def _stored_guardrails(row: Document) -> DocumentGuardrails:
-    # A historical prefix scan can establish a finding, but cannot clear the full document.
-    findings = row.sensitive_content_findings
-    if row.sensitive_content_scan_truncated and not findings:
-        findings = None
     return DocumentGuardrails(
         sensitive_content=_sensitive_content_guardrail(
-            findings, row.sensitive_content_acknowledged_at
+            None if row.guardrails is None else row.guardrails.get("sensitive_content")
         )
     )
 
@@ -146,15 +167,15 @@ def scan_document_text(
 
 
 def confirmation_fingerprint(
-    owner: str, filename: str, text: str, findings: list[dict[str, Any]]
+    owner: str, filename: str, text: str, occurrences: list[dict[str, Any]]
 ) -> str:
     payload = json.dumps(
-        [1, owner, filename, text, findings],
+        [2, owner, filename, text, occurrences],
         ensure_ascii=False,
         separators=(",", ":"),
         sort_keys=True,
     )
-    return "v1-" + hashlib.sha256(payload.encode()).hexdigest()
+    return "v2-" + hashlib.sha256(payload.encode()).hexdigest()
 
 
 @dataclass(frozen=True)
@@ -387,19 +408,24 @@ class DocumentIngestionService:
                     text,
                     self.settings.guardrails.sensitive_content,
                 )
-                findings = (
+                occurrences = (
                     None
+                    if report is None
+                    else [occurrence.model_dump() for occurrence in report.occurrences]
+                )
+                findings = (
+                    []
                     if report is None
                     else [finding.model_dump() for finding in report.findings]
                 )
                 confirmed_at = None
-                if findings:
+                if occurrences:
                     fingerprint = await to_thread.run_sync(
                         confirmation_fingerprint,
                         user_info.user_id,
                         filename,
                         text,
-                        findings,
+                        occurrences,
                     )
                     if confirmation != fingerprint:
                         raise GuardrailConfirmationRequired(findings, fingerprint)
@@ -424,9 +450,14 @@ class DocumentIngestionService:
                     path=get_document_path(document_id),
                     created_at=created_at,
                     guardrails=DocumentGuardrails(
-                        sensitive_content=_sensitive_content_guardrail(
-                            findings,
-                            confirmed_at,
+                        sensitive_content=SensitiveContentGuardrail(
+                            occurrences=None
+                            if occurrences is None
+                            else tuple(
+                                SensitiveContentOccurrence.model_validate(item)
+                                for item in occurrences
+                            ),
+                            confirmed_at=confirmed_at,
                         )
                     ),
                 )
@@ -437,8 +468,17 @@ class DocumentIngestionService:
                             document_id,
                             text_length=len(text),
                             preview=preview,
-                            sensitive_content_findings=findings,
-                            sensitive_content_acknowledged_at=confirmed_at,
+                            guardrails=None
+                            if occurrences is None
+                            else {
+                                "sensitive_content": {
+                                    "occurrences": occurrences,
+                                    "confirmed_at": None
+                                    if confirmed_at is None
+                                    else confirmed_at.isoformat(),
+                                    "coverage": "complete",
+                                }
+                            },
                         ):
                             raise DocumentStorageError(
                                 "Document could not be marked ready"

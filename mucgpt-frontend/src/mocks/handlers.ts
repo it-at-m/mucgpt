@@ -15,7 +15,7 @@ import {
 } from "../api";
 import { buildAssistantCreateResponse, buildOwnersDetailedFromOwnerIds, buildChatMessage, buildRichMarkdownChatMessage } from "./data/generators";
 import { CREATIVITY_HIGH, CREATIVITY_MEDIUM } from "../constants";
-import type { AssistantAuditEvent, DocumentLibraryEntry, SensitiveContentFinding } from "../api/models";
+import type { AssistantAuditEvent, DocumentLibraryEntry, SensitiveContentFinding, SensitiveContentOccurrence } from "../api/models";
 import { CANVAS_TOOL_IDS } from "../utils/canvasStream";
 import { loadMockAssistants, loadMockSubscriptions, saveMockAssistants, saveMockSubscriptions } from "./data/assistant-store";
 import { MOCK_DELETED_SUBSCRIBED_SNAPSHOT, MOCK_SUBSCRIPTION_SEED } from "./data/browser-scenario-seed";
@@ -691,11 +691,44 @@ const MOCK_SENSITIVE_CONTENT_PATTERNS: { finding: Omit<SensitiveContentFinding, 
     { finding: { category: "credential_assignment", kind: "secret", confidence: "likely" }, pattern: /\b(?:password|passwort)\s*[:=]\s*\S{6,}/gi }
 ];
 
-const mockScan = (text: string): SensitiveContentFinding[] =>
-    MOCK_SENSITIVE_CONTENT_PATTERNS.flatMap(({ finding, pattern }) => {
-        const count = text.match(pattern)?.length ?? 0;
-        return count > 0 ? [{ ...finding, count }] : [];
-    });
+const codePointOffsets = (text: string) => {
+    const offsets = new Uint32Array(text.length + 1);
+    let utf16Offset = 0;
+    let codePointOffset = 0;
+
+    while (utf16Offset < text.length) {
+        offsets[utf16Offset] = codePointOffset;
+        const codePoint = text.codePointAt(utf16Offset);
+        utf16Offset += codePoint !== undefined && codePoint > 0xffff ? 2 : 1;
+        codePointOffset += 1;
+    }
+    offsets[text.length] = codePointOffset;
+    return offsets;
+};
+
+const mockScan = (text: string): SensitiveContentOccurrence[] => {
+    const offsets = codePointOffsets(text);
+    return MOCK_SENSITIVE_CONTENT_PATTERNS.flatMap(({ finding, pattern }) =>
+        Array.from(text.matchAll(pattern)).map(match => ({
+            ...finding,
+            start: offsets[match.index],
+            end: offsets[match.index + match[0].length],
+            provenance: { guardrail: "sensitive_content", detector: finding.category }
+        }))
+    );
+};
+
+const mockFindings = (occurrences: SensitiveContentOccurrence[]): SensitiveContentFinding[] =>
+    Array.from(
+        occurrences
+            .reduce((findings, occurrence) => {
+                const key = `${occurrence.category}:${occurrence.kind}:${occurrence.confidence}`;
+                const finding = findings.get(key);
+                findings.set(key, finding ? { ...finding, count: finding.count + 1 } : { ...occurrence, count: 1 });
+                return findings;
+            }, new Map<string, SensitiveContentFinding>())
+            .values()
+    );
 
 /** Mocked document library upload: mirrors the backend's quota, size and format rejections. */
 async function uploadDocumentHandler({ request }: { request: Request }) {
@@ -721,9 +754,10 @@ async function uploadDocumentHandler({ request }: { request: Request }) {
         return HttpResponse.json({ detail: "Document extraction returned no usable text." }, { status: 422 });
     }
 
-    const findings = mockScan(text);
+    const occurrences = mockScan(text);
+    const findings = mockFindings(occurrences);
     if (findings.length) {
-        const data = new TextEncoder().encode(JSON.stringify([file.name, text, findings]));
+        const data = new TextEncoder().encode(JSON.stringify([file.name, text, occurrences]));
         const digest = await crypto.subtle.digest("SHA-256", data);
         const fingerprint = Array.from(new Uint8Array(digest), b => b.toString(16).padStart(2, "0")).join("");
         if (formData.get("confirmation_fingerprint") !== fingerprint)
@@ -744,7 +778,13 @@ async function uploadDocumentHandler({ request }: { request: Request }) {
         path: `/documents/${id}.txt`,
         created_at: new Date().toISOString(),
         status: "ready",
-        guardrails: { sensitive_content: { findings, confirmed_at: findings.length ? new Date().toISOString() : null } }
+        guardrails: {
+            sensitive_content: {
+                findings,
+                occurrences,
+                confirmed_at: findings.length ? new Date().toISOString() : null
+            }
+        }
     };
     mockDocuments.unshift(document);
     return HttpResponse.json(document, { status: 201 });

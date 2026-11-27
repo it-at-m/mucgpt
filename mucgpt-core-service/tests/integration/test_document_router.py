@@ -122,7 +122,11 @@ def test_upload_returns_only_ready_metadata_and_uses_authenticated_owner(upload_
         "path": f"/documents/{document_id}.txt",
         "created_at": metadata["created_at"],
         "guardrails": {
-            "sensitive_content": {"findings": [], "confirmed_at": None},
+            "sensitive_content": {
+                "findings": [],
+                "occurrences": [],
+                "confirmed_at": None,
+            },
         },
     }
     assert metadata["created_at"]

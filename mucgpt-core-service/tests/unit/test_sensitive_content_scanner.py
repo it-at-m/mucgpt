@@ -116,6 +116,32 @@ def test_report_contains_categories_and_counts_but_never_values():
     }
 
 
+def test_occurrences_use_unicode_code_point_offsets_and_stable_provenance():
+    text = "😀 Kontakt: max@example.org; erneut max@example.org"
+    report = scan_text(text)
+
+    assert [
+        (occurrence.start, occurrence.end, occurrence.provenance.detector)
+        for occurrence in report.occurrences
+    ] == [
+        (text.index("max@example.org"), text.index("max@example.org") + 15, "email"),
+        (text.rindex("max@example.org"), text.rindex("max@example.org") + 15, "email"),
+    ]
+    serialized = report.model_dump_json()
+    assert "max@example.org" not in serialized
+
+
+def test_overlapping_occurrences_keep_detector_priority_and_are_ordered():
+    text = "postgres://admin:S3cr3t!pw@db.internal:5432/app max@example.org"
+    report = scan_text(text)
+
+    assert [occurrence.category for occurrence in report.occurrences] == [
+        "connection_string",
+        "email",
+    ]
+    assert report.occurrences[0].start < report.occurrences[1].start
+
+
 def test_findings_list_secrets_before_personal_data():
     report = scan_text(f"max@example.org {private_key_fixture(kind='')}")
 

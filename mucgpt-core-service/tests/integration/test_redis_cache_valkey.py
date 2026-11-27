@@ -12,13 +12,14 @@ from dataclasses import dataclass
 from typing import Any, cast
 from unittest.mock import AsyncMock
 
+import httpx2
 import pytest
 import pytest_asyncio
 import redis.asyncio as redis_asyncio
 from langchain_core.tools import StructuredTool
 from tests import container_runtime
 
-from agent.tools.mcp import McpLoader
+from agent.tools.mcp import McpBearerAuthProvider, McpLoader
 from config.settings import MCPConfig, MCPSourceConfig, MCPTransport, RedisConfig
 from core.auth_models import AuthenticationResult
 from core.cache import RedisCache
@@ -256,3 +257,57 @@ async def test_mcp_loader_force_reload_replaces_real_valkey_cache(
     assert [tool.name for tool in tools] == ["fresh"]
     assert cached is not None
     assert [tool.tool.name for tool in cached["documents"]] == ["fresh"]
+
+
+@pytest.mark.asyncio
+async def test_mcp_loader_cache_hit_uses_current_forwarded_token(
+    valkey_client, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Cached metadata never retains a forwarded token after it is rotated."""
+    source = MCPSourceConfig(
+        url="http://mcp.example/sse",
+        transport=MCPTransport.SSE,
+        forward_token=True,
+    )
+    monkeypatch.setattr(
+        McpLoader,
+        "_mcp_settings",
+        MCPConfig(sources={"documents": source}, cache_ttl=60),
+    )
+    monkeypatch.setattr(McpBearerAuthProvider, "_tokens", {})
+    discovery_calls = 0
+    invocation_clients: list[Any] = []
+
+    def adapter_factory(_client: Any) -> _FakeMcpAdapter:
+        nonlocal discovery_calls
+        discovery_calls += 1
+        return _FakeMcpAdapter([_mcp_tool("search")])
+
+    async def wrap_tool(raw_tool: Any, client: Any) -> StructuredTool:
+        invocation_clients.append(client)
+        return _mcp_tool(raw_tool.name)
+
+    monkeypatch.setattr("agent.tools.mcp.MCPAdapter", adapter_factory)
+    monkeypatch.setattr("agent.tools.mcp.as_langchain_tool", wrap_tool)
+    user_id = "valkey-forward-token"
+    old_token = "old-token-must-not-be-cached"
+    new_token = "new-token-after-rotation"
+    cache_key = f"{McpLoader._CACHE_PREFIX}:{user_id}"
+
+    await McpLoader.load_mcp_tools(
+        _mcp_user(user_id).model_copy(update={"token": old_token})
+    )
+    cached_bytes = await valkey_client.get(cache_key)
+    assert cached_bytes is not None
+    assert old_token.encode() not in cached_bytes
+
+    tools = await McpLoader.load_mcp_tools(
+        _mcp_user(user_id).model_copy(update={"token": new_token})
+    )
+    auth = invocation_clients[-1].transport.auth
+    request = httpx2.Request("GET", "https://mcp.example/tools")
+    next(auth.auth_flow(request))
+
+    assert [tool.name for tool in tools] == ["search"]
+    assert discovery_calls == 1
+    assert request.headers["Authorization"] == f"Bearer {new_token}"

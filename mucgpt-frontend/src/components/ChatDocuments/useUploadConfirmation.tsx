@@ -1,11 +1,11 @@
 import { Dialog, DialogActions, DialogBody, DialogContent, DialogSurface, DialogTitle } from "@fluentui/react-components";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import type { SensitivityFinding } from "../../api/models";
+import type { SensitiveContentFinding } from "../../api/models";
 import { Button } from "../../ui/Button";
-import { describeFindings } from "./sensitivity";
+import { describeFindings } from "./sensitiveContent";
 
-type Decision = { name: string; findings: SensitivityFinding[]; resolve: (save: boolean) => void };
+type Decision = { name: string; findings: SensitiveContentFinding[]; resolve: (save: boolean) => void };
 
 export function useUploadConfirmation(scope?: string) {
     const { t } = useTranslation();
@@ -21,7 +21,7 @@ export function useUploadConfirmation(scope?: string) {
     }, [scope]);
     const createConfirmation = useCallback(() => {
         const started = generation.current;
-        return (name: string, findings: SensitivityFinding[]) =>
+        return (name: string, findings: SensitiveContentFinding[]) =>
             new Promise<boolean>(resolve => {
                 if (generation.current !== started) return resolve(false);
                 pending.current.push({ name, findings, resolve });
@@ -40,7 +40,7 @@ export function useUploadConfirmation(scope?: string) {
                 <DialogBody>
                     <DialogTitle>{t("document_library.save_question")}</DialogTitle>
                     <DialogContent>
-                        {current.name} — {t("document_library.sensitivity_badge_hint", { findings: describeFindings(current.findings, t) })}
+                        {current.name} — {t("document_library.guardrails_badge_hint", { findings: describeFindings(current.findings, t) })}
                     </DialogContent>
                     <DialogActions>
                         <Button appearance="secondary" onClick={() => decide(false)}>

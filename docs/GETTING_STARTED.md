@@ -150,16 +150,17 @@ credit cards, dates of birth, email addresses, phone numbers) and secrets
 assignments). Detection uses patterns plus checksums; it does not detect names
 or addresses. The scan report stores categories and counts. Matched values stay in the document itself.
 
-A flagged upload returns HTTP 409 with code `sensitivity_confirmation_required` and releases the quota reservation. The warning lists the categories. Selecting **Save document** resubmits the file with its confirmation fingerprint. The service scans again before storing the text and recording the confirmation time. The library and attached document retain a badge, and the owner can reuse the document in another chat without confirming again. Cancelling leaves the file unsaved. A scanner failure returns HTTP 503 and can be retried. Apply core database migrations before rolling out the service and frontend.
+A flagged upload returns HTTP 409 with code `guardrail_confirmation_required` and `guardrail: "sensitive_content"`, then releases the quota reservation. The warning lists the categories. Selecting **Save document** resubmits the file with its confirmation fingerprint. The service scans again before storing the text and recording the confirmation time. The library and attached document retain a badge, and the owner can reuse the document in another chat without confirming again. Cancelling leaves the file unsaved. A scanner failure returns HTTP 503 and can be retried. Apply core database migrations before rolling out the service and frontend.
 
-Configure it under `documents.sensitivity`:
+Configure the document-local guardrail under `documents.guardrails.sensitive_content`:
 
 ```yaml
 documents:
-  sensitivity:
-    enabled: true                  # scan new uploads
-    ignored_email_domains: ["muenchen.de"]
-    disabled_categories: []        # e.g. ["phone"]
+  guardrails:
+    sensitive_content:
+      enabled: true                  # scan new uploads
+      ignored_email_domains: ["muenchen.de"]
+      disabled_categories: []        # e.g. ["phone"]
 ```
 
 Documents uploaded before the scan existed, or while it was disabled, are not

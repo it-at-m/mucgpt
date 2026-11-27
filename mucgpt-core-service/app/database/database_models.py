@@ -105,14 +105,14 @@ class Document(Base):
     )
     # Scan result as a list of findings (categories and counts, never matched
     # values); NULL means the text was not scanned.
-    sensitivity_findings: Mapped[list[dict[str, Any]] | None] = mapped_column(
+    sensitive_content_findings: Mapped[list[dict[str, Any]] | None] = mapped_column(
         JSON, nullable=True
     )
-    sensitivity_truncated: Mapped[bool | None] = mapped_column(nullable=True)
+    sensitive_content_scan_truncated: Mapped[bool | None] = mapped_column(nullable=True)
     # The scanner raised, so the text may contain unreported findings.
-    sensitivity_scan_failed: Mapped[bool] = mapped_column(
+    sensitive_content_scan_failed: Mapped[bool] = mapped_column(
         nullable=False, default=False, server_default=false()
     )
-    sensitivity_acknowledged_at: Mapped[datetime | None] = mapped_column(
+    sensitive_content_acknowledged_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True
     )

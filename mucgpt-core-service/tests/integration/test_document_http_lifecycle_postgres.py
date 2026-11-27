@@ -40,7 +40,7 @@ async def test_document_http_lifecycle_survives_restart_and_deletion(
         warning = await harness.upload_document("council-decision.txt", b"source")
         assert warning.status_code == 409
         detail = warning.json()["detail"]
-        assert detail["code"] == "sensitivity_confirmation_required"
+        assert detail["code"] == "guardrail_confirmation_required"
         assert (await harness.client.get("/v1/documents")).json() == []
         uploaded = await harness.client.post(
             "/v1/documents",
@@ -58,15 +58,19 @@ async def test_document_http_lifecycle_survives_restart_and_deletion(
             "original_size": len(b"source"),
             "text_length": len(extracted_text),
             "preview": extracted_text,
-            "sensitivity": {
-                "findings": detail["findings"],
-                "confirmed_at": metadata["sensitivity"]["confirmed_at"],
+            "guardrails": {
+                "sensitive_content": {
+                    "findings": detail["findings"],
+                    "confirmed_at": metadata["guardrails"]["sensitive_content"][
+                        "confirmed_at"
+                    ],
+                },
             },
             "preview_kind": "initial_excerpt",
             "path": f"/documents/{document_id}.txt",
             "created_at": metadata["created_at"],
         }
-        assert metadata["sensitivity"]["confirmed_at"]
+        assert metadata["guardrails"]["sensitive_content"]["confirmed_at"]
         assert metadata["created_at"]
 
         catalog_document = await _catalog_document(harness.owner.user_id, document_id)

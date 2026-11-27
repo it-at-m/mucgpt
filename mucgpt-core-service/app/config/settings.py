@@ -27,7 +27,7 @@ from pydantic_settings import (
     YamlConfigSettingsSource,
 )
 
-from sensitivity.models import SensitivityCategory
+from guardrails.sensitive_content.models import SensitiveContentCategory
 
 MODEL_INFO_TIMEOUT_SECONDS = 8.0
 
@@ -544,14 +544,22 @@ class DBConfig(BaseModel):
     password: SecretStr = SecretStr("admin")
 
 
-class DocumentSensitivityConfig(BaseModel):
-    """Scan extracted document text for personal data and secrets."""
+class SensitiveContentGuardrailConfig(BaseModel):
+    """Detect personal data and secrets in extracted document text."""
 
     enabled: bool = True
     # Own organisation's addresses (e.g. "muenchen.de") appear in nearly every
     # official letter; ignoring them avoids flagging every upload.
     ignored_email_domains: list[str] = Field(default_factory=list)
-    disabled_categories: list[SensitivityCategory] = Field(default_factory=list)
+    disabled_categories: list[SensitiveContentCategory] = Field(default_factory=list)
+
+
+class DocumentGuardrailsConfig(BaseModel):
+    """Guardrails applied while documents cross into MUCGPT storage."""
+
+    sensitive_content: SensitiveContentGuardrailConfig = Field(
+        default_factory=SensitiveContentGuardrailConfig
+    )
 
 
 class DocumentConfig(BaseModel):
@@ -560,8 +568,8 @@ class DocumentConfig(BaseModel):
     max_upload_bytes: PositiveInt = 100 * 1024 * 1024
     max_text_bytes: PositiveInt = 5 * 1024 * 1024
     preview_max_chars: PositiveInt = 1000
-    sensitivity: DocumentSensitivityConfig = Field(
-        default_factory=DocumentSensitivityConfig
+    guardrails: DocumentGuardrailsConfig = Field(
+        default_factory=DocumentGuardrailsConfig
     )
 
 

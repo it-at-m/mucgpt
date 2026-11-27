@@ -10,7 +10,11 @@ from anyio import CancelScope, to_thread
 from fastapi import UploadFile
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
-from config.settings import DocumentConfig, DocumentSensitivityConfig, get_settings
+from config.settings import (
+    DocumentConfig,
+    SensitiveContentGuardrailConfig,
+    get_settings,
+)
 from core.auth_models import AuthenticationResult
 from core.logtools import getLogger
 from core.virtual_file_system_helper import (
@@ -23,8 +27,12 @@ from database.database_models import Document
 from database.document_catalog import DocumentCatalogManager
 from database.document_lock import document_work_lock
 from database.document_repo import DOCUMENT_LIMIT, DocumentRepository
+from guardrails.sensitive_content import (
+    SensitiveContentFinding,
+    SensitiveContentReport,
+    scan_text,
+)
 from parsing.factory import get_parser
-from sensitivity import Finding, SensitivityReport, scan_text
 
 logger = getLogger()
 
@@ -74,9 +82,9 @@ class DocumentProcessingError(ValueError):
     """Public deletion cannot interrupt processing or another active document operation."""
 
 
-class SensitivityConfirmationRequired(ValueError):
+class GuardrailConfirmationRequired(ValueError):
     def __init__(self, findings: list[dict[str, Any]], fingerprint: str):
-        super().__init__("Sensitivity confirmation required")
+        super().__init__("Guardrail confirmation required")
         self.findings = findings
         self.fingerprint = fingerprint
 
@@ -86,36 +94,45 @@ class DocumentScanError(RuntimeError):
 
 
 @dataclass(frozen=True)
-class DocumentSensitivity:
-    findings: tuple[Finding, ...] | None
+class SensitiveContentGuardrail:
+    findings: tuple[SensitiveContentFinding, ...] | None
     confirmed_at: datetime | None = None
 
 
-NOT_SCANNED = DocumentSensitivity(findings=None)
+NOT_SCANNED = SensitiveContentGuardrail(findings=None)
 
 
-def _document_sensitivity(
+@dataclass(frozen=True)
+class DocumentGuardrails:
+    sensitive_content: SensitiveContentGuardrail = NOT_SCANNED
+
+
+def _sensitive_content_guardrail(
     findings: list[dict[str, Any]] | None, confirmed_at: datetime | None
-) -> DocumentSensitivity:
-    return DocumentSensitivity(
+) -> SensitiveContentGuardrail:
+    return SensitiveContentGuardrail(
         None
         if findings is None
-        else tuple(Finding.model_validate(item) for item in findings),
+        else tuple(SensitiveContentFinding.model_validate(item) for item in findings),
         confirmed_at,
     )
 
 
-def _stored_sensitivity(row: Document) -> DocumentSensitivity:
+def _stored_guardrails(row: Document) -> DocumentGuardrails:
     # A historical prefix scan can establish a finding, but cannot clear the full document.
-    findings = row.sensitivity_findings
-    if row.sensitivity_truncated and not findings:
+    findings = row.sensitive_content_findings
+    if row.sensitive_content_scan_truncated and not findings:
         findings = None
-    return _document_sensitivity(findings, row.sensitivity_acknowledged_at)
+    return DocumentGuardrails(
+        sensitive_content=_sensitive_content_guardrail(
+            findings, row.sensitive_content_acknowledged_at
+        )
+    )
 
 
 def scan_document_text(
-    text: str, settings: DocumentSensitivityConfig
-) -> SensitivityReport | None:
+    text: str, settings: SensitiveContentGuardrailConfig
+) -> SensitiveContentReport | None:
     if not settings.enabled:
         return None
     try:
@@ -151,7 +168,7 @@ class SelectedDocument:
     preview_kind: str
     path: str
     created_at: datetime
-    sensitivity: DocumentSensitivity = NOT_SCANNED
+    guardrails: DocumentGuardrails = DocumentGuardrails()
 
 
 @dataclass(frozen=True)
@@ -180,7 +197,7 @@ class LibraryDocument:
     path: str
     status: str
     created_at: datetime
-    sensitivity: DocumentSensitivity = NOT_SCANNED
+    guardrails: DocumentGuardrails = DocumentGuardrails()
 
 
 def _selected_document(row: Document) -> SelectedDocument:
@@ -197,7 +214,7 @@ def _selected_document(row: Document) -> SelectedDocument:
         preview_kind=row.preview_kind,
         path=get_document_path(row.id),
         created_at=row.created_at,
-        sensitivity=_stored_sensitivity(row),
+        guardrails=_stored_guardrails(row),
     )
 
 
@@ -232,7 +249,7 @@ class DocumentLibraryService:
                     path=get_document_path(row.id),
                     status=row.status,
                     created_at=row.created_at,
-                    sensitivity=_stored_sensitivity(row),
+                    guardrails=_stored_guardrails(row),
                 )
                 for row in rows
             ]
@@ -366,7 +383,9 @@ class DocumentIngestionService:
                     create_initial_excerpt, text, self.settings
                 )
                 report = await to_thread.run_sync(
-                    scan_document_text, text, self.settings.sensitivity
+                    scan_document_text,
+                    text,
+                    self.settings.guardrails.sensitive_content,
                 )
                 findings = (
                     None
@@ -383,7 +402,7 @@ class DocumentIngestionService:
                         findings,
                     )
                     if confirmation != fingerprint:
-                        raise SensitivityConfirmationRequired(findings, fingerprint)
+                        raise GuardrailConfirmationRequired(findings, fingerprint)
                     confirmed_at = datetime.now(UTC)
                 backend = create_document_backend(user_info.user_id)
                 write_attempted = True
@@ -404,9 +423,11 @@ class DocumentIngestionService:
                     preview_kind="initial_excerpt",
                     path=get_document_path(document_id),
                     created_at=created_at,
-                    sensitivity=_document_sensitivity(
-                        findings,
-                        confirmed_at,
+                    guardrails=DocumentGuardrails(
+                        sensitive_content=_sensitive_content_guardrail(
+                            findings,
+                            confirmed_at,
+                        )
                     ),
                 )
                 with CancelScope(shield=True):
@@ -416,8 +437,8 @@ class DocumentIngestionService:
                             document_id,
                             text_length=len(text),
                             preview=preview,
-                            sensitivity_findings=findings,
-                            sensitivity_acknowledged_at=confirmed_at,
+                            sensitive_content_findings=findings,
+                            sensitive_content_acknowledged_at=confirmed_at,
                         ):
                             raise DocumentStorageError(
                                 "Document could not be marked ready"
@@ -435,7 +456,7 @@ class DocumentIngestionService:
                                 "Document ingestion cleanup failed for %s", document_id
                             )
                             if isinstance(
-                                ingestion_error, SensitivityConfirmationRequired
+                                ingestion_error, GuardrailConfirmationRequired
                             ):
                                 raise DocumentStorageError(
                                     "Could not release document reservation"

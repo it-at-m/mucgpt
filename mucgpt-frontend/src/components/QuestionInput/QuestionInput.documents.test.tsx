@@ -34,7 +34,7 @@ const libraryEntry = (overrides: Partial<DocumentLibraryEntry> = {}): DocumentLi
     preview_kind: "initial_excerpt",
     path: "/documents/library-1.txt",
     created_at: "2026-11-02",
-    sensitivity: { findings: [], confirmed_at: null },
+    guardrails: { sensitive_content: { findings: [], confirmed_at: null } },
     status: "ready",
     ...overrides
 });
@@ -81,9 +81,11 @@ beforeEach(() => {
 const flaggedUpload = (): DocumentMetadata =>
     ({
         ...libraryEntry({ id: "flagged", filename: "Antrag.txt" }),
-        sensitivity: {
-            findings: [{ category: "iban", kind: "pii", confidence: "certain", count: 2 }],
-            confirmed_at: null
+        guardrails: {
+            sensitive_content: {
+                findings: [{ category: "iban", kind: "pii", confidence: "certain", count: 2 }],
+                confirmed_at: null
+            }
         }
     }) as DocumentMetadata;
 
@@ -91,7 +93,7 @@ describe("QuestionInput sensitive documents", () => {
     it.each([true, false])("asks before attaching a flagged upload (save=%s)", async save => {
         vi.mocked(uploadDocumentApi).mockImplementation(async (file, confirm) => {
             const metadata = flaggedUpload();
-            if (!(await confirm!(file.name, metadata.sensitivity.findings!))) throw new DOMException("Cancelled", "AbortError");
+            if (!(await confirm!(file.name, metadata.guardrails.sensitive_content.findings!))) throw new DOMException("Cancelled", "AbortError");
             return metadata;
         });
         render(<Harness />);
@@ -99,14 +101,14 @@ describe("QuestionInput sensitive documents", () => {
         const button = await screen.findByRole("button", { name: save ? "document_library.save_document" : "common.cancel" });
         fireEvent.click(button);
         await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
-        await waitFor(() => expect(Boolean(screen.queryByText("document_library.sensitivity_badge"))).toBe(save));
+        await waitFor(() => expect(Boolean(screen.queryByText("document_library.guardrails_badge"))).toBe(save));
     });
 
     it("cancels a pending confirmation when switching chats", async () => {
         const saved = vi.fn();
         vi.mocked(uploadDocumentApi).mockImplementation(async (file, confirm) => {
             const metadata = flaggedUpload();
-            if (!(await confirm!(file.name, metadata.sensitivity.findings!))) throw new DOMException("Cancelled", "AbortError");
+            if (!(await confirm!(file.name, metadata.guardrails.sensitive_content.findings!))) throw new DOMException("Cancelled", "AbortError");
             saved();
             return metadata;
         });
@@ -122,22 +124,22 @@ describe("QuestionInput sensitive documents", () => {
         render(
             <Harness
                 conversationKey="second"
-                initialData={[{ ...attached(), status: "ready", confirmed: true, sensitiveFindings: flaggedUpload().sensitivity.findings! }]}
+                initialData={[{ ...attached(), status: "ready", confirmed: true, sensitiveFindings: flaggedUpload().guardrails.sensitive_content.findings! }]}
             />
         );
         expect(sendButton()).toBeEnabled();
         expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
-        const badge = screen.getByText("document_library.sensitivity_badge");
+        const badge = screen.getByText("document_library.guardrails_badge");
         badge.focus();
         expect(badge).toHaveFocus();
-        expect(badge).toHaveTextContent("document_library.sensitivity_badge_confirmed");
+        expect(badge).toHaveTextContent("document_library.guardrails_badge_confirmed");
     });
 
     it("shows no warning for clean documents", () => {
         render(<Harness initialData={[attached()]} />);
 
         expect(screen.queryByText("document_library.save_question")).not.toBeInTheDocument();
-        expect(screen.queryByText("document_library.sensitivity_badge")).not.toBeInTheDocument();
+        expect(screen.queryByText("document_library.guardrails_badge")).not.toBeInTheDocument();
     });
 });
 

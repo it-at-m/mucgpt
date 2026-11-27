@@ -1,15 +1,15 @@
 import type { TFunction } from "i18next";
 import { describe, expect, it } from "vitest";
 
-import type { SensitivityFinding } from "../../api/models";
-import { describeFindings } from "./sensitivity";
+import type { SensitiveContentFinding } from "../../api/models";
+import { describeFindings } from "./sensitiveContent";
 
 const t = ((key: string, options?: Record<string, unknown>) =>
-    key === "document_library.sensitivity_finding"
+    key === "document_library.guardrails_finding"
         ? `${options?.count}× ${options?.category}`
-        : key.replace("document_library.sensitivity_category_", "")) as TFunction;
+        : key.replace("document_library.guardrails_category_", "")) as TFunction;
 
-const finding = (overrides: Partial<SensitivityFinding>): SensitivityFinding => ({
+const finding = (overrides: Partial<SensitiveContentFinding>): SensitiveContentFinding => ({
     category: "iban",
     kind: "pii",
     confidence: "certain",

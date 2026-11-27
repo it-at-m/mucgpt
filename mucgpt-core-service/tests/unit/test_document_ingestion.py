@@ -16,7 +16,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from sqlalchemy.orm import Session
 from starlette.datastructures import Headers
 
-from config.settings import DocumentConfig, DocumentSensitivityConfig
+from config.settings import DocumentConfig, SensitiveContentGuardrailConfig
 from core import document_service as services
 from core.auth_models import AuthenticationResult
 from core.virtual_file_system_helper import (
@@ -561,7 +561,7 @@ async def test_confirmation_cleanup_failure_logs_retained_reservation(
 async def test_confirmation_binds_reviewed_upload(ingestion, change):
     service, sessions, store, parser = ingestion
     parser.parse.return_value = SENSITIVE_TEXT
-    with pytest.raises(services.SensitivityConfirmationRequired) as warning:
+    with pytest.raises(services.GuardrailConfirmationRequired) as warning:
         await service.ingest_document(user(), upload())
     assert sessions.rows() == []
     assert store.search(get_document_namespace(user().user_id)) == []
@@ -570,29 +570,32 @@ async def test_confirmation_binds_reviewed_upload(ingestion, change):
     if change == "text":
         parser.parse.return_value += " extra"
     if change == "findings":
-        service.settings.sensitivity.disabled_categories = ["iban"]
+        service.settings.guardrails.sensitive_content.disabled_categories = ["iban"]
     save = service.ingest_document(owner, file, warning.value.fingerprint)
     if change:
-        with pytest.raises(services.SensitivityConfirmationRequired):
+        with pytest.raises(services.GuardrailConfirmationRequired):
             await save
         assert sessions.rows() == []
         return
     metadata = await save
-    assert metadata.sensitivity.confirmed_at
+    assert metadata.guardrails.sensitive_content.confirmed_at
     row = sessions.rows()[0]
-    assert row.sensitivity_findings == warning.value.findings
+    assert row.sensitive_content_findings == warning.value.findings
     assert (
         store.get(get_document_namespace(owner.user_id), row.storage_key).value[
             "content"
         ]
         == SENSITIVE_TEXT
     )
-    service.settings.sensitivity.enabled = False
+    service.settings.guardrails.sensitive_content.enabled = False
     library = services.DocumentLibraryService(
         cast("async_sessionmaker[AsyncSession]", sessions.begin),
     )
     listed = await library.list_documents(owner)
-    assert listed[0].sensitivity.findings == metadata.sensitivity.findings
+    assert (
+        listed[0].guardrails.sensitive_content.findings
+        == metadata.guardrails.sensitive_content.findings
+    )
     assert (await resolve(sessions, [metadata.id])).document_ids == (metadata.id,)
 
 
@@ -602,13 +605,17 @@ async def test_disabled_scan_stores_no_findings(ingestion):
     parser.parse.return_value = SENSITIVE_TEXT
     service = services.DocumentIngestionService(
         cast("async_sessionmaker[AsyncSession]", sessions),
-        DocumentConfig(sensitivity=DocumentSensitivityConfig(enabled=False)),
+        DocumentConfig(
+            guardrails={
+                "sensitive_content": SensitiveContentGuardrailConfig(enabled=False)
+            }
+        ),
     )
 
     metadata = await service.ingest_document(user(), upload())
 
-    assert metadata.sensitivity == services.NOT_SCANNED
-    assert sessions.rows()[0].sensitivity_findings is None
+    assert metadata.guardrails.sensitive_content == services.NOT_SCANNED
+    assert sessions.rows()[0].sensitive_content_findings is None
     assert (await resolve(sessions, [metadata.id])).document_ids == (metadata.id,)
 
 

@@ -58,8 +58,8 @@ export type CanvasState = {
     truncated?: boolean;
 };
 
-/** Mirrors `SensitivityCategory` in the core service (`app/sensitivity/models.py`). */
-export type SensitivityCategory =
+/** Mirrors `SensitiveContentCategory` in the core service guardrail. */
+export type SensitiveContentCategory =
     | "email"
     | "phone"
     | "iban"
@@ -76,16 +76,20 @@ export type SensitivityCategory =
     | "high_entropy_secret";
 
 /** Likely personal data or secrets found in a document's text; counts only, never the values. */
-export type SensitivityFinding = {
-    category: SensitivityCategory;
+export type SensitiveContentFinding = {
+    category: SensitiveContentCategory;
     kind: "pii" | "secret";
     confidence: "certain" | "likely";
     count: number;
 };
 
-export type DocumentSensitivity = {
-    findings: SensitivityFinding[] | null;
+export type SensitiveContentGuardrail = {
+    findings: SensitiveContentFinding[] | null;
     confirmed_at: string | null;
+};
+
+export type DocumentGuardrails = {
+    sensitive_content: SensitiveContentGuardrail;
 };
 
 export type DocumentMetadata = {
@@ -98,7 +102,7 @@ export type DocumentMetadata = {
     preview_kind: string;
     path: string;
     created_at: string;
-    sensitivity: DocumentSensitivity;
+    guardrails: DocumentGuardrails;
 };
 
 export type DocumentLibraryEntry = Omit<DocumentMetadata, "text_length" | "preview" | "preview_kind"> & {

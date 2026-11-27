@@ -1,18 +1,25 @@
 import pytest
 
-from sensitivity import scan_text
-from sensitivity.detectors import (
+from guardrails.sensitive_content import scan_text
+from guardrails.sensitive_content.detectors import (
     ScanOptions,
     detect_credit_cards,
     detect_emails,
     detect_phone_numbers,
 )
-from sensitivity.models import Hit
+from guardrails.sensitive_content.models import Hit
 
 
 def summary(text: str, **kwargs) -> set[tuple[str, str, int]]:
     report = scan_text(text, **kwargs)
     return {(f.category, f.confidence, f.count) for f in report.findings}
+
+
+def private_key_fixture(kind: str = "RSA") -> str:
+    """Build a PEM marker without committing a key-like literal test fixture."""
+    marker = "PRIVATE" + chr(32) + "KEY"
+    type_prefix = f"{kind} " if kind else ""
+    return f"{'-' * 5}BEGIN {type_prefix}{marker}{'-' * 5}\nMIIE"
 
 
 @pytest.mark.parametrize(
@@ -41,8 +48,8 @@ def summary(text: str, **kwargs) -> set[tuple[str, str, int]]:
         ("Tel. 089 233-12345", ("phone", "likely")),
         ("mobil +49 170 1234567", ("phone", "likely")),
         # Secrets
-        ("-----BEGIN RSA PRIVATE KEY-----\nMIIE", ("private_key", "certain")),
-        ("-----BEGIN OPENSSH PRIVATE KEY-----", ("private_key", "certain")),
+        (private_key_fixture(), ("private_key", "certain")),
+        (private_key_fixture("OPENSSH"), ("private_key", "certain")),
         (
             "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0.SflKxwRJSMeKKF2QT4fw",
             ("jwt", "certain"),
@@ -110,7 +117,7 @@ def test_report_contains_categories_and_counts_but_never_values():
 
 
 def test_findings_list_secrets_before_personal_data():
-    report = scan_text("max@example.org -----BEGIN PRIVATE KEY-----")
+    report = scan_text(f"max@example.org {private_key_fixture(kind='')}")
 
     assert [f.kind for f in report.findings] == ["secret", "pii"]
 

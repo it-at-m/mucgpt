@@ -3,7 +3,7 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
-SensitivityCategory = Literal[
+SensitiveContentCategory = Literal[
     # Personal data
     "email",
     "phone",
@@ -21,8 +21,8 @@ SensitivityCategory = Literal[
     "credential_assignment",
     "high_entropy_secret",
 ]
-SensitivityKind = Literal["pii", "secret"]
-SensitivityConfidence = Literal["certain", "likely"]
+SensitiveContentKind = Literal["pii", "secret"]
+SensitiveContentConfidence = Literal["certain", "likely"]
 
 
 @dataclass(frozen=True)
@@ -33,30 +33,30 @@ class Hit:
     traces by accident.
     """
 
-    category: SensitivityCategory
-    kind: SensitivityKind
-    confidence: SensitivityConfidence
+    category: SensitiveContentCategory
+    kind: SensitiveContentKind
+    confidence: SensitiveContentConfidence
     start: int
     end: int
 
 
-class Finding(BaseModel):
+class SensitiveContentFinding(BaseModel):
     """Aggregated hits of one category and confidence, without matched values."""
 
     model_config = ConfigDict(frozen=True)
 
-    category: SensitivityCategory
-    kind: SensitivityKind
-    confidence: SensitivityConfidence
+    category: SensitiveContentCategory
+    kind: SensitiveContentKind
+    confidence: SensitiveContentConfidence
     count: int = Field(ge=1)
 
 
-class SensitivityReport(BaseModel):
+class SensitiveContentReport(BaseModel):
     """Scan result for one text. Contains categories and counts only."""
 
     model_config = ConfigDict(frozen=True)
 
-    findings: tuple[Finding, ...] = ()
+    findings: tuple[SensitiveContentFinding, ...] = ()
 
     @property
     def is_flagged(self) -> bool:

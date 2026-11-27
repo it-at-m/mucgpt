@@ -16,11 +16,11 @@ from core.document_service import (
     DocumentSizeExceededError,
     DocumentUnavailableError,
     EmptyDocumentExtractionError,
+    GuardrailConfirmationRequired,
     InvalidDocumentTextError,
     InvalidDocumentUploadError,
     LibraryDocument,
     SelectedDocument,
-    SensitivityConfirmationRequired,
 )
 from core.logtools import getLogger
 from database.document_repo import DocumentQuotaExceededError
@@ -96,13 +96,15 @@ async def delete_document(
     ),
     responses={
         400: {"description": "Invalid upload or parser rejected the document"},
-        409: {"description": "Document library limit reached or sensitivity_confirmation_required"},
+        409: {
+            "description": "Document library limit reached or guardrail_confirmation_required"
+        },
         413: {"description": "Upload or extracted text exceeds its byte limit"},
         415: {"description": "Parser does not support the document format"},
         422: {"description": "Missing file, invalid extraction, or no usable text"},
         500: {"description": "Document storage or ingestion failed"},
         502: {"description": "Parser service returned an error"},
-        503: {"description": "Document processing disabled or sensitivity scan failed"},
+        503: {"description": "Document processing disabled or guardrail scan failed"},
         504: {"description": "Parser service timed out"},
     },
 )
@@ -117,11 +119,12 @@ async def upload_document(
         return await DocumentIngestionService().ingest_document(
             user_info, file, confirmation_fingerprint
         )
-    except SensitivityConfirmationRequired as exc:
+    except GuardrailConfirmationRequired as exc:
         raise HTTPException(
             409,
             detail={
-                "code": "sensitivity_confirmation_required",
+                "code": "guardrail_confirmation_required",
+                "guardrail": "sensitive_content",
                 "findings": exc.findings,
                 "fingerprint": exc.fingerprint,
             },

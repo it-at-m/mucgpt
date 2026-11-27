@@ -12,8 +12,8 @@ import { useTranslation } from "react-i18next";
 
 import type { DocumentLibraryEntry } from "../../api/models";
 import { DocumentTypeIcon } from "../../components/ChatDocuments/DocumentTypeIcon";
-import { SensitivityBadge } from "../../components/ChatDocuments/SensitivityBadge";
-import { getSensitiveFindings } from "../../components/ChatDocuments/sensitivity";
+import { SensitiveContentBadge } from "../../components/ChatDocuments/SensitiveContentBadge";
+import { getSensitiveFindings } from "../../components/ChatDocuments/sensitiveContent";
 import { formatFileSize, getLibraryStatusKey } from "../../components/ChatDocuments/documentSelection";
 import { EdelweissSpinner } from "../../components/EdelweissSpinner";
 import type { StoredParsedDocument } from "../../service/parsedDocumentStorage";
@@ -31,7 +31,7 @@ export interface PendingUpload {
 interface DocumentRowProps {
     icon: ReactNode;
     name: string;
-    /** Compact status shown next to the name, e.g. a sensitivity badge. */
+    /** Compact status shown next to the name, e.g. a content guardrail badge. */
     badge?: ReactNode;
     meta: ReactNode;
     /** Announces changing meta text, e.g. upload progress or errors. */
@@ -112,7 +112,10 @@ export const LibraryDocumentRow = ({ document, isBusy, formatDate, onStartChat, 
             name={document.filename}
             badge={
                 document.status === "ready" && (
-                    <SensitivityBadge findings={getSensitiveFindings(document.sensitivity)} confirmed={Boolean(document.sensitivity?.confirmed_at)} />
+                    <SensitiveContentBadge
+                        findings={getSensitiveFindings(document.guardrails.sensitive_content)}
+                        confirmed={Boolean(document.guardrails.sensitive_content.confirmed_at)}
+                    />
                 )
             }
             meta={joinMeta([formatDate(document.created_at), formatFileSize(document.original_size), statusKey && t(statusKey)])}

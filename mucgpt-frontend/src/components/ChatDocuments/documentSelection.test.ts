@@ -18,7 +18,7 @@ const readyEntry = (): DocumentLibraryEntry => ({
     preview_kind: "initial_excerpt",
     path: "/documents/ready.txt",
     created_at: "2026-11-02",
-    sensitivity: { findings: [], confirmed_at: null },
+    guardrails: { sensitive_content: { findings: [], confirmed_at: null } },
     status: "ready"
 });
 

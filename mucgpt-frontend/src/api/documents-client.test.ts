@@ -66,7 +66,10 @@ it.each([true, false])("resubmits a flagged file only when confirmed (save=%s)",
     const file = new File(["text"], "report.txt");
     const findings = [{ category: "phone", kind: "pii", confidence: "likely", count: 1 }];
     fetchMock.mockResolvedValueOnce(
-        Response.json({ detail: { code: "sensitivity_confirmation_required", fingerprint: "v1-review", findings } }, { status: 409 })
+        Response.json(
+            { detail: { code: "guardrail_confirmation_required", guardrail: "sensitive_content", fingerprint: "v1-review", findings } },
+            { status: 409 }
+        )
     );
     fetchMock.mockResolvedValueOnce(Response.json({ id: "saved" }));
     const confirm = vi.fn().mockResolvedValue(save);

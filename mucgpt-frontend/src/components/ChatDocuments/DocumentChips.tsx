@@ -8,7 +8,7 @@ import { Button } from "../../ui/Button";
 import { EdelweissSpinner } from "../EdelweissSpinner";
 import styles from "./DocumentChips.module.css";
 import { DocumentTypeIcon } from "./DocumentTypeIcon";
-import { SensitivityBadge } from "./SensitivityBadge";
+import { SensitiveContentBadge } from "./SensitiveContentBadge";
 import type { ChatDocument } from "./documentSelection";
 
 interface Props {
@@ -125,7 +125,7 @@ export const DocumentChips = ({ documents, onRemove, onRetry, onFocusLeave, disa
                     <span className={styles.name} title={document.name}>
                         {document.name}
                     </span>
-                    {document.status === "ready" && <SensitivityBadge findings={document.sensitiveFindings} confirmed={document.confirmed} />}
+                    {document.status === "ready" && <SensitiveContentBadge findings={document.sensitiveFindings} confirmed={document.confirmed} />}
                     {statusText && (
                         <span className={styles.status} title={statusText}>
                             {statusText}

@@ -12,11 +12,11 @@ from collections import Counter
 from collections.abc import Callable, Iterable, Iterator
 from dataclasses import dataclass, field
 
-from sensitivity.models import (
+from guardrails.sensitive_content.models import (
     Hit,
-    SensitivityCategory,
-    SensitivityConfidence,
-    SensitivityKind,
+    SensitiveContentCategory,
+    SensitiveContentConfidence,
+    SensitiveContentKind,
 )
 
 
@@ -29,9 +29,9 @@ Detector = Callable[[str, ScanOptions], Iterable[Hit]]
 
 
 def _hit(
-    category: SensitivityCategory,
-    kind: SensitivityKind,
-    confidence: SensitivityConfidence,
+    category: SensitiveContentCategory,
+    kind: SensitiveContentKind,
+    confidence: SensitiveContentConfidence,
     match: re.Match[str],
     group: int = 0,
 ) -> Hit:
@@ -371,7 +371,7 @@ def _is_valid_tax_id(digits: str) -> bool:
 def detect_tax_ids(text: str, _options: ScanOptions) -> Iterator[Hit]:
     for match in _TAX_ID_RE.finditer(text):
         if _is_valid_tax_id("".join(match.groups())):
-            confidence: SensitivityConfidence = (
+            confidence: SensitiveContentConfidence = (
                 "certain"
                 if _has_context(text, match.start(), _TAX_ID_CONTEXT_RE, 60)
                 else "likely"

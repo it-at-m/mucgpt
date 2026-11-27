@@ -121,9 +121,8 @@ def test_upload_returns_only_ready_metadata_and_uses_authenticated_owner(upload_
         "preview_kind": "initial_excerpt",
         "path": f"/documents/{document_id}.txt",
         "created_at": metadata["created_at"],
-        "sensitivity": {
-            "findings": [],
-            "confirmed_at": None,
+        "guardrails": {
+            "sensitive_content": {"findings": [], "confirmed_at": None},
         },
     }
     assert metadata["created_at"]
@@ -287,7 +286,7 @@ def test_flagged_upload_requires_confirmation_before_publication(upload_api):
     warning = post_document(client)
     assert warning.status_code == 409
     detail = warning.json()["detail"]
-    assert detail["code"] == "sensitivity_confirmation_required"
+    assert detail["code"] == "guardrail_confirmation_required"
     assert "user@example.org" not in warning.text
     assert rows(engine) == []
     assert store.search(get_document_namespace(owner.user_id)) == []
@@ -295,8 +294,9 @@ def test_flagged_upload_requires_confirmation_before_publication(upload_api):
         client, data={"confirmation_fingerprint": detail["fingerprint"]}
     )
     assert saved.status_code == 201
-    assert saved.json()["sensitivity"]["confirmed_at"]
-    assert saved.json()["sensitivity"]["findings"] == detail["findings"]
+    guardrail = saved.json()["guardrails"]["sensitive_content"]
+    assert guardrail["confirmed_at"]
+    assert guardrail["findings"] == detail["findings"]
 
 
 def test_confirmation_cleanup_failure_returns_safe_server_error(

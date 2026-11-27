@@ -25,7 +25,7 @@ const entry = (overrides: Partial<DocumentLibraryEntry> = {}): DocumentLibraryEn
     preview_kind: "initial_excerpt",
     path: "/documents/ready.txt",
     created_at: "2026-11-02",
-    sensitivity: { findings: [], confirmed_at: null },
+    guardrails: { sensitive_content: { findings: [], confirmed_at: null } },
     status: "ready",
     ...overrides
 });
@@ -154,7 +154,7 @@ it.each(["upload", "legacy"])("keeps a flagged %s unsaved on cancel and saves on
         const item = entry({
             id: file.name,
             filename: file.name,
-            sensitivity: { findings: file.name === legacy.name ? [...findings] : [], confirmed_at: null }
+            guardrails: { sensitive_content: { findings: file.name === legacy.name ? [...findings] : [], confirmed_at: null } }
         });
         saved.push(item);
         return item as DocumentMetadata;

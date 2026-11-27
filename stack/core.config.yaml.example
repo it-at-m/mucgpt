@@ -78,15 +78,16 @@ documents:
   max_upload_bytes: 104857600
   max_text_bytes: 5242880
   preview_max_chars: 1000
-  # Scan extracted text for personal data and secrets. Flagged documents show a
-  # warning and must be confirmed once before their text is stored.
-  # Findings store categories and counts only, never the matched values.
-  sensitivity:
-    enabled: true
-    # Own organisation's addresses appear in nearly every letter; ignore them.
-    ignored_email_domains: []
-    # e.g. ["phone"] to stop flagging phone numbers in letterheads.
-    disabled_categories: []
+  guardrails:
+    # Detect personal data and secrets in extracted text. Flagged documents show
+    # a warning and must be confirmed once before their text is stored. Findings
+    # store categories and counts only, never the matched values.
+    sensitive_content:
+      enabled: true
+      # Own organisation's addresses appear in nearly every letter; ignore them.
+      ignored_email_domains: []
+      # e.g. ["phone"] to stop flagging phone numbers in letterheads.
+      disabled_categories: []
 
 # Compliance cache settings
 # If enabled, compliance check results are cached in Redis and can be verified by the assistant service.

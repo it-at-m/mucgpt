@@ -122,8 +122,8 @@ class DocumentRepository:
         *,
         text_length: int,
         preview: str,
-        sensitivity_acknowledged_at: datetime | None = None,
-        sensitivity_findings: list[dict[str, Any]] | None = None,
+        sensitive_content_acknowledged_at: datetime | None = None,
+        sensitive_content_findings: list[dict[str, Any]] | None = None,
     ) -> bool:
         """Finalize owned processing metadata after the caller has stored the body."""
         get_document_namespace(user_id)
@@ -141,8 +141,8 @@ class DocumentRepository:
                 text_length=text_length,
                 preview=preview,
                 preview_kind="initial_excerpt",
-                sensitivity_acknowledged_at=sensitivity_acknowledged_at,
-                sensitivity_findings=sensitivity_findings,
+                sensitive_content_acknowledged_at=sensitive_content_acknowledged_at,
+                sensitive_content_findings=sensitive_content_findings,
             )
             .returning(Document.id)
         )

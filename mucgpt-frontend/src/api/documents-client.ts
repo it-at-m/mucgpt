@@ -1,5 +1,5 @@
 import { ApiError, deleteConfig, getConfig, handleApiRequest, handleRedirect, postFormDataConfig } from "./fetch-utils";
-import type { DocumentLibraryEntry, DocumentMetadata, SensitivityFinding } from "./models";
+import type { DocumentLibraryEntry, DocumentMetadata, SensitiveContentFinding } from "./models";
 
 const DOCUMENTS_URL = "/api/backend/v1/documents";
 
@@ -7,7 +7,10 @@ export function listDocumentsApi(): Promise<DocumentLibraryEntry[]> {
     return handleApiRequest(() => fetch(DOCUMENTS_URL, getConfig()), "Failed to load documents");
 }
 
-export async function uploadDocumentApi(file: File, confirm?: (name: string, findings: SensitivityFinding[]) => Promise<boolean>): Promise<DocumentMetadata> {
+export async function uploadDocumentApi(
+    file: File,
+    confirm?: (name: string, findings: SensitiveContentFinding[]) => Promise<boolean>
+): Promise<DocumentMetadata> {
     const body = new FormData();
     body.append("file", file);
     for (;;) {
@@ -18,7 +21,12 @@ export async function uploadDocumentApi(file: File, confirm?: (name: string, fin
                 .clone()
                 .json()
                 .catch(() => ({}));
-            if (detail?.code === "sensitivity_confirmation_required" && typeof detail.fingerprint === "string" && Array.isArray(detail.findings)) {
+            if (
+                detail?.code === "guardrail_confirmation_required" &&
+                detail?.guardrail === "sensitive_content" &&
+                typeof detail.fingerprint === "string" &&
+                Array.isArray(detail.findings)
+            ) {
                 if (!(await confirm(file.name, detail.findings))) throw new DOMException("Upload cancelled", "AbortError");
                 body.set("confirmation_fingerprint", detail.fingerprint);
                 continue;

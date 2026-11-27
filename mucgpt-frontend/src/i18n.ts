@@ -224,6 +224,7 @@ i18n
                             redo: "Wiederherstellen",
                             bold: "Fett",
                             italic: "Kursiv",
+                            underline: "Unterstrichen",
                             heading_1: "Überschrift 1",
                             heading_2: "Überschrift 2",
                             heading_3: "Überschrift 3",
@@ -596,6 +597,11 @@ i18n
                             import: "Importieren",
                             import_error: "Import fehlgeschlagen",
                             import_failed: "Die Datei konnte nicht importiert werden",
+                            unsupported_filename:
+                                "Nur Dateien mit genau einer Dateiendung .json können importiert werden. Dateien wie assistant.exe.json sind nicht erlaubt.",
+                            malformed_json: "Die Datei enthält kein gültiges JSON. Exportiere den Assistenten erneut und versuche es noch einmal.",
+                            invalid_structure:
+                                "Die JSON-Datei ist gültig, enthält aber keinen unterstützten Assistenten-Export. Erforderliche Daten fehlen oder haben ein ungültiges Format.",
                             import_invalid_format: "Ungültiges Dateiformat. Die Datei muss einen Titel und System-Prompt enthalten.",
                             draft_exists_title: "Entwurf bereits vorhanden",
                             draft_exists_message:
@@ -1225,6 +1231,7 @@ i18n
                             redo: "Redo",
                             bold: "Bold",
                             italic: "Italic",
+                            underline: "Underline",
                             heading_1: "Heading 1",
                             heading_2: "Heading 2",
                             heading_3: "Heading 3",
@@ -1593,6 +1600,11 @@ i18n
                             import: "Import",
                             import_error: "Import failed",
                             import_failed: "The file could not be imported",
+                            unsupported_filename:
+                                "Only files with exactly one .json extension can be imported. Files such as assistant.exe.json are not allowed.",
+                            malformed_json: "The file does not contain valid JSON. Export the assistant again and try again.",
+                            invalid_structure:
+                                "The JSON file is valid but is not a supported assistant export. Required data is missing or has an invalid format.",
                             import_invalid_format: "Invalid file format. The file must contain a title and system prompt.",
                             draft_exists_title: "Draft already exists",
                             draft_exists_message: "You already have an unsaved assistant draft. Importing will overwrite this draft.",
@@ -2255,6 +2267,7 @@ i18n
                             redo: "Wiedaherstejn",
                             bold: "Fett",
                             italic: "Kursiv",
+                            underline: "Unterstrichen",
                             heading_1: "Überschrift 1",
                             heading_2: "Überschrift 2",
                             heading_3: "Überschrift 3",
@@ -2561,6 +2574,11 @@ i18n
                             import: "Importiern",
                             import_error: "Import fehlgschlogn",
                             import_failed: "De Datei konnt ned importiert werdn",
+                            unsupported_filename:
+                                "Nua Dateien mit genau oana Dateiendung .json kennan importiert werdn. Dateien wia assistant.exe.json san ned erlaubt.",
+                            malformed_json: "De Datei enthuit koa gültigs JSON. Exportier den Assistentn no amoi und probier's dann no amoi.",
+                            invalid_structure:
+                                "De JSON-Datei is gültig, oba koan unterstütztn Assistentn-Export. Erforderliche Daten fehln oda ham a ungültigs Format.",
                             import_invalid_format: "Ungültigs Dateiformat. De Datei muass an Titel und System-Prompt enthoidn.",
                             draft_exists_title: "Entwurf is scho do",
                             draft_exists_message: "Du host scho an ungspeichertn Assistentn-Entwurf. Beim Importiern wead der Entwurf überschriebn.",
@@ -3163,6 +3181,7 @@ i18n
                             redo: "Rétablir",
                             bold: "Gras",
                             italic: "Italique",
+                            underline: "Souligné",
                             heading_1: "Titre 1",
                             heading_2: "Titre 2",
                             heading_3: "Titre 3",
@@ -3534,6 +3553,11 @@ i18n
                             import: "Importer",
                             import_error: "Échec de l'importation",
                             import_failed: "Le fichier n'a pas pu être importé",
+                            unsupported_filename:
+                                "Seuls les fichiers avec une unique extension .json peuvent être importés. Les fichiers tels que assistant.exe.json ne sont pas autorisés.",
+                            malformed_json: "Le fichier ne contient pas de JSON valide. Exportez à nouveau l’assistant et réessayez.",
+                            invalid_structure:
+                                "Le fichier JSON est valide, mais il ne s’agit pas d’un export d’assistant pris en charge. Des données requises sont manquantes ou ont un format invalide.",
                             import_invalid_format: "Format de fichier invalide. Le fichier doit contenir un titre et un prompt système.",
                             draft_exists_title: "Un brouillon existe déjà",
                             draft_exists_message: "Vous avez déjà un brouillon d'assistant non enregistré. L'importation écrasera ce brouillon.",
@@ -4132,6 +4156,7 @@ i18n
                             redo: "Повторити",
                             bold: "Напівжирний",
                             italic: "Курсив",
+                            underline: "Підкреслений",
                             heading_1: "Заголовок 1",
                             heading_2: "Заголовок 2",
                             heading_3: "Заголовок 3",
@@ -4500,6 +4525,10 @@ i18n
                             import: "Імпортувати",
                             import_error: "Помилка імпорту",
                             import_failed: "Не вдалося імпортувати файл",
+                            unsupported_filename: "Можна імпортувати лише файли з одним розширенням .json. Файли на кшталт assistant.exe.json не дозволені.",
+                            malformed_json: "Файл не містить дійсного JSON. Експортуйте асистента ще раз і повторіть спробу.",
+                            invalid_structure:
+                                "JSON-файл є дійсним, але не є підтримуваним експортом асистента. Відсутні потрібні дані або вони мають недійсний формат.",
                             import_invalid_format: "Недійсний формат файлу. Файл повинен містити назву та системний запит.",
                             draft_exists_title: "Чернетка вже існує",
                             draft_exists_message: "У вас вже є незбережена чернетка асистента. Імпорт перезапише цю чернетку.",

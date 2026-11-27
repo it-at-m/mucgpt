@@ -12,9 +12,10 @@ MUCGPT is a web interface to LLMs for public administration (it@M / City of Muni
 
 ## Monorepo layout
 
-Four independently-versioned, independently-deployed components, each with its own `pyproject.toml`/`package.json`, `Dockerfile`, `uv.lock`, and CI workflow:
+Five independently-versioned, independently-deployed components, each with its own `pyproject.toml`/`package.json`, `Dockerfile`, `uv.lock`, and CI workflow:
 
-- **`mucgpt-core-service/`** — Python 3.13 / FastAPI. LLM agent orchestration (LangGraph/Deep Agents), tools, document parsing. The heart of the system.
+- **`mucgpt-core-service/`** — Python 3.13 / FastAPI. LLM agent orchestration (LangGraph/Deep Agents), tools, document parsing, conversation persistence (Postgres). The heart of the system.
+- **`mucgpt-core-service/migrations/`** — Alembic migrations for the core service's Postgres schema (`chats`, `canvas_documents`, `documents`, store), released as a run-once container (`Dockerfile.migrations`, same `MIGRATION_*` env vars as the assistant migrations, DB settings via `MUCGPT_CORE_`).
 - **`mucgpt-assistant-service/`** — Python 3.13 / FastAPI. CRUD + sharing of assistant configurations; departments/users via LDAP; talks to Postgres.
 - **`mucgpt-assistant-service/migrations/`** — Alembic migrations for the assistant service's Postgres schema, released as a run-once container.
 - **`mucgpt-frontend/`** — React 19 + TypeScript + Vite 8 (Rolldown), Fluent UI v9, i18next, PWA. MSW mocks the backend in dev.
@@ -53,6 +54,26 @@ npm run build        # tsc && vite build
 - Tests are split by **directory** (`tests/unit/`, `tests/integration/`); "integration" here means FastAPI `TestClient` router tests, not external services.
 - Only the `integration` marker is actually used in tests. Core registers `unit`/`integration`; assistant registers only `integration` (`--strict-markers`), so `-m unit` errors there — use `-m "not integration"`.
 
+### Core PostgreSQL lifecycle tests
+
+- The core PostgreSQL lifecycle suites use the shared harness in
+  `mucgpt-core-service/tests/postgres.py`. Reuse its isolated database context
+  and migration helpers; do not add ad-hoc containers, database names, or
+  migration setup in individual tests.
+- The process-scoped Testcontainers lifecycle is managed by
+  `mucgpt-core-service/tests/conftest.py`. It includes explicit cleanup for
+  normal teardown, `atexit`, Ctrl+C, and termination signals. On Windows with
+  Podman, lifecycle PostgreSQL uses the Podman CLI rather than Ryuk.
+- Windows requires a running Podman machine. The harness starts its disposable
+  PostgreSQL container through the Podman CLI automatically; `MUCGPT_TEST_CONTAINER_RUNTIME=podman`
+  can force that runtime.
+- Prefer `MUCGPT_LIFECYCLE_POSTGRES_*` settings when CI or another process
+  provides PostgreSQL. When these settings are present, tests must not start a
+  Testcontainers instance.
+- If an interrupted run leaves containers behind, inspect labels and remove
+  only containers created by Testcontainers. Never clean up Compose containers
+  as part of test troubleshooting.
+
 ## Configuration model
 
 Each Python service is configured by a **`config.yaml`** (see each service's `config.yaml.example`, and `stack/*.config.yaml.example`). **YAML keys are lowercase** (`models:`, `redis:`, `host:`, `password:`); legacy UPPERCASE YAML keys are ignored — existing config files must migrate (mostly fails loudly at startup: missing required db fields, empty models list). Exception: a top-level `SSO:` section and `ROLE`/`ADMIN_ROLE` under `sso` **fail startup validation** (silently ignoring them would disable the SSO role check). Settings are pydantic-settings with nesting via `__` and a per-service prefix; env var names stay UPPERCASE and match case-insensitively:
@@ -64,6 +85,14 @@ Model connection settings live in a **`providers`** section (`type: "openai"|"az
 
 Langfuse is **not** part of the config: the Langfuse SDK reads the standard `LANGFUSE_PUBLIC_KEY` / `LANGFUSE_SECRET_KEY` / `LANGFUSE_HOST` env vars directly (host defaults to Langfuse cloud if unset). **`MUCGPT_CORE_LANGFUSE__*` env vars are no longer read (silently ignored)** — likely migration error; tracing degrades gracefully (log + disabled) when unset.
 
+### Langfuse trace analysis
+
+When investigating a failed or interrupted agent response, use the trace ID with `uv run python app/scripts/analyze_langfuse_trace.py <trace-id>` from `mucgpt-core-service/`. The script loads `stack/.env` by default, prints a chronological observation timeline, and marks provider terminations as `CONTENT_FILTERED`. Do not print prompts, tool arguments, or model output by default: use `--show-content` only when the user explicitly authorizes content inspection in an approved environment.
+
+- Check the model generation and enclosing `model` chain for `finish_reason`, error level, model name, and tool calls before changing application code.
+- `content_filter` and `content_policy_violation` originate with the model provider/gateway. Fix MUCGPT so it reports the structured failure and never executes partial tool calls, but do not claim the application can remove the provider policy; category details require provider/gateway logs when absent from the trace.
+- Inspect the complete timeline for repeated model/tool cycles. A terminal provider response that contains a partial tool call must not be treated as a successful tool request.
+
 Source priority (core): constructor/init (tests) > env vars > `config.yaml` > `shared-config.yaml` > `.env`. Core config covers providers/models/prompts/MCP/Redis/SSO/db; assistant config covers db/redis/ldap/sso.
 
 Secrets doctrine: real secrets (passwords, API keys, tokens) belong in **environment variables** (prefix + `__`), never in `config.yaml` (ConfigMap/etcd/Git leak risk). Provider API keys are configured per provider and are env-overridable via `MUCGPT_CORE_PROVIDERS__<PROVIDER>__API_KEY`; whole sections can be replaced via the `MUCGPT_CORE_PROVIDERS` / `MUCGPT_CORE_MODELS` JSON env vars.
@@ -72,19 +101,21 @@ Migration notes for older configs: (a) lowercase the `config.yaml` keys, (b) mov
 
 ## Core service architecture (`mucgpt-core-service/app/`)
 
-Entry: `app.py` → `backend.py` builds the FastAPI app, mounts `api_app` at `/api/`, and includes routers from `api/routers/`: `chat`, `compliance`, `generation`, `parsing`, `system`, `tools` (all under `/v1`). `init_app.py` has `warmup_app`/`destroy_app` lifespan hooks; `init_agent()` builds the tool collection + agent **per message** (known TODO, see `chat_router.py`).
+Entry: `app.py` → `backend.py` builds the FastAPI app, mounts `api_app` at `/api/`, and includes routers from `api/routers/`: `chat`, `compliance`, `generation`, `parsing`, `system`, `tools`, `document`, `export` (all under `/v1`). `init_app.py` has `warmup_app`/`destroy_app` lifespan hooks; `init_agent()` builds the tool collection + agent **per message** (known TODO, see `chat_router.py`).
 
-**Agent** (`agent/`): `deep_agent.py::MUCGPTAgent` wraps LangChain **Deep Agents** (`deepagents.create_deep_agent`) in `_ConfiguredLangChainDeepAgentGraph`. The graph is compiled once and reused; `DefaultAgentState` is fixed at compile time (per-request schema selection is no longer supported — see comment after PR #1177; `agent/tools/tools.py::select_agent_state_schema` still exists but its result is not used for the compiled graph). `agent_executor.py` drives the agent and emits OpenAI-compatible `ChatCompletionChunk` streams with Langfuse tracing.
+**Agent** (`agent/`): `deep_agent.py::MUCGPTAgent` wraps LangChain **Deep Agents** (`deepagents.create_deep_agent`) in `_ConfiguredLangChainDeepAgentGraph`; `init_agent()` builds it per request. `DefaultAgentState` is always the state schema (per-request schema selection is no longer supported — see comment after PR #1177; `agent/tools/tools.py::select_agent_state_schema` still exists but its result is not used for the graph). Model-specific Deep Agents built-ins and extra middleware (summarization, todo list, tool-call limits, sub-agent) come from a harness profile registered per model at startup (`config/harness_profiles.py`). `agent_executor.py::run_agui_with_streaming` drives the agent and emits AG-UI events with Langfuse tracing; the only chat endpoint is `POST /v1/chat/v2/completions` (AG-UI SSE). The OpenAI-style `run_with_streaming`/`run_without_streaming` methods still exist but no router calls them.
 
-- **`checkpointer=None` is deliberate** in `create_deep_agent`. Chat persistence is request-authoritative: the client resends full history each turn; `conversation_id` is accepted but unused server-side (history lives client-side in IndexedDB). Don't "fix" this by attaching the checkpointer.
+- **Chats are persisted server-side** (`persist=true`, the default): `init_agent` attaches `PersistanceHelpers`' `FencedPostgresSaver` as checkpointer, ownership/metadata live in the `chats` table, and IndexedDB is only a browser cache. The first persisted turn seeds the checkpoint with the client history, later turns append only the newest user message. `persist=false` (assistant previews) runs stateless on the full client history. Details: `docs/conversation-persistence.md`.
+- **The system prompt is request-scoped and never stored.** `_prepare_run` moves the request's `SystemMessage`s into `RequestContext.system_prompt`; `ContextMiddleware` swaps the *leading* stored system messages for it on every model call, so edited assistant/custom prompts reach existing chats. Don't strip system messages further down the history — deepagents inserts its own there. A HITL resume has no graph input messages: the router passes the request's prompt to `astream(system_prompt=…)` — never via `configurable`, LangGraph copies those values into checkpoint metadata. `system_prompt=None` (request without any messages) keeps whatever is stored.
+- **`app/chat_migration/` is temporary**: one-time import of browser-only chats (`POST /v1/conversations/import`, frontend `src/service/chatMigration/`). Delete both folders and the lines marked `TODO: remove after the browser chat migration` once the migration window is over.
 - Request-specific settings (`model`, `extra_body`, `user`, temperature, `enabled_tools`, `data_sources`) flow through `RequestContext` (the graph's `context_schema`); `middleware.py` (`ContextMiddleware`, `ToolStatusMiddleware`, `ToolErrorMiddleware`, `TokenUsageMiddleware`) applies them per model request. `ContextMiddleware` injects request `data_sources` into the prompt. `ToolStatusMiddleware` adds a required `status_message` argument to every tool definition and strips it again before the tool runs (the frontend shows it as the live activity label) — it must stay **after** `ContextMiddleware`, which filters tools as `BaseTool` objects; from there on tools are flat `{name, description, parameters}` dicts.
 
 **Tools** (`agent/tools/`): **read `agent/tools/README.md` first** — it's the authoritative guide.
 - Local tools use the `LocalTool` spec pattern (`spec.py`): add a module with `TOOL = LocalTool(id=..., factory=..., metadata=..., is_configured=...)` and register it in `LOCAL_TOOLS` in `tools.py`; `get_tools()` and `GET /v1/tools` pick it up automatically.
-- MCP tools are a **config change only** (`MCP` settings / `MUCGPT_CORE_MCP__...`), loaded per-user by `mcp.py::McpLoader` and cached in Redis with distributed locking — that caching is load-bearing, don't simplify it away. `McpBearerAuthProvider` forwards the per-user token to MCP servers.
+- MCP tools are a **config change only** (`MCP` settings / `MUCGPT_CORE_MCP__...`), loaded per-user by `mcp.py::McpLoader` and cached in Valkey/Redis with distributed locking — that caching is load-bearing, don't simplify it away. `McpBearerAuthProvider` forwards the per-user token to MCP servers.
 - Internet search is provided through a configured MCP server, not a local tool.
 
-**Prompts** are Markdown files in `agent/prompt_pool/` (incl. `generation_prompts/` for assistant title/description/system-prompt generation and `compliance_prompts/`), read at import time — edit the `.md`, not string literals.
+**Prompts** are resolved by `core/lf_prompts.py::PromptPool`: prompts configured under `prompts:` in `config.yaml` are loaded from Langfuse, with optional local Markdown fallbacks in `agent/prompt_pool/` (same name without `.md`; the repo currently ships none). This covers the agent's `default_instructions`, `generation_prompts` (assistant title/description/system prompt) and the compliance prompts — don't hard-code prompt strings.
 
 **Compliance**: `compliance_router` + `core/compliance.py` screen assistant prompts against EU AI Act high-risk categories (feature flag `ai_act_compliance_check_enabled`). Tuning workflow: `app/scripts/run_compliance_experiment.py` + the repo skill `compliance-prompt-improvement` (`.agents/skills/`).
 
@@ -111,8 +142,8 @@ Standard FastAPI + SQLAlchemy (async) + Postgres. Routers in `api/routers/` (`as
 
 ## Release / deploy
 
-Images are released per component by pushing a tag `mucgpt-{frontend,core,assistant,assistant-migrations}-<version>` (triggers the matching `docker-release-*.yml` workflow); a frontend tag also redeploys GitHub Pages. Use the interactive `tag-version.ps1` (bumps the manifest version via `uv version`/package.json and creates+pushes the tag) or tag manually per `docs/DEVELOPMENT.md`.
+Images are released per component by pushing a tag `mucgpt-{frontend,core,core-migrations,assistant,assistant-migrations}-<version>` (triggers the matching `docker-release-*.yml` workflow); a frontend tag also redeploys GitHub Pages. Use the interactive `tag-version.ps1` (bumps the manifest version via `uv version`/package.json and creates+pushes the tag) or tag manually per `docs/DEVELOPMENT.md`.
 
 ## Docs worth reading
 
-`docs/GETTING_STARTED.md` (config, LDAP, SSO, MCP setup), `docs/DEVELOPMENT.md` (uv workflow, release tags, MCP credential security note), `stack/README.md` (compose topology, ports — gateway :8083, Keycloak :8100 `admin/admin`, needs a `keycloak` hosts entry), `mucgpt-core-service/app/agent/tools/README.md` (tool handling), `DESIGN.md`. Note: `docs/FEATURES.md` is the user-facing view (e.g. "chat history stays in the browser") — the technical truth is in the sections above.
+`docs/GETTING_STARTED.md` (config, LDAP, SSO, MCP setup), `docs/DEVELOPMENT.md` (uv workflow, release tags, MCP credential security note), `stack/README.md` (compose topology, ports — gateway :8083, Keycloak :8100 `admin/admin`, needs a `keycloak` hosts entry), `mucgpt-core-service/app/agent/tools/README.md` (tool handling), `DESIGN.md`. Note: `docs/FEATURES.md` is the user-facing view — the technical truth is in the sections above; `docs/conversation-persistence.md` covers chat persistence, deletion and the browser chat migration.

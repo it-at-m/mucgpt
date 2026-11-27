@@ -1,4 +1,5 @@
 import logging
+import re
 from decimal import Decimal
 from enum import StrEnum
 from functools import lru_cache
@@ -27,6 +28,16 @@ from pydantic_settings import (
 )
 
 MODEL_INFO_TIMEOUT_SECONDS = 8.0
+
+# Plain HTML tag name without attributes or brackets (canvas_allowed_html_tags).
+_HTML_TAG_NAME = re.compile(r"^[a-z][a-z0-9]*$")
+
+# Raw HTML tags the canvas editor schema understands (mirrors
+# CANVAS_SUPPORTED_HTML_TAGS in mucgpt-frontend canvasHtmlWhitelist.ts;
+# core and frontend are updated in sync). canvas_allowed_html_tags may only
+# restrict this set — a tag the editor schema does not know cannot be
+# rendered, serialized, or exported. Extending it requires a release.
+SUPPORTED_CANVAS_HTML_TAGS: frozenset[str] = frozenset({"u"})
 
 
 class MCPTransport(StrEnum):
@@ -115,12 +126,32 @@ DeepAgentBuiltinTool = Literal[
 ]
 
 
+DEFAULT_BUILTIN_TOOL_RUN_LIMITS: dict[DeepAgentBuiltinTool, int | None] = {
+    "read_file": 20,
+    "grep": 20,
+}
+
+
 class DeepAgentModelConfig(BaseModel):
     """Model-specific Deep Agents harness configuration."""
 
     enabled_builtin_tools: set[DeepAgentBuiltinTool] = Field(default_factory=set)
+    builtin_tool_run_limits: dict[DeepAgentBuiltinTool, PositiveInt | None] = Field(
+        default_factory=DEFAULT_BUILTIN_TOOL_RUN_LIMITS.copy
+    )
     enable_subagents: bool = False
     enable_summarization: bool | None = False
+
+    @field_validator("builtin_tool_run_limits", mode="before")
+    @staticmethod
+    def merge_builtin_tool_run_limits(value):
+        # Partial overrides retain defaults; explicit null disables one limit,
+        # and null for the whole section disables all of them.
+        if value is None:
+            return {}
+        if isinstance(value, dict):
+            return {**DEFAULT_BUILTIN_TOOL_RUN_LIMITS, **value}
+        return value
 
 
 class ProviderConfig(BaseModel):
@@ -439,6 +470,7 @@ class MCPToolOverride(BaseModel):
     group: str | None = None
     require_approval: bool | None = None
     data_classification: DataClassification | None = None
+    run_limit: PositiveInt | None = None
 
     @field_validator("group")
     @staticmethod
@@ -463,6 +495,7 @@ class MCPSourceConfig(BaseModel):
     require_approval: bool = False
     data_classification: DataClassification = DEFAULT_DATA_CLASSIFICATION
     overrides: list[MCPToolOverride] | None = None
+    run_limit: PositiveInt | None = None
 
     @field_validator("forward_auth_override", mode="before")
     @staticmethod
@@ -647,6 +680,12 @@ class Settings(BaseSettings):
     # Editor input limit (characters). The export endpoint caps the serialized
     # markdown/html at 4× this to leave headroom for markup and separators.
     canvas_editor_max_chars: PositiveInt = 512 * 1024
+    # HTML tag names the canvas allows inside its GFM markdown (e.g. <u> for
+    # underline, which GFM cannot express). Entries must be lowercase plain tag
+    # names without attributes; everything else the canvas tools reject and the
+    # frontend sanitizer escapes to literal text. An empty list disables raw
+    # HTML in the canvas entirely.
+    canvas_allowed_html_tags: list[str] = ["u"]
 
     # Nested sub-configurations
     sso: SSOConfig = Field(default_factory=SSOConfig)
@@ -675,6 +714,34 @@ class Settings(BaseSettings):
                 "Rename them to 'role' and 'admin_role'."
             )
         return data
+
+    @field_validator("canvas_allowed_html_tags", mode="before")
+    @classmethod
+    def normalize_canvas_allowed_html_tags(cls, value):
+        """Lowercases and stringifies entries so YAML/env can carry 'U' or ['u', 'ins']."""
+        if not isinstance(value, list):
+            return value
+        return [entry.lower() if isinstance(entry, str) else entry for entry in value]
+
+    @model_validator(mode="after")
+    @staticmethod
+    def validate_canvas_allowed_html_tags(settings) -> "Settings":
+        """Whitespace-free plain tag names only; and every entry must be one the
+        editor schema supports: config may restrict the whitelist, never extend
+        it (a tag the frontend does not understand would silently degrade)."""
+        for tag in settings.canvas_allowed_html_tags:
+            if not isinstance(tag, str) or not _HTML_TAG_NAME.match(tag):
+                raise ValueError(
+                    f"Invalid canvas_allowed_html_tags entry {tag!r}: entries must be "
+                    "lowercase plain HTML tag names without attributes or brackets."
+                )
+            if tag not in SUPPORTED_CANVAS_HTML_TAGS:
+                raise ValueError(
+                    f"canvas_allowed_html_tags entry {tag!r} is not supported by this "
+                    f"release. Supported tags: {sorted(SUPPORTED_CANVAS_HTML_TAGS)}. "
+                    "Extending the whitelist requires a core+frontend release."
+                )
+        return settings
 
     # Customize settings sources to prioritize YAML config
     @classmethod

@@ -13,9 +13,7 @@ const mockRunInputs: Array<Record<string, unknown>> = [];
 
 vi.mock("../api/core-client", () => ({
     createChatName: vi.fn(),
-    mucgptForwardedProps: vi.fn((request: { language?: string }) => ({
-        mucgpt: { language: request.language }
-    })),
+    mucgptForwardedProps: vi.fn((request: Record<string, unknown>) => ({ mucgpt: request })),
     MucgptAgUiAgent: class {
         pendingInterrupts = [];
 
@@ -305,5 +303,82 @@ describe("chat title generation", () => {
         await makeApiRequest(...baseArgs({ 0: answers2, 4: { current: "chat-1" }, 5: storage, 10: fetchHistory }));
         await flushMicrotasks();
         await vi.waitFor(() => expect(createChatName).toHaveBeenCalledTimes(2));
+    });
+
+    describe("canvas adoption wiring", () => {
+        const adoptArgs = (wiring: unknown, ref: { current: unknown }, storage: StorageService<ChatResponse, ChatOptions>): MakeApiRequestArgs =>
+            baseArgs({ 1: "Question", 2: vi.fn(), 4: ref, 5: storage, 9: { current: false }, 20: wiring });
+
+        it("captures the canvas content before the placeholder creation is awaited and announces the adoption after it", async () => {
+            vi.stubGlobal("requestAnimationFrame", vi.fn());
+            const wiring = {
+                getCanvasState: vi.fn(() => null),
+                capturePreChatDraft: vi.fn(),
+                adoptNewConversation: vi.fn(),
+                onStreamEvent: vi.fn(),
+                onRunStarted: vi.fn(),
+                onRunFinished: vi.fn()
+            };
+            const { promise: createPending, resolve: resolveCreate } = deferred<string>();
+            const storage = makeStorage({ create: vi.fn().mockReturnValue(createPending) });
+
+            const request = makeApiRequest(...adoptArgs(wiring, { current: undefined }, storage));
+            await flushMicrotasks();
+
+            expect(wiring.capturePreChatDraft).toHaveBeenCalledTimes(1);
+            expect(wiring.adoptNewConversation).not.toHaveBeenCalled();
+
+            resolveCreate("chat-1");
+            await request;
+            expect(wiring.adoptNewConversation).toHaveBeenCalledTimes(1);
+        });
+
+        it("does not announce the adoption when the user selects another chat during placeholder creation", async () => {
+            vi.stubGlobal("requestAnimationFrame", vi.fn());
+            const wiring = {
+                getCanvasState: vi.fn(() => null),
+                capturePreChatDraft: vi.fn(),
+                adoptNewConversation: vi.fn(),
+                onStreamEvent: vi.fn(),
+                onRunStarted: vi.fn(),
+                onRunFinished: vi.fn()
+            };
+            const { promise: createPending, resolve: resolveCreate } = deferred<string>();
+            const storage = makeStorage({ create: vi.fn().mockReturnValue(createPending) });
+            const ref = { current: undefined as unknown };
+
+            const request = makeApiRequest(...adoptArgs(wiring, ref, storage));
+            await flushMicrotasks();
+            expect(wiring.capturePreChatDraft).toHaveBeenCalledTimes(1);
+
+            ref.current = "chat-b";
+            resolveCreate("chat-1");
+            await request;
+
+            expect(wiring.adoptNewConversation).not.toHaveBeenCalled();
+            // The placeholder is still activated so the sidebar shows it.
+            expect(vi.mocked(storage.create)).toHaveBeenCalledTimes(1);
+        });
+
+        it("sends the canvas that was present before placeholder creation", async () => {
+            vi.stubGlobal("requestAnimationFrame", vi.fn());
+            const outgoingCanvas = { content: "# outgoing", selection: null };
+            const wiring = {
+                getCanvasState: vi.fn(() => outgoingCanvas),
+                onStreamEvent: vi.fn(),
+                onRunStarted: vi.fn(),
+                onRunFinished: vi.fn()
+            };
+            const { promise: createPending, resolve: resolveCreate } = deferred<string>();
+            const storage = makeStorage({ create: vi.fn().mockReturnValue(createPending) });
+
+            const request = makeApiRequest(...adoptArgs(wiring, { current: undefined }, storage));
+            await flushMicrotasks();
+            wiring.getCanvasState.mockReturnValue({ content: "# later", selection: null });
+            resolveCreate("chat-1");
+            await request;
+
+            expect(mockRunInputs.at(-1)?.forwardedProps).toEqual(expect.objectContaining({ mucgpt: expect.objectContaining({ canvas: outgoingCanvas }) }));
+        });
     });
 });

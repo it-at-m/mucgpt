@@ -18,7 +18,10 @@ export const CanvasEditor = ({ editor, isLocked, getSelectionMarkdown, onInsertI
 
     // Hard lock: while the agent writes, the editor is read-only.
     useEffect(() => {
-        editor?.setEditable(!isLocked);
+        if (editor && !editor.isDestroyed)
+            // emitUpdate=false: the editable toggle is not a user edit; the
+            // empty editor's debounced notification would clear the draft.
+            editor.setEditable(!isLocked, false);
     }, [editor, isLocked]);
 
     return (

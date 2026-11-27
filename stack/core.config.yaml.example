@@ -42,6 +42,11 @@ ai_act_compliance_check_enabled: true
 # Canvas limits (characters); exposed to the frontend via /config
 canvas_content_max_chars: 262144
 canvas_editor_max_chars: 524288
+# HTML tag names allowed inside canvas markdown (e.g. <u> for underline, which
+# GFM cannot express); exposed to the frontend via /config. Lowercase plain tag
+# names without attributes; the list may only restrict the release's supported
+# set (an unsupported tag fails core startup). Empty list disables raw HTML.
+canvas_allowed_html_tags: ["u"]
 app_version: "2.0"
 frontend_version: "0.0.2"
 assistant_version: "0.0.3"
@@ -146,9 +151,11 @@ mcp:
       transport: "sse"
       forward_token: false
       group: "organization-docs"
+      # run_limit: 4  # Per-tool calls per turn; default is 10. Null = unlimited.
       overrides:
         - name: "fetch_docs"
           description: "Loads information from a specific documentation URL. Always provide the complete URL."
+          # run_limit: 2  # Omitted inherits the source; null = unlimited.
         - name: "list_doc_sources"
           description: "Lists available documentation sources. Use fetch_docs to retrieve relevant content."
       # ...
@@ -221,6 +228,10 @@ models:
         ]
       enable_summarization: true
       enable_subagents: false
+      # Optional partial overrides; defaults: read_file=20, grep=20. Null means unlimited.
+      # builtin_tool_run_limits:
+      #   read_file: 30
+      #   grep: null
     model_info:
       internal_task_model_strength: null  # Optional: "weak" for chat titles, "strong" for assistant drafts
       auto_enrich_from_model_info_endpoint: true

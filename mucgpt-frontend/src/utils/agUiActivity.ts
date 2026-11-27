@@ -43,6 +43,7 @@ const MAX_DETAIL_LENGTH = 120;
 // Added to every tool by the core service's ToolStatusMiddleware; streamed as the first argument.
 const STATUS_ARGUMENT_KEY = "status_message";
 const MAX_DESCRIPTION_LENGTH = 80;
+const TOOL_EXECUTION_FAILURE_PREFIX = "Tool execution failed:";
 // Matches the finished status string inside still-incomplete argument JSON.
 const STATUS_ARGUMENT_PATTERN = new RegExp(`"${STATUS_ARGUMENT_KEY}"\\s*:\\s*("(?:[^"\\\\]|\\\\.)*")`);
 
@@ -86,6 +87,17 @@ const settleArgs = ({ args, ...step }: ActivityStep): ActivityStep => {
     return detail ? { ...step, detail } : step;
 };
 
+/**
+ * Tool failures do not fail the whole agent run: the agent receives a tool
+ * result and can recover or explain the problem. MUCGPT marks these results
+ * explicitly in event metadata. The text check keeps clients compatible with
+ * servers that predate that metadata.
+ */
+const isFailedToolResult = ({ content, metadata }: ToolCallResultEvent): boolean => {
+    const mucgpt = metadata?.mucgpt;
+    return mucgpt?.toolStatus === "error" || (typeof content === "string" && content.startsWith(TOOL_EXECUTION_FAILURE_PREFIX));
+};
+
 const updateStep = (steps: ActivityStep[], toolCallId: string, update: (step: ActivityStep) => ActivityStep) =>
     steps.map(step => (step.toolCallId === toolCallId ? update(step) : step));
 
@@ -124,10 +136,13 @@ export const reduceRunActivity = (state: RunActivity, event: BaseEvent, now: num
             return { ...state, steps: updateStep(state.steps, toolCallId, settleArgs) };
         }
         case EventType.TOOL_CALL_RESULT: {
-            const { toolCallId } = event as ToolCallResultEvent;
+            const toolResult = event as ToolCallResultEvent;
+            const { toolCallId } = toolResult;
             return {
                 ...state,
-                steps: updateStep(state.steps, toolCallId, step => (step.status === "running" ? settleArgs({ ...step, status: "done", endedAt: now }) : step))
+                steps: updateStep(state.steps, toolCallId, step =>
+                    step.status === "running" ? settleArgs({ ...step, status: isFailedToolResult(toolResult) ? "error" : "done", endedAt: now }) : step
+                )
             };
         }
         case EventType.TEXT_MESSAGE_START:

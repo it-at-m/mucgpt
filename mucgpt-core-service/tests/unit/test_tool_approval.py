@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock
 
 import pytest
 from langchain_core.language_models import BaseChatModel
-from langchain_core.messages import AIMessage, ToolMessage
+from langchain_core.messages import AIMessage, HumanMessage, SystemMessage, ToolMessage
 from langchain_core.outputs import ChatGeneration, ChatResult
 from langchain_core.tools import tool
 from langgraph.checkpoint.memory import InMemorySaver
@@ -94,6 +94,24 @@ class TestApprovalConfig:
         assert requires_approval(built)
         assert data_classification(built) == "internal"
 
+    def test_local_tool_keeps_factory_run_limit_without_its_own(self):
+        @tool
+        def lookup(query: str) -> str:
+            """Look something up."""
+            return query
+
+        lookup.metadata = {"run_limit": 3}
+        spec = LocalTool(
+            id="lookup",
+            factory=lambda _logger: lookup,
+            metadata={"english": {"name": "Lookup", "description": "Looks up"}},
+            needs_model=False,
+        )
+
+        built = spec.build(model=cast(BaseChatModel, None), logger=logging.getLogger())
+
+        assert (built.metadata or {})["run_limit"] == 3
+
 
 def pending(*ids: str) -> list[PendingToolApproval]:
     return [
@@ -160,6 +178,7 @@ class ScriptedModel(BaseChatModel):
     """Answers with the given messages in turn, whatever it is asked."""
 
     responses: list[AIMessage]
+    seen: list[list[Any]] = []
 
     @property
     def _llm_type(self) -> str:
@@ -169,6 +188,7 @@ class ScriptedModel(BaseChatModel):
         return self
 
     def _generate(self, messages, stop=None, run_manager=None, **kwargs):
+        self.seen.append(list(messages))
         return ChatResult(generations=[ChatGeneration(message=self.responses.pop(0))])
 
 
@@ -267,7 +287,9 @@ class TestPausedRun:
             config, {"canvas": working_canvas}
         )
 
-    async def run(self, graph, config, input_data, resume_decisions=None) -> list[Any]:
+    async def run(
+        self, graph, config, input_data, resume_decisions=None, system_prompt=None
+    ) -> list[Any]:
         return [
             item
             async for item in graph.astream(
@@ -275,6 +297,7 @@ class TestPausedRun:
                 stream_mode="updates",
                 config=config,
                 resume_decisions=resume_decisions,
+                system_prompt=system_prompt,
             )
         ]
 
@@ -310,6 +333,42 @@ class TestPausedRun:
 
         assert searched == ["Kita"]
         assert await graph.get_pending_approvals(config) == []
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize("stored_prompt", [None, "role v1"])
+    async def test_a_resumed_run_keeps_the_current_system_prompt(
+        self, graph, config, stored_prompt
+    ):
+        if stored_prompt:
+            # older chats have the prompt frozen in the checkpoint
+            await graph.agent.aupdate_state(
+                config, {"messages": [SystemMessage(stored_prompt)]}
+            )
+        await self.run(
+            graph,
+            config,
+            {
+                "messages": [
+                    SystemMessage("role v2"),
+                    HumanMessage("Wie teuer ist die Kita?"),
+                ]
+            },
+        )
+        # the resume carries no messages, the prompt comes along separately
+        await self.run(
+            graph,
+            config,
+            {"messages": []},
+            resume_decisions=[{"type": "approve"}],
+            system_prompt="role v2",
+        )
+
+        prompts = [m.text for m in graph.model.seen[-1] if isinstance(m, SystemMessage)]
+        assert "role v2" in prompts
+        assert "role v1" not in prompts
+
+        checkpoint = await graph.agent.aget_state(config)
+        assert "role v2" not in str(checkpoint.metadata)
 
     @pytest.mark.asyncio
     async def test_a_rejected_call_never_runs(self, graph, config, searched):

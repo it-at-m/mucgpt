@@ -77,6 +77,8 @@ from core.stream_cleanup import close_stream
 
 logger = getLogger(name="mucgpt-core-agent")
 
+TOOL_EXECUTION_FAILURE_PREFIX = "Tool execution failed:"
+
 
 def _json_safe(value: Any) -> Any:
     """Convert LangChain/Pydantic objects into Langfuse-serializable data."""
@@ -769,6 +771,7 @@ class MUCGPTAgentExecutor:
         resume_decisions: list[dict[str, str]] | None = None,
         run_id: str | None = None,
         language: str | None = None,
+        system_prompt: str | None = None,
     ) -> AsyncGenerator[BaseEvent]:
         """Run the agent and stream the result as AG-UI protocol events.
 
@@ -777,7 +780,8 @@ class MUCGPTAgentExecutor:
         ``language``: the user's interface language for the deliberate-default
         response-language instruction. ``resume`` is the generic AG-UI
         interrupt response map; ``resume_decisions`` is MUCGPT's validated
-        approval decision payload.
+        approval decision payload. ``system_prompt``: the request's prompt for
+        runs whose input carries no messages (resume); ``None`` keeps the stored one.
         """
         run_id = run_id or uuid.uuid4().hex
         tags = (
@@ -832,6 +836,7 @@ class MUCGPTAgentExecutor:
                 stream_mode=["messages", "custom", "updates"],
                 config=config,
                 resume_decisions=resume_decisions,
+                system_prompt=system_prompt,
             )
             try:
                 yield RunStartedEvent(
@@ -906,6 +911,10 @@ class MUCGPTAgentExecutor:
                         continue
                     if isinstance(chunk, ToolMessage):
                         content = chunk.content
+                        failed = chunk.status == "error" or (
+                            isinstance(content, str)
+                            and content.startswith(TOOL_EXECUTION_FAILURE_PREFIX)
+                        )
                         yield ToolCallResultEvent(
                             type=EventType.TOOL_CALL_RESULT,
                             message_id=chunk.id or uuid.uuid4().hex,
@@ -916,6 +925,9 @@ class MUCGPTAgentExecutor:
                                 else json.dumps(content)
                             ),
                             role="tool",
+                            metadata=(
+                                {"mucgpt": {"toolStatus": "error"}} if failed else None
+                            ),
                         )
                         continue
                     if not isinstance(chunk, AIMessageChunk):

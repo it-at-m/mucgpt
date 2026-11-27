@@ -5,21 +5,51 @@ import type { Mark, Node as PMNode } from "@tiptap/pm/model";
 import { EditorState } from "@tiptap/pm/state";
 
 import type { CanvasState } from "../api/models";
+import { useConfigContext } from "../context/ConfigContext";
 import { useCanvasLimits } from "../components/Canvas/canvasLimits";
 import { loadCanvasRevisions, loadCanvasState, parseCanvasRevisions, type CanvasRevision, type CanvasRevisions } from "../service/canvasStorage";
 import type { CanvasStreamEvent } from "../utils/canvasStream";
 import { CANVAS_PERSISTENCE_RESET, persistentCaret, persistentSelection } from "../components/Canvas/canvasSelectionPersistence";
+import { clearCanvasDraft, loadCanvasDraft, saveCanvasDraft } from "../components/Canvas/canvasDraft";
 import { canvasExtensions } from "../components/Canvas/canvasExtensions";
+import { effectiveAllowedTags, sanitizeCanvasMarkdown } from "../components/Canvas/canvasHtmlWhitelist";
 
 /**
  * Interface between the canvas UI and the chat page.
  * Consumed by the chat page wiring.
  */
+/** Opaque, request-scoped handle for a pre-chat canvas capture. */
+export type PreChatDraftCapture = object;
+
+interface PreChatDraftCaptureData {
+    markdown: string;
+    preChatSession: number;
+    adoptedConversationId?: string;
+}
+
 export interface CanvasController {
     isOpen: boolean;
     setIsOpen(open: boolean): void;
     /** Sets an open request that survives a pending fresh-chat reset. */
     requestOpen(): void;
+    /** Captures the current editor content for the failed-request draft
+     * recovery. The page calls it synchronously when a fresh conversation's
+     * first request starts, before any await in between can replace the
+     * editor with another chat's content. */
+    capturePreChatDraft(): PreChatDraftCapture;
+    /** Flags the next fresh-conversation id assignment as an adoption of the
+     * captured pre-chat content: the switch effect then keeps the content
+     * instead of running the conversation switch. Called by the page right
+     * before it assigns the id, and only when the user has not left the
+     * pre-chat state while the request started. */
+    beginAdoption(capture?: PreChatDraftCapture): void;
+    /** Stores this request's captured content as the pre-chat canvas draft
+     * (localStorage), falling back to the current editor content when nothing
+     * was captured; used when a fresh conversation's first turn fails. A
+     * stored draft saved after the capture is newer and is kept.
+     * Without a content-limit guard: this is the recovery channel for content
+     * the server persist refuses, so it must keep oversized documents too. */
+    snapshotPreChatDraft(capture?: PreChatDraftCapture): void;
     /** True while the agent is writing */
     isLocked: boolean;
     unlock(): void;
@@ -263,6 +293,16 @@ export function useCanvasController(conversationId: string | undefined, serverCo
     // to the canvas endpoints with the plain backend conversation id.
     const serverId = serverConversationId ?? conversationId;
     const limits = useCanvasLimits();
+    const { canvas_allowed_html_tags: allowedHtmlTags } = useConfigContext();
+    // Sanitize before the Markdown parser (html: true) sees the content: every
+    // tag outside the deployment allowlist becomes literal text. Config may
+    // only restrict; tags unknown to this frontend release are ignored.
+    const allowedTags = effectiveAllowedTags(allowedHtmlTags);
+    // Stable identity on purpose: the conversation-switch effect and the stream
+    // callbacks must not be torn down/re-run when the config loads.
+    const allowedTagsRef = useRef(allowedTags);
+    allowedTagsRef.current = allowedTags;
+    const sanitize = useCallback((md: string): string => sanitizeCanvasMarkdown(md, allowedTagsRef.current), []);
     const editor = useEditor(
         {
             extensions: canvasExtensions({ exportLimitChars: limits.editorLimitChars, warnChars: limits.warnChars }),
@@ -284,6 +324,15 @@ export function useCanvasController(conversationId: string | undefined, serverCo
     // Tracks the conversation the switch effect last ran with; starts as a sentinel
     // (not undefined) so the initial mount load isn't mistaken for an id assignment.
     const prevConversationIdRef = useRef<string | undefined | "uninitialized">("uninitialized");
+    // Set by beginAdoption: the next undefined→id assignment is a fresh
+    // conversation adopting this request's captured pre-chat content, not a
+    // switch.
+    const adoptingCaptureRef = useRef<PreChatDraftCapture | undefined>(undefined);
+    // Captures belong to individual fresh-chat requests. A request can outlive
+    // a chat switch and another fresh-chat attempt, so one shared capture slot
+    // would let the older request recover the newer request's content.
+    const preChatSessionRef = useRef(0);
+    const preChatDraftCapturesRef = useRef(new WeakMap<PreChatDraftCapture, PreChatDraftCaptureData>());
     // Mirrors isOpen for the switch effect, which must not depend on the state value
     // (adding it to the deps would re-run the whole switch on every open/close toggle).
     const isOpenRef = useRef(false);
@@ -374,6 +423,34 @@ export function useCanvasController(conversationId: string | undefined, serverCo
         };
     }, [editor, notifySubscribers]);
 
+    // No conversation: the canvas is an unpersisted pre-chat draft. Seeds the
+    // stored draft into an empty editor and opens it; shared by the switch
+    // effect and the recreation retry below.
+    const seedPreChatDraft = useCallback(() => {
+        const current = editorRef.current;
+        if (!current || current.isDestroyed || hasCanvasContent()) return;
+        const draft = loadCanvasDraft();
+        if (!draft?.trim()) return;
+        current.commands.setContent(sanitize(draft));
+        current.view.dispatch(current.state.tr.setMeta(CANVAS_PERSISTENCE_RESET, true));
+        // The seed is not a user edit: keep its notification (which would
+        // only rewrite the identical draft) out of the edit stream.
+        clearPendingNotify();
+        setIsOpen(true);
+    }, [sanitize, hasCanvasContent, clearPendingNotify]);
+
+    // A replaced editor at mount (the throwaway 1 ms useEditor instance, the
+    // limits config) starts empty and outlives the switch's single seed run:
+    // without a retry the canvas stays closed and a later empty open clears
+    // the draft. Retry while nothing was ever captured and no conversation
+    // exists; once captured, the recreation restore below re-applies it.
+    useEffect(() => {
+        if (conversationId) return;
+        if (!editor || editor.isDestroyed) return;
+        if (lastCurrentDocRef.current !== null) return;
+        seedPreChatDraft();
+    }, [conversationId, editor, seedPreChatDraft]);
+
     // Editor recreation (e.g. the limits config arriving) starts empty and the
     // conversation-switch effect does not re-run for it. Reapply the latest
     // document — including an intentional clear — so a recreated empty editor
@@ -393,17 +470,45 @@ export function useCanvasController(conversationId: string | undefined, serverCo
     useEffect(() => {
         const previous = prevConversationIdRef.current;
         prevConversationIdRef.current = conversationId;
+        // Any conversation switch ends the current pre-chat session. Captures
+        // from it must not adopt or recover their stale canvas after this point.
+        if (previous !== "uninitialized" && previous !== conversationId) {
+            preChatSessionRef.current += 1;
+        }
         // An open request made before a fresh-chat reset stays pending while the
         // switch runs; it is consumed as soon as the new chat has an id.
         const pendingOpen = pendingOpenRef.current;
         if (conversationId) pendingOpenRef.current = false;
-        // The undefined→id transition is ambiguous: either the first prompt of this
-        // new chat just got its id (same logical conversation — the canvas is open
-        // and/or holds content: keep everything) or a page reload is restoring an
-        // existing conversation (fresh controller, canvas closed and empty: run the
-        // load path below to restore the stored canvas before an empty canvas state
-        // is sent and overwrites it server-side).
-        if (previous === undefined && conversationId !== undefined && (isOpenRef.current || hasCanvasContent())) return;
+        // The flag announced by beginAdoption is consumed by the id
+        // assignment of the fresh conversation adopting the captured pre-chat
+        // content (its first request already carried it): keep everything;
+        // later autosaves persist it and the pre-chat draft becomes obsolete.
+        // Any other id assignment is a genuine conversation switch whose
+        // target canvas must load, and the flag is disarmed so a rendered
+        // adoption can never hijack a later chat selection — the request may
+        // have raced a switch to another chat during placeholder creation,
+        // making its assignment defined→defined.
+        const adoptingCapture = adoptingCaptureRef.current;
+        const announcedAdoption = previous === undefined && conversationId !== undefined && adoptingCapture !== undefined;
+        adoptingCaptureRef.current = undefined;
+        if (announcedAdoption) {
+            const captured = preChatDraftCapturesRef.current.get(adoptingCapture!);
+            if (captured) captured.adoptedConversationId = conversationId;
+            const stored = loadCanvasDraft();
+            // A distinct stored value was saved after the capture (by this tab
+            // or another tab). It belongs to a later pre-chat draft and must
+            // survive this request's adoption.
+            if (stored === null || stored === captured?.markdown) clearCanvasDraft();
+            // A canvas explicitly closed before the send stays closed: the
+            // pending open request is not honored across the adoption.
+            return;
+        }
+        // Switching away — including to persisted chats — keeps the draft
+        // stored: only new chats display it, and the next new chat restores
+        // it. The defined→undefined reset (deliberate new chat, aborted first
+        // turn) does not clear either: an aborted first turn re-arms the
+        // draft just before the reset, and a deliberate new chat lets the
+        // surviving draft resurface.
 
         lastStreamRevisionRef.current = -1;
         nextRevisionRef.current = 1;
@@ -461,18 +566,23 @@ export function useCanvasController(conversationId: string | undefined, serverCo
                         if (pendingOpen && !cancelled) setIsOpen(true);
                         return;
                     }
-                    editor.commands.setContent(stored);
+                    editor.commands.setContent(sanitize(stored));
                     editor.view.dispatch(editor.state.tr.setMeta(CANVAS_PERSISTENCE_RESET, true));
                     setIsOpen(true);
                 } catch (error) {
                     console.error("Loading canvas failed:", error);
                 }
             })();
+        } else {
+            // No conversation: the canvas is an unpersisted pre-chat draft
+            // (surviving from a deliberate new chat or re-armed after an
+            // aborted first turn).
+            seedPreChatDraft();
         }
         return () => {
             cancelled = true;
         };
-    }, [conversationId, hasCanvasContent, serverId, flushPendingNotify, clearPendingNotify]);
+    }, [conversationId, hasCanvasContent, serverId, flushPendingNotify, clearPendingNotify, seedPreChatDraft]);
 
     const setIsOpen = useCallback((open: boolean) => {
         isOpenRef.current = open;
@@ -487,6 +597,41 @@ export function useCanvasController(conversationId: string | undefined, serverCo
         pendingOpenRef.current = true;
         setIsOpen(true);
     }, []);
+
+    // See the interface docs: capture happens at request start, arming at the
+    // id assignment; both are page-driven and must be kept in that order.
+    const capturePreChatDraft = useCallback(() => {
+        const capture = {};
+        preChatDraftCapturesRef.current.set(capture, { markdown: getMarkdown(), preChatSession: preChatSessionRef.current });
+        return capture;
+    }, [getMarkdown]);
+
+    const beginAdoption = useCallback((capture?: PreChatDraftCapture) => {
+        const captured = capture ? preChatDraftCapturesRef.current.get(capture) : undefined;
+        if (!captured || captured.preChatSession !== preChatSessionRef.current) return;
+        adoptingCaptureRef.current = capture;
+    }, []);
+
+    const snapshotPreChatDraft = useCallback(
+        (capture?: PreChatDraftCapture) => {
+            const captured = capture ? preChatDraftCapturesRef.current.get(capture) : undefined;
+            if (captured === undefined) {
+                // No adoption: the editor still holds the pre-chat content
+                // (placeholder creation failed before the id assignment).
+                const live = getMarkdown();
+                if (live.trim()) saveCanvasDraft(live);
+                return;
+            }
+            if (captured.preChatSession !== preChatSessionRef.current && captured.adoptedConversationId !== conversationId) return;
+            // The adoption cleared the slot, so a stored draft differing from the
+            // capture was written afterwards (a later session or tab) and is
+            // newer: kept. Identical or missing re-arms the capture.
+            const stored = loadCanvasDraft();
+            if (stored !== null && stored !== captured.markdown) return;
+            if (captured.markdown.trim()) saveCanvasDraft(captured.markdown);
+        },
+        [getMarkdown, conversationId]
+    );
 
     // Called on RUN_STARTED: the server numbers canvas_revision per run,
     // so the monotonicity guard must reset per run, not per conversation.
@@ -546,9 +691,12 @@ export function useCanvasController(conversationId: string | undefined, serverCo
         return start <= offsets.endOffset ? markdown.slice(start, offsets.endOffset) : null;
     }, [getMarkdown]);
 
-    const setMarkdown = useCallback((md: string) => {
-        editorRef.current?.commands.setContent(md);
-    }, []);
+    const setMarkdown = useCallback(
+        (md: string) => {
+            editorRef.current?.commands.setContent(sanitize(md));
+        },
+        [sanitize]
+    );
 
     const toCanvasState = useCallback((): CanvasState | null => {
         // The canvas is always editable: whenever the document has content it is
@@ -595,34 +743,37 @@ export function useCanvasController(conversationId: string | undefined, serverCo
         };
     }, [isOpen, getMarkdown, getSelectionMarkdown, limits]);
 
-    const applyStreamEvent = useCallback((ev: CanvasStreamEvent) => {
-        const current = editorRef.current;
-        if (!current) return;
-        if (ev.state === "UPDATE") {
-            const revision = ev.metadata?.canvas_revision;
-            if (typeof revision === "number") {
-                if (revision <= lastStreamRevisionRef.current) return;
-                lastStreamRevisionRef.current = revision;
+    const applyStreamEvent = useCallback(
+        (ev: CanvasStreamEvent) => {
+            const current = editorRef.current;
+            if (!current) return;
+            if (ev.state === "UPDATE") {
+                const revision = ev.metadata?.canvas_revision;
+                if (typeof revision === "number") {
+                    if (revision <= lastStreamRevisionRef.current) return;
+                    lastStreamRevisionRef.current = revision;
+                }
+                current.commands.setContent(sanitize(ev.content));
+                // The agent replaced the document; a stale caret/selection there would be misleading.
+                current.view.dispatch(current.state.tr.setMeta(CANVAS_PERSISTENCE_RESET, true));
+            } else if (ev.state === "APPEND") {
+                const doc = current.state.doc;
+                const endPos = doc.content.size;
+                // Append inside the trailing paragraph when possible; when the document ends in a
+                // non-textblock (table, code block), insert after it as a new paragraph.
+                const insertPos = doc.resolve(Math.max(endPos - 1, 0)).parent.inlineContent ? endPos - 1 : endPos;
+                current
+                    .chain()
+                    .command(({ tr }) => {
+                        tr.setMeta(NO_HISTORY_META, false);
+                        return true;
+                    })
+                    .insertContentAt(insertPos, sanitize(ev.content))
+                    .run();
             }
-            current.commands.setContent(ev.content);
-            // The agent replaced the document; a stale caret/selection there would be misleading.
-            current.view.dispatch(current.state.tr.setMeta(CANVAS_PERSISTENCE_RESET, true));
-        } else if (ev.state === "APPEND") {
-            const doc = current.state.doc;
-            const endPos = doc.content.size;
-            // Append inside the trailing paragraph when possible; when the document ends in a
-            // non-textblock (table, code block), insert after it as a new paragraph.
-            const insertPos = doc.resolve(Math.max(endPos - 1, 0)).parent.inlineContent ? endPos - 1 : endPos;
-            current
-                .chain()
-                .command(({ tr }) => {
-                    tr.setMeta(NO_HISTORY_META, false);
-                    return true;
-                })
-                .insertContentAt(insertPos, ev.content)
-                .run();
-        }
-    }, []);
+        },
+        [sanitize]
+    );
 
     const subscribe = useCallback(
         (cb: (markdown: string) => void) => {
@@ -703,6 +854,9 @@ export function useCanvasController(conversationId: string | undefined, serverCo
             isOpen,
             setIsOpen,
             requestOpen,
+            beginAdoption,
+            capturePreChatDraft,
+            snapshotPreChatDraft,
             isLocked,
             beginRun,
             unlock,
@@ -722,6 +876,9 @@ export function useCanvasController(conversationId: string | undefined, serverCo
             isOpen,
             setIsOpen,
             requestOpen,
+            beginAdoption,
+            capturePreChatDraft,
+            snapshotPreChatDraft,
             isLocked,
             beginRun,
             unlock,

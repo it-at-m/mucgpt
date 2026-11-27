@@ -90,7 +90,7 @@ vi.mock("@tiptap/react", () => ({ useEditor: () => editors.active }));
 
 let capturedController: ReturnType<typeof useCanvasController> | undefined;
 
-const Owner = ({ conversationId }: { conversationId: string }) => {
+const Owner = ({ conversationId }: { conversationId: string | undefined }) => {
     const controller = useCanvasController(conversationId);
     capturedController = controller;
     return <CanvasPanel controller={controller} conversationId={conversationId} />;
@@ -107,9 +107,13 @@ const clearedRings = {
 };
 
 beforeEach(() => {
+    // The editor stub is shared across tests; leftover content would make the
+    // switch effect's reset emit a real update and pollute the next test.
+    editorStub.markdownText = "";
     saveMock.mockResolvedValue(true);
     loadStateMock.mockResolvedValue(null);
     loadRevisionsMock.mockResolvedValue(null);
+    localStorage.clear();
 });
 
 afterEach(() => {
@@ -247,5 +251,276 @@ describe("useCanvasController notify flush", () => {
 
         expect(recreated.markdownText).toBe("");
         editors.active = editorStub;
+    });
+});
+
+describe("useCanvasController pre-chat canvas draft", () => {
+    it("stores an unpersisted edit in the localStorage draft after the debounce", async () => {
+        render(<Owner conversationId={undefined} />);
+
+        editorStub.markdownText = "# unpersisted";
+        editorStub.emit("update");
+        await advanceDebounce();
+
+        expect(localStorage.getItem("canvas-draft")).toBe("# unpersisted");
+        expect(saveMock).not.toHaveBeenCalled();
+    });
+
+    it("restores the pre-chat draft on a fresh canvas and opens it", () => {
+        localStorage.setItem("canvas-draft", "# draft");
+
+        render(<Owner conversationId={undefined} />);
+
+        expect(editorStub.markdownText).toBe("# draft");
+        expect(capturedController!.isOpen).toBe(true);
+    });
+
+    it("clears the draft when the unpersisted canvas is emptied", async () => {
+        localStorage.setItem("canvas-draft", "# older");
+        render(<Owner conversationId={undefined} />);
+        await advanceDebounce();
+        expect(editorStub.markdownText).toBe("# older");
+
+        editorStub.markdownText = "";
+        editorStub.emit("update");
+        await advanceDebounce();
+
+        expect(localStorage.getItem("canvas-draft")).toBeNull();
+    });
+
+    it("keeps the previous draft when an over-limit edit arrives while unpersisted", async () => {
+        render(<Owner conversationId={undefined} />);
+
+        editorStub.markdownText = "# valid";
+        editorStub.emit("update");
+        await advanceDebounce();
+
+        editorStub.markdownText = "x".repeat(256001);
+        editorStub.emit("update");
+        await advanceDebounce();
+
+        expect(localStorage.getItem("canvas-draft")).toBe("# valid");
+    });
+
+    it("drops the draft on pagehide when the unpersisted canvas was emptied inside the debounce window", async () => {
+        localStorage.setItem("canvas-draft", "# older");
+        render(<Owner conversationId={undefined} />);
+        await advanceDebounce();
+        expect(editorStub.markdownText).toBe("# older");
+
+        editorStub.markdownText = "";
+        editorStub.emit("update");
+        act(() => {
+            window.dispatchEvent(new Event("pagehide"));
+        });
+
+        expect(localStorage.getItem("canvas-draft")).toBeNull();
+    });
+
+    it("keeps adopted content on a fresh conversation's id assignment and drops the draft", async () => {
+        localStorage.setItem("canvas-draft", "# older");
+        const view = render(<Owner conversationId={undefined} />);
+
+        editorStub.markdownText = "# adopted";
+        editorStub.emit("update");
+        await advanceDebounce();
+
+        const capture = capturedController!.capturePreChatDraft();
+        act(() => capturedController!.beginAdoption(capture));
+        view.rerender(<Owner conversationId="conv-new" />);
+
+        expect(editorStub.markdownText).toBe("# adopted");
+        expect(localStorage.getItem("canvas-draft")).toBeNull();
+        expect(loadStateMock).not.toHaveBeenCalled();
+    });
+
+    it("switches away with canvas content: the target conversation's server canvas replaces it and the draft survives", async () => {
+        const view = render(<Owner conversationId={undefined} />);
+
+        editorStub.markdownText = "# stale";
+        editorStub.emit("update");
+        await advanceDebounce();
+        loadStateMock.mockResolvedValue("# stored");
+
+        view.rerender(<Owner conversationId="existing-1" />);
+
+        await waitFor(() => expect(editorStub.markdownText).toBe("# stored"));
+        expect(localStorage.getItem("canvas-draft")).toBe("# stale");
+        expect(loadStateMock).toHaveBeenCalledWith("existing-1");
+    });
+
+    it("re-seeds the surviving draft into the next new chat after switching away to a persisted chat", async () => {
+        const view = render(<Owner conversationId={undefined} />);
+
+        editorStub.markdownText = "# draft";
+        editorStub.emit("update");
+        await advanceDebounce();
+        loadStateMock.mockResolvedValue(null);
+        await view.rerender(<Owner conversationId="existing-1" />);
+        await waitFor(() => expect(editorStub.markdownText).toBe(""));
+
+        view.rerender(<Owner conversationId={undefined} />);
+
+        expect(editorStub.markdownText).toBe("# draft");
+        expect(capturedController!.isOpen).toBe(true);
+    });
+
+    it("re-seeds the draft after an aborted conversation: snapshotPreChatDraft re-arms it before the reset", () => {
+        localStorage.setItem("canvas-draft", "# older");
+        const view = render(<Owner conversationId="conv-1" />);
+        editorStub.markdownText = "# first turn content";
+        editorStub.emit("update");
+
+        act(() => capturedController!.snapshotPreChatDraft());
+        expect(localStorage.getItem("canvas-draft")).toBe("# first turn content");
+
+        view.rerender(<Owner conversationId={undefined} />);
+        expect(editorStub.markdownText).toBe("# first turn content");
+    });
+
+    it("re-seeds the draft into a recreated editor when the mount seed fell into a recreation window", () => {
+        const view = render(<Owner conversationId={undefined} />);
+        // No document was ever captured: the seed ran against a since-replaced,
+        // empty editor, and the draft was saved before that.
+        localStorage.setItem("canvas-draft", "# draft");
+        const recreated = makeEditorStub();
+        editors.active = recreated;
+        view.rerender(<Owner conversationId={undefined} />);
+
+        expect(recreated.markdownText).toBe("# draft");
+        expect(capturedController!.isOpen).toBe(true);
+        editors.active = editorStub;
+    });
+
+    it("re-arms the draft with the content captured at request start, not with a later chat switch's editor content", async () => {
+        const view = render(<Owner conversationId={undefined} />);
+
+        editorStub.markdownText = "# pre-chat";
+        editorStub.emit("update");
+        const capture = capturedController!.capturePreChatDraft();
+        // Adoption completes with the first conversation id.
+        loadStateMock.mockResolvedValue(null);
+        await act(async () => view.rerender(<Owner conversationId="conv-new" />));
+        // Switch to another persisted chat mid-run: its (empty) canvas must
+        // not overwrite the pre-chat draft on abort.
+        await act(async () => view.rerender(<Owner conversationId="other-1" />));
+        await act(async () => {
+            await new Promise(resolve => setTimeout(resolve, 0));
+        });
+        editorStub.markdownText = "# other chat";
+        editorStub.emit("update");
+
+        act(() => capturedController!.snapshotPreChatDraft(capture));
+
+        expect(localStorage.getItem("canvas-draft")).toBe("# pre-chat");
+    });
+
+    it("does not re-arm a capture from an earlier pre-chat session", async () => {
+        const view = render(<Owner conversationId={undefined} />);
+
+        editorStub.markdownText = "# pre-chat";
+        editorStub.emit("update");
+        const capture = capturedController!.capturePreChatDraft();
+
+        // The user selects an existing chat while the placeholder creation
+        // awaits: its canvas replaces the editor, and the adoption is not
+        // announced for it.
+        loadStateMock.mockResolvedValue("# stored");
+        await act(async () => view.rerender(<Owner conversationId="other-1" />));
+        await waitFor(() => expect(editorStub.markdownText).toBe("# stored"));
+
+        localStorage.clear();
+        act(() => capturedController!.snapshotPreChatDraft(capture));
+
+        expect(localStorage.getItem("canvas-draft")).toBeNull();
+    });
+
+    it("does not adopt an older capture into a later pre-chat session", async () => {
+        const view = render(<Owner conversationId={undefined} />);
+
+        editorStub.markdownText = "# first request";
+        editorStub.emit("update");
+        const firstCapture = capturedController!.capturePreChatDraft();
+
+        loadStateMock.mockResolvedValue("# persisted");
+        await act(async () => view.rerender(<Owner conversationId="other-1" />));
+        await waitFor(() => expect(editorStub.markdownText).toBe("# persisted"));
+        await act(async () => view.rerender(<Owner conversationId={undefined} />));
+
+        // The older request cannot flag this new pre-chat session for adoption.
+        act(() => capturedController!.beginAdoption(firstCapture));
+        loadStateMock.mockResolvedValue("# target");
+        await act(async () => view.rerender(<Owner conversationId="target-1" />));
+
+        await waitFor(() => expect(editorStub.markdownText).toBe("# target"));
+    });
+
+    it("disarms the adoption flag on a switch that does not consume it", async () => {
+        const view = render(<Owner conversationId={undefined} />);
+
+        const capture = capturedController!.capturePreChatDraft();
+        act(() => capturedController!.beginAdoption(capture));
+
+        // The placeholder arrives while a chat selection is already active:
+        // the adoption cannot happen anymore, and the flag must not reach the
+        // next existing-chat selection.
+        await act(async () => view.rerender(<Owner conversationId="conv-a" />));
+        await act(async () => view.rerender(<Owner conversationId={undefined} />));
+        loadStateMock.mockResolvedValue("# stored");
+        await act(async () => view.rerender(<Owner conversationId="existing-1" />));
+        await waitFor(() => expect(editorStub.markdownText).toBe("# stored"));
+    });
+
+    it("keeps a pre-chat draft saved after the capture when the stale adoption re-arms", async () => {
+        const view = render(<Owner conversationId={undefined} />);
+
+        // First request: the page captures the pre-chat content at request
+        // start; the adoption then clears the draft slot.
+        editorStub.markdownText = "# from old request";
+        editorStub.emit("update");
+        const capture = capturedController!.capturePreChatDraft();
+        act(() => capturedController!.beginAdoption(capture));
+        await act(async () => view.rerender(<Owner conversationId="conv-a" />));
+
+        // The user starts a later conversation-less session while the old
+        // request is still in flight and saves a newer draft.
+        await act(async () => view.rerender(<Owner conversationId={undefined} />));
+        editorStub.markdownText = "# newer draft";
+        editorStub.emit("update");
+        await advanceDebounce();
+
+        // The old request fails: the stale capture must not replace the
+        // newer draft.
+        act(() => capturedController!.snapshotPreChatDraft(capture));
+
+        expect(localStorage.getItem("canvas-draft")).toBe("# newer draft");
+    });
+
+    it("does not clear a draft saved after the capture during adoption", async () => {
+        const view = render(<Owner conversationId={undefined} />);
+
+        editorStub.markdownText = "# captured";
+        const capture = capturedController!.capturePreChatDraft();
+        localStorage.setItem("canvas-draft", "# saved later");
+        act(() => capturedController!.beginAdoption(capture));
+        await act(async () => view.rerender(<Owner conversationId="conv-a" />));
+
+        expect(localStorage.getItem("canvas-draft")).toBe("# saved later");
+    });
+
+    it("re-arms after an aborted first turn that failed with no draft saved since adoption", async () => {
+        const view = render(<Owner conversationId={undefined} />);
+
+        editorStub.markdownText = "# pre-chat";
+        editorStub.emit("update");
+        const capture = capturedController!.capturePreChatDraft();
+        act(() => capturedController!.beginAdoption(capture));
+        await act(async () => view.rerender(<Owner conversationId="conv-a" />));
+        // No newer draft: the slot was cleared at adoption and stays empty.
+        expect(localStorage.getItem("canvas-draft")).toBeNull();
+
+        act(() => capturedController!.snapshotPreChatDraft(capture));
+
+        expect(localStorage.getItem("canvas-draft")).toBe("# pre-chat");
     });
 });

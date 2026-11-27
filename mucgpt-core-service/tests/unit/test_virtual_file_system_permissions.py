@@ -4,9 +4,17 @@ import pytest
 from deepagents.backends.utils import create_file_data
 from deepagents.middleware.filesystem import FilesystemMiddleware
 from langchain.agents import create_agent
-from langchain_core.language_models.fake_chat_models import FakeMessagesListChatModel
 from langchain_core.messages import AIMessage, ToolMessage
 from langgraph.store.memory import InMemoryStore
+from tests.fakes.scripted_chat_model import (
+    ScriptedChatModel,
+)
+from tests.fakes.scripted_chat_model import (
+    message as scripted_message,
+)
+from tests.fakes.scripted_chat_model import (
+    text as scripted_text,
+)
 
 from core import virtual_file_system_helper as vfs
 
@@ -14,11 +22,6 @@ SELECTED_ID = "12345678-1234-4234-8234-123456789abc"
 OTHER_ID = "87654321-4321-4321-8321-cba987654321"
 SELECTED_PATH = vfs.get_document_path(SELECTED_ID)
 OTHER_PATH = vfs.get_document_path(OTHER_ID)
-
-
-class FilesystemTestModel(FakeMessagesListChatModel):
-    def bind_tools(self, tools, **kwargs):
-        return self
 
 
 @pytest.fixture
@@ -38,16 +41,23 @@ def document_store(monkeypatch):
 
 async def run_tools(user_id, selected_ids, calls, *, asynchronous, files=None):
     """Exercise real middleware tool dispatch and graph-state writes, without an LLM."""
-    model = FilesystemTestModel(
-        responses=[
-            AIMessage(
-                content="",
-                tool_calls=[
-                    {"name": name, "args": args, "id": str(index), "type": "tool_call"}
-                    for index, (name, args) in enumerate(calls)
-                ],
+    model = ScriptedChatModel(
+        script=[
+            scripted_message(
+                AIMessage(
+                    content="",
+                    tool_calls=[
+                        {
+                            "name": name,
+                            "args": args,
+                            "id": str(index),
+                            "type": "tool_call",
+                        }
+                        for index, (name, args) in enumerate(calls)
+                    ],
+                )
             ),
-            AIMessage(content="done"),
+            scripted_text("done"),
         ]
     )
     agent = create_agent(
@@ -55,7 +65,7 @@ async def run_tools(user_id, selected_ids, calls, *, asynchronous, files=None):
         middleware=[
             FilesystemMiddleware(
                 backend=vfs.create_backend(user_id, selected_ids),
-                _permissions=vfs.create_permissions(selected_ids),
+                permissions=vfs.create_permissions(selected_ids),
             )
         ],
     )

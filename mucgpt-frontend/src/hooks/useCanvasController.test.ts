@@ -91,6 +91,7 @@ afterEach(async () => {
         });
         await new Promise(resolve => setTimeout(resolve, 5));
     }
+    localStorage.removeItem("canvas-draft");
 });
 
 const posOf = (editor: Editor, needle: string) => {
@@ -404,6 +405,9 @@ describe("conversation id assignment", () => {
             harness.current.setMarkdown("# Mine");
             harness.current.setIsOpen(true);
         });
+        // The page announces the adoption before makeApiRequest assigns the id.
+        const capture = harness.current.capturePreChatDraft();
+        act(() => harness.current.beginAdoption(capture));
 
         await harness.rerender("conv-1");
 
@@ -466,11 +470,35 @@ describe("conversation id assignment", () => {
 
         const harness = renderController();
         harness.render(undefined);
-        act(() => harness.current.setMarkdown("---"));
+        let capture: ReturnType<typeof harness.current.capturePreChatDraft>;
+        act(() => {
+            harness.current.setMarkdown("---");
+            capture = harness.current.capturePreChatDraft();
+            harness.current.beginAdoption(capture);
+        });
 
         await harness.rerender("conv-1");
 
         expect(harness.current.getMarkdown().trim()).not.toBe("");
+    });
+
+    it("treats an unannounced id assignment as a switch and leaves the stored draft alone", async () => {
+        localStorage.setItem("canvas-draft", "# pre-chat draft");
+        loadCanvasStateMock.mockResolvedValue("# Stored");
+        loadCanvasRevisionsMock.mockResolvedValue(emptyRevisions());
+
+        const harness = renderController();
+        harness.render(undefined);
+        act(() => {
+            harness.current.setMarkdown("# Mine");
+            harness.current.setIsOpen(true);
+        });
+
+        await harness.rerender("conv-1");
+
+        // Live pre-chat content must not leak into the other conversation.
+        expect(harness.current.getMarkdown()).toBe("# Stored");
+        expect(localStorage.getItem("canvas-draft")).toBe("# pre-chat draft");
     });
 });
 
@@ -798,5 +826,127 @@ describe("selection markdown", () => {
         });
         const state = harness.current.toCanvasState();
         expect(state?.cursor).toBe(2);
+    });
+});
+
+describe("canvas HTML whitelist integration", () => {
+    const markNames = (harness: ReturnType<typeof renderController>): string[] => {
+        const names: string[] = [];
+        harness.current.editor!.state.doc.descendants(node =>
+            node.marks.forEach(mark => {
+                if (!names.includes(mark.type.name)) names.push(mark.type.name);
+            })
+        );
+        return names;
+    };
+
+    it("keeps whitelisted <u> as a mark and renders other HTML as literal text", () => {
+        const harness = renderController();
+        harness.render(undefined);
+        act(() => {
+            harness.current.setMarkdown("Hello <u>world</u> and <b>bold</b>");
+        });
+        expect(harness.current.getMarkdown()).toContain("<u>world</u>");
+        expect(markNames(harness)).toContain("underline");
+        expect(markNames(harness)).not.toContain("bold");
+        expect(harness.current.editor!.state.doc.textContent).toContain("<b>bold</b>");
+    });
+
+    it("keeps underline through the store/restore cycle", () => {
+        const harness = renderController();
+        harness.render(undefined);
+        act(() => {
+            harness.current.setMarkdown("Before <u>marked</u> rest");
+        });
+        act(() => {
+            harness.current.snapshot("manual");
+        });
+        const revision = harness.current.listRevisions().manual[0].revision;
+        act(() => {
+            harness.current.setMarkdown("Replaced entirely");
+        });
+        act(() => {
+            harness.current.restore(revision);
+        });
+        expect(harness.current.getMarkdown()).toBe("Before <u>marked</u> rest");
+        expect(markNames(harness)).toContain("underline");
+    });
+
+    it("sanitizes stream UPDATE content the same way", () => {
+        const harness = renderController();
+        harness.render(undefined);
+        act(() => {
+            harness.current.applyStreamEvent({
+                state: "UPDATE",
+                content: "Agent <u>wrote</u> <b>this</b>",
+                metadata: { canvas_revision: 1 }
+            });
+        });
+        expect(harness.current.getMarkdown()).toContain("<u>wrote</u>");
+        expect(markNames(harness)).not.toContain("bold");
+    });
+});
+
+describe("selection markdown and caret offsets with whitelisted HTML", () => {
+    const selectRange = (harness: ReturnType<typeof renderController>, markdown: string, from: string, to: string) => {
+        act(() => {
+            harness.current.setMarkdown(markdown);
+            harness.current.setIsOpen(true);
+            const editor = harness.current.editor!;
+            const fromPos = posOf(editor, from);
+            const toPos = posOf(editor, to) + to.length;
+            editor.chain().setTextSelection({ from: fromPos, to: toPos }).run();
+        });
+        return harness.current.getSelectionMarkdown();
+    };
+
+    it("quotes an inner underlined segment without the enclosing tags", () => {
+        const harness = renderController();
+        harness.render(undefined);
+        expect(selectRange(harness, "Vor <u>unterstrichener Welt hier</u> nach", "strichener", "Welt")).toBe("strichener Welt");
+    });
+
+    it("keeps the opening tag when the selection starts at the mark's start (contract)", () => {
+        const harness = renderController();
+        harness.render(undefined);
+        expect(selectRange(harness, "Vor <u>unterstrichener Welt hier</u> nach", "unterstrichener", "Welt")).toBe("<u>unterstrichener Welt");
+    });
+
+    it("keeps the underline tags when the selection covers the whole mark", () => {
+        const harness = renderController();
+        harness.render(undefined);
+        expect(selectRange(harness, "Vor <u>unterstrichener Welt</u> nach", "unterstrichener", "Welt")).toBe("<u>unterstrichener Welt</u>");
+    });
+
+    it("keeps verbatim markdown when the selection crosses the closing tag", () => {
+        const harness = renderController();
+        harness.render(undefined);
+        expect(selectRange(harness, "Vor <u>unterstrichener Welt</u> nach", "strichener", "nach")).toBe("strichener Welt</u> nach");
+    });
+
+    it("reports exact caret offsets inside underlined text", () => {
+        const harness = renderController();
+        harness.render(undefined);
+        act(() => {
+            harness.current.setMarkdown("Vor <u>hallo Welt</u> nach");
+        });
+        const editor = harness.current.editor!;
+        const offset = caretMarkdownOffset(editor, posOf(editor, "hallo") + 2);
+        const markdown = harness.current.getMarkdown();
+        expect(offset).toBe(markdown.indexOf("llo Welt"));
+        expect(markdown.slice(offset!, offset! + 3)).toBe("llo");
+    });
+
+    it("reports exact caret offsets inside bold text", () => {
+        const harness = renderController();
+        harness.render(undefined);
+        act(() => {
+            harness.current.setMarkdown("Vor **krasser Welt** nach");
+        });
+        const editor = harness.current.editor!;
+        const offset = caretMarkdownOffset(editor, posOf(editor, "krasser") + 3);
+        const markdown = harness.current.getMarkdown();
+        expect(offset).toBe(markdown.indexOf("sser Welt"));
+        expect(markdown.slice(offset!, offset! + 3)).toBe("sse");
     });
 });

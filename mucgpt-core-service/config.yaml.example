@@ -46,6 +46,14 @@ ai_act_compliance_check_enabled: true
 # uses 4× this as request headroom). Both are exposed to the frontend via /config.
 canvas_content_max_chars: 262144
 canvas_editor_max_chars: 524288
+# HTML tag names allowed inside canvas markdown (besides GFM). GFM cannot express
+# underline, so <u>text</u> is allowed by default; the canvas tools reject every
+# other raw HTML tag and the frontend sanitizer escapes it to literal text.
+# Entries are lowercase plain tag names without attributes. The list may only
+# restrict the release's supported set — referencing an unsupported tag fails
+# startup (extending it requires a core+frontend release). An empty list
+# disables raw HTML in the canvas entirely.
+canvas_allowed_html_tags: ["u"]
 frontend_version: "unknown"
 assistant_version: "unknown"
 footer_link_url: ""
@@ -127,6 +135,10 @@ models:
         ]
       enable_summarization: true
       enable_subagents: false
+      # Optional partial overrides; defaults: read_file=20, grep=20. Null means unlimited.
+      # builtin_tool_run_limits:
+      #   read_file: 30
+      #   grep: null
     model_info:
       auto_enrich_from_model_info_endpoint: true
       max_output_tokens: 16384
@@ -175,6 +187,9 @@ sso:
 #         # General system instructions used for regular chat.
 #         - name: "default_instructions"
 #           label: "production"
+#         # Instructions for reading selected documents from the virtual filesystem.
+#         - name: "document_instructions"
+#           label: "production"
 #     - name: "generation_prompts"
 #       prompts:
 #         # Generates a concise title for a chat conversation.
@@ -215,12 +230,14 @@ mcp:
       # group: "Wissensdatenbank"  # optional: group for all tools of this server (default: the source id)
       # require_approval: false  # optional: the user confirms each call before it is sent (default: false)
       # data_classification: "public"  # optional: highest data level the tools may receive: public | internal | confidential (default: public)
-       # overrides:  # optional: customize a tool's description, group, approval and/or data classification
+      # run_limit: 4  # optional: per-tool calls per turn; default is 10; null = unlimited
+       # overrides:  # optional: customize metadata and call limits for a discovered tool name
        #   - name: "searchConfluenceUsingCql"
        #     description: "Search Confluence content using CQL queries. Use for structured or advanced filtering."
        #     group: "Wissen Personal"
        #     require_approval: true
        #     data_classification: "internal"
+       #     run_limit: 2  # omitted inherits the source; null = unlimited
   cache_ttl: 43200
 
 # Redis Settings (optional - nested under redis key)

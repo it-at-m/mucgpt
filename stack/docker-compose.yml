@@ -80,7 +80,7 @@ services:
   #
   keycloak:
     container_name: keycloak
-    image: quay.io/keycloak/keycloak:26.8.2@sha256:3879c623248408de29a5303178b5816c77e8dfef3890c361f8c0bbeaa979ba3b
+    image: quay.io/keycloak/keycloak:26.8.2@sha256:7e66a96e4739239070aeaf72e4c5decf0f7f682cfc725b9f7ea2b336eaba38b3
     command:
       - start-dev
     environment:
@@ -189,8 +189,8 @@ services:
   ##############################
   core-service:
     build:
-      context: ../mucgpt-core-service
-      dockerfile: Dockerfile
+      context: ..
+      dockerfile: mucgpt-core-service/Dockerfile
       args:
         - HTTPS_PROXY=${HTTPS_PROXY}
     env_file:
@@ -226,8 +226,8 @@ services:
 
   core-migrations:
     build:
-      context: ../mucgpt-core-service
-      dockerfile: Dockerfile.migrations
+      context: ..
+      dockerfile: mucgpt-core-service/Dockerfile.migrations
       args:
         - HTTPS_PROXY=${HTTPS_PROXY}
     depends_on:
@@ -245,8 +245,8 @@ services:
 
   assistant-migrations:
     build:
-      context: ../mucgpt-assistant-service
-      dockerfile: Dockerfile.migrations
+      context: ..
+      dockerfile: mucgpt-assistant-service/Dockerfile.migrations
       args:
         - HTTPS_PROXY=${HTTPS_PROXY}
     depends_on:
@@ -263,8 +263,8 @@ services:
 
   assistant-service:
     build:
-      context: ../mucgpt-assistant-service
-      dockerfile: Dockerfile
+      context: ..
+      dockerfile: mucgpt-assistant-service/Dockerfile
       args:
         - HTTPS_PROXY=${HTTPS_PROXY}
     depends_on:
@@ -298,8 +298,8 @@ services:
 
   frontend:
     build:
-      context: ../mucgpt-frontend
-      dockerfile: Dockerfile
+      context: ..
+      dockerfile: mucgpt-frontend/Dockerfile
       args:
         - HTTP_PROXY=${HTTP_PROXY:-}
         - HTTPS_PROXY=${HTTPS_PROXY}

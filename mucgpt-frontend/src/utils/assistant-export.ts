@@ -15,7 +15,9 @@ export interface AssistantExportData {
 }
 
 export const sanitizeAssistantFilename = (name: string): string => {
-    const sanitized = name.replace(/[/\\:*?"<>|]/g, "_");
+    // Import accepts only a single extension, so dots in the base name would make
+    // an otherwise valid export impossible to import again.
+    const sanitized = name.replace(/[./\\:*?"<>|]/g, "_");
     const cleaned = sanitized.trim();
     if (!cleaned || /^_+$/.test(cleaned) || !/[a-zA-Z0-9]/.test(cleaned)) {
         return "assistant";

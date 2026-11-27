@@ -9,6 +9,7 @@ import httpx2
 import pytest
 from langchain_core.tools import StructuredTool
 from mcp.types import Tool as MCPTool
+from pydantic import ValidationError
 
 from agent.tools.mcp import McpBearerAuthProvider, McpLoader, _decline_elicitation
 from config.settings import MCPConfig, MCPSourceConfig, MCPTransport
@@ -201,6 +202,70 @@ class TestBuildConnection:
 
 
 class TestApplyToolCustomizations:
+    def test_unconfigured_mcp_source_leaves_limit_for_shared_default(self) -> None:
+        source = MCPSourceConfig(url="http://x", transport=MCPTransport.SSE)
+        tool = StructuredTool(
+            name="search_docs",
+            description="Search documents",
+            args_schema={"type": "object", "properties": {}},
+            coroutine=AsyncMock(),
+            metadata={"run_limit": 999},
+        )
+
+        McpLoader._apply_tool_customizations(tool, "src", source)
+
+        assert tool.metadata is not None
+        assert "run_limit" not in tool.metadata
+
+    @pytest.mark.parametrize(
+        "override, expected",
+        [
+            (None, 4),
+            ({"name": "search_docs"}, 4),
+            ({"name": "search_docs", "run_limit": 2}, 2),
+            ({"name": "search_docs", "run_limit": None}, None),
+            ({"name": "old_name", "run_limit": 2}, 4),
+        ],
+    )
+    def test_run_limit_inheritance(
+        self, override: dict[str, Any] | None, expected: int | None
+    ) -> None:
+        source = MCPSourceConfig(
+            url="http://x",
+            transport=MCPTransport.SSE,
+            run_limit=4,
+            overrides=[override] if override else None,
+        )
+        tool = StructuredTool(
+            name="search_docs",
+            description="Search documents",
+            args_schema={"type": "object", "properties": {}},
+            coroutine=AsyncMock(),
+            metadata={"run_limit": 999},
+        )
+
+        McpLoader._apply_tool_customizations(tool, "src", source)
+
+        assert tool.metadata is not None
+        assert tool.metadata["run_limit"] == expected
+
+    @pytest.mark.parametrize("limit", [0, -1])
+    @pytest.mark.parametrize("on_override", [False, True])
+    def test_rejects_non_positive_run_limits(
+        self, limit: int, on_override: bool
+    ) -> None:
+        with pytest.raises(ValidationError):
+            if on_override:
+                MCPSourceConfig(
+                    url="http://x",
+                    transport=MCPTransport.SSE,
+                    overrides=[{"name": "search_docs", "run_limit": limit}],
+                )
+            else:
+                MCPSourceConfig(
+                    url="http://x", transport=MCPTransport.SSE, run_limit=limit
+                )
+
     def test_override_applies_description_and_group(self) -> None:
         source = make_source(
             "http://x",

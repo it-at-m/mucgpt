@@ -15,6 +15,7 @@ from api.routers import (
     system_router,
     tools_router,
 )
+from chat_migration import router as chat_migration_router
 from config.settings import (
     get_settings,
 )
@@ -91,6 +92,8 @@ api_app.include_router(tools_router.router, prefix="", tags=["Tools"])
 api_app.include_router(parsing_router.router, prefix="", tags=["Parsing"])
 api_app.include_router(document_router.router, tags=["Documents"])
 api_app.include_router(export_router.router, prefix="", tags=["Export"])
+# TODO: remove after the browser chat migration
+api_app.include_router(chat_migration_router.router, tags=["Chat migration"])
 
 
 @api_app.exception_handler(AuthError)

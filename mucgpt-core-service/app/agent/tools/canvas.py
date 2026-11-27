@@ -10,9 +10,11 @@ from langgraph.config import get_stream_writer
 from langgraph.prebuilt import InjectedState, ToolRuntime
 from langgraph.types import Command, StreamWriter
 
+from agent.middleware import RequestContext
 from agent.tools.spec import LocalTool
 from agent.tools.tool_chunk import ToolStreamChunk, ToolStreamState
 from api.api_models import (
+    CANVAS_ALLOWED_HTML_TAGS,
     CANVAS_CONTENT_MAX_CHARS,
     CANVAS_READ_LIMIT_CHARS,
     CanvasState,
@@ -41,6 +43,23 @@ CANVAS_EDIT_SUMMARY = (
     "user's highlighted passage). When the user refers to 'here', anchor the "
     "change at the cursor position reported by canvas_read."
 )
+
+
+def _format_allowed_tags() -> str:
+    """Comma-separated list of the deployment's allowed canvas HTML tags."""
+    return ", ".join(f"<{tag}>" for tag in sorted(CANVAS_ALLOWED_HTML_TAGS))
+
+
+def _html_rule_note() -> str:
+    """Tool-description sentence naming the deployment's allowed canvas HTML tags."""
+    if CANVAS_ALLOWED_HTML_TAGS:
+        return (
+            "The canvas supports GFM plus these whitelisted raw HTML tags: "
+            f"{_format_allowed_tags()}. Any other HTML tag, or tag attributes, "
+            "are rejected."
+        )
+    return "The canvas supports GFM only; raw HTML tags are rejected."
+
 
 CANVAS_READ_SUMMARY = (
     "Returns the canvas document, optionally only the area around the user's "
@@ -100,10 +119,22 @@ _TRUNCATED_ERROR = (
     "tools become available again afterwards."
 )
 
-HTML_NOT_ALLOWED_ERROR = (
-    "Error: canvas content must be GitHub-Flavored Markdown without raw HTML tags "
-    "(e.g. <b> or <u>). Use GFM formatting instead (e.g. **bold**)."
+HTML_NOT_ALLOWED_ERROR_STEM = (
+    "Error: canvas content must be GitHub-Flavored Markdown; raw HTML tags are "
+    "only allowed from the deployment's whitelist"
 )
+
+
+def _html_not_allowed_error() -> str:
+    if CANVAS_ALLOWED_HTML_TAGS:
+        return (
+            f"{HTML_NOT_ALLOWED_ERROR_STEM} (currently: {_format_allowed_tags()}). "
+            "Everything else must stay GFM (e.g. **bold** instead of <b>)."
+        )
+    return (
+        f"{HTML_NOT_ALLOWED_ERROR_STEM} (none are configured; use GFM like **bold**)."
+    )
+
 
 # Canvas content enters the context only via canvas_read results; the tool and
 # its result must carry the quoted-data rule the injected context used to state.
@@ -122,9 +153,9 @@ _REPLACED_READ_NOTE = (
     "call canvas_read to see the current document.]"
 )
 
-# HTML-tag syntax outside code; whatever the editor's html:false Markdown parser
-# would treat as inline HTML and render as literal text.
-_HTML_TAG = re.compile(r"</?[a-zA-Z][a-zA-Z0-9]*(\s[^<>]*)?/?>")
+# HTML-tag syntax outside code; whatever the editor's Markdown parser would
+# treat as inline HTML once the deployment whitelist permits it.
+_HTML_TAG = re.compile(r"</?(?P<name>[a-zA-Z][a-zA-Z0-9]*)(?P<attrs>\s[^<>]*)?/?>")
 
 # Fenced code blocks (backtick and tilde fences per CommonMark/GFM) and inline
 # code spans may legitimately contain angle brackets; strip them before scanning.
@@ -138,8 +169,17 @@ _OVERSIZED_ERROR = (
 
 
 def _contains_html(text: str) -> bool:
+    """True when the text carries a raw HTML tag the canvas does not allow:
+    a tag whose name is not whitelisted, or one carrying attributes (bare tags
+    only — markup like `<u onclick="…">` must stay rejected)."""
     stripped = _CODE_SPAN.sub("", _FENCED_BLOCK.sub("", text))
-    return _HTML_TAG.search(stripped) is not None
+    for match in _HTML_TAG.finditer(stripped):
+        if (
+            match.group("name").lower() not in CANVAS_ALLOWED_HTML_TAGS
+            or match.group("attrs") is not None
+        ):
+            return True
+    return False
 
 
 # The ToolNode strips caller-supplied values for InjectedToolArg-style params
@@ -176,7 +216,7 @@ def _next_revision(context: Any) -> int:
 
 
 def _effective_canvas(
-    runtime: ToolRuntime | None, canvas_state: Any
+    runtime: ToolRuntime[RequestContext] | None, canvas_state: Any
 ) -> CanvasState | None:
     """Return the canvas the tool operates on.
 
@@ -193,7 +233,7 @@ def _effective_canvas(
     return _ensure_canvas(canvas_state)
 
 
-def _tool_context(runtime: ToolRuntime | None) -> Any:
+def _tool_context(runtime: ToolRuntime[RequestContext] | None) -> RequestContext | None:
     return getattr(runtime, "context", None)
 
 
@@ -248,11 +288,13 @@ def _iter_markdown_chunks(content: str) -> Iterator[str]:
 
 
 def make_canvas_write_tool(logger: Logger) -> BaseTool:
-    @tool("canvas_write", description=CANVAS_WRITE_SUMMARY)
+    @tool("canvas_write", description=f"{CANVAS_WRITE_SUMMARY} {_html_rule_note()}")
     def canvas_write(
         content: str,
         canvas_state: _CANVAS_STATE_ARG = None,
-        runtime: ToolRuntime = None,  # ty: ignore[invalid-parameter-default]
+        runtime: ToolRuntime[
+            RequestContext
+        ] = None,  # ty: ignore[invalid-parameter-default]
     ) -> str:
         # The canvas is always editable: when no canvas exists in this
         # conversation yet, canvas_write creates one.
@@ -273,7 +315,7 @@ def make_canvas_write_tool(logger: Logger) -> BaseTool:
             if canvas is not None and canvas.truncated:
                 return _fail(context, _TRUNCATED_ERROR)
             if _contains_html(content):
-                return _fail(context, HTML_NOT_ALLOWED_ERROR)
+                return _fail(context, _html_not_allowed_error())
             if len(content) > CANVAS_CONTENT_MAX_CHARS:
                 return _fail(context, _OVERSIZED_ERROR)
 
@@ -300,12 +342,14 @@ def make_canvas_write_tool(logger: Logger) -> BaseTool:
 
 
 def make_canvas_edit_tool(logger: Logger) -> BaseTool:
-    @tool("canvas_edit", description=CANVAS_EDIT_SUMMARY)
+    @tool("canvas_edit", description=f"{CANVAS_EDIT_SUMMARY} {_html_rule_note()}")
     def canvas_edit(
         old_text: str,
         new_text: str,
         canvas_state: _CANVAS_STATE_ARG = None,
-        runtime: ToolRuntime = None,  # ty: ignore[invalid-parameter-default]
+        runtime: ToolRuntime[
+            RequestContext
+        ] = None,  # ty: ignore[invalid-parameter-default]
     ) -> str:
         # Shape validation stays before the batch gate: an empty-argument call
         # never touches the canvas, so it must not fail the batch for the
@@ -345,7 +389,7 @@ def make_canvas_edit_tool(logger: Logger) -> BaseTool:
                 )
             edit_start = document.find(old_text)
             if _contains_html(new_text):
-                return _fail(context, HTML_NOT_ALLOWED_ERROR)
+                return _fail(context, _html_not_allowed_error())
 
             updated = (
                 document[:edit_start]
@@ -458,7 +502,9 @@ def make_canvas_read_tool(logger: Logger) -> BaseTool:
         canvas_state: _CANVAS_STATE_ARG = None,
         around_cursor: bool = False,
         messages: Annotated[list | None, InjectedState("messages")] = None,
-        runtime: ToolRuntime = None,  # ty: ignore[invalid-parameter-default]
+        runtime: ToolRuntime[
+            RequestContext
+        ] = None,  # ty: ignore[invalid-parameter-default]
     ) -> str | Command:
         context = _tool_context(runtime)
         lock = getattr(context, "canvas_lock", None)

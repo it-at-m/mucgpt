@@ -180,6 +180,11 @@ mcp:
         # ...
   cache_ttl: 123
 
+# Browser chat migration protection. Imports are admitted through a distributed
+# Redis slot limit so a large login wave cannot overwhelm checkpoint writes.
+chat_migration_max_concurrent_imports: 4
+chat_migration_slot_ttl_seconds: 300
+
 # Providers configuration
 # Connection settings (type/endpoint/api_key/api_version) live in this `providers`
 # dict; model entries reference a provider via `provider: <key>`. Provider keys

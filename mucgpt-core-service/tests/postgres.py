@@ -107,8 +107,10 @@ async def _wait_for_task(task: asyncio.Task[object]) -> None:
             return
 
 
-async def migrate_database(server: PostgresServerConfig, database: str) -> None:
-    """Apply the production Alembic migrations to an isolated database."""
+async def migrate_database(
+    server: PostgresServerConfig, database: str, revision: str = "head"
+) -> None:
+    """Apply production Alembic migrations through ``revision`` to an isolated DB."""
     migration_env = {
         "MUCGPT_CORE_DB__HOST": server.host,
         "MUCGPT_CORE_DB__PORT": str(server.port),
@@ -123,7 +125,7 @@ async def migrate_database(server: PostgresServerConfig, database: str) -> None:
                 asyncio.to_thread(
                     command.upgrade,
                     Config(str(Path(__file__).parents[1] / "alembic.ini")),
-                    "head",
+                    revision,
                 )
             )
             try:

@@ -2,6 +2,7 @@
 import { describe, expect, it, vi } from "vitest";
 import type { Assistant } from "../api/models";
 import { downloadAssistantExport, mapAssistantToExportData, mapVersionToExportData, sanitizeAssistantFilename } from "./assistant-export";
+import { parseAssistantImport } from "./assistant-import";
 
 describe("sanitizeAssistantFilename", () => {
     it("keeps clean names as they are", () => {
@@ -9,7 +10,11 @@ describe("sanitizeAssistantFilename", () => {
     });
 
     it("replaces filesystem-hostile characters", () => {
-        expect(sanitizeAssistantFilename('a/b\\c:d*e?f"g<h>i|j')).toBe("a_b_c_d_e_f_g_h_i_j");
+        expect(sanitizeAssistantFilename('a/b\\c:d*e?f"g<h>i|j.k')).toBe("a_b_c_d_e_f_g_h_i_j_k");
+    });
+
+    it("replaces dots so exported files can be imported again", () => {
+        expect(sanitizeAssistantFilename("My Assistant Version 1.2")).toBe("My Assistant Version 1_2");
     });
 
     it("trims surrounding whitespace", () => {
@@ -69,6 +74,12 @@ describe("export mapping", () => {
                 is_visible: false
             })
         );
+    });
+
+    it("round-trips an assistant without a default model through JSON import", () => {
+        const exported = mapAssistantToExportData({ ...baseAssistant, tools: [{ id: "tool-a" }] });
+
+        expect(parseAssistantImport("assistant.json", JSON.stringify(exported)).defaultModel).toBe(undefined);
     });
 
     it("maps a version response onto the same export shape", () => {

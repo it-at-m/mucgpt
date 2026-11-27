@@ -8,15 +8,20 @@ reachable or when MUCGPT_TEST_VALKEY=off.
 
 import asyncio
 from collections.abc import Awaitable
-from typing import cast
+from dataclasses import dataclass
+from typing import Any, cast
 from unittest.mock import AsyncMock
 
+import httpx2
 import pytest
 import pytest_asyncio
 import redis.asyncio as redis_asyncio
+from langchain_core.tools import StructuredTool
 from tests import container_runtime
 
-from config.settings import RedisConfig
+from agent.tools.mcp import McpBearerAuthProvider, McpLoader
+from config.settings import MCPConfig, MCPSourceConfig, MCPTransport, RedisConfig
+from core.auth_models import AuthenticationResult
 from core.cache import RedisCache
 
 # Captured at import time, before the session-wide held_run_locks fixture
@@ -24,6 +29,44 @@ from core.cache import RedisCache
 _REAL_GET_REDIS = RedisCache.get_redis
 
 _container = None
+
+
+@dataclass
+class _FakeMcpClient:
+    server_info: None = None
+
+
+class _FakeMcpAdapter:
+    def __init__(self, tools: list[StructuredTool]) -> None:
+        self._tools = tools
+
+    async def __aenter__(self) -> "_FakeMcpAdapter":
+        return self
+
+    async def __aexit__(self, *_args: Any) -> None:
+        return None
+
+    async def list_tools(self) -> list[StructuredTool]:
+        return self._tools
+
+
+def _mcp_tool(name: str) -> StructuredTool:
+    return StructuredTool(
+        name=name,
+        description=f"Description for {name}",
+        args_schema={"type": "object", "properties": {}},
+        coroutine=AsyncMock(),
+    )
+
+
+def _mcp_user(user_id: str) -> AuthenticationResult:
+    return AuthenticationResult(
+        token="test-token",
+        user_id=user_id,
+        department="IT",
+        name="Valkey Test User",
+        roles=["mucgpt-user"],
+    )
 
 
 @pytest.fixture(scope="module")
@@ -126,3 +169,145 @@ async def test_init_redis_with_real_valkey(valkey_container, monkeypatch):
     assert await cast(Awaitable[bool], client.ping()) is True
 
     RedisCache._redis_client = None
+
+
+@pytest.mark.asyncio
+async def test_mcp_loader_reuses_cached_metadata_from_real_valkey(
+    valkey_client, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A second tool load uses Redis metadata rather than rediscovering MCP tools."""
+    source = MCPSourceConfig(url="http://mcp.example/sse", transport=MCPTransport.SSE)
+    monkeypatch.setattr(
+        McpLoader,
+        "_mcp_settings",
+        MCPConfig(sources={"documents": source}, cache_ttl=60),
+    )
+    build_calls: list[_FakeMcpClient] = []
+
+    def build_connection(*_args: Any) -> _FakeMcpClient:
+        client = _FakeMcpClient()
+        build_calls.append(client)
+        return client
+
+    async def wrap_tool(raw_tool, _client: _FakeMcpClient) -> StructuredTool:
+        return _mcp_tool(raw_tool.name)
+
+    monkeypatch.setattr(McpLoader, "_build_connection", build_connection)
+    monkeypatch.setattr("agent.tools.mcp.as_langchain_tool", wrap_tool)
+    monkeypatch.setattr(
+        "agent.tools.mcp.MCPAdapter",
+        lambda _client: _FakeMcpAdapter([_mcp_tool("search")]),
+    )
+    user = _mcp_user("valkey-cache-hit")
+
+    first = await McpLoader.load_mcp_tools(user)
+    cache_key = f"{McpLoader._CACHE_PREFIX}:{user.user_id}"
+    cached = await RedisCache.get_object(cache_key)
+
+    assert [tool.name for tool in first] == ["search"]
+    assert cached is not None
+    assert cached["documents"][0].tool.name == "search"
+    # A cold load creates one client for discovery and one for the returned tool.
+    assert len(build_calls) == 2
+
+    monkeypatch.setattr(
+        "agent.tools.mcp.MCPAdapter",
+        lambda _client: (_ for _ in ()).throw(
+            AssertionError("cache hit rediscovered MCP tools")
+        ),
+    )
+    second = await McpLoader.load_mcp_tools(user)
+
+    assert [tool.name for tool in second] == ["search"]
+    assert len(build_calls) == 3  # A cache hit only creates the invocation client.
+
+
+@pytest.mark.asyncio
+async def test_mcp_loader_force_reload_replaces_real_valkey_cache(
+    valkey_client, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """force_reload bypasses existing Redis metadata and stores fresh discovery results."""
+    source = MCPSourceConfig(url="http://mcp.example/sse", transport=MCPTransport.SSE)
+    monkeypatch.setattr(
+        McpLoader,
+        "_mcp_settings",
+        MCPConfig(sources={"documents": source}, cache_ttl=60),
+    )
+    monkeypatch.setattr(McpLoader, "_build_connection", lambda *_args: _FakeMcpClient())
+
+    async def wrap_tool(raw_tool, _client: _FakeMcpClient) -> StructuredTool:
+        return _mcp_tool(raw_tool.name)
+
+    monkeypatch.setattr("agent.tools.mcp.as_langchain_tool", wrap_tool)
+    user = _mcp_user("valkey-force-reload")
+    cache_key = f"{McpLoader._CACHE_PREFIX}:{user.user_id}"
+    await RedisCache.set_object(
+        cache_key,
+        {"documents": []},
+        ttl=60,
+    )
+    monkeypatch.setattr(
+        "agent.tools.mcp.MCPAdapter",
+        lambda _client: _FakeMcpAdapter([_mcp_tool("fresh")]),
+    )
+
+    tools = await McpLoader.load_mcp_tools(user, force_reload=True)
+    cached = await RedisCache.get_object(cache_key)
+
+    assert [tool.name for tool in tools] == ["fresh"]
+    assert cached is not None
+    assert [tool.tool.name for tool in cached["documents"]] == ["fresh"]
+
+
+@pytest.mark.asyncio
+async def test_mcp_loader_cache_hit_uses_current_forwarded_token(
+    valkey_client, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Cached metadata never retains a forwarded token after it is rotated."""
+    source = MCPSourceConfig(
+        url="http://mcp.example/sse",
+        transport=MCPTransport.SSE,
+        forward_token=True,
+    )
+    monkeypatch.setattr(
+        McpLoader,
+        "_mcp_settings",
+        MCPConfig(sources={"documents": source}, cache_ttl=60),
+    )
+    monkeypatch.setattr(McpBearerAuthProvider, "_tokens", {})
+    discovery_calls = 0
+    invocation_clients: list[Any] = []
+
+    def adapter_factory(_client: Any) -> _FakeMcpAdapter:
+        nonlocal discovery_calls
+        discovery_calls += 1
+        return _FakeMcpAdapter([_mcp_tool("search")])
+
+    async def wrap_tool(raw_tool: Any, client: Any) -> StructuredTool:
+        invocation_clients.append(client)
+        return _mcp_tool(raw_tool.name)
+
+    monkeypatch.setattr("agent.tools.mcp.MCPAdapter", adapter_factory)
+    monkeypatch.setattr("agent.tools.mcp.as_langchain_tool", wrap_tool)
+    user_id = "valkey-forward-token"
+    old_token = "old-token-must-not-be-cached"
+    new_token = "new-token-after-rotation"
+    cache_key = f"{McpLoader._CACHE_PREFIX}:{user_id}"
+
+    await McpLoader.load_mcp_tools(
+        _mcp_user(user_id).model_copy(update={"token": old_token})
+    )
+    cached_bytes = await valkey_client.get(cache_key)
+    assert cached_bytes is not None
+    assert old_token.encode() not in cached_bytes
+
+    tools = await McpLoader.load_mcp_tools(
+        _mcp_user(user_id).model_copy(update={"token": new_token})
+    )
+    auth = invocation_clients[-1].transport.auth
+    request = httpx2.Request("GET", "https://mcp.example/tools")
+    next(auth.auth_flow(request))
+
+    assert [tool.name for tool in tools] == ["search"]
+    assert discovery_calls == 1
+    assert request.headers["Authorization"] == f"Bearer {new_token}"

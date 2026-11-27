@@ -20,7 +20,7 @@ from agent.tools.approval import (
     data_classification,
     requires_approval,
 )
-from agent.tools.mcp import McpLoader
+from agent.tools.mcp import CachedMCPTool, McpLoader
 from agent.tools.spec import LocalTool
 from api.api_models import CanvasState, ToolApprovalResumeEntry
 from config.settings import MCPSourceConfig, MCPToolOverride
@@ -67,7 +67,12 @@ class TestApprovalConfig:
         self, caplog: pytest.LogCaptureFixture
     ):
         source = make_source(overrides=[MCPToolOverride(name="web_serch")])
-        raw_tools = [MCPTool(name="web_search", inputSchema={"type": "object"})]
+        raw_tools = [
+            CachedMCPTool(
+                tool=MCPTool(name="web_search", input_schema={"type": "object"}),
+                server_info=None,
+            )
+        ]
 
         with caplog.at_level(logging.WARNING):
             McpLoader._warn_about_unknown_overrides("search", source, raw_tools)

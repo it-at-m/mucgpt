@@ -35,6 +35,9 @@ from core.virtual_file_system_helper import FileStoreManager
 from database.document_catalog import DocumentCatalogManager
 from parsing.base import ParserBackend
 
+DEFAULT_SCRIPTED_MODEL = "scripted-model"
+"""Model name single-scenario tests send and script without naming it."""
+
 
 @dataclass
 class DeterministicParser(ParserBackend):
@@ -79,7 +82,11 @@ class NoopLangfuseClient:
 
 @dataclass
 class PostgresHttpHarness:
-    """One isolated database, real request stack, and deterministic boundaries."""
+    """One isolated database, real request stack, and deterministic boundaries.
+
+    Every model name has its own ``ScriptedChatModel``, so scenarios can give
+    concurrent chats independent script cursors.
+    """
 
     database: IsolatedPostgresDatabase
     monkeypatch: MonkeyPatch
@@ -89,6 +96,7 @@ class PostgresHttpHarness:
     foreign_user: AuthenticationResult
     parser: DeterministicParser
     model: ScriptedChatModel
+    models: dict[str, ScriptedChatModel] = field(repr=False)
     _current_user: AuthenticationResult
     _runtime_state: dict[str, Any] = field(repr=False)
 
@@ -104,19 +112,36 @@ class PostgresHttpHarness:
             self._current_user = previous_user
             self._runtime_state["user"] = previous_user
 
-    def set_model_script(self, script: Sequence[ScriptStep]) -> ScriptedChatModel:
-        """Replace the finite scripted-model sequence for the next agent request."""
-        self.model = ScriptedChatModel(script=list(script))
-        self._runtime_state["model"] = self.model
-        return self.model
+    def set_model_script(
+        self,
+        script: Sequence[ScriptStep],
+        *,
+        model_name: str = DEFAULT_SCRIPTED_MODEL,
+    ) -> ScriptedChatModel:
+        """Register a finite script for one model name.
+
+        A chat request selects its script by sending ``model_name`` in its body,
+        so chats with different names get independent script cursors and may run
+        concurrently. The newest model is also exposed as ``harness.model`` for
+        single-chat scenarios.
+        """
+        scripted = ScriptedChatModel(script=list(script))
+        self.models[model_name] = scripted
+        self.model = scripted
+        self._runtime_state["model"] = scripted
+        return scripted
 
     def persisted_chat_body(
-        self, content: str, *, conversation_id: str | None = None
+        self,
+        content: str,
+        *,
+        conversation_id: str | None = None,
+        model_name: str = DEFAULT_SCRIPTED_MODEL,
     ) -> dict[str, Any]:
         """Return the smallest legacy request that exercises persisted AG-UI chat."""
         return {
             "conversation_id": conversation_id or f"harness-{uuid4()}",
-            "model": "scripted-model",
+            "model": model_name,
             "messages": [{"role": "user", "content": content}],
             "persist": True,
             # Avoid settings-dependent creativity lookup in infrastructure tests.
@@ -142,7 +167,11 @@ class PostgresHttpHarness:
 
     def assert_model_consumed(self) -> None:
         """Make an omitted model interaction visible in the scenario that owns it."""
-        self.model.assert_consumed()
+        for model_name, model in self.models.items():
+            try:
+                model.assert_consumed()
+            except AssertionError as exc:
+                raise AssertionError(f"Model {model_name!r}: {exc}") from exc
 
 
 async def decode_agui_events(response: httpx.Response) -> list[dict[str, Any]]:
@@ -191,17 +220,25 @@ async def postgres_http_harness(
         foreign_user = _test_user("harness-foreign", "Harness Foreign User")
         parser = DeterministicParser()
         initial_model = ScriptedChatModel(script=[])
-        state: dict[str, Any] = {"user": owner, "model": initial_model}
+        models = {DEFAULT_SCRIPTED_MODEL: initial_model}
+        state: dict[str, Any] = {
+            "user": owner,
+            "model": initial_model,
+            "models": models,
+        }
 
         async def current_user() -> AuthenticationResult:
             return state["user"]
 
         def scripted_model(name: str | None = None, **_: Any) -> BaseChatModel:
-            if name not in {None, "scripted-model"}:
+            if name is None:
+                return state["model"]
+            try:
+                return state["models"][name]
+            except KeyError as exc:
                 raise ModelsConfigurationException(
                     f"Model {name!r} not found in the registry"
-                )
-            return state["model"]
+                ) from exc
 
         # Router-level dependency overrides retain FastAPI's real dependency
         # resolution while making user switching a per-request test concern.
@@ -246,6 +283,7 @@ async def postgres_http_harness(
                     foreign_user=foreign_user,
                     parser=parser,
                     model=initial_model,
+                    models=models,
                     _current_user=owner,
                     _runtime_state=state,
                 )

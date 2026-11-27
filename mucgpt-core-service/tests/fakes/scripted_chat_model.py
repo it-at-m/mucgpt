@@ -6,7 +6,7 @@ tool binding for assertions.
 """
 
 import asyncio
-from collections.abc import AsyncIterator, Iterator, Sequence
+from collections.abc import AsyncIterator, Callable, Iterator, Sequence
 from dataclasses import dataclass
 from typing import Any, Literal, cast
 
@@ -19,6 +19,7 @@ from langchain_core.messages import (
     AIMessage,
     AIMessageChunk,
     BaseMessage,
+    ToolMessage,
     message_chunk_to_message,
 )
 from langchain_core.outputs import ChatGeneration, ChatGenerationChunk, ChatResult
@@ -31,12 +32,13 @@ from pydantic import Field, PrivateAttr
 class ScriptStep:
     """One expected model operation and its deterministic result."""
 
-    kind: Literal["message", "stream", "error", "wait"]
+    kind: Literal["message", "stream", "error", "wait", "derive"]
     message: AIMessage | None = None
     chunks: tuple[AIMessageChunk, ...] = ()
     error: Exception | None = None
     stream_error: Exception | None = None
     event: asyncio.Event | None = None
+    derive: Callable[[Sequence[BaseMessage]], AIMessage] | None = None
 
 
 @dataclass(frozen=True)
@@ -88,6 +90,40 @@ def read_file(file_path: str, *, id: str, **kwargs: Any) -> ScriptStep:
 def grep(pattern: str, path: str, *, id: str, **kwargs: Any) -> ScriptStep:
     """Return a ``grep`` call."""
     return tool_call("grep", {"pattern": pattern, "path": path, **kwargs}, id=id)
+
+
+def message_text(content: str | list[Any]) -> str:
+    """Flatten text message content into the plain text a caller would read."""
+    if isinstance(content, str):
+        return content
+    return "".join(
+        part if isinstance(part, str) else str(part.get("text", "")) for part in content
+    )
+
+
+def answer_from_tool(
+    *, tool_call_id: str | None = None, prefix: str = ""
+) -> ScriptStep:
+    """Compose the next assistant message from a recorded tool result.
+
+    Deriving the answer from the tool result keeps the model response tied to
+    what the tool actually returned instead of replaying canned text.  The
+    latest tool result is used unless ``tool_call_id`` selects one.
+    """
+
+    def derive(messages: Sequence[BaseMessage]) -> AIMessage:
+        results = [
+            message
+            for message in messages
+            if isinstance(message, ToolMessage)
+            and (tool_call_id is None or message.tool_call_id == tool_call_id)
+        ]
+        if not results:
+            target = tool_call_id or "the latest tool call"
+            raise AssertionError(f"Missing tool result for {target}")
+        return AIMessage(content=f"{prefix}{message_text(results[-1].content)}")
+
+    return ScriptStep(kind="derive", derive=derive)
 
 
 def raise_error(error: Exception) -> ScriptStep:
@@ -184,7 +220,12 @@ class ScriptedChatModel(BaseChatModel):
             )
 
     @staticmethod
-    def _message_from_step(step: ScriptStep) -> AIMessage:
+    def _message_from_step(
+        step: ScriptStep, messages: Sequence[BaseMessage]
+    ) -> AIMessage:
+        if step.kind == "derive":
+            assert step.derive is not None
+            return step.derive(messages)
         if step.kind == "message":
             assert step.message is not None
             return step.message
@@ -230,7 +271,9 @@ class ScriptedChatModel(BaseChatModel):
         )
         self._raise_or_reject_wait(step)
         return ChatResult(
-            generations=[ChatGeneration(message=self._message_from_step(step))]
+            generations=[
+                ChatGeneration(message=self._message_from_step(step, messages))
+            ]
         )
 
     async def _agenerate(
@@ -251,7 +294,9 @@ class ScriptedChatModel(BaseChatModel):
             )
         self._raise_or_reject_wait(step)
         return ChatResult(
-            generations=[ChatGeneration(message=self._message_from_step(step))]
+            generations=[
+                ChatGeneration(message=self._message_from_step(step, messages))
+            ]
         )
 
     def _stream(
@@ -268,7 +313,7 @@ class ScriptedChatModel(BaseChatModel):
         chunks = (
             step.chunks
             if step.kind == "stream"
-            else (self._chunk_from_message(self._message_from_step(step)),)
+            else (self._chunk_from_message(self._message_from_step(step, messages)),)
         )
         for chunk in chunks:
             yield ChatGenerationChunk(message=chunk)
@@ -294,7 +339,7 @@ class ScriptedChatModel(BaseChatModel):
         chunks = (
             step.chunks
             if step.kind == "stream"
-            else (self._chunk_from_message(self._message_from_step(step)),)
+            else (self._chunk_from_message(self._message_from_step(step, messages)),)
         )
         for chunk in chunks:
             yield ChatGenerationChunk(message=chunk)

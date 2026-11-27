@@ -14,7 +14,7 @@ const MAX_TITLE_CHARS = 200;
 const FALLBACK_TITLE = "New Chat";
 // the server won't take these, retrying doesn't help, chat stays local
 const KEEP_LOCAL_STATUSES = [403, 409, 413, 422];
-const RETRYABLE_STATUSES = [423, 429];
+const RETRYABLE_STATUSES = [423, 429, 503];
 // locked by a running (or crashed) turn, skip this chat for now and try the next one
 const BUSY_STATUS = 423;
 const MIGRATION_RETRY_ATTEMPTS = 3;

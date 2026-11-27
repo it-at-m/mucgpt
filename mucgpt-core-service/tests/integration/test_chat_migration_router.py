@@ -124,6 +124,31 @@ def test_import_capacity_frees_the_conversation_lock(
     assert held_run_locks == set()
 
 
+def test_lost_import_slot_lease_cancels_the_import(
+    test_client: TestClient, monkeypatch, import_chat
+):
+    cancelled = False
+
+    async def stalled_import(*_args):
+        nonlocal cancelled
+        try:
+            await asyncio.Event().wait()
+        except asyncio.CancelledError:
+            cancelled = True
+            raise
+
+    monkeypatch.setattr(
+        "chat_migration.router._renew_import_slot", AsyncMock(return_value=False)
+    )
+    import_chat.side_effect = stalled_import
+
+    response = test_client.post(URL, json=BODY)
+
+    assert response.status_code == 503, response.text
+    assert response.headers["retry-after"] == "5"
+    assert cancelled
+
+
 def test_busy_chat_does_not_take_an_import_slot(
     test_client: TestClient, held_run_locks, monkeypatch, import_chat
 ):
@@ -152,3 +177,14 @@ async def test_import_slot_renewal_extends_the_lease(monkeypatch):
     await chat_migration_router._renew_import_slot(slot, 60, stop)
 
     slot.extend.assert_awaited_once_with(60, replace_ttl=True)
+
+
+@pytest.mark.asyncio
+async def test_import_slot_renewal_reports_a_lost_lease(monkeypatch):
+    slot = AsyncMock()
+    slot.extend.return_value = False
+    monkeypatch.setattr("chat_migration.router.asyncio.sleep", AsyncMock())
+
+    renewed = await chat_migration_router._renew_import_slot(slot, 60, asyncio.Event())
+
+    assert not renewed

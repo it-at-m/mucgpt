@@ -54,22 +54,23 @@ async def _release_import_slot(slot: Lock) -> None:
 
 async def _renew_import_slot(
     slot: Lock, lease_seconds: int, stop: asyncio.Event
-) -> None:
+) -> bool:
     """Keep an import slot claimed when an unusually large import runs slowly."""
     while not stop.is_set():
         await asyncio.sleep(lease_seconds / 2)
         if stop.is_set():
-            return
+            return True
         try:
             if not await slot.extend(lease_seconds, replace_ttl=True):
                 logger.warning("Chat migration import slot could not be renewed")
-                return
+                return False
         except LockError:
             logger.warning("Chat migration import slot expired before it could renew")
-            return
+            return False
         except Exception:
             logger.exception("Chat migration import slot renewal failed")
-            return
+            return False
+    return True
 
 
 @router.post(
@@ -82,6 +83,7 @@ async def _renew_import_slot(
         429: {
             "description": "Browser chat migration capacity is temporarily exhausted"
         },
+        503: {"description": "Browser chat migration lease was lost; retry the import"},
     },
 )
 async def import_conversation(
@@ -121,8 +123,26 @@ async def import_conversation(
                 slot_renewal_stop,
             )
         )
+        import_task = asyncio.create_task(import_chat(request, user_info.user_id))
         try:
-            status = await import_chat(request, user_info.user_id)
+            done, _ = await asyncio.wait(
+                (import_task, slot_renewal),
+                return_when=asyncio.FIRST_COMPLETED,
+            )
+            if (
+                slot_renewal in done
+                and not slot_renewal.result()
+                and not import_task.done()
+            ):
+                import_task.cancel()
+                with suppress(asyncio.CancelledError):
+                    await import_task
+                raise HTTPException(
+                    status_code=503,
+                    detail="Browser chat migration capacity lease was lost; retry the import",
+                    headers={"Retry-After": str(IMPORT_RETRY_AFTER_SECONDS)},
+                )
+            status = await import_task
         except ImportConflictError as exc:
             raise HTTPException(
                 status_code=409, detail="Conversation id is not available"
@@ -132,6 +152,10 @@ async def import_conversation(
             slot_renewal.cancel()
             with suppress(asyncio.CancelledError):
                 await slot_renewal
+            if not import_task.done():
+                import_task.cancel()
+                with suppress(asyncio.CancelledError):
+                    await import_task
             await _release_import_slot(import_slot)
     finally:
         lock_renewal_stop.set()

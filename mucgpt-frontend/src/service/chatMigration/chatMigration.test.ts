@@ -178,11 +178,11 @@ describe("chat migration", () => {
         vi.useRealTimers();
     });
 
-    it("retries an overloaded import before marking the chat persisted", async () => {
+    it.each([429, 503])("retries a temporarily unavailable import (%s) before marking the chat persisted", async status => {
         vi.useFakeTimers();
         localChats([chat()]);
         vi.mocked(handleApiRequest)
-            .mockRejectedValueOnce(new ApiError("overloaded", 429, undefined, 1))
+            .mockRejectedValueOnce(new ApiError("temporarily unavailable", status, undefined, 1))
             .mockResolvedValueOnce({ status: "imported" });
 
         const migration = migrateLocalChatsToBackend();

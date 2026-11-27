@@ -299,6 +299,7 @@ def detect_ibans(text: str, _options: ScanOptions) -> Iterator[Hit]:
 
 
 _CREDIT_CARD_RE = re.compile(r"(?<![\d-])(?:\d[ -]?){12,18}\d(?![\d-])")
+_CARD_EXPIRY_SUFFIX_RE = re.compile(r"[ -](?:0[1-9]|1[0-2])/(?:\d{4}|\d{2})(?![\w/])")
 
 
 def _luhn(digits: str) -> bool:
@@ -330,9 +331,14 @@ def detect_credit_cards(text: str, _options: ScanOptions) -> Iterator[Hit]:
     for match in _CREDIT_CARD_RE.finditer(text):
         value = match.group(0)
         # Trailing expiry digits can be swallowed by the greedy candidate.
-        # Prefer the full card, then retry only at explicit group boundaries.
+        # Prefer the full card; recover a prefix only before an MM/YY or MM/YYYY
+        # expiry, never from an invalid longer card with arbitrary extra digits.
         ends = [separator.start() for separator in re.finditer(r"[ -]", value)]
         for end in reversed([*ends, len(value)]):
+            if end < len(value) and not _CARD_EXPIRY_SUFFIX_RE.match(
+                text, match.start() + end
+            ):
+                continue
             digits = re.sub(r"\D", "", value[:end])
             if len(digits) < 13:
                 break

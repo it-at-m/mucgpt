@@ -79,6 +79,9 @@ def test_detects_category(text, expected):
         "Karte 4111 1111 1111 1112",  # Luhn fails
         "Karte 4111 1111 1111 1112 12/25",  # expiry must not bypass Luhn
         "Karte 4000 0000 0000 0000 007",  # invalid 19-digit card
+        "Karte 4111 1111 1111 1111 123",  # valid prefix of an invalid card
+        "Karte 4111-1111-1111-1111-123",  # same with hyphen grouping
+        "Karte 4111 1111 1111 1111 13/25",  # invalid expiry month
         "Steuer-ID: 86095742718",  # MOD 11,10 check digit fails
         "SV-Nr. 15 070649 C 104",  # check digit fails
         "geb. Müller",  # birth name, not a date
@@ -167,7 +170,7 @@ def test_email_detector_rejects_numeric_top_level_domains():
         "4000000000000000006",
     ],
 )
-@pytest.mark.parametrize("suffix", ["", " 12/25"])
+@pytest.mark.parametrize("suffix", ["", " 12/25", " 01/2027"])
 def test_card_detection_preserves_card_span_before_expiry(card, suffix):
     text = f"Karte {card}{suffix}"
 

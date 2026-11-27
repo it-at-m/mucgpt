@@ -1,6 +1,6 @@
 [project]
 name = "mucgpt-core-service"
-version = "1.15.0"
+version = "1.16.1"
 description = "a web interface for large language models for the public administration"
 readme = "README.md"
 requires-python = "==3.13.18"
@@ -16,7 +16,7 @@ maintainers = [
 
 dependencies = [
     "fastapi[standard]==0.162.2",
-    "langchain==1.4.9",
+    "langchain[mcp]==1.4.9",
     "langchain-core==1.7.6",
     "langchain_community==0.4.2",
     "langchain-openai==1.7.4",
@@ -30,7 +30,6 @@ dependencies = [
     "truststore==0.10.5",
     "langfuse==4.18.0",
     "httpx==0.28.1",
-    "langchain-mcp-adapters==0.3.2",
     "redis==7.4.1",
     "cloudpickle==3.1.2",
     "python-multipart==0.0.33",
@@ -42,7 +41,6 @@ dependencies = [
     "asyncpg==0.32.0",
     "ag-ui-langgraph[fastapi]==0.0.47",
     "ag-ui-protocol==1.0.0",
-    "mcp==1.30.0",
     "weasyprint==70.0",
     "openpyxl==3.1.5",
     "beautifulsoup4==4.15.0",
@@ -90,13 +88,18 @@ root = ["./app", "."]
 include = ["app", "migrations", "tests"]
 
 [tool.pytest.ini_options]
-addopts = "--strict-markers --strict-config --verbose --tb=short -ra --cov=app --cov-report=term --cov-report=xml --cov-fail-under=89"
+addopts = "--strict-markers --strict-config --verbose --tb=short -ra --cov=app --cov-report=term --cov-report=xml --cov-fail-under=89.1"
 pythonpath = ["app/"]
 testpaths = [
     "tests"]
 markers = [
     "integration: mark a test as a integration test",
     "unit: mark test as a unit test",
+]
+filterwarnings = [
+    # Ubuntu 22.04 lacks HarfBuzz-Subset. WeasyPrint still supports the
+    # available system library; this is an upstream notice about a future requirement.
+    "ignore:HarfBuzz-Subset will be required by future versions of WeasyPrint:DeprecationWarning:weasyprint\\.text\\.ffi",
 ]
 env = [
     "MUCGPT_CORE_LOG_CONFIG=app/logconf.yaml",

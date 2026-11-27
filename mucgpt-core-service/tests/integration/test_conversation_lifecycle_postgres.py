@@ -486,6 +486,9 @@ class ConversationLifecyclePostgresTests(unittest.IsolatedAsyncioTestCase):
                         _ConfiguredLangChainDeepAgentGraph
                     )
                     wrapper.agent = cast("Any", graph)
+                    # This harness intentionally bypasses __init__, so mirror
+                    # the fields that configure execution behavior.
+                    wrapper.checkpointer = saver
                     wrapper.approval_tools = {}
                     wrapper.state_schema = cast("Any", MessagesState)
                     wrapper._prepare_run = cast(

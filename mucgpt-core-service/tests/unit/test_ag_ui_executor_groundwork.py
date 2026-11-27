@@ -11,7 +11,7 @@ from typing import Any
 
 import pytest
 from ag_ui.core.events import EventType
-from langchain_core.messages import AIMessage, AIMessageChunk, HumanMessage
+from langchain_core.messages import AIMessage, AIMessageChunk, HumanMessage, ToolMessage
 from langgraph.types import Command, Interrupt
 
 from agent.agent_executor import MUCGPTAgentExecutor
@@ -165,6 +165,40 @@ async def test_language_reaches_the_graph_config(monkeypatch):
         pass
 
     assert graph.config["configurable"]["language"] == "German"
+
+
+@pytest.mark.asyncio
+async def test_failed_tool_result_carries_structured_failure_metadata(monkeypatch):
+    graph = RecordingGraph(
+        chunks=[
+            (
+                "messages",
+                (
+                    ToolMessage(
+                        content="Tool execution failed: unavailable",
+                        tool_call_id="tool-1",
+                        status="error",
+                    ),
+                    {"langgraph_node": "tools"},
+                ),
+            )
+        ]
+    )
+    runner = _runner(monkeypatch, InterruptedAgent(graph))
+
+    events = [
+        event
+        async for event in runner.run_agui_with_streaming(
+            messages=[InputMessage(role="user", content="hi")],
+            temperature=0.5,
+            model=None,
+            user_info=_user(),
+            conversation_id="conv-1",
+        )
+    ]
+
+    result = next(event for event in events if event.type == EventType.TOOL_CALL_RESULT)
+    assert result.metadata == {"mucgpt": {"toolStatus": "error"}}
 
 
 @pytest.mark.asyncio

@@ -4,6 +4,7 @@ import { DBMessage, StorageService } from "../service/storage";
 import { DBObject } from "../service/storage";
 import { ChatMessage, ChatOptions } from "./chat/Chat";
 import { ChatRequest, ChatResponse, CanvasState, ChatTurn, DataSource, Model } from "../api";
+import type { PreChatDraftCapture } from "../hooks/useCanvasController";
 import { ToolStreamHandler, ToolStatus } from "../utils/ToolStreamHandler";
 
 import language from "react-syntax-highlighter/dist/esm/languages/hljs/1c";
@@ -224,6 +225,21 @@ export interface CanvasWiring {
     onRunStarted: () => void;
     /** RUN_FINISHED/RUN_ERROR: post-run snapshot and unlock */
     onRunFinished: () => void;
+    /** Synchronously at a fresh conversation's first request: captures the
+     * current canvas content for the failed-request draft recovery, before
+     * any await could replace the editor with another chat's content.
+     * Absent for non-persisted requests (previews) and tests. */
+    capturePreChatDraft?: () => PreChatDraftCapture;
+    /** Right before a fresh conversation's id assignment: the captured canvas
+     * content is adopted into it, so the controller must not treat the
+     * assignment as a conversation switch. Absent for non-persisted requests
+     * (previews) and tests. */
+    adoptNewConversation?: (capture: PreChatDraftCapture | undefined) => void;
+    /** A fresh conversation's first request failed and it is discarded:
+     * re-arms the pre-chat canvas draft so the content survives the following
+     * conversation reset. Absent for non-persisted requests (previews) and
+     * tests. */
+    savePreChatDraft?: (capture: PreChatDraftCapture | undefined) => void;
 }
 
 /** A completed turn used as extra context when regenerating a chat title. */
@@ -367,12 +383,24 @@ export const makeApiRequest = async (
             : conversationId
         : undefined;
 
+    let preChatDraftCapture: PreChatDraftCapture | undefined;
+    // Placeholder creation is asynchronous. Preserve the outgoing canvas for
+    // this first turn before it can be replaced by a chat selection.
+    const freshConversationCanvas = newChatLocalId ? (canvasWiring?.getCanvasState() ?? undefined) : undefined;
     if (newChatLocalId) {
+        // Capture the canvas content synchronously: a chat selection during
+        // the await below must not end up in the recovery capture.
+        preChatDraftCapture = canvasWiring?.capturePreChatDraft?.();
         // Create the chat right away with an unnamed placeholder title so it is
         // visible in the sidebar and header while the first answer streams.
         // The generated title replaces the placeholder once the turn completes.
         const placeholderId = await storageService.create([], options, newChatLocalId, i18next.t("components.history.unnamed_chat"), false);
         if (placeholderId) {
+            // The id assignment below adopts the captured canvas content. Only
+            // announced while the pre-chat state survived the await: a
+            // selection during placeholder creation belongs to another
+            // conversation and must not be adopted.
+            if (!activeChatRef.current) canvasWiring?.adoptNewConversation?.(preChatDraftCapture);
             activeChatRef.current = placeholderId;
             dispatch({ type: "SET_ACTIVE_CHAT", payload: placeholderId });
             fetchHistory?.();
@@ -382,6 +410,11 @@ export const makeApiRequest = async (
     /** Fails the request, discarding an orphaned first persisted conversation. */
     const abortRequest = async (error: unknown): Promise<never> => {
         if (isNewPersistedConversation) {
+            // The discarded turn must not take canvas content typed before the
+            // conversation existed with it: re-arm the pre-chat draft from the
+            // still-current editor, so the conversation reset below restores
+            // it as an unpersisted draft.
+            canvasWiring?.savePreChatDraft?.(preChatDraftCapture);
             let serverConversationDeleted = false;
             try {
                 await deleteConversationApi(conversationId);
@@ -444,7 +477,7 @@ export const makeApiRequest = async (
         conversation_id: conversationId,
         persist,
         data_sources: data_sources && data_sources.length > 0 ? data_sources : undefined,
-        canvas: canvasWiring?.getCanvasState() ?? undefined,
+        canvas: isNewPersistedConversation ? freshConversationCanvas : (canvasWiring?.getCanvasState() ?? undefined),
         document_ids: options.document_ids
     };
 

@@ -7,14 +7,12 @@ import { useTranslation } from "react-i18next";
 
 import styles from "./Discovery.module.css";
 import { getCommunityAssistantApi, unsubscribeFromAssistantApi } from "../../api/assistant-client";
-import { Assistant, AssistantResponse, CommunityAssistantSnapshot, ToolBase } from "../../api/models";
+import { Assistant, AssistantResponse, CommunityAssistantSnapshot } from "../../api/models";
 import { AssistantStorageService } from "../../service/assistantstorage";
 import { CommunityAssistantStorageService } from "../../service/communityassistantstorage";
-import { ASSISTANT_STORE, COMMUNITY_ASSISTANT_STORE, CREATIVITY_LOW } from "../../constants";
+import { ASSISTANT_STORE, COMMUNITY_ASSISTANT_STORE } from "../../constants";
 import { useGlobalToastContext } from "../../components/GlobalToastHandler/GlobalToastContext";
 import { DiscoveryCard, DiscoveryCardSkeleton } from "../../components/DiscoveryCard";
-import { FollowUpActionModel } from "../../components/FollowUpAction";
-import { StarterPromptModel } from "../../components/StarterPrompt";
 import { OwnerMetadataLink, getPrimaryOwnerDetails } from "../../components/OwnerMetadataLink/OwnerMetadataLink";
 import { AssistantDetailsSidebar, AssistantCardData } from "../../components/AssistantDetailsSidebar/AssistantDetailsSidebar";
 import { CloseConfirmationDialog } from "../../components/AssistantDialogs/shared/CloseConfirmationDialog";
@@ -29,6 +27,7 @@ import { downloadAssistantExport, mapAssistantToExportData, mapVersionToExportDa
 import { isCompleteCommunityAssistantSnapshot, mapCommunitySnapshotToAssistant } from "../../utils/community-assistant-snapshots";
 import { getAssistantBadges, isAssistantPrivate } from "../../utils/assistantCardDisplay";
 import { ApiError } from "../../api/fetch-utils";
+import { AssistantImportError, hasValidAssistantImportFilename, parseAssistantImport } from "../../utils/assistant-import";
 import { ConfigContext } from "../../context/ConfigContext";
 import { Dropdown } from "../../ui/Dropdown";
 import { Option } from "../../ui/Option";
@@ -42,19 +41,6 @@ import { resetMockScenarios } from "../../mocks/data/browser-scenario-seed";
 
 const communityAssistantStorageService = new CommunityAssistantStorageService(COMMUNITY_ASSISTANT_STORE);
 const assistantStorageService = new AssistantStorageService(ASSISTANT_STORE);
-const asArray = <T,>(value: unknown): T[] => (Array.isArray(value) ? value : []);
-const isToolBase = (value: unknown): value is ToolBase =>
-    typeof value === "object" && value !== null && typeof (value as ToolBase).id === "string" && (value as ToolBase).id !== "";
-const isQuickPrompt = (value: unknown): value is FollowUpActionModel =>
-    typeof value === "object" &&
-    value !== null &&
-    typeof (value as { label?: unknown }).label === "string" &&
-    typeof (value as { prompt?: unknown }).prompt === "string";
-const isExample = (value: unknown): value is StarterPromptModel =>
-    typeof value === "object" &&
-    value !== null &&
-    typeof (value as { text?: unknown }).text === "string" &&
-    typeof (value as { value?: unknown }).value === "string";
 const isAssistantResponse = (data: AssistantResponse | CommunityAssistantSnapshot): data is AssistantResponse =>
     "latest_version" in data && data.latest_version != null && typeof data.latest_version.name === "string";
 
@@ -250,40 +236,23 @@ const Discovery = () => {
             if (!file) return;
 
             try {
+                if (!hasValidAssistantImportFilename(file.name)) {
+                    throw new AssistantImportError("unsupported_filename");
+                }
                 const content = await file.text();
-                const importedData = JSON.parse(content);
-
-                if (
-                    typeof importedData?.title !== "string" ||
-                    typeof importedData.system_message !== "string" ||
-                    !importedData.title ||
-                    !importedData.system_message
-                ) {
-                    throw new Error(t("components.import_assistant.import_invalid_format"));
-                }
-
-                const tools = asArray<unknown>(importedData.tools);
-                if (!tools.every(isToolBase)) {
-                    throw new Error(t("components.import_assistant.import_invalid_format"));
-                }
-
-                const quickPrompts = asArray<unknown>(importedData.quick_prompts);
-                const examples = asArray<unknown>(importedData.examples);
-                if (!quickPrompts.every(isQuickPrompt) || !examples.every(isExample)) {
-                    throw new Error(t("components.import_assistant.import_invalid_format"));
-                }
+                const importedData = parseAssistantImport(file.name, content);
 
                 const draft: CreateAssistantDraftValues = {
                     title: importedData.title,
-                    description: typeof importedData.description === "string" ? importedData.description : "",
-                    systemPrompt: importedData.system_message,
-                    creativity: typeof importedData.creativity === "string" ? importedData.creativity : CREATIVITY_LOW,
-                    defaultModel: typeof importedData.default_model === "string" ? importedData.default_model : undefined,
-                    tools,
-                    followUpActions: quickPrompts,
-                    starterPrompts: examples,
-                    hierarchicalAccess: asArray(importedData.hierarchical_access),
-                    isVisible: importedData.is_visible === true
+                    description: importedData.description,
+                    systemPrompt: importedData.systemMessage,
+                    creativity: importedData.creativity,
+                    defaultModel: importedData.defaultModel,
+                    tools: importedData.tools,
+                    followUpActions: importedData.followUpActions,
+                    starterPrompts: importedData.starterPrompts,
+                    hierarchicalAccess: importedData.hierarchicalAccess,
+                    isVisible: importedData.isVisible
                 };
 
                 if (hasCreateAssistantDraft()) {
@@ -293,7 +262,8 @@ const Discovery = () => {
                 }
             } catch (error) {
                 console.error("Failed to import assistant", error);
-                const errorMessage = error instanceof Error ? error.message : t("components.import_assistant.import_failed");
+                const errorMessage =
+                    error instanceof AssistantImportError ? t(`components.import_assistant.${error.code}`) : t("components.import_assistant.import_failed");
                 showError(t("components.import_assistant.import_error"), errorMessage);
             }
         };

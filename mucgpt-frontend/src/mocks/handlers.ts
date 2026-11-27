@@ -691,17 +691,32 @@ const MOCK_SENSITIVE_CONTENT_PATTERNS: { finding: Omit<SensitiveContentFinding, 
     { finding: { category: "credential_assignment", kind: "secret", confidence: "likely" }, pattern: /\b(?:password|passwort)\s*[:=]\s*\S{6,}/gi }
 ];
 
-const codePointOffset = (text: string, utf16Offset: number) => Array.from(text.slice(0, utf16Offset)).length;
+const codePointOffsets = (text: string) => {
+    const offsets = new Uint32Array(text.length + 1);
+    let utf16Offset = 0;
+    let codePointOffset = 0;
 
-const mockScan = (text: string): SensitiveContentOccurrence[] =>
-    MOCK_SENSITIVE_CONTENT_PATTERNS.flatMap(({ finding, pattern }) =>
+    while (utf16Offset < text.length) {
+        offsets[utf16Offset] = codePointOffset;
+        const codePoint = text.codePointAt(utf16Offset);
+        utf16Offset += codePoint !== undefined && codePoint > 0xffff ? 2 : 1;
+        codePointOffset += 1;
+    }
+    offsets[text.length] = codePointOffset;
+    return offsets;
+};
+
+const mockScan = (text: string): SensitiveContentOccurrence[] => {
+    const offsets = codePointOffsets(text);
+    return MOCK_SENSITIVE_CONTENT_PATTERNS.flatMap(({ finding, pattern }) =>
         Array.from(text.matchAll(pattern)).map(match => ({
             ...finding,
-            start: codePointOffset(text, match.index),
-            end: codePointOffset(text, match.index + match[0].length),
+            start: offsets[match.index],
+            end: offsets[match.index + match[0].length],
             provenance: { guardrail: "sensitive_content", detector: finding.category }
         }))
     );
+};
 
 const mockFindings = (occurrences: SensitiveContentOccurrence[]): SensitiveContentFinding[] =>
     Array.from(

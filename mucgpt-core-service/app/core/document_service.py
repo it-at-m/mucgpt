@@ -122,6 +122,12 @@ def _sensitive_content_guardrail(
         return NOT_SCANNED
     occurrences = data.get("occurrences")
     legacy_findings = data.get("legacy_findings")
+    if (
+        occurrences is None
+        and not legacy_findings
+        and data.get("coverage") != "complete"
+    ):
+        legacy_findings = None
     return SensitiveContentGuardrail(
         occurrences=None
         if occurrences is None

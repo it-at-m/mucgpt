@@ -3,7 +3,7 @@ from __future__ import annotations
 import ssl
 from typing import Any
 
-from ldap3 import NONE, SUBTREE, Connection, Server, Tls
+from ldap3 import SUBTREE, Connection, Server, Tls
 from ldap3.core import exceptions as ldap_exceptions
 
 from config.settings import LDAPSettings
@@ -148,9 +148,6 @@ class LDAPPersonLookupLoader:
             use_ssl=self.settings.use_ssl,
             tls=tls,
             connect_timeout=connect_timeout,
-            # Lookups name every needed attribute, so schema discovery at bind
-            # time only adds an avoidable server request.
-            get_info=NONE,
         )
 
     def _build_tls_context(self) -> Tls | None:

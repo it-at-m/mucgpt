@@ -254,7 +254,20 @@ def test_listing_exposes_sensitive_content_findings_without_values(library_api):
             }
         },
     )
-    unscanned = add_document(engine, owner.user_id, slot=2)
+    incomplete = add_document(
+        engine,
+        owner.user_id,
+        slot=2,
+        guardrails={
+            "sensitive_content": {
+                "legacy_findings": [],
+                "occurrences": None,
+                "confirmed_at": None,
+                "coverage": "incomplete",
+            }
+        },
+    )
+    unscanned = add_document(engine, owner.user_id, slot=3)
 
     entries = {entry["id"]: entry for entry in client.get("/api/v1/documents").json()}
 
@@ -268,6 +281,8 @@ def test_listing_exposes_sensitive_content_findings_without_values(library_api):
     assert entries[clean]["guardrails"] == {
         "sensitive_content": {"findings": [], "occurrences": [], "confirmed_at": None}
     }
+    assert entries[incomplete]["guardrails"]["sensitive_content"]["findings"] is None
+    assert entries[incomplete]["guardrails"]["sensitive_content"]["occurrences"] is None
     assert entries[unscanned]["guardrails"]["sensitive_content"]["findings"] is None
     assert entries[unscanned]["guardrails"]["sensitive_content"]["occurrences"] is None
 

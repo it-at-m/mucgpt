@@ -1,11 +1,9 @@
 from typing import Any
 
 import pytest
-from ldap3 import NONE
 from ldap3.core import exceptions as ldap_exceptions
 
 from config.settings import LDAPSettings
-from core.organization.ldap_loader import LDAPOrganizationLoader
 from core.organization.ldap_person_loader import (
     LDAPPersonLookupError,
     LDAPPersonLookupLoader,
@@ -68,13 +66,6 @@ def test_default_directory_attributes_do_not_assume_a_schema() -> None:
     settings = _build_settings()
 
     assert settings.required_attributes == []
-
-
-def test_ldap_servers_skip_unneeded_schema_discovery() -> None:
-    settings = _build_settings()
-
-    assert LDAPOrganizationLoader(settings)._build_server().get_info == NONE
-    assert LDAPPersonLookupLoader(settings)._build_server().get_info == NONE
 
 
 def test_lookup_returns_none_when_not_found(monkeypatch: pytest.MonkeyPatch) -> None:

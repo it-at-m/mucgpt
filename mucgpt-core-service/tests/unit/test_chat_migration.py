@@ -1,5 +1,6 @@
 """Tests for the temporary browser chat import (app/chat_migration)."""
 
+import asyncio
 from contextlib import asynccontextmanager
 from datetime import UTC, datetime
 from typing import cast
@@ -15,6 +16,7 @@ from sqlalchemy import Table, create_engine, select
 from sqlalchemy.orm import Session
 
 import init_app
+from chat_migration import service as chat_migration_service
 from chat_migration.models import ConversationImportRequest
 from chat_migration.service import ImportConflictError, import_chat
 from core.auth_models import AuthenticationResult
@@ -213,6 +215,63 @@ async def test_failed_checkpoint_keeps_preexisting_row(monkeypatch, saver, chats
         await import_chat(_request(), "owner")
 
     assert _row(chats).conversation_id == "chat-1"
+
+
+@pytest.mark.asyncio
+async def test_cancelled_incomplete_import_drops_claimed_row(monkeypatch, saver, chats):
+    _ownership(monkeypatch, owned=False)
+    _add_row(chats)
+    checkpoint_started = asyncio.Event()
+
+    class StalledImportGraph:
+        async def aupdate_state(self, *_args, **_kwargs):
+            checkpoint_started.set()
+            await asyncio.Event().wait()
+
+    monkeypatch.setattr(
+        chat_migration_service, "_get_import_graph", lambda: StalledImportGraph()
+    )
+    task = asyncio.create_task(import_chat(_request(), "owner"))
+    await checkpoint_started.wait()
+    # The import reaches the checkpoint only after the metadata transaction commits.
+    assert _row(chats).chat_title == "Kita Gebühren"
+
+    task.cancel()
+
+    with pytest.raises(asyncio.CancelledError):
+        await task
+    with Session(chats) as session:
+        assert session.execute(select(Chat)).first() is None
+    assert (
+        await saver.aget_tuple(RunnableConfig(configurable={"thread_id": "chat-1"}))
+        is None
+    )
+
+
+@pytest.mark.asyncio
+async def test_cancelled_import_keeps_claimed_row_with_completed_checkpoint(
+    monkeypatch, saver, chats
+):
+    _ownership(monkeypatch, owned=False)
+    _add_row(chats)
+    import_graph = chat_migration_service._get_import_graph()
+
+    class CompletedThenCancelledImportGraph:
+        async def aupdate_state(self, *args, **kwargs):
+            await import_graph.aupdate_state(*args, **kwargs)
+            raise asyncio.CancelledError()
+
+    monkeypatch.setattr(
+        chat_migration_service,
+        "_get_import_graph",
+        lambda: CompletedThenCancelledImportGraph(),
+    )
+
+    with pytest.raises(asyncio.CancelledError):
+        await import_chat(_request(), "owner")
+
+    assert _row(chats).conversation_id == "chat-1"
+    assert len(await _stored_messages(saver)) == 4
 
 
 @pytest.mark.asyncio

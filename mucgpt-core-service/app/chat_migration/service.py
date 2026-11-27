@@ -1,5 +1,6 @@
 """Writes an imported browser chat into the checkpoint and the chats table."""
 
+import asyncio
 from datetime import UTC, datetime
 from typing import Any, Literal
 
@@ -83,7 +84,9 @@ async def import_chat(
                 .where(*live_row)
                 .values(
                     chat_title=request.title,
-                    updated_at=_activity_time(request.last_edited), # ensure chat ordering is preserved if possible!
+                    updated_at=_activity_time(
+                        request.last_edited
+                    ),  # ensure chat ordering is preserved if possible!
                     assistant_id=func.coalesce(Chat.assistant_id, request.assistant_id),
                 )
             )
@@ -93,6 +96,14 @@ async def import_chat(
             {"messages": messages},
             as_node="import",
         )
+    except asyncio.CancelledError:
+        if claimed and not await PersistanceHelpers.has_checkpoint(conversation_id):
+            # Cancellation can arrive after the metadata commit but before the
+            # checkpoint is complete. Remove that incomplete ownership claim so
+            # the browser can retry; a completed checkpoint remains authoritative.
+            async with PersistanceHelpers._get_session_factory().begin() as session:
+                await session.execute(delete(Chat).where(*live_row))
+        raise
     except Exception:
         if claimed:
             # drop the row we just claimed, otherwise the history listing marks the

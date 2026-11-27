@@ -31,7 +31,7 @@ describe("AnswerError details dialog", () => {
         expect(screen.queryByText(/secret/)).not.toBeInTheDocument();
 
         await user.click(screen.getByRole("button", { name: "common.errors.provider.details" }));
-        const dialog = screen.getByRole("dialog");
+        const dialog = await screen.findByRole("dialog");
         expect(within(dialog).getByText(/secret/)).toBeInTheDocument();
         expect(within(dialog).getByText(/HTTP status: 500/)).toBeInTheDocument();
     });

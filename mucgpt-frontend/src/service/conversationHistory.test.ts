@@ -27,7 +27,7 @@ describe("conversation history", () => {
         vi.spyOn(StorageService.prototype, "connectToDB").mockResolvedValue({ put, close } as never);
         vi.spyOn(StorageService.prototype, "get").mockResolvedValue(undefined);
         vi.spyOn(StorageService.prototype, "getAll").mockResolvedValue([]);
-        vi.mocked(migrateLocalChatsToBackend).mockResolvedValue(undefined);
+        vi.mocked(migrateLocalChatsToBackend).mockResolvedValue({ migratedIds: new Set() });
         vi.mocked(listConversationsApi).mockResolvedValue([
             {
                 conversation_id: "thread",
@@ -44,6 +44,7 @@ describe("conversation history", () => {
         const order: string[] = [];
         vi.mocked(migrateLocalChatsToBackend).mockImplementation(async () => {
             order.push("migrate");
+            return { migratedIds: new Set() };
         });
         vi.mocked(listConversationsApi).mockImplementation(async () => {
             order.push("list");
@@ -63,6 +64,19 @@ describe("conversation history", () => {
 
         expect(listConversationsApi).toHaveBeenCalledTimes(1);
         expect(put).toHaveBeenCalledWith(CHAT_STORE.objectStore_name, expect.objectContaining({ id: "thread" }));
+    });
+
+    it("keeps chats migrated in this sync when the following server list is stale", async () => {
+        const deleteChat = vi.spyOn(StorageService.prototype, "delete").mockResolvedValue(true);
+        vi.mocked(migrateLocalChatsToBackend).mockResolvedValue({ migratedIds: new Set(["migrated", "CHAT_assistant-id_migrated"]) });
+        vi.mocked(StorageService.prototype.getAll)
+            .mockResolvedValueOnce([{ id: "migrated", backendPersisted: true, config: {}, messages: [] }])
+            .mockResolvedValueOnce([{ id: "CHAT_assistant-id_migrated", backendPersisted: true, config: {}, messages: [] }]);
+        vi.mocked(listConversationsApi).mockResolvedValue([]);
+
+        await syncConversationHistory();
+
+        expect(deleteChat).not.toHaveBeenCalled();
     });
 
     it("restores ordinary and assistant metadata in an empty browser without fetching transcripts", async () => {

@@ -8,6 +8,7 @@ reachable or when MUCGPT_TEST_VALKEY=off.
 
 import asyncio
 from collections.abc import Awaitable
+from contextlib import suppress
 from dataclasses import dataclass
 from typing import Any, cast
 from unittest.mock import AsyncMock
@@ -20,7 +21,14 @@ from langchain_core.tools import StructuredTool
 from tests import container_runtime
 
 from agent.tools.mcp import McpBearerAuthProvider, McpLoader
-from config.settings import MCPConfig, MCPSourceConfig, MCPTransport, RedisConfig
+from chat_migration import router as chat_migration_router
+from config.settings import (
+    MCPConfig,
+    MCPSourceConfig,
+    MCPTransport,
+    RedisConfig,
+    Settings,
+)
 from core.auth_models import AuthenticationResult
 from core.cache import RedisCache
 
@@ -169,6 +177,67 @@ async def test_init_redis_with_real_valkey(valkey_container, monkeypatch):
     assert await cast(Awaitable[bool], client.ping()) is True
 
     RedisCache._redis_client = None
+
+
+@pytest.mark.asyncio
+async def test_chat_migration_slots_limit_concurrent_imports(
+    valkey_client, monkeypatch
+):
+    """Real Valkey locks cap imports globally and admit a caller after release."""
+    monkeypatch.setattr(
+        chat_migration_router,
+        "get_settings",
+        lambda: Settings(
+            chat_migration_max_concurrent_imports=2,
+            chat_migration_slot_ttl_seconds=60,
+        ),
+    )
+
+    slots = await asyncio.gather(
+        *(chat_migration_router._acquire_import_slot() for _ in range(3))
+    )
+    acquired = [slot for slot in slots if slot is not None]
+    assert len(acquired) == 2
+    assert slots.count(None) == 1
+
+    await chat_migration_router._release_import_slot(acquired.pop())
+    replacement = await chat_migration_router._acquire_import_slot()
+    assert replacement is not None
+    acquired.append(replacement)
+
+    await asyncio.gather(
+        *(chat_migration_router._release_import_slot(slot) for slot in acquired)
+    )
+
+
+@pytest.mark.asyncio
+async def test_chat_migration_slot_renewal_keeps_capacity_claimed(
+    valkey_client, monkeypatch
+):
+    """A slow import continues to occupy its real Valkey capacity slot."""
+    monkeypatch.setattr(
+        chat_migration_router,
+        "get_settings",
+        lambda: Settings(
+            chat_migration_max_concurrent_imports=1,
+            chat_migration_slot_ttl_seconds=1,
+        ),
+    )
+    slot = await chat_migration_router._acquire_import_slot()
+    assert slot is not None
+    stop = asyncio.Event()
+    renewal = asyncio.create_task(
+        chat_migration_router._renew_import_slot(slot, 1, stop)
+    )
+    try:
+        await asyncio.sleep(1.1)
+        assert await chat_migration_router._acquire_import_slot() is None
+    finally:
+        stop.set()
+        renewal.cancel()
+        with suppress(asyncio.CancelledError):
+            await renewal
+        await chat_migration_router._release_import_slot(slot)
 
 
 @pytest.mark.asyncio

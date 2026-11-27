@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { validate as isUuid } from "uuid";
+import { deleteConversationApi } from "../../api/conversations-client";
 import { ApiError, handleApiRequest } from "../../api/fetch-utils";
 import type { ChatResponse } from "../../api/models";
 import { ASSISTANT_STORE, CHAT_STORE } from "../../constants";
@@ -18,6 +19,8 @@ const OTHER_ID = "7c1d9e3a-4b2f-4d6e-8f10-2a3b4c5d6e7f";
 const ASSISTANT_ID = "a8e4c2d1-5f6b-4a7c-9d8e-0f1a2b3c4d5e";
 const LAST_EDITED = Date.UTC(2025, 2, 1, 12, 0);
 
+vi.mock("../../api/conversations-client", () => ({ deleteConversationApi: vi.fn() }));
+
 type Chat = DBObject<ChatResponse, unknown>;
 
 function chat(overrides: Partial<Chat> = {}): Chat {
@@ -35,8 +38,9 @@ function chat(overrides: Partial<Chat> = {}): Chat {
 describe("chat migration", () => {
     const put = vi.fn();
     const del = vi.fn();
+    const get = vi.fn();
     const close = vi.fn();
-    const transaction = vi.fn(() => ({ store: { put, delete: del }, done: Promise.resolve() }));
+    const transaction = vi.fn(() => ({ store: { get, put, delete: del }, done: Promise.resolve() }));
 
     /** Local chats per store: [chat store, assistant store]. */
     function localChats(chats: Chat[], assistantChats: Chat[] = []) {
@@ -55,8 +59,10 @@ describe("chat migration", () => {
     beforeEach(() => {
         vi.restoreAllMocks();
         vi.clearAllMocks();
+        get.mockResolvedValue(chat());
         vi.stubGlobal("fetch", fetchMock);
         vi.spyOn(StorageService.prototype, "connectToDB").mockResolvedValue({ transaction, close } as never);
+        vi.mocked(deleteConversationApi).mockResolvedValue(undefined);
         vi.mocked(handleApiRequest).mockImplementation(async request => {
             await request();
             return { status: "imported" };
@@ -77,6 +83,7 @@ describe("chat migration", () => {
                 turns: [{ user: "q1", assistant: "a1" }]
             }
         ]);
+        expect(fetchMock.mock.calls[0][1]).toMatchObject({ cache: "no-store" });
         expect(transaction).toHaveBeenCalledWith(CHAT_STORE.objectStore_name, "readwrite");
         expect(put).toHaveBeenCalledWith({ ...chat(), backendPersisted: true });
         expect(del).not.toHaveBeenCalled();
@@ -152,6 +159,126 @@ describe("chat migration", () => {
         await migrateLocalChatsToBackend();
 
         expect(handleApiRequest).toHaveBeenCalledTimes(1);
+        expect(put).not.toHaveBeenCalled();
+    });
+
+    it("retries a busy import before marking the chat persisted", async () => {
+        vi.useFakeTimers();
+        localChats([chat()]);
+        vi.mocked(handleApiRequest)
+            .mockRejectedValueOnce(new ApiError("busy", 423, undefined, 1))
+            .mockResolvedValueOnce({ status: "imported" });
+
+        const migration = migrateLocalChatsToBackend();
+        await vi.advanceTimersByTimeAsync(1_000);
+        await migration;
+
+        expect(handleApiRequest).toHaveBeenCalledTimes(2);
+        expect(put).toHaveBeenCalledWith({ ...chat(), backendPersisted: true });
+        vi.useRealTimers();
+    });
+
+    it.each([429, 503])("retries a temporarily unavailable import (%s) before marking the chat persisted", async status => {
+        vi.useFakeTimers();
+        localChats([chat()]);
+        vi.mocked(handleApiRequest)
+            .mockRejectedValueOnce(new ApiError("temporarily unavailable", status, undefined, 1))
+            .mockResolvedValueOnce({ status: "imported" });
+
+        const migration = migrateLocalChatsToBackend();
+        await vi.advanceTimersByTimeAsync(1_000);
+        await migration;
+
+        expect(handleApiRequest).toHaveBeenCalledTimes(2);
+        expect(put).toHaveBeenCalledWith({ ...chat(), backendPersisted: true });
+        vi.useRealTimers();
+    });
+
+    it("preserves a turn appended while a busy import waits to retry", async () => {
+        vi.useFakeTimers();
+        const initialChat = chat();
+        const appendedTurn = { user: "q2", response: { answer: "a2" } };
+        localChats([initialChat]);
+        get.mockResolvedValue({ ...initialChat, messages: [...initialChat.messages, appendedTurn] });
+        vi.mocked(handleApiRequest)
+            .mockRejectedValueOnce(new ApiError("busy", 423, undefined, 1))
+            .mockResolvedValueOnce({ status: "skipped" });
+
+        const migration = migrateLocalChatsToBackend();
+        await vi.advanceTimersByTimeAsync(1_000);
+        await migration;
+
+        expect(put).toHaveBeenCalledWith({
+            ...initialChat,
+            messages: [...initialChat.messages, appendedTurn],
+            backendPersisted: true
+        });
+        vi.useRealTimers();
+    });
+
+    it("does not bring back a chat deleted while its import waited", async () => {
+        vi.useFakeTimers();
+        localChats([chat()]);
+        get.mockResolvedValue(undefined);
+        vi.mocked(handleApiRequest)
+            .mockRejectedValueOnce(new ApiError("overloaded", 429, undefined, 1))
+            .mockResolvedValueOnce({ status: "imported" });
+
+        const migration = migrateLocalChatsToBackend();
+        await vi.advanceTimersByTimeAsync(1_000);
+        const { migratedIds } = await migration;
+
+        expect(put).not.toHaveBeenCalled();
+        expect(migratedIds.size).toBe(0);
+        expect(deleteConversationApi).toHaveBeenCalledWith(CHAT_ID);
+        vi.useRealTimers();
+    });
+
+    it("skips a chat that stays busy and migrates the next one", async () => {
+        vi.useFakeTimers();
+        localChats([chat(), chat({ id: OTHER_ID })]);
+        get.mockResolvedValue(chat({ id: OTHER_ID }));
+        const busy = new ApiError("busy", 423, undefined, 1);
+        vi.mocked(handleApiRequest)
+            .mockRejectedValueOnce(busy)
+            .mockRejectedValueOnce(busy)
+            .mockRejectedValueOnce(busy)
+            .mockRejectedValueOnce(busy)
+            .mockResolvedValueOnce({ status: "imported" });
+
+        const migration = migrateLocalChatsToBackend();
+        await vi.advanceTimersByTimeAsync(3_000);
+        const { migratedIds } = await migration;
+
+        expect(handleApiRequest).toHaveBeenCalledTimes(5);
+        expect(put).toHaveBeenCalledOnce();
+        expect([...migratedIds]).toEqual([OTHER_ID]);
+        vi.useRealTimers();
+    });
+
+    it("caps a huge Retry-After and stops retrying once the budget is spent", async () => {
+        vi.useFakeTimers();
+        vi.spyOn(console, "warn").mockImplementation(() => {});
+        localChats([chat()]);
+        vi.mocked(handleApiRequest).mockRejectedValue(new ApiError("overloaded", 429, undefined, 3_600));
+
+        const migration = migrateLocalChatsToBackend();
+        // capped at 10s per retry, the 15s budget allows only one
+        await vi.advanceTimersByTimeAsync(10_000);
+        await migration;
+
+        expect(handleApiRequest).toHaveBeenCalledTimes(2);
+        expect(put).not.toHaveBeenCalled();
+        vi.useRealTimers();
+    });
+
+    it("keeps an unavailable conversation local without retrying", async () => {
+        localChats([chat()]);
+        vi.mocked(handleApiRequest).mockRejectedValueOnce(new ApiError("unavailable", 409));
+
+        await migrateLocalChatsToBackend();
+
+        expect(handleApiRequest).toHaveBeenCalledOnce();
         expect(put).not.toHaveBeenCalled();
     });
 

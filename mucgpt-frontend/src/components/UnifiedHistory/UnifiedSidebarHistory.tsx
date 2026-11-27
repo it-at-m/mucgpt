@@ -220,7 +220,9 @@ export const UnifiedSidebarHistory = ({ requestClose }: UnifiedSidebarHistoryPro
                         {t("components.history.all_chats")}
                     </Tab>
                     <Tab value="assistant" icon={<Bot20Regular />}>
-                        {t("components.history.current_assistant")}
+                        {pageContext?.kind === "assistant" && pageContext.assistantTitle?.trim()
+                            ? pageContext.assistantTitle
+                            : t("components.history.current_assistant")}
                     </Tab>
                 </TabList>
             )}

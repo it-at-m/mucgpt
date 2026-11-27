@@ -61,6 +61,20 @@ async def test_document_http_lifecycle_survives_restart_and_deletion(
             "guardrails": {
                 "sensitive_content": {
                     "findings": detail["findings"],
+                    "occurrences": [
+                        {
+                            "category": "email",
+                            "kind": "pii",
+                            "confidence": "certain",
+                            "start": extracted_text.index("contact@example.org"),
+                            "end": extracted_text.index("contact@example.org")
+                            + len("contact@example.org"),
+                            "provenance": {
+                                "guardrail": "sensitive_content",
+                                "detector": "email",
+                            },
+                        }
+                    ],
                     "confirmed_at": metadata["guardrails"]["sensitive_content"][
                         "confirmed_at"
                     ],

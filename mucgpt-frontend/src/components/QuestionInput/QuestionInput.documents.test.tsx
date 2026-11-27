@@ -34,7 +34,7 @@ const libraryEntry = (overrides: Partial<DocumentLibraryEntry> = {}): DocumentLi
     preview_kind: "initial_excerpt",
     path: "/documents/library-1.txt",
     created_at: "2026-11-02",
-    guardrails: { sensitive_content: { findings: [], confirmed_at: null } },
+    guardrails: { sensitive_content: { findings: [], occurrences: [], confirmed_at: null } },
     status: "ready",
     ...overrides
 });
@@ -84,6 +84,7 @@ const flaggedUpload = (): DocumentMetadata =>
         guardrails: {
             sensitive_content: {
                 findings: [{ category: "iban", kind: "pii", confidence: "certain", count: 2 }],
+                occurrences: [],
                 confirmed_at: null
             }
         }

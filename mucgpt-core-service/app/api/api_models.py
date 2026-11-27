@@ -13,14 +13,24 @@ from pydantic import (
 
 from api.exception import ProviderErrorPayload
 from config.settings import ReasoningEffort, get_settings
-from guardrails.sensitive_content.models import SensitiveContentFinding
+from guardrails.sensitive_content.models import (
+    SensitiveContentFinding,
+    SensitiveContentOccurrence,
+)
 
 
 class SensitiveContentGuardrailInfo(BaseModel):
-    """Personal-data/secret check result; categories and counts, never values."""
+    """Personal-data/secret scan result; never includes matched values."""
 
     findings: list[SensitiveContentFinding] | None = Field(
         description="Detected categories; null when the text was not scanned."
+    )
+    occurrences: list[SensitiveContentOccurrence] | None = Field(
+        description=(
+            "Individual value-free matches; null when the text was not scanned or "
+            "historic offsets are unavailable. Start and end are end-exclusive Unicode "
+            "code-point offsets into the exact extracted text stored by the service."
+        )
     )
     confirmed_at: datetime | None = None
 

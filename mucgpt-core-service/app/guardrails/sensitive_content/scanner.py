@@ -1,4 +1,3 @@
-from collections import Counter
 from collections.abc import Iterable, Sequence
 
 from guardrails.sensitive_content.detectors import (
@@ -8,14 +7,27 @@ from guardrails.sensitive_content.detectors import (
 )
 from guardrails.sensitive_content.models import (
     SensitiveContentCategory,
-    SensitiveContentConfidence,
-    SensitiveContentFinding,
-    SensitiveContentKind,
+    SensitiveContentOccurrence,
+    SensitiveContentProvenance,
     SensitiveContentReport,
 )
 
-_KIND_ORDER: dict[SensitiveContentKind, int] = {"secret": 0, "pii": 1}
-_CONFIDENCE_ORDER: dict[SensitiveContentConfidence, int] = {"certain": 0, "likely": 1}
+_DETECTOR_IDS = {
+    "detect_private_keys": "private_key",
+    "detect_jwts": "jwt",
+    "detect_connection_strings": "connection_string",
+    "detect_access_tokens": "access_token",
+    "detect_credential_assignments": "credential_assignment",
+    "detect_high_entropy_secrets": "high_entropy_secret",
+    "detect_id_documents": "id_document_number",
+    "detect_social_security_numbers": "social_security_number",
+    "detect_ibans": "iban",
+    "detect_credit_cards": "credit_card",
+    "detect_tax_ids": "tax_id",
+    "detect_dates_of_birth": "date_of_birth",
+    "detect_emails": "email",
+    "detect_phone_numbers": "phone",
+}
 
 
 def scan_text(
@@ -27,8 +39,8 @@ def scan_text(
 ) -> SensitiveContentReport:
     """Scan text for personal data and secrets; CPU-bound, run it off the event loop.
 
-    The report holds categories and counts only, never matched values, so it
-    is safe to persist, log and return to the client.
+    The report holds offsets and detector provenance only, never matched
+    values, so it is safe to persist, log and return to the client.
     """
     options = ScanOptions(
         ignored_email_domains=frozenset(
@@ -37,31 +49,44 @@ def scan_text(
     )
     disabled = frozenset(disabled_categories)
     claimed = bytearray(len(text))
-    counts: Counter[
-        tuple[
-            SensitiveContentCategory, SensitiveContentKind, SensitiveContentConfidence
-        ]
-    ] = Counter()
+    occurrences: list[SensitiveContentOccurrence] = []
     for detector in detectors:
-        for hit in detector(text, options):
+        detector_name = getattr(detector, "__name__", type(detector).__name__)
+        detector_id = _DETECTOR_IDS.get(
+            detector_name, detector_name.removeprefix("detect_")
+        )
+        for hit in sorted(
+            detector(text, options),
+            key=lambda item: (item.start, item.end, item.category, item.confidence),
+        ):
             # Disabled categories still claim their span so that, e.g., an
             # ignored IBAN is not reported again as a card or phone number.
             if claimed.find(b"\x01", hit.start, hit.end) >= 0:
                 continue
             claimed[hit.start : hit.end] = b"\x01" * (hit.end - hit.start)
             if hit.category not in disabled:
-                counts[(hit.category, hit.kind, hit.confidence)] += 1
-    findings = sorted(
-        (
-            SensitiveContentFinding(
-                category=category, kind=kind, confidence=confidence, count=count
+                occurrences.append(
+                    SensitiveContentOccurrence(
+                        category=hit.category,
+                        kind=hit.kind,
+                        confidence=hit.confidence,
+                        start=hit.start,
+                        end=hit.end,
+                        provenance=SensitiveContentProvenance(detector=detector_id),
+                    )
+                )
+    return SensitiveContentReport(
+        occurrences=tuple(
+            sorted(
+                occurrences,
+                key=lambda item: (
+                    item.start,
+                    item.end,
+                    item.provenance.detector,
+                    item.category,
+                    item.kind,
+                    item.confidence,
+                ),
             )
-            for (category, kind, confidence), count in counts.items()
-        ),
-        key=lambda f: (
-            _KIND_ORDER[f.kind],
-            _CONFIDENCE_ORDER[f.confidence],
-            f.category,
-        ),
+        )
     )
-    return SensitiveContentReport(findings=tuple(findings))

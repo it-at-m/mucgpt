@@ -6,8 +6,14 @@ can reuse it. Reports never contain the matched values.
 
 from guardrails.sensitive_content.models import (
     SensitiveContentFinding,
+    SensitiveContentOccurrence,
     SensitiveContentReport,
 )
 from guardrails.sensitive_content.scanner import scan_text
 
-__all__ = ["SensitiveContentFinding", "SensitiveContentReport", "scan_text"]
+__all__ = [
+    "SensitiveContentFinding",
+    "SensitiveContentOccurrence",
+    "SensitiveContentReport",
+    "scan_text",
+]

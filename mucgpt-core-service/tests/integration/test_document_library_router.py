@@ -99,7 +99,7 @@ def add_document(
     status="ready",
     slot=0,
     document_id=None,
-    sensitive_content_findings=None,
+    guardrails=None,
 ):
     document_id = document_id or str(uuid4())
     with Session(engine) as session:
@@ -117,7 +117,7 @@ def add_document(
                 storage_key=get_document_storage_key(document_id),
                 status=status,
                 created_at=datetime(2026, 1, 1, tzinfo=UTC),
-                sensitive_content_findings=sensitive_content_findings,
+                guardrails=guardrails,
             )
         )
         session.commit()
@@ -230,20 +230,46 @@ IBAN_FINDING = {"category": "iban", "kind": "pii", "confidence": "certain", "cou
 def test_listing_exposes_sensitive_content_findings_without_values(library_api):
     client, _, _, engine, _, owner, _ = library_api
     flagged = add_document(
-        engine, owner.user_id, slot=0, sensitive_content_findings=[IBAN_FINDING]
+        engine,
+        owner.user_id,
+        slot=0,
+        guardrails={
+            "sensitive_content": {
+                "legacy_findings": [IBAN_FINDING],
+                "occurrences": None,
+                "confirmed_at": None,
+                "coverage": "complete",
+            }
+        },
     )
-    clean = add_document(engine, owner.user_id, slot=1, sensitive_content_findings=[])
+    clean = add_document(
+        engine,
+        owner.user_id,
+        slot=1,
+        guardrails={
+            "sensitive_content": {
+                "occurrences": [],
+                "confirmed_at": None,
+                "coverage": "complete",
+            }
+        },
+    )
     unscanned = add_document(engine, owner.user_id, slot=2)
 
     entries = {entry["id"]: entry for entry in client.get("/api/v1/documents").json()}
 
     assert entries[flagged]["guardrails"] == {
-        "sensitive_content": {"findings": [IBAN_FINDING], "confirmed_at": None}
+        "sensitive_content": {
+            "findings": [IBAN_FINDING],
+            "occurrences": None,
+            "confirmed_at": None,
+        }
     }
     assert entries[clean]["guardrails"] == {
-        "sensitive_content": {"findings": [], "confirmed_at": None}
+        "sensitive_content": {"findings": [], "occurrences": [], "confirmed_at": None}
     }
     assert entries[unscanned]["guardrails"]["sensitive_content"]["findings"] is None
+    assert entries[unscanned]["guardrails"]["sensitive_content"]["occurrences"] is None
 
 
 @pytest.mark.parametrize(

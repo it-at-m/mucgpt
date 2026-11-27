@@ -1,7 +1,12 @@
 import pytest
 
 from sensitivity import scan_text
-from sensitivity.detectors import ScanOptions, detect_emails
+from sensitivity.detectors import (
+    ScanOptions,
+    detect_credit_cards,
+    detect_emails,
+    detect_phone_numbers,
+)
 from sensitivity.models import Hit
 
 
@@ -72,6 +77,8 @@ def test_detects_category(text, expected):
         "Az. 2024/1234-5 vom 01.02.2024",
         "DE89 3704 0044 0532 0130 01",  # IBAN checksum fails
         "Karte 4111 1111 1111 1112",  # Luhn fails
+        "Karte 4111 1111 1111 1112 12/25",  # expiry must not bypass Luhn
+        "Karte 4000 0000 0000 0000 007",  # invalid 19-digit card
         "Steuer-ID: 86095742718",  # MOD 11,10 check digit fails
         "SV-Nr. 15 070649 C 104",  # check digit fails
         "geb. Müller",  # birth name, not a date
@@ -148,3 +155,50 @@ def test_email_detector_rejects_numeric_top_level_domains():
     hits = list(detect_emails("user@10.0.0.1", ScanOptions()))
 
     assert hits == []
+
+
+@pytest.mark.parametrize(
+    "card",
+    [
+        "4111 1111 1111 1111",
+        "4111-1111-1111-1111",
+        "4111111111111111",
+        "4000 0000 0000 0000 006",
+        "4000000000000000006",
+    ],
+)
+@pytest.mark.parametrize("suffix", ["", " 12/25"])
+def test_card_detection_preserves_card_span_before_expiry(card, suffix):
+    text = f"Karte {card}{suffix}"
+
+    hits = list(detect_credit_cards(text, ScanOptions()))
+
+    assert [text[hit.start : hit.end] for hit in hits] == [card]
+    assert summary(text) == {("credit_card", "likely", 1)}
+
+
+@pytest.mark.parametrize(
+    ("first", "second", "separator"),
+    [
+        ("0891234567", "0897654321", " / "),
+        ("0891234567", "+49 170 1234567", " / "),
+        ("0891234567", "(089) 233-12345", "  /  "),
+    ],
+)
+def test_alternative_phone_numbers_are_separate_findings(first, second, separator):
+    text = f"Tel. {first}{separator}{second}"
+
+    hits = list(detect_phone_numbers(text, ScanOptions()))
+
+    assert [text[hit.start : hit.end] for hit in hits] == [first, second]
+    assert summary(text) == {("phone", "likely", 2)}
+
+
+@pytest.mark.parametrize("phone", ["089/23312345", "089 / 23312345"])
+def test_single_slash_formatted_phone_number_is_preserved(phone):
+    text = f"Tel. {phone}"
+
+    hits = list(detect_phone_numbers(text, ScanOptions()))
+
+    assert [text[hit.start : hit.end] for hit in hits] == [phone]
+    assert summary(text) == {("phone", "likely", 1)}

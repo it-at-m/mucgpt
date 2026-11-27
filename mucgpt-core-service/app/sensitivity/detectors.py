@@ -328,9 +328,19 @@ def _has_card_prefix(digits: str) -> bool:
 
 def detect_credit_cards(text: str, _options: ScanOptions) -> Iterator[Hit]:
     for match in _CREDIT_CARD_RE.finditer(text):
-        digits = re.sub(r"\D", "", match.group(0))
-        if _has_card_prefix(digits) and _luhn(digits):
-            yield _hit("credit_card", "pii", "likely", match)
+        value = match.group(0)
+        # Trailing expiry digits can be swallowed by the greedy candidate.
+        # Prefer the full card, then retry only at explicit group boundaries.
+        ends = [separator.start() for separator in re.finditer(r"[ -]", value)]
+        for end in reversed([*ends, len(value)]):
+            digits = re.sub(r"\D", "", value[:end])
+            if len(digits) < 13:
+                break
+            if _has_card_prefix(digits) and _luhn(digits):
+                yield Hit(
+                    "credit_card", "pii", "likely", match.start(), match.start() + end
+                )
+                break
 
 
 _TAX_ID_RE = re.compile(r"(?<![\d/-])([1-9]\d) ?(\d{3}) ?(\d{3}) ?(\d{3})(?![\d/-])")
@@ -404,7 +414,10 @@ def detect_emails(text: str, options: ScanOptions) -> Iterator[Hit]:
 
 
 _PHONE_RE = re.compile(
-    r"(?<![\w+/.,-])(?:\+\d|\(0|0)[\d ()/-]{5,22}\d(?![\w/-])(?![.,]\d)"
+    # A spaced slash followed by a new phone prefix separates alternatives;
+    # slashes within a single number ("089 / 23312345") remain supported.
+    r"(?<![\w+/.,-])(?:\+\d|\(0|0)"
+    r"(?:(?! +/ +(?:\+\d|\(0|0))[\d ()/-]){5,22}\d(?![\w/-])(?![.,]\d)"
 )
 
 

@@ -1,7 +1,7 @@
 from collections.abc import AsyncGenerator, Iterator
 from contextlib import asynccontextmanager
 from typing import Any
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import anyio
 import cloudpickle
@@ -11,7 +11,12 @@ from langchain_core.tools import StructuredTool
 from mcp.types import Tool as MCPTool
 from pydantic import ValidationError
 
-from agent.tools.mcp import McpBearerAuthProvider, McpLoader, _decline_elicitation
+from agent.tools.mcp import (
+    CachedMCPTool,
+    McpBearerAuthProvider,
+    McpLoader,
+    _decline_elicitation,
+)
 from config.settings import MCPConfig, MCPSourceConfig, MCPTransport
 from core.auth_models import AuthenticationResult
 
@@ -59,8 +64,19 @@ def make_tool(
     )
 
 
+def make_cached_tool(name: str = "search_docs") -> CachedMCPTool:
+    return CachedMCPTool(
+        tool=MCPTool(name=name, input_schema={"type": "object"}),
+        server_info=None,
+    )
+
+
 class FakeClient:
+    def __init__(self) -> None:
+        self.enter_calls = 0
+
     async def __aenter__(self) -> "FakeClient":
+        self.enter_calls += 1
         return self
 
     async def __aexit__(self, *_args: Any) -> None:
@@ -290,13 +306,42 @@ class TestApplyToolCustomizations:
 
 
 class TestWrapRawTools:
+    def test_cached_tool_serializes_server_identity(self) -> None:
+        server_info = MagicMock()
+        server_info.model_dump.return_value = {
+            "name": "Documents MCP",
+            "version": "2.0",
+        }
+
+        cached_tool = McpLoader._to_cached_tool(make_tool(), server_info)
+
+        assert cached_tool.tool.name == "search_docs"
+        assert cached_tool.tool.description == "Search documents"
+        assert cached_tool.tool.input_schema == {
+            "type": "object",
+            "properties": {"query": {"type": "string"}},
+        }
+        assert cached_tool.server_info == {
+            "name": "Documents MCP",
+            "version": "2.0",
+        }
+        server_info.model_dump.assert_called_once_with(exclude_none=True)
+
     @pytest.mark.asyncio
-    async def test_wraps_cached_metadata_with_live_client(
+    async def test_wraps_cached_metadata_without_opening_connection(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         source = make_source("http://mcp.example/sse", forward_token=True)
-        raw = {"src": [MCPTool(name="search_docs", input_schema={"type": "object"})]}
-        monkeypatch.setattr(McpLoader, "_build_connection", lambda *_args: FakeClient())
+        raw = {
+            "src": [
+                CachedMCPTool(
+                    tool=MCPTool(name="search_docs", input_schema={"type": "object"}),
+                    server_info={"name": "MCP server", "version": "1.0"},
+                )
+            ]
+        }
+        client = FakeClient()
+        monkeypatch.setattr(McpLoader, "_build_connection", lambda *_args: client)
 
         async def wrap(raw_tool: MCPTool, _client: FakeClient) -> StructuredTool:
             return make_tool(raw_tool.name)
@@ -307,10 +352,15 @@ class TestWrapRawTools:
         assert len(tools) == 1
         assert tools[0].metadata is not None
         assert tools[0].metadata["mcp_source"] == "src"
+        assert tools[0].metadata["mcp"]["server"] == {
+            "name": "MCP server",
+            "version": "1.0",
+        }
+        assert client.enter_calls == 0
 
     @pytest.mark.asyncio
     async def test_skips_source_no_longer_configured(self) -> None:
-        raw = {"stale_source": [MCPTool(name="a", input_schema={"type": "object"})]}
+        raw = {"stale_source": [make_cached_tool("a")]}
         assert await McpLoader._wrap_raw_tools(raw, make_user(), {}) == []
 
     @pytest.mark.asyncio
@@ -318,8 +368,8 @@ class TestWrapRawTools:
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         raw = {
-            "bad": [MCPTool(name="bad_tool", input_schema={"type": "object"})],
-            "good": [MCPTool(name="good_tool", input_schema={"type": "object"})],
+            "bad": [make_cached_tool("bad_tool")],
+            "good": [make_cached_tool("good_tool")],
         }
         sources = {
             "bad": make_source("http://bad/sse"),
@@ -336,6 +386,25 @@ class TestWrapRawTools:
         tools = await McpLoader._wrap_raw_tools(raw, make_user(), sources)
 
         assert [tool.name for tool in tools] == ["good_tool"]
+
+    @pytest.mark.asyncio
+    async def test_continues_wrapping_when_one_cached_tool_cannot_convert(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        source = make_source("http://mcp.example/sse")
+        raw = {"src": [make_cached_tool("invalid"), make_cached_tool("available")]}
+        monkeypatch.setattr(McpLoader, "_build_connection", lambda *_args: FakeClient())
+
+        async def wrap(raw_tool: MCPTool, _client: FakeClient) -> StructuredTool:
+            if raw_tool.name == "invalid":
+                raise ValueError("invalid cached metadata")
+            return make_tool(raw_tool.name)
+
+        monkeypatch.setattr("agent.tools.mcp.as_langchain_tool", wrap)
+
+        tools = await McpLoader._wrap_raw_tools(raw, make_user(), {"src": source})
+
+        assert [tool.name for tool in tools] == ["available"]
 
 
 class TestLoadMcpTools:
@@ -435,7 +504,7 @@ class TestLoadMcpTools:
             "_mcp_settings",
             MCPConfig(sources={"src": source}, cache_ttl=100),
         )
-        cached = {"src": [MCPTool(name="a", input_schema={"type": "object"})]}
+        cached = {"src": [make_cached_tool("a")]}
         build = patch.object(McpLoader, "_build_connection", return_value=FakeClient())
         with (
             build as build_connection,

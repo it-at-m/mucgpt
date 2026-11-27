@@ -1,4 +1,5 @@
 import asyncio
+from dataclasses import dataclass
 from typing import Any
 
 from fastmcp import Client
@@ -28,6 +29,14 @@ async def _decline_elicitation(*_args: Any, **_kwargs: Any) -> ElicitResult:
     return ElicitResult(action="decline")
 
 
+@dataclass(frozen=True)
+class CachedMCPTool:
+    """Secret-free MCP tool metadata retained between discovery and wrapping."""
+
+    tool: MCPTool
+    server_info: dict[str, Any] | None
+
+
 class McpLoader:
     # "_raw" marks the cache schema: only secret-free raw MCPTool metadata (see
     # _wrap_raw_tools' docstring). Older deployments cached a different shape
@@ -37,7 +46,7 @@ class McpLoader:
     # with the wrong shape and crashing on the first read after a deploy. If this
     # cache's stored shape ever changes again, bump this suffix again rather than
     # reusing a prefix that may already hold a different payload shape.
-    _CACHE_PREFIX = "mcp_tools_raw_v2"
+    _CACHE_PREFIX = "mcp_tools_raw_v3"
     _logger = getLogger(name="mucgpt-core-mcp-loader")
     _mcp_settings = get_mcp_settings()
 
@@ -93,9 +102,9 @@ class McpLoader:
         )
 
         async def cached_or_none() -> list[BaseTool] | None:
-            raw_dump: dict[str, list[MCPTool]] | None = await RedisCache.get_object(
-                cache_key
-            )
+            raw_dump: (
+                dict[str, list[CachedMCPTool]] | None
+            ) = await RedisCache.get_object(cache_key)
             if raw_dump is None:
                 return None
             return await McpLoader._wrap_raw_tools(raw_dump, user_info, sources)
@@ -110,8 +119,8 @@ class McpLoader:
             )
 
         # Helper to discover raw (secret-free) tool metadata from all sources
-        async def fetch_all_tools() -> tuple[dict[str, list[MCPTool]], set[str]]:
-            raw_by_source: dict[str, list[MCPTool]] = {}
+        async def fetch_all_tools() -> tuple[dict[str, list[CachedMCPTool]], set[str]]:
+            raw_by_source: dict[str, list[CachedMCPTool]] = {}
             failed_sources: set[str] = set()
 
             for source_id, source_cfg in sources.items():
@@ -135,7 +144,11 @@ class McpLoader:
 
                     async with MCPAdapter(client) as adapter:
                         live_tools = await adapter.list_tools()
-                    raw_tools = [McpLoader._to_raw_tool(tool) for tool in live_tools]
+                        server_info = getattr(client, "server_info", None)
+                        raw_tools = [
+                            McpLoader._to_cached_tool(tool, server_info)
+                            for tool in live_tools
+                        ]
 
                     raw_by_source[source_id] = raw_tools
                     McpLoader._logger.debug(
@@ -283,8 +296,8 @@ class McpLoader:
         return Client(transport, auth=auth, elicitation_handler=_decline_elicitation)
 
     @staticmethod
-    def _to_raw_tool(tool: BaseTool) -> MCPTool:
-        """Extract only serializable tool metadata from a live LangChain tool."""
+    def _to_cached_tool(tool: BaseTool, server_info: Any | None) -> CachedMCPTool:
+        """Extract secret-free metadata from a discovered MCP tool for the cache."""
         args_schema = tool.args_schema
         if isinstance(args_schema, dict):
             input_schema = args_schema
@@ -297,10 +310,17 @@ class McpLoader:
             )
         else:
             input_schema = {"type": "object", "properties": {}}
-        return MCPTool(
-            name=tool.name,
-            description=tool.description,
-            input_schema=input_schema,
+        return CachedMCPTool(
+            tool=MCPTool(
+                name=tool.name,
+                description=tool.description,
+                input_schema=input_schema,
+            ),
+            server_info=(
+                server_info.model_dump(exclude_none=True)
+                if server_info is not None
+                else None
+            ),
         )
 
     @staticmethod
@@ -352,7 +372,7 @@ class McpLoader:
 
     @staticmethod
     async def _wrap_raw_tools(
-        raw_by_source: dict[str, list[MCPTool]],
+        raw_by_source: dict[str, list[CachedMCPTool]],
         user_info: AuthenticationResult,
         sources: dict[str, MCPSourceConfig],
     ) -> list[BaseTool]:
@@ -377,27 +397,45 @@ class McpLoader:
                 client = McpLoader._build_connection(source_id, source_cfg, user_info)
                 if client is None:
                     continue
-
-                async with client:
-                    for raw_tool in raw_tools:
-                        try:
-                            wrapped_tool = await as_langchain_tool(raw_tool, client)
-                            McpLoader._apply_tool_customizations(
-                                wrapped_tool, source_id, source_cfg
-                            )
-                            tools.append(wrapped_tool)
-                        except Exception as e:
-                            McpLoader._logger.error(
-                                f"Failed to wrap cached MCP tool '{raw_tool.name}' from '{source_id}'",
-                                exc_info=e,
-                            )
             except Exception as e:
                 McpLoader._logger.error(
-                    f"Failed to open MCP connection for '{source_id}' while wrapping cached tools",
+                    f"Failed to configure MCP connection for '{source_id}' while wrapping cached tools",
                     exc_info=e,
                 )
+                continue
+
+            for cached_tool in raw_tools:
+                try:
+                    wrapped_tool = await as_langchain_tool(cached_tool.tool, client)
+                    McpLoader._restore_server_metadata(
+                        wrapped_tool, cached_tool.server_info
+                    )
+                    McpLoader._apply_tool_customizations(
+                        wrapped_tool, source_id, source_cfg
+                    )
+                    tools.append(wrapped_tool)
+                except Exception as e:
+                    McpLoader._logger.error(
+                        f"Failed to wrap cached MCP tool '{cached_tool.tool.name}' from "
+                        f"'{source_id}'",
+                        exc_info=e,
+                    )
 
         return tools
+
+    @staticmethod
+    def _restore_server_metadata(
+        wrapped_tool: BaseTool, server_info: dict[str, Any] | None
+    ) -> None:
+        """Restore server identity captured during discovery without reconnecting."""
+        if server_info is None:
+            return
+
+        metadata = dict(getattr(wrapped_tool, "metadata", {}) or {})
+        mcp_metadata = dict(metadata.get("mcp") or {})
+        mcp_metadata["server"] = server_info
+        metadata["mcp"] = mcp_metadata
+        wrapped_tool.metadata = metadata
 
     @staticmethod
     def _resolve_group(
@@ -434,9 +472,9 @@ class McpLoader:
 
     @staticmethod
     def _warn_about_unknown_overrides(
-        source_id: str, source_config: MCPSourceConfig, raw_tools: list[MCPTool]
+        source_id: str, source_config: MCPSourceConfig, raw_tools: list[CachedMCPTool]
     ) -> None:
-        tool_names = {raw_tool.name for raw_tool in raw_tools}
+        tool_names = {raw_tool.tool.name for raw_tool in raw_tools}
         for override in source_config.overrides or []:
             if override.name not in tool_names:
                 McpLoader._logger.warning(

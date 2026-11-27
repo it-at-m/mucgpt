@@ -1,4 +1,5 @@
 import httpx
+from anyio import fail_after
 from fastapi import APIRouter, Depends, HTTPException, UploadFile
 
 from config.settings import ParserBackendType, get_settings
@@ -9,6 +10,10 @@ from parsing.factory import get_parser
 
 logger = getLogger()
 settings = get_settings()
+
+# /parse has no document-operation deadline, and xberg_timeout only bounds
+# inactivity, so a trickling parser response needs its own wall-clock limit.
+PARSE_TIMEOUT_SECONDS = 180
 
 router = APIRouter(prefix="/v1")
 _parser: ParserBackend | None = get_parser()
@@ -40,7 +45,17 @@ async def parse_file(file: UploadFile, user_info=Depends(authenticate_user)) -> 
             status_code=503, detail="Document processing is not enabled."
         )
     try:
-        content = await parser.parse(file)
+        with fail_after(PARSE_TIMEOUT_SECONDS):
+            content = await parser.parse(file)
+    except TimeoutError as exc:
+        logger.error(
+            f"Parser deadline exceeded while parsing file '{file.filename}': {exc}",
+            exc_info=True,
+        )
+        raise HTTPException(
+            status_code=504,
+            detail=f"Parser service timed out while processing '{file.filename}'.",
+        ) from exc
     except httpx.TimeoutException as exc:
         logger.error(
             f"Timeout while parsing file '{file.filename}': {exc}",

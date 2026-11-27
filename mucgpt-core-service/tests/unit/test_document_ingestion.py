@@ -27,6 +27,7 @@ from core.virtual_file_system_helper import (
     get_document_storage_key,
 )
 from database.database_models import Base, Document
+from database.document_lock import DocumentLockTimeoutError
 from database.document_repo import DocumentQuotaExceededError, DocumentRepository
 from parsing import xberg
 
@@ -339,6 +340,127 @@ async def test_parser_errors_and_cancellation_compensate(ingestion, error_type):
 
 
 @pytest.mark.asyncio
+async def test_parser_deadline_compensates_and_releases_the_work_lock(ingestion):
+    service, sessions, _, parser = ingestion
+    service.settings = DocumentConfig(ingestion_timeout=0.05, cleanup_timeout=1)
+
+    async def parse(_):
+        await anyio.sleep_forever()
+
+    parser.parse.side_effect = parse
+    with pytest.raises(services.DocumentOperationTimeoutError, match="ingestion"):
+        await service.ingest_document(user(), upload())
+    assert sessions.rows() == []
+    assert sessions.locked_ids == set()
+
+
+@pytest.mark.asyncio
+async def test_storage_deadline_compensates_and_releases_the_work_lock(
+    ingestion, monkeypatch
+):
+    service, sessions, _, _ = ingestion
+    service.settings = DocumentConfig(ingestion_timeout=0.05, cleanup_timeout=1)
+
+    async def write(*_):
+        await anyio.sleep_forever()
+
+    monkeypatch.setattr(
+        services,
+        "create_document_backend",
+        lambda _: MagicMock(awrite=AsyncMock(side_effect=write)),
+    )
+    with pytest.raises(services.DocumentOperationTimeoutError, match="ingestion"):
+        await service.ingest_document(user(), upload())
+    # A queued store operation may still finish after the deadline, so its slot
+    # stays deleting until background cleanup can delete the final body safely.
+    assert sessions.rows()[0].status == "deleting"
+    assert sessions.locked_ids == set()
+
+
+@pytest.mark.asyncio
+async def test_late_store_write_is_deleted_only_after_it_settles(
+    ingestion, monkeypatch
+):
+    service, sessions, store, _ = ingestion
+    service.settings = DocumentConfig(ingestion_timeout=0.05, cleanup_timeout=1)
+    real_backend = create_document_backend(user().user_id)
+    allow_write = asyncio.Event()
+    write_started = asyncio.Event()
+
+    async def delayed_write(path, text):
+        write_started.set()
+        await allow_write.wait()
+        return await real_backend.awrite(path, text)
+
+    monkeypatch.setattr(
+        services,
+        "create_document_backend",
+        lambda _: MagicMock(awrite=AsyncMock(side_effect=delayed_write)),
+    )
+
+    with pytest.raises(services.DocumentOperationTimeoutError, match="ingestion"):
+        await service.ingest_document(user(), upload())
+
+    await write_started.wait()
+    row = sessions.rows()[0]
+    assert row.status == "deleting"
+    assert store.get(get_document_namespace(user().user_id), row.storage_key) is None
+
+    allow_write.set()
+    for _ in range(20):
+        await anyio.sleep(0)
+        if not sessions.rows():
+            break
+    assert sessions.rows() == []
+    assert store.search(get_document_namespace(user().user_id)) == []
+
+
+@pytest.mark.asyncio
+async def test_document_deadline_reports_the_nested_lock_timeout(monkeypatch):
+    warning = MagicMock()
+    monkeypatch.setattr(services.logger, "warning", warning)
+    with pytest.raises(services.DocumentOperationTimeoutError, match="work-lock query"):
+        async with services.document_deadline(300, "ingestion"):
+            raise DocumentLockTimeoutError("work-lock query", 10)
+    warning.assert_called_once_with(
+        "Document %s timed out after %.2fs", "work-lock query", 10
+    )
+
+
+@pytest.mark.asyncio
+async def test_publication_deadline_inside_shield_compensates(ingestion, monkeypatch):
+    # The shield keeps the operation deadline: a hung commit must not hang forever
+    # nor fall through and report an unpublished document as ready.
+    service, sessions, _, _ = ingestion
+    service.settings = DocumentConfig(ingestion_timeout=0.05, cleanup_timeout=1)
+
+    async def hang(*_args, **_kwargs):
+        await anyio.sleep_forever()
+
+    monkeypatch.setattr(DocumentRepository, "mark_ready", hang)
+    with pytest.raises(services.DocumentOperationTimeoutError, match="ingestion"):
+        await service.ingest_document(user(), upload())
+    assert sessions.rows() == []
+    assert sessions.locked_ids == set()
+
+
+@pytest.mark.asyncio
+async def test_cleanup_deadline_retains_the_deleting_row(ingestion, monkeypatch):
+    service, sessions, _, _ = ingestion
+    service.settings = DocumentConfig(cleanup_timeout=0.01, ingestion_timeout=1)
+    monkeypatch.setattr(DocumentRepository, "mark_ready", AsyncMock(return_value=False))
+
+    async def delete_body(*_):
+        await anyio.sleep_forever()
+
+    monkeypatch.setattr(services, "delete_document_body", delete_body)
+    with pytest.raises(services.DocumentStorageError, match="marked ready"):
+        await service.ingest_document(user(), upload())
+    assert sessions.rows()[0].status == "deleting"
+    assert sessions.locked_ids == set()
+
+
+@pytest.mark.asyncio
 async def test_anyio_level_cancellation_shields_compensation(ingestion):
     service, sessions, _, parser = ingestion
     with anyio.CancelScope() as scope:
@@ -420,9 +542,9 @@ async def test_upload_lock_is_held_through_compensation_then_released(
             assert not acquired  # Another worker cannot claim this processing row.
         raise error_type("interrupted")
 
-    async def cleanup(owner, document_id, write_attempted):
+    async def cleanup(owner, document_id, write_attempted, **kwargs):
         assert document_id in sessions.locked_ids
-        await compensate(owner, document_id, write_attempted)
+        await compensate(owner, document_id, write_attempted, **kwargs)
 
     parser.parse.side_effect = parse
     monkeypatch.setattr(service, "_compensate", cleanup)

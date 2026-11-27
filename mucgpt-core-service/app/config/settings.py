@@ -3,7 +3,7 @@ import re
 from decimal import Decimal
 from enum import StrEnum
 from functools import lru_cache
-from typing import Any, Literal
+from typing import Annotated, Any, Literal
 from urllib.parse import urljoin
 
 import httpx
@@ -28,6 +28,7 @@ from pydantic_settings import (
 )
 
 MODEL_INFO_TIMEOUT_SECONDS = 8.0
+PositiveSeconds = Annotated[float, Field(gt=0, allow_inf_nan=False)]
 
 # Plain HTML tag name without attributes or brackets (canvas_allowed_html_tags).
 _HTML_TAG_NAME = re.compile(r"^[a-z][a-z0-9]*$")
@@ -569,7 +570,11 @@ class DocumentConfig(BaseModel):
 
     max_upload_bytes: PositiveInt = 100 * 1024 * 1024
     max_text_bytes: PositiveInt = 5 * 1024 * 1024
+    parser_response_max_bytes: PositiveInt = 10 * 1024 * 1024
     preview_max_chars: PositiveInt = 1000
+    ingestion_timeout: PositiveSeconds = 300.0
+    deletion_timeout: PositiveSeconds = 90.0
+    cleanup_timeout: PositiveSeconds = 60.0
 
 
 class PromptConfig(BaseModel):

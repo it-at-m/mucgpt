@@ -2,8 +2,23 @@ from contextlib import asynccontextmanager
 from uuid import UUID
 
 import psycopg
-from anyio import CancelScope
+from anyio import CancelScope, fail_after
+from psycopg.errors import ConnectionTimeout, QueryCanceled
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
+
+# Bounds connecting and the non-blocking lock query of the dedicated lock session.
+# keep it a constant to avoid overengineering;
+# no other db connection timeout is configurable
+LOCK_TIMEOUT_SECONDS = 10
+
+
+class DocumentLockTimeoutError(TimeoutError):
+    """Timeout carrying the lock operation and its budget."""
+
+    def __init__(self, phase: str, timeout: float) -> None:
+        self.phase = phase
+        self.timeout = timeout
+        super().__init__(f"Document {phase} timed out after {timeout:.2f}s")
 
 
 @asynccontextmanager
@@ -19,23 +34,45 @@ async def document_work_lock(
     """
     url = session_factory.kw["bind"].url
     key = "mucgpt-document:" + str(UUID(document_id))
+    # Shielded so a cancelled caller cannot leak a half-opened connection, and
+    # bounded so an unreachable database cannot hang the shielded connect forever.
     with CancelScope(shield=True):
-        connection = await psycopg.AsyncConnection.connect(
-            host=url.host,
-            port=url.port,
-            dbname=url.database,
-            user=url.username,
-            password=url.password,
-            autocommit=True,
-        )
+        try:
+            with fail_after(LOCK_TIMEOUT_SECONDS):
+                connection = await psycopg.AsyncConnection.connect(
+                    host=url.host,
+                    port=url.port,
+                    dbname=url.database,
+                    user=url.username,
+                    password=url.password,
+                    autocommit=True,
+                    connect_timeout=LOCK_TIMEOUT_SECONDS,
+                    options=(
+                        "-c application_name=mucgpt-document-lock "
+                        f"-c statement_timeout={LOCK_TIMEOUT_SECONDS * 1000}"
+                    ),
+                )
+        except (ConnectionTimeout, TimeoutError) as exc:
+            raise DocumentLockTimeoutError(
+                "work-lock connection", LOCK_TIMEOUT_SECONDS
+            ) from exc
     try:
-        cursor = await connection.execute(
-            "SELECT pg_try_advisory_lock(hashtextextended(%s, 0))", (key,)
-        )
+        try:
+            with fail_after(LOCK_TIMEOUT_SECONDS):
+                cursor = await connection.execute(
+                    "SELECT pg_try_advisory_lock(hashtextextended(%s, 0))", (key,)
+                )
+        except (QueryCanceled, TimeoutError) as exc:
+            # Only statement_timeout cancels statements on this private session.
+            raise DocumentLockTimeoutError(
+                "work-lock query", LOCK_TIMEOUT_SECONDS
+            ) from exc
         row = await cursor.fetchone()
         if row is None:  # a SELECT always yields a row; fail loudly if not
             raise RuntimeError("Advisory lock query returned no row")
         yield row[0]
     finally:
+        # close() is synchronous in psycopg (PQfinish), so it cannot stall; ending
+        # the session is what releases the session-level advisory lock.
         with CancelScope(shield=True):
             await connection.close()

@@ -2,6 +2,7 @@
 
 from contextlib import asynccontextmanager
 from datetime import UTC, datetime
+from types import SimpleNamespace
 from typing import cast
 from unittest.mock import AsyncMock, MagicMock
 from uuid import uuid4
@@ -264,6 +265,32 @@ def test_foreign_and_missing_deletions_are_uniform_and_never_touch_store(
     )
     assert store.mock_calls == []
     assert rows(engine)[0].user_id != owner.user_id
+
+
+def test_delete_honors_deletion_timeout(library_api, monkeypatch):
+    _, _, service, engine, store, owner, _ = library_api
+    document_id = add_document(engine, owner.user_id)
+    original_get_document = DocumentRepository.get_document
+
+    async def delayed_get_document(repository, *args):
+        await sleep(0.01)
+        return await original_get_document(repository, *args)
+
+    monkeypatch.setattr(DocumentRepository, "get_document", delayed_get_document)
+    monkeypatch.setattr(
+        services,
+        "get_settings",
+        lambda: SimpleNamespace(
+            documents=services.DocumentConfig(deletion_timeout=0.001)
+        ),
+    )
+
+    with pytest.raises(services.DocumentOperationTimeoutError, match="deletion"):
+        run(service.delete_document, owner, document_id)
+
+    assert service.session_factory.locked_ids == set()
+    assert rows(engine)[0].status == "ready"
+    assert store.mock_calls == []
 
 
 def test_stale_processing_document_without_worker_lock_is_deleted(library_api):

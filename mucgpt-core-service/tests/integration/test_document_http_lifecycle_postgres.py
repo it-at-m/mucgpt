@@ -1,5 +1,6 @@
 """Real PostgreSQL HTTP coverage for the complete document-library lifecycle."""
 
+import json
 import os
 from uuid import UUID
 
@@ -154,3 +155,52 @@ async def test_document_http_lifecycle_survives_restart_and_deletion(
         documents_after_replacement = await harness.client.get("/v1/documents")
         assert documents_after_replacement.status_code == 200
         assert len(documents_after_replacement.json()) == DOCUMENT_LIMIT
+
+
+@pytest.mark.asyncio
+async def test_confirmation_fingerprint_binds_reviewed_occurrences(monkeypatch) -> None:
+    """A changed extraction must be reviewed again before its offsets are stored."""
+    async with postgres_http_harness(monkeypatch) as harness:
+        filename = "reviewed.txt"
+        harness.parser.text = "😀 Contact: first@example.org"
+        first_review = await harness.upload_document(filename, b"source")
+
+        assert first_review.status_code == 409
+        first_detail = first_review.json()["detail"]
+        assert first_detail["code"] == "guardrail_confirmation_required"
+
+        harness.parser.text = "😀 Contact: second@example.org"
+        changed_review = await harness.client.post(
+            "/v1/documents",
+            files={"file": (filename, b"source", "text/plain")},
+            data={"confirmation_fingerprint": first_detail["fingerprint"]},
+        )
+
+        assert changed_review.status_code == 409
+        changed_detail = changed_review.json()["detail"]
+        assert changed_detail["fingerprint"] != first_detail["fingerprint"]
+        assert (await harness.client.get("/v1/documents")).json() == []
+
+        saved = await harness.client.post(
+            "/v1/documents",
+            files={"file": (filename, b"source", "text/plain")},
+            data={"confirmation_fingerprint": changed_detail["fingerprint"]},
+        )
+
+        assert saved.status_code == 201
+        guardrail = saved.json()["guardrails"]["sensitive_content"]
+        assert guardrail["findings"] == changed_detail["findings"]
+        assert guardrail["occurrences"] == [
+            {
+                "category": "email",
+                "kind": "pii",
+                "confidence": "certain",
+                "start": 11,
+                "end": 29,
+                "provenance": {
+                    "guardrail": "sensitive_content",
+                    "detector": "email",
+                },
+            }
+        ]
+        assert "second@example.org" not in json.dumps(guardrail)

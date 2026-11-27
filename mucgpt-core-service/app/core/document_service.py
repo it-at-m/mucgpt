@@ -431,15 +431,15 @@ class DocumentIngestionService:
                                 user_info.user_id, document_id, write_attempted
                             )
                         except Exception:
+                            logger.exception(
+                                "Document ingestion cleanup failed for %s", document_id
+                            )
                             if isinstance(
                                 ingestion_error, SensitivityConfirmationRequired
                             ):
                                 raise DocumentStorageError(
                                     "Could not release document reservation"
                                 ) from None
-                            logger.exception(
-                                "Document ingestion cleanup failed for %s", document_id
-                            )
                 raise
 
     async def _validate_upload_size(self, file: UploadFile) -> int:

@@ -21,7 +21,7 @@ from core.auth import authenticate_user
 from core.auth_models import AuthenticationResult
 from core.virtual_file_system_helper import FileStoreManager, get_document_namespace
 from database.database_models import Base, Document
-from database.document_repo import DOCUMENT_LIMIT
+from database.document_repo import DOCUMENT_LIMIT, DocumentRepository
 
 pytestmark = pytest.mark.integration
 
@@ -297,6 +297,26 @@ def test_flagged_upload_requires_confirmation_before_publication(upload_api):
     assert saved.status_code == 201
     assert saved.json()["sensitivity"]["confirmed_at"]
     assert saved.json()["sensitivity"]["findings"] == detail["findings"]
+
+
+def test_confirmation_cleanup_failure_returns_safe_server_error(
+    upload_api, monkeypatch
+):
+    client, _, parser, engine, store, owner, _ = upload_api
+    parser.parse.return_value = "Email: user@example.org"
+    monkeypatch.setattr(
+        DocumentRepository,
+        "remove_after_cleanup",
+        AsyncMock(side_effect=RuntimeError("private catalog failure")),
+    )
+
+    response = post_document(client)
+
+    assert response.status_code == 500
+    assert response.json() == {"detail": "Document could not be stored."}
+    assert len(rows(engine)) == 1
+    assert rows(engine)[0].status == "deleting"
+    assert store.search(get_document_namespace(owner.user_id)) == []
 
 
 def test_scan_error_returns_retryable_response_and_stores_nothing(

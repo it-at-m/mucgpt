@@ -524,6 +524,39 @@ async def resolve(sessions, document_ids, **kwargs):
 
 
 @pytest.mark.asyncio
+async def test_confirmation_cleanup_failure_logs_retained_reservation(
+    ingestion, monkeypatch, caplog
+):
+    service, sessions, store, parser = ingestion
+    parser.parse.return_value = SENSITIVE_TEXT
+    cleanup_error = RuntimeError("catalog cleanup unavailable")
+    monkeypatch.setattr(
+        DocumentRepository,
+        "remove_after_cleanup",
+        AsyncMock(side_effect=cleanup_error),
+    )
+
+    with caplog.at_level("ERROR", logger=services.logger.name):
+        with pytest.raises(
+            services.DocumentStorageError,
+            match="Could not release document reservation",
+        ):
+            await service.ingest_document(user(), upload())
+
+    row = sessions.rows()[0]
+    assert row.status == "deleting" and row.slot == 0
+    assert store.search(get_document_namespace(user().user_id)) == []
+    records = [
+        record
+        for record in caplog.records
+        if record.getMessage() == f"Document ingestion cleanup failed for {row.id}"
+    ]
+    assert len(records) == 1
+    assert records[0].exc_info is not None
+    assert records[0].exc_info[1] is cleanup_error
+
+
+@pytest.mark.asyncio
 @pytest.mark.parametrize("change", ["owner", "filename", "text", "findings", None])
 async def test_confirmation_binds_reviewed_upload(ingestion, change):
     service, sessions, store, parser = ingestion
